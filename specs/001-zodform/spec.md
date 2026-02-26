@@ -5,6 +5,12 @@
 **Status**: Draft
 **Input**: User description: "Schema-Driven Form Generation for Zod v4. A form generation library that walks Zod's internal type tree using the processor registry pattern to emit React form components instead of JSON Schema."
 
+## Clarifications
+
+### Session 2026-02-26
+
+- Q: What is the default component library for the runtime `<ZodForm>` renderer? → A: Unstyled HTML primitives as default; shadcn/ui as optional preset map
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Runtime Form Rendering (Priority: P1)
@@ -141,7 +147,7 @@ As a developer iterating on my data model, I want the CLI to watch for schema ch
 - **FR-003**: Each processor MUST output a FormField descriptor containing: key (field path), component name, props, label, description, placeholder, required flag, default value, read-only flag, hidden flag, order, options (for enums/unions), children (for nested objects), array item template, and constraint data (min, max, minLength, maxLength, pattern, format)
 - **FR-004**: The system MUST read metadata from two sources in precedence order: (1) form-specific registry via `z.registry<FormMeta>()` for fieldType, order, hidden, gridColumn, render overrides; (2) global registry via `z.globalRegistry` / `.meta()` / `.describe()` for title, description, examples, deprecated
 - **FR-005**: The runtime renderer MUST provide a `<ZodForm>` component that accepts a Zod schema, optional form registry, typed onSubmit handler, optional default values, optional custom component map, optional className, and renders a complete validated form using React Hook Form with zodResolver
-- **FR-006**: The renderer MUST use a pluggable component map (Input, Textarea, Checkbox, Switch, Select, DatePicker, FileInput, RadioGroup) allowing users to override individual components or provide entirely custom maps for different UI libraries
+- **FR-006**: The renderer MUST default to unstyled HTML primitives (native `<input>`, `<select>`, `<textarea>`, etc.) and use a pluggable component map (Input, Textarea, Checkbox, Switch, Select, DatePicker, FileInput, RadioGroup) allowing users to override individual components or provide entirely custom maps for different UI libraries. A pre-built shadcn/ui component map MUST be provided as an optional import.
 - **FR-007**: The CLI MUST dynamically import the user's Zod schema file, call the core walker to produce FormField[], and emit a static `.tsx` file with explicit form markup that has zero runtime dependency on zodform — importing only from react-hook-form, zod, and the user's UI library
 - **FR-008**: All rendered and generated form components MUST include: label elements with htmlFor linking, validation error display via FormMessage, description text via FormDescription when metadata is present, aria-invalid on inputs when errors exist, proper required attributes, and logical tab order (schema declaration order, overridable via order in form registry)
 - **FR-009**: The system MUST support Zod v4 (v4.0.0+) exclusively, using the `_zod` internals API (`schema._zod.def`, `schema._zod.bag`, `schema._zod.parent`, `schema._zod.optin/optout`). Zod v3 support is NOT a goal.
@@ -183,7 +189,7 @@ As a developer iterating on my data model, I want the CLI to watch for schema ch
 - For build-time codegen: shadcn/ui form components are installed in the consumer's project
 - The Zod schema is exported as a named export from a TypeScript file
 - `schema._zod.def`, `schema._zod.bag`, `schema._zod.parent`, `schema._zod.optin/optout` remain stable across Zod v4.x releases (documented as the library substrate API)
-- The default UI component library is shadcn/ui; other libraries are supported via custom component maps
+- The runtime renderer defaults to unstyled HTML primitives; shadcn/ui is available as a pre-built optional component map. The CLI defaults to shadcn/ui imports in generated code.
 - Zod v3 support is explicitly out of scope for v1
 
 ### Out of Scope (v1)
