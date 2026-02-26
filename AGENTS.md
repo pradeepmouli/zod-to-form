@@ -10,7 +10,7 @@ This repository is designed for multi-agent collaboration (Copilot, Claude, Gemi
 ## Ground Rules
 - Prefer non-destructive changes; never reset user work.
 - Follow conventional commits.
-- Keep formatting consistent with .editorconfig and .oxfmtrc.json.
+- Keep formatting consistent with the repository formatter configuration (.oxfmtrc.json).
 - Run pnpm run lint and pnpm test after code changes when practical.
 - Keep docs current when changing scripts or workflows.
 
