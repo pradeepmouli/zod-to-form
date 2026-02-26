@@ -79,8 +79,8 @@ As a developer, I want to override how specific fields are rendered — both at 
 **Acceptance Scenarios**:
 
 1. **Given** an enum field with `{ fieldType: "combobox" }` in the form registry, **When** the form renders, **Then** a combobox is rendered instead of a select dropdown
-2. **Given** a field with `{ order: 2 }` in the form registry, **When** the form renders, **Then** it appears second regardless of schema declaration order
-3. **Given** a field with `{ hidden: true }` in the form registry, **When** the form renders, **Then** it is not rendered but is still included in form state
+2. *(Covered by US2-AC5)* Hidden field behavior — see User Story 2, Scenario 5
+3. *(Covered by US2-AC6)* Order override behavior — see User Story 2, Scenario 6
 4. **Given** a field with a custom `render` function in the form registry, **When** the form renders at runtime, **Then** the custom renderer is used; in codegen mode, a TODO comment is emitted
 
 ---
@@ -133,7 +133,7 @@ As a developer iterating on my data model, I want the CLI to watch for schema ch
 
 ### Edge Cases
 
-- What happens when a schema contains `z.lazy()` (recursive types)? The walker MUST detect cycles via a Seen map and stop recursion at a configurable depth limit, rendering an expandable section or a placeholder.
+- What happens when a schema contains `z.lazy()` (recursive types)? The walker MUST detect cycles via a Seen map and stop recursion at a configurable depth limit (default: 5), rendering an expandable section or a placeholder.
 - What happens when a schema contains `z.transform()` or `z.custom()`? The system MUST provide a sensible fallback (text input) and allow override via the form registry.
 - What happens when a schema contains a discriminated union (`z.discriminatedUnion()`)? The system MUST render a select/radio for the discriminator field, then dynamically show only the fields for the selected variant (select-then-reveal pattern).
 - What happens when a schema contains `z.intersection()`? The system MUST merge the shapes of both sides and render all fields.

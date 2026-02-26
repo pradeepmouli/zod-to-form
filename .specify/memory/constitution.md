@@ -1,33 +1,22 @@
 <!--
   Sync Impact Report
   ==================
-  Version change: 0.0.0 (template) → 1.0.0
-  Bump rationale: MAJOR — initial ratification of all principles from template placeholders.
+  Version change: 1.0.0 → 1.0.1
+  Bump rationale: PATCH — clarification of Principle I wording to resolve
+    apparent contradiction with Principle III (FormField[] IR).
 
   Modified Principles:
-    - [PRINCIPLE_1_NAME] → I. Zod-Native Architecture
-    - [PRINCIPLE_2_NAME] → II. Processor Registry Pattern
-    - [PRINCIPLE_3_NAME] → III. Dual-Mode Output
-    - [PRINCIPLE_4_NAME] → IV. Zero Unnecessary Dependencies
-    - [PRINCIPLE_5_NAME] → V. Test-First Development (NON-NEGOTIABLE)
-    - (added) → VI. Type Safety First
-    - (added) → VII. Accessibility by Default
+    - I. Zod-Native Architecture: Clarified that the prohibition on
+      intermediate representations applies to *schema*-level conversions
+      (e.g., JSON Schema), not the output-level FormField[] IR mandated
+      by Principle III.
 
-  Added Sections:
-    - Technology Stack (replaces [SECTION_2_NAME])
-    - Development Workflow (replaces [SECTION_3_NAME])
+  Added Sections: None
+  Removed Sections: None
 
-  Removed Sections: None (all template placeholders replaced)
+  Templates requiring updates: None — no structural changes.
 
-  Templates requiring updates:
-    - .specify/templates/plan-template.md — ✅ No changes needed;
-      Constitution Check section is generic and will be filled per-feature.
-    - .specify/templates/spec-template.md — ✅ No changes needed;
-      User Stories and FR sections align with principles.
-    - .specify/templates/tasks-template.md — ✅ No changes needed;
-      Test-first ordering and phase structure align with Principle V.
-
-  Follow-up TODOs: None — all placeholders resolved.
+  Follow-up TODOs: None.
 -->
 
 # zodforms Constitution
@@ -45,8 +34,11 @@ source of truth:
 - Detect optionality via `schema._zod.optin` / `schema._zod.optout`
 - Read metadata via `z.globalRegistry` (`.meta()`, `.describe()`)
 - Store form-specific annotations via `z.registry<FormMeta>()`
-- No intermediate representations (e.g., JSON Schema, ParsedSchema)
-  or parallel type systems are permitted
+- No intermediate *schema* representations (e.g., JSON Schema,
+  ParsedSchema) or parallel type systems are permitted between Zod
+  internals and processors. The output-level `FormField[]` IR
+  (Principle III) is not a schema representation — it is the
+  processor output consumed by renderers and codegen.
 
 **Rationale**: Zod v4 was explicitly designed as a "validation substrate"
 for library authors. Using its internals directly eliminates round-trip
@@ -209,4 +201,4 @@ compliance with the seven core principles.
   documented in the relevant spec's Complexity Tracking section
 - **Guidance**: Use `AGENTS.md` for agent-specific development guidance
 
-**Version**: 1.0.0 | **Ratified**: 2026-02-26 | **Last Amended**: 2026-02-26
+**Version**: 1.0.1 | **Ratified**: 2026-02-26 | **Last Amended**: 2026-02-26

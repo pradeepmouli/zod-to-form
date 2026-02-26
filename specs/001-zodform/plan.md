@@ -73,11 +73,11 @@ packages/
 │   │       ├── date.ts          # date
 │   │       ├── enum.ts          # enum, nativeEnum, literal
 │   │       ├── file.ts          # file
-│   │       ├── object.ts        # object (recurse into shape)
+│   │       ├── object.ts        # object (recurse into shape), intersection (merge shapes)
 │   │       ├── array.ts         # array, tuple
 │   │       ├── union.ts         # union, discriminatedUnion
-│   │       ├── wrappers.ts      # optional, nullable, default, readonly, pipe, catch
-│   │       └── fallback.ts      # transform, custom, lazy, intersection, record, any, unknown
+│   │       ├── wrappers.ts      # optional, nullable, default, readonly, pipe, catch, lazy
+│   │       └── fallback.ts      # transform, custom, record, any, unknown
 │   ├── tests/
 │   │   ├── walker.test.ts
 │   │   ├── metadata.test.ts

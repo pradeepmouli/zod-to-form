@@ -21,6 +21,7 @@ The central data structure produced by the core walker. A recursive tree of fiel
 | `readOnly` | `boolean` | Read-only state (from `z.readonly()` or metadata) |
 | `hidden` | `boolean` | Hidden but in form state (from form registry `hidden: true`) |
 | `order` | `number \| undefined` | Display order override (from form registry) |
+| `gridColumn` | `string \| undefined` | CSS grid-column hint (from form registry `gridColumn`) |
 | `options` | `FormFieldOption[] \| undefined` | For enum/union select fields |
 | `children` | `FormField[] \| undefined` | For nested objects (recursive) |
 | `arrayItem` | `FormField \| undefined` | Template for array items |
@@ -72,7 +73,7 @@ The central data structure produced by the core walker. A recursive tree of fiel
 | `order` | `number \| undefined` | Display order override |
 | `hidden` | `boolean \| undefined` | Hide field from UI (remains in form state) |
 | `gridColumn` | `string \| undefined` | CSS grid column hint |
-| `render` | `((field: FormField, props: any) => ReactNode) \| undefined` | Custom render function (runtime only) |
+| `render` | `((field: FormField, props: unknown) => unknown) \| undefined` | Custom render function (runtime only; React package narrows return to ReactNode) |
 
 ### ComponentMap
 

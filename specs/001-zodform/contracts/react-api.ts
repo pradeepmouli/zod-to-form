@@ -25,6 +25,8 @@ export interface ComponentMap {
   DatePicker: ComponentType<any>;
   FileInput: ComponentType<any>;
   RadioGroup: ComponentType<any>;
+  /** Combobox for autocomplete/searchable select (optional) */
+  Combobox?: ComponentType<any>;
   /** Field wrapper providing label + input + error layout */
   FormField: ComponentType<any>;
   /** Label element */

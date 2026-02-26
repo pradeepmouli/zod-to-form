@@ -1,12 +1,4 @@
-/**
- * @zodform/core — API Contract
- *
- * This file defines the public TypeScript interfaces for the core package.
- * It serves as the contract between core and its consumers (react, cli).
- * Implementation MUST satisfy these interfaces.
- */
-
-import type { ZodType, ZodRegistry } from "zod";
+import type { ZodType } from 'zod';
 
 // ─── FormField: Intermediate Representation ───────────────────────────
 
@@ -93,7 +85,7 @@ export interface FormProcessorContext {
   /** Registry mapping def.type → processor function */
   processors: Record<string, FormProcessor>;
   /** Form-specific metadata registry */
-  formRegistry?: ZodRegistry<FormMeta>;
+  formRegistry?: ZodFormRegistry;
   /** Current field path stack */
   path: string[];
   /** Cycle detection for recursive schemas */
@@ -111,40 +103,24 @@ export type FormProcessor = (
   params: ProcessParams
 ) => void;
 
-// ─── Public API ───────────────────────────────────────────────────────
+// ─── Public API Options ───────────────────────────────────────────────
+
+/**
+ * Type alias for the form registry. Uses the Zod registry system
+ * with FormMeta as the metadata shape.
+ * Consumers create this via: `const formRegistry = z.registry<FormMeta>()`
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ZodFormRegistry = {
+  get(schema: ZodType): FormMeta | undefined;
+  has(schema: ZodType): boolean;
+};
 
 export interface WalkOptions {
   /** Custom form registry for metadata annotations */
-  formRegistry?: ZodRegistry<FormMeta>;
+  formRegistry?: ZodFormRegistry;
   /** Custom processors to add or override built-in ones */
   processors?: Record<string, FormProcessor>;
   /** Maximum recursion depth for lazy/recursive schemas (default: 5) */
   maxDepth?: number;
 }
-
-/**
- * Walk a Zod schema and produce a FormField[] tree.
- *
- * @param schema - A Zod object schema (top-level must be z.object())
- * @param options - Optional configuration for the walk
- * @returns FormField[] - Ordered array of field descriptors
- */
-export declare function walkSchema(
-  schema: ZodType,
-  options?: WalkOptions
-): FormField[];
-
-/**
- * Create a custom processor registry by merging with built-in processors.
- *
- * @param custom - Custom processors to add or override
- * @returns Merged processor registry
- */
-export declare function createProcessors(
-  custom: Record<string, FormProcessor>
-): Record<string, FormProcessor>;
-
-/**
- * Built-in processor registry containing handlers for all supported Zod types.
- */
-export declare const builtinProcessors: Record<string, FormProcessor>;

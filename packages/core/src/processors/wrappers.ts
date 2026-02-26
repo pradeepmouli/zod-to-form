@@ -1,0 +1,108 @@
+import type { ZodType } from 'zod';
+import { processFallback } from './fallback.js';
+import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
+
+function getDef(schema: ZodType): Record<string, unknown> {
+  return (
+    (schema as unknown as { _zod?: { def?: Record<string, unknown> } })['_zod']?.['def'] ?? {}
+  );
+}
+
+function runInner(
+  innerSchema: ZodType,
+  ctx: FormProcessorContext,
+  field: FormField,
+  params: ProcessParams
+): void {
+  const innerDef = getDef(innerSchema);
+  const innerType =
+    typeof innerDef['type'] === 'string' ? (innerDef['type'] as string) : 'unknown';
+  const processor = ctx.processors[innerType];
+
+  if (processor) {
+    processor(innerSchema, ctx, field, params);
+    return;
+  }
+
+  processFallback(innerSchema, ctx, field, params);
+}
+
+export function processOptional(
+  schema: ZodType,
+  ctx: FormProcessorContext,
+  field: FormField,
+  params: ProcessParams
+): void {
+  const def = getDef(schema);
+  const innerType = def['innerType'] as ZodType | undefined;
+
+  field.required = false;
+  if (innerType) {
+    runInner(innerType, ctx, field, params);
+  }
+}
+
+export function processNullable(
+  schema: ZodType,
+  ctx: FormProcessorContext,
+  field: FormField,
+  params: ProcessParams
+): void {
+  const def = getDef(schema);
+  const innerType = def['innerType'] as ZodType | undefined;
+
+  field.required = false;
+  if (innerType) {
+    runInner(innerType, ctx, field, params);
+  }
+}
+
+export function processDefault(
+  schema: ZodType,
+  ctx: FormProcessorContext,
+  field: FormField,
+  params: ProcessParams
+): void {
+  const def = getDef(schema);
+  const innerType = def['innerType'] as ZodType | undefined;
+  const defaultValue = def['defaultValue'];
+
+  if (typeof defaultValue === 'function') {
+    field.defaultValue = (defaultValue as () => unknown)();
+  } else {
+    field.defaultValue = defaultValue;
+  }
+
+  if (innerType) {
+    runInner(innerType, ctx, field, params);
+  }
+}
+
+export function processReadonly(
+  schema: ZodType,
+  ctx: FormProcessorContext,
+  field: FormField,
+  params: ProcessParams
+): void {
+  const def = getDef(schema);
+  const innerType = def['innerType'] as ZodType | undefined;
+
+  field.readOnly = true;
+  if (innerType) {
+    runInner(innerType, ctx, field, params);
+  }
+}
+
+export function processPipe(
+  schema: ZodType,
+  ctx: FormProcessorContext,
+  field: FormField,
+  params: ProcessParams
+): void {
+  const def = getDef(schema);
+  const inputType = def['in'] as ZodType | undefined;
+
+  if (inputType) {
+    runInner(inputType, ctx, field, params);
+  }
+}
