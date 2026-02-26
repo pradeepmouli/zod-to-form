@@ -10,6 +10,7 @@
 ### Session 2026-02-26
 
 - Q: What is the default component library for the runtime `<ZodForm>` renderer? → A: Unstyled HTML primitives as default; shadcn/ui as optional preset map
+- Q: How should discriminated unions render in the form? → A: Select-then-reveal — render a select/radio for the discriminator field, then dynamically show only the fields for the selected variant
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -133,6 +134,7 @@ As a developer iterating on my data model, I want the CLI to watch for schema ch
 
 - What happens when a schema contains `z.lazy()` (recursive types)? The walker MUST detect cycles via a Seen map and stop recursion at a configurable depth limit, rendering an expandable section or a placeholder.
 - What happens when a schema contains `z.transform()` or `z.custom()`? The system MUST provide a sensible fallback (text input) and allow override via the form registry.
+- What happens when a schema contains a discriminated union (`z.discriminatedUnion()`)? The system MUST render a select/radio for the discriminator field, then dynamically show only the fields for the selected variant (select-then-reveal pattern).
 - What happens when a schema contains `z.intersection()`? The system MUST merge the shapes of both sides and render all fields.
 - What happens when a field has conflicting metadata (form registry vs global registry)? The form registry MUST take precedence, with global registry as fallback.
 - What happens when the CLI cannot resolve the schema export? The CLI MUST produce a clear error message identifying the file path and export name it attempted to load.
@@ -143,7 +145,7 @@ As a developer iterating on my data model, I want the CLI to watch for schema ch
 ### Functional Requirements
 
 - **FR-001**: The system MUST implement a recursive type tree walker that traverses Zod v4 schemas by reading `schema._zod.def` for structural data, `schema._zod.bag` for constraint data, and dispatching to type-specific processors by `def.type`
-- **FR-002**: The system MUST implement a processor registry with handlers for at minimum: string, number, boolean, date, enum, literal, file, object, array, union, tuple, nullable, optional, default, pipe, readonly, and template_literal Zod types. Processors for transform, custom, lazy, intersection, record, and other types MUST be provided with sensible defaults or configurable fallbacks.
+- **FR-002**: The system MUST implement a processor registry with handlers for at minimum: string, number, boolean, date, enum, literal, file, object, array, union (including discriminated unions), tuple, nullable, optional, default, pipe, readonly, and template_literal Zod types. Discriminated unions MUST render using a select-then-reveal pattern: a select/radio for the discriminator field with conditional rendering of variant-specific fields. Processors for transform, custom, lazy, intersection, record, and other types MUST be provided with sensible defaults or configurable fallbacks.
 - **FR-003**: Each processor MUST output a FormField descriptor containing: key (field path), component name, props, label, description, placeholder, required flag, default value, read-only flag, hidden flag, order, options (for enums/unions), children (for nested objects), array item template, and constraint data (min, max, minLength, maxLength, pattern, format)
 - **FR-004**: The system MUST read metadata from two sources in precedence order: (1) form-specific registry via `z.registry<FormMeta>()` for fieldType, order, hidden, gridColumn, render overrides; (2) global registry via `z.globalRegistry` / `.meta()` / `.describe()` for title, description, examples, deprecated
 - **FR-005**: The runtime renderer MUST provide a `<ZodForm>` component that accepts a Zod schema, optional form registry, typed onSubmit handler, optional default values, optional custom component map, optional className, and renders a complete validated form using React Hook Form with zodResolver
