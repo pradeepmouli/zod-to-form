@@ -11,6 +11,7 @@
 
 - Q: What is the default component library for the runtime `<ZodForm>` renderer? → A: Unstyled HTML primitives as default; shadcn/ui as optional preset map
 - Q: How should discriminated unions render in the form? → A: Select-then-reveal — render a select/radio for the discriminator field, then dynamically show only the fields for the selected variant
+- Q: Should `zodform/react` bundle react-hook-form as a direct dependency or declare it as a peer dependency? → A: Peer dependencies only — `react-hook-form` and `@hookform/resolvers` are peer deps that the user installs themselves
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -182,12 +183,12 @@ As a developer iterating on my data model, I want the CLI to watch for schema ch
 - **SC-007**: Types that are unrepresentable in JSON Schema (date, file) render correct form controls directly from Zod type information
 - **SC-008**: Custom form registry annotations override default rendering behavior in 100% of annotated fields
 - **SC-009**: Nested objects and arrays render with correct field paths and validation at any nesting depth
-- **SC-010**: The core package has zero runtime dependencies beyond the Zod peer dependency
+- **SC-010**: The core package (`zodform/core`) has zero runtime dependencies beyond the Zod peer dependency. The React package (`zodform/react`) declares `react`, `react-hook-form`, `@hookform/resolvers`, and `zod` as peer dependencies only — no direct runtime dependencies.
 
 ### Assumptions
 
 - Zod v4 (v4.0.0+) is used — the `_zod` internals API does not exist in v3
-- For runtime rendering: React 18+ and React Hook Form 7+ are available in the consumer's project
+- For runtime rendering: React 18+, React Hook Form 7+, and `@hookform/resolvers` are available in the consumer's project as peer dependencies (not bundled by zodform)
 - For build-time codegen: shadcn/ui form components are installed in the consumer's project
 - The Zod schema is exported as a named export from a TypeScript file
 - `schema._zod.def`, `schema._zod.bag`, `schema._zod.parent`, `schema._zod.optin/optout` remain stable across Zod v4.x releases (documented as the library substrate API)
