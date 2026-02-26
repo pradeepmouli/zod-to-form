@@ -1,50 +1,212 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+  Sync Impact Report
+  ==================
+  Version change: 0.0.0 (template) → 1.0.0
+  Bump rationale: MAJOR — initial ratification of all principles from template placeholders.
+
+  Modified Principles:
+    - [PRINCIPLE_1_NAME] → I. Zod-Native Architecture
+    - [PRINCIPLE_2_NAME] → II. Processor Registry Pattern
+    - [PRINCIPLE_3_NAME] → III. Dual-Mode Output
+    - [PRINCIPLE_4_NAME] → IV. Zero Unnecessary Dependencies
+    - [PRINCIPLE_5_NAME] → V. Test-First Development (NON-NEGOTIABLE)
+    - (added) → VI. Type Safety First
+    - (added) → VII. Accessibility by Default
+
+  Added Sections:
+    - Technology Stack (replaces [SECTION_2_NAME])
+    - Development Workflow (replaces [SECTION_3_NAME])
+
+  Removed Sections: None (all template placeholders replaced)
+
+  Templates requiring updates:
+    - .specify/templates/plan-template.md — ✅ No changes needed;
+      Constitution Check section is generic and will be filled per-feature.
+    - .specify/templates/spec-template.md — ✅ No changes needed;
+      User Stories and FR sections align with principles.
+    - .specify/templates/tasks-template.md — ✅ No changes needed;
+      Test-first ordering and phase structure align with Principle V.
+
+  Follow-up TODOs: None — all placeholders resolved.
+-->
+
+# zodforms Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Zod-Native Architecture
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+All schema introspection MUST use Zod v4's native internals as the single
+source of truth:
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+- Access structural data exclusively via `schema._zod.def`
+- Access constraints exclusively via `schema._zod.bag`
+- Navigate wrapper chains via `schema._zod.parent`
+- Detect optionality via `schema._zod.optin` / `schema._zod.optout`
+- Read metadata via `z.globalRegistry` (`.meta()`, `.describe()`)
+- Store form-specific annotations via `z.registry<FormMeta>()`
+- No intermediate representations (e.g., JSON Schema, ParsedSchema)
+  or parallel type systems are permitted
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**Rationale**: Zod v4 was explicitly designed as a "validation substrate"
+for library authors. Using its internals directly eliminates round-trip
+information loss and keeps zodforms forward-compatible with Zod core.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### II. Processor Registry Pattern
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+The core walker MUST mirror the architecture of Zod v4's `toJSONSchema()`:
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+- A `process(schema, ctx, params)` function dispatches to processors
+  by `def.type`
+- Processors are registered in a `Record<string, FormProcessor>` map
+- Each processor reads Zod internals and writes to a `FormField` descriptor
+- Adding support for a new Zod type MUST require only adding a new
+  processor — no walker modifications
+- Custom processors MUST be registrable by library consumers
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+**Rationale**: This pattern is battle-tested in Zod core, enables
+extensibility without forking, and ensures feature additions are isolated
+and independently testable.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### III. Dual-Mode Output
+
+The core walker MUST produce a `FormField[]` intermediate representation
+that is consumed by two independent output modes:
+
+- **Runtime renderer** (`zodform/react`): `FormField[]` → React elements
+  at runtime via a pluggable `ComponentMap`
+- **Build-time codegen** (`zodform/cli`): `FormField[]` → static `.tsx`
+  source code with no runtime dependency on zodforms
+
+Both modes MUST share the same core traversal and processor registry.
+The same schema MUST produce identical form behavior regardless of mode.
+
+**Rationale**: Runtime rendering enables rapid prototyping; build-time
+codegen enables full control and zero-dependency output. Sharing the
+core ensures consistency.
+
+### IV. Zero Unnecessary Dependencies
+
+Dependency discipline MUST be maintained across all packages:
+
+- `zodform/core` MUST have zero dependencies beyond `zod` as a peer
+- `zodform/react` MUST use only peer dependencies (`react`,
+  `react-hook-form`, `@hookform/resolvers`, `zod`, UI components)
+- `zodform/cli` MAY have direct dependencies for build tooling (`jiti`,
+  `commander`, `prettier`, `chokidar`)
+- Generated `.tsx` files MUST have zero runtime dependency on zodforms —
+  they import only from `react-hook-form`, `zod`, and the user's UI library
+- No dependency MUST be added without explicit justification
+
+**Rationale**: Minimal dependencies reduce supply-chain risk, bundle size,
+and version conflict surface. Generated code that stands alone is
+fundamentally more maintainable.
+
+### V. Test-First Development (NON-NEGOTIABLE)
+
+All feature development MUST follow the TDD red-green-refactor cycle:
+
+- Tests MUST be written before implementation code
+- Tests MUST fail (red) before implementation begins
+- Implementation MUST make tests pass (green) with minimal code
+- Refactoring MUST NOT change test outcomes
+- Every form processor MUST have dedicated tests covering:
+  constraint extraction, metadata resolution, and edge cases
+- Generated code MUST compile without errors (`tsc --noEmit`)
+- Runtime and codegen output MUST be tested for behavioral equivalence
+
+**Rationale**: The processor registry pattern creates many small,
+independent units that are ideal for TDD. Skipping tests risks
+silent regressions across 20+ Zod type handlers.
+
+### VI. Type Safety First
+
+Full TypeScript strict mode MUST be enabled across all packages:
+
+- `z.infer<typeof schema>` types MUST propagate through form state
+  to `onSubmit` handlers
+- Generated code MUST pass `tsc --noEmit` with zero errors
+- Public APIs MUST use generics to preserve schema type information
+- `any` and `as` casts are prohibited unless explicitly justified
+  with an inline comment explaining why
+
+**Rationale**: zodforms targets TypeScript-first Zod users. Type safety
+from schema definition through form submission is a core value
+proposition over loosely-typed alternatives.
+
+### VII. Accessibility by Default
+
+All rendered and generated form components MUST include:
+
+- `<label>` elements with `htmlFor` linking for every visible field
+- Error messages displayed via `<FormMessage>` or equivalent
+- `<FormDescription>` when description metadata is present
+- `aria-invalid` on inputs when validation errors exist
+- Proper `required` attributes derived from schema optionality
+- Logical tab order (schema declaration order, overridable via
+  `order` in form registry)
+- Keyboard-navigable controls for all interactive elements
+
+**Rationale**: Accessibility is not a feature to be added later.
+Forms are a primary interaction point; inaccessible forms exclude
+users and violate WCAG guidelines.
+
+## Technology Stack
+
+The following technology choices are mandatory for zodforms:
+
+- **Language**: TypeScript 5.x with strict mode
+- **Schema Library**: Zod v4 (v4.0.0+) — the `_zod` internals API
+- **Form State**: React Hook Form 7+ with `zodResolver`
+- **Default UI**: shadcn/ui form components (pluggable via ComponentMap)
+- **Runtime**: React 18+
+- **Build Tool**: Vite for development, TypeScript compiler for output
+- **Testing**: Vitest for unit/integration tests
+- **Package Manager**: pnpm with workspaces
+- **Linting**: oxlint
+- **Formatting**: oxfmt
+- **Monorepo**: pnpm workspaces (packages/core, packages/react, packages/cli)
+
+Additions to the stack MUST be justified against Principle IV
+(Zero Unnecessary Dependencies).
+
+## Development Workflow
+
+All contributions MUST follow this workflow:
+
+1. **Specification**: Features start with a spec-kit specification
+   defining user stories and acceptance criteria
+2. **Constitution Check**: Verify alignment with all seven principles
+   before implementation begins
+3. **Test-First**: Write failing tests for the feature (Principle V)
+4. **Implementation**: Write minimal code to pass tests
+5. **Type Check**: Run `pnpm run type-check` — zero errors required
+6. **Lint**: Run `pnpm run lint` — zero warnings required
+7. **Format**: Run `pnpm run format` — consistent formatting required
+8. **Accessibility Audit**: Verify rendered output meets Principle VII
+9. **Commit**: Follow conventional commit format
+
+Quality gates that MUST pass before merge:
+
+- All tests pass (`pnpm test`)
+- Type checking passes (`pnpm run type-check`)
+- Linting passes (`pnpm run lint`)
+- Generated code compiles (`tsc --noEmit` on output)
+- No new dependencies without justification (Principle IV)
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes all other development practices for the
+zodforms project. All pull requests and code reviews MUST verify
+compliance with the seven core principles.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+- **Amendments**: Require documented rationale, review, and a migration
+  plan for any affected code or workflows
+- **Versioning**: Constitution follows semantic versioning (MAJOR for
+  principle removals/redefinitions, MINOR for additions, PATCH for
+  clarifications)
+- **Complexity Justification**: Any deviation from principles MUST be
+  documented in the relevant spec's Complexity Tracking section
+- **Guidance**: Use `AGENTS.md` for agent-specific development guidance
+
+**Version**: 1.0.0 | **Ratified**: 2026-02-26 | **Last Amended**: 2026-02-26
