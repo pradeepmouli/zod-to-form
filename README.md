@@ -12,7 +12,7 @@ Schema-Driven Form Generation for Zod v4 - walks Zod internal type tree using pr
 ### Installation
 
 ```bash
-git clone http://local_proxy@127.0.0.1:37618/git/pradeepmouli/zodforms
+git clone https://github.com/<org>/zodforms.git
 cd zodforms
 pnpm install
 ```
