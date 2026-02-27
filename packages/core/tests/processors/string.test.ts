@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { processString, processTemplateLiteral } from '../../src/processors/string.js';
 import { createBaseField } from '../../src/utils.js';
 import type { FormProcessorContext } from '../../src/types.js';
+import * as processorExports from '../../src/processors/index.js';
 
 function createContext(): FormProcessorContext {
   return {
@@ -116,5 +117,16 @@ describe('processTemplateLiteral', () => {
     expect(field.component).toBe('Input');
     expect(field.props['type']).toBe('text');
     expect(field.zodType).toBe('template_literal');
+  });
+});
+
+describe('processors entrypoint contract', () => {
+  it('exports callable built-in processors', () => {
+    expect(typeof processorExports.processString).toBe('function');
+    expect(typeof processorExports.processNumber).toBe('function');
+    expect(typeof processorExports.processBoolean).toBe('function');
+    expect(typeof processorExports.processEnum).toBe('function');
+    expect(typeof processorExports.processObject).toBe('function');
+    expect(typeof processorExports.processArray).toBe('function');
   });
 });

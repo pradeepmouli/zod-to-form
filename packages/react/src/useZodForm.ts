@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { walkSchema } from '@zod-to-form/core';
 import { useForm } from 'react-hook-form';
@@ -9,6 +9,8 @@ type UseZodFormOptions<TSchema extends ZodObject> = {
   defaultValues?: Partial<TSchema['_zod']['output']>;
   formRegistry?: ZodFormRegistry;
   processors?: Record<string, FormProcessor>;
+  mode?: 'onSubmit' | 'onChange' | 'onBlur';
+  onValueChange?: (values: TSchema['_zod']['output']) => void;
 };
 
 function normalizeFileLists(value: unknown): unknown {
@@ -75,8 +77,30 @@ export function useZodForm<TSchema extends ZodObject>(
         context,
         resolverOptions as Parameters<typeof baseResolver>[2]
       )) as any,
-    defaultValues: options?.defaultValues as any
+    defaultValues: options?.defaultValues as any,
+    mode: options?.mode
   });
+
+  useEffect(() => {
+    if (!options?.onValueChange) {
+      return undefined;
+    }
+
+    const subscription = form.watch((values, info) => {
+      if (!info?.name) {
+        return;
+      }
+
+      const parsed = schema.safeParse(normalizeFileLists(values));
+      if (parsed.success) {
+        options.onValueChange?.(parsed.data as TSchema['_zod']['output']);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [form, options?.onValueChange, schema]);
 
   return {
     form,

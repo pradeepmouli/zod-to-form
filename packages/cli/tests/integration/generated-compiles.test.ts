@@ -2,11 +2,40 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
-import { describe, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { FormField } from '@zod-to-form/core';
 import { generateFormComponent } from '../../src/codegen.js';
 
 describe('generated component compilation', () => {
+  it('falls back to default input rendering when component config is not provided', async () => {
+    const fields: FormField[] = [
+      {
+        key: 'kind',
+        component: 'cross-ref',
+        props: {},
+        label: 'Kind',
+        required: true,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'string'
+      }
+    ];
+
+    const output = await generateFormComponent(fields, {
+      schemaPath: '/tmp/schema.ts',
+      exportName: 'entitySchema',
+      outputPath: '/tmp/EntityForm.tsx',
+      componentName: 'EntityForm',
+      mode: 'submit',
+      ui: 'unstyled',
+      serverAction: false
+    });
+
+    expect(output).toContain(`<input id="kind" type="text" {...register('kind')} />`);
+    expect(output).not.toContain(`from '@app/components'`);
+  });
+
   it('passes tsc --noEmit in strict mode', async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), 'zodform-generated-compile-'));
     const outputPath = path.join(tempDir, 'UserForm.tsx');
@@ -33,6 +62,7 @@ describe('generated component compilation', () => {
       exportName: 'userSchema',
       outputPath,
       componentName: 'UserForm',
+      mode: 'submit',
       ui: 'unstyled',
       serverAction: false
     });

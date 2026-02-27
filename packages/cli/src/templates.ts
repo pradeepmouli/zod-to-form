@@ -3,15 +3,21 @@ import type { FormField } from '@zod-to-form/core';
 export function getFileHeader(
   schemaImportPath: string,
   exportName: string,
-  hasArrays = false
+  hasArrays = false,
+  mode: 'submit' | 'auto-save' = 'submit',
+  componentImportLine?: string
 ): string {
   const rhfImports = hasArrays
     ? `import { useForm, useFieldArray } from 'react-hook-form';`
     : `import { useForm } from 'react-hook-form';`;
 
+  const reactImports = mode === 'auto-save' ? `import { useEffect } from 'react';` : '';
+
   return [
+    ...(reactImports ? [reactImports] : []),
     rhfImports,
     `import { zodResolver } from '@hookform/resolvers/zod';`,
+    ...(componentImportLine ? [componentImportLine] : []),
     `import { ${exportName} } from '${schemaImportPath}';`,
     ``,
     `type FormData = (typeof ${exportName})['_zod']['output'];`

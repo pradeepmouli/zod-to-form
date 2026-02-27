@@ -70,6 +70,8 @@ export interface FormMeta {
   hidden?: boolean;
   /** CSS grid column hint */
   gridColumn?: string;
+  /** Arbitrary field metadata props forwarded by processors */
+  props?: Record<string, unknown>;
   /** Custom render function (runtime only, ignored in codegen) */
   render?: (field: FormField, props: unknown) => unknown;
 }

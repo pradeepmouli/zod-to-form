@@ -121,10 +121,7 @@ export function regexToMask(pattern: string): string | null {
   return result.length > 0 ? result : null;
 }
 
-function parseQuantifier(
-  p: string,
-  i: number
-): { value: number; consumed: number } | null {
+function parseQuantifier(p: string, i: number): { value: number; consumed: number } | null {
   if (p[i] !== '{') return null;
   const end = p.indexOf('}', i + 1);
   if (end === -1) return null;
@@ -139,12 +136,7 @@ function parseQuantifier(
 function charClassToMaskChar(cls: string): string | null {
   if (cls === '0-9') return '9';
   if (cls === 'A-Z' || cls === 'a-z' || cls === 'A-Za-z' || cls === 'a-zA-Z') return 'a';
-  if (
-    cls === 'A-Za-z0-9' ||
-    cls === 'a-zA-Z0-9' ||
-    cls === '0-9A-Za-z' ||
-    cls === '0-9a-zA-Z'
-  )
+  if (cls === 'A-Za-z0-9' || cls === 'a-zA-Z0-9' || cls === '0-9A-Za-z' || cls === '0-9a-zA-Z')
     return '*';
   return null;
 }

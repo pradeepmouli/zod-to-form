@@ -9,6 +9,7 @@ function makeConfig(overrides: Partial<CodegenConfig> = {}): CodegenConfig {
     exportName: 'userSchema',
     outputPath: path.resolve('/tmp/UserForm.tsx'),
     componentName: 'UserForm',
+    mode: 'submit',
     ui: 'shadcn',
     serverAction: true,
     ...overrides

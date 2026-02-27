@@ -1,9 +1,30 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import { Component, type ReactNode } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { FieldRenderer } from '../src/FieldRenderer.js';
 import { defaultComponentMap } from '../src/components/index.js';
 import type { FormField } from '@zod-to-form/core';
+import type { RuntimeComponentConfig } from '../src/FieldRenderer.js';
+
+class TestErrorBoundary extends Component<{ children: ReactNode }, { message: string | null }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { message: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { message: error.message };
+  }
+
+  render() {
+    if (this.state.message) {
+      return <div data-testid="runtime-error">{this.state.message}</div>;
+    }
+
+    return this.props.children;
+  }
+}
 
 function renderWithForm(field: FormField): void {
   function TestHarness() {
@@ -125,5 +146,150 @@ describe('FieldRenderer', () => {
 
     expect(screen.getByLabelText('Country')).toBeInTheDocument();
     expect(document.querySelector('datalist')).toBeInTheDocument();
+  });
+
+  it('resolves configured runtime component and caches render resolver across fields', async () => {
+    const customInput = (props: Record<string, unknown>) => {
+      return <input data-testid="runtime-input" {...props} />;
+    };
+    const renderResolver = vi.fn(async () => customInput);
+
+    function TestHarness() {
+      const form = useForm({ defaultValues: { name: '', alias: '' } });
+      const componentConfig: RuntimeComponentConfig = {
+        components: '@unused/components',
+        fieldTypes: {
+          Input: {
+            component: 'RuntimeInput',
+            render: renderResolver
+          }
+        }
+      };
+
+      return (
+        <FormProvider {...form}>
+          <FieldRenderer
+            field={{
+              key: 'name',
+              component: 'Input',
+              props: { type: 'text' },
+              label: 'Name',
+              required: true,
+              readOnly: false,
+              hidden: false,
+              constraints: {},
+              zodType: 'string'
+            }}
+            components={defaultComponentMap}
+            componentConfig={componentConfig}
+          />
+          <FieldRenderer
+            field={{
+              key: 'alias',
+              component: 'Input',
+              props: { type: 'text' },
+              label: 'Alias',
+              required: false,
+              readOnly: false,
+              hidden: false,
+              constraints: {},
+              zodType: 'string'
+            }}
+            components={defaultComponentMap}
+            componentConfig={componentConfig}
+          />
+        </FormProvider>
+      );
+    }
+
+    render(<TestHarness />);
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('runtime-input')).toHaveLength(2);
+    });
+    expect(renderResolver).toHaveBeenCalledTimes(1);
+  });
+
+  it('throws explicit runtime diagnostic for invalid component module resolution', async () => {
+    const field: FormField = {
+      key: 'kind',
+      component: 'Input',
+      props: { type: 'text' },
+      label: 'Kind',
+      required: true,
+      readOnly: false,
+      hidden: false,
+      constraints: {},
+      zodType: 'string'
+    };
+
+    function InvalidModuleHarness() {
+      const form = useForm({ defaultValues: { kind: '' } });
+      return (
+        <TestErrorBoundary>
+          <FormProvider {...form}>
+            <FieldRenderer
+              field={field}
+              components={defaultComponentMap}
+              componentConfig={{
+                components: './components/index.js',
+                fieldTypes: {
+                  Input: { component: 'MissingComponent' }
+                }
+              }}
+            />
+          </FormProvider>
+        </TestErrorBoundary>
+      );
+    }
+
+    render(<InvalidModuleHarness />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('runtime-error')).toHaveTextContent('INVALID_RUNTIME_COMPONENT');
+    });
+  });
+
+  it('throws explicit runtime diagnostic for invalid render override result', async () => {
+    const field: FormField = {
+      key: 'kind',
+      component: 'Input',
+      props: { type: 'text' },
+      label: 'Kind',
+      required: true,
+      readOnly: false,
+      hidden: false,
+      constraints: {},
+      zodType: 'string'
+    };
+
+    function InvalidRenderHarness() {
+      const form = useForm({ defaultValues: { kind: '' } });
+      return (
+        <TestErrorBoundary>
+          <FormProvider {...form}>
+            <FieldRenderer
+              field={field}
+              components={defaultComponentMap}
+              componentConfig={{
+                components: '@unused/components',
+                fieldTypes: {
+                  Input: {
+                    component: 'RuntimeInputInvalid',
+                    render: async () => 'not-a-component'
+                  }
+                }
+              }}
+            />
+          </FormProvider>
+        </TestErrorBoundary>
+      );
+    }
+
+    render(<InvalidRenderHarness />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('runtime-error')).toHaveTextContent('INVALID_COMPONENT_ENTRY');
+    });
   });
 });

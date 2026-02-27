@@ -132,4 +132,67 @@ describe('ZodForm', () => {
       );
     });
   });
+
+  it('preserves submit-only behavior when onValueChange is not provided', async () => {
+    const schema = z.object({
+      name: z.string().min(1)
+    });
+    const onSubmit = vi.fn();
+
+    render(
+      <ZodForm schema={schema} onSubmit={onSubmit}>
+        <button type="submit">Save</button>
+      </ZodForm>
+    );
+
+    fireEvent.change(screen.getByLabelText('Name'), {
+      target: { value: 'Alice' }
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Alice' }),
+        expect.anything()
+      );
+    });
+  });
+
+  it('supports onSubmit and onValueChange with separate triggers', async () => {
+    const schema = z.object({
+      name: z.string().min(2)
+    });
+
+    const onSubmit = vi.fn();
+    const onValueChange = vi.fn();
+
+    render(
+      <ZodForm schema={schema} mode="onChange" onSubmit={onSubmit} onValueChange={onValueChange}>
+        <button type="submit">Save</button>
+      </ZodForm>
+    );
+
+    fireEvent.change(screen.getByLabelText('Name'), {
+      target: { value: 'Al' }
+    });
+
+    await waitFor(() => {
+      expect(onValueChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Al'
+        })
+      );
+    });
+
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Al' }),
+        expect.anything()
+      );
+    });
+  });
 });

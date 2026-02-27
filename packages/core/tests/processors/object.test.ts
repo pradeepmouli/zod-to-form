@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { processObject, processIntersection } from '../../src/processors/object.js';
+import { processCrossRef } from '../../src/processors/cross-ref.js';
 import { createBaseField } from '../../src/utils.js';
 import type { FormField, FormProcessorContext } from '../../src/types.js';
 
@@ -82,5 +83,32 @@ describe('processIntersection', () => {
     expect(field.children).toBeDefined();
     expect(field.children!.map((c) => c.key)).toContain('merged.name');
     expect(field.children!.map((c) => c.key)).toContain('merged.age');
+  });
+});
+
+describe('processCrossRef', () => {
+  it('emits cross-ref component token and forwards refType from metadata', () => {
+    const schema = z.string();
+    const field = createBaseField('superType', 'string');
+
+    const formRegistry = z.registry<{ fieldType?: string; props?: Record<string, unknown> }>();
+    formRegistry.add(schema, {
+      fieldType: 'cross-ref',
+      props: { refType: 'Data' }
+    });
+
+    const ctx: FormProcessorContext = {
+      processors: {},
+      formRegistry,
+      path: ['superType'],
+      seen: new WeakSet(),
+      maxDepth: 5,
+      currentDepth: 0
+    };
+
+    processCrossRef(schema, ctx, field, {});
+
+    expect(field.component).toBe('cross-ref');
+    expect(field.props['refType']).toBe('Data');
   });
 });

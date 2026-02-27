@@ -1,5 +1,58 @@
 # Examples
 
+## Unified Component Config (CLI + Runtime)
+
+Use one shared config file for both generated output and runtime rendering.
+
+```typescript
+// component-config.ts
+import type { ZodToFormComponentConfig } from '@zod-to-form/cli';
+
+type RuntimeComponents = {
+  Input: unknown;
+  TypeSelector: unknown;
+};
+
+const componentConfig: ZodToFormComponentConfig<RuntimeComponents> = {
+  components: '@/components/form-fields',
+  fieldTypes: {
+    Input: { component: 'Input' },
+    'cross-ref': { component: 'TypeSelector' }
+  },
+  fields: {
+    'DataForm.superType': {
+      fieldType: 'cross-ref',
+      props: { refType: 'Data' }
+    }
+  }
+};
+
+export default componentConfig;
+```
+
+CLI usage:
+
+```bash
+pnpm zodform generate \
+  --schema ./src/schema.ts \
+  --export dataSchema \
+  --component-config ./component-config.ts \
+  --mode auto-save
+```
+
+Runtime usage:
+
+```tsx
+import componentConfig from './component-config';
+import { ZodForm } from '@zod-to-form/react';
+
+<ZodForm
+  schema={dataSchema}
+  componentConfig={componentConfig}
+  onValueChange={(value) => saveDraft(value)}
+/>
+```
+
 <!-- TEMPLATE: Update these examples to match your actual packages and APIs -->\nThis directory contains examples demonstrating how to use the packages in this monorepo.\n\n## String Utilities\n\n<!-- TEMPLATE: @company is a placeholder - update with your package scope -->\n```typescript\nimport { capitalize, camelCase, kebabCase, truncate } from '@company/utils';
 
 // Capitalize

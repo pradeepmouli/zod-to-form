@@ -1,5 +1,6 @@
 import path from 'node:path';
 import type { FormField } from '@zod-to-form/core';
+import type { ComponentEntry, FieldOverride, ZodToFormComponentConfig } from './index.js';
 import { getFileHeader, renderField } from './templates.js';
 
 export type CodegenConfig = {
@@ -7,9 +8,110 @@ export type CodegenConfig = {
   exportName: string;
   outputPath: string;
   componentName: string;
+  mode: 'submit' | 'auto-save';
+  componentConfig?: ZodToFormComponentConfig<Record<string, unknown>>;
   ui: 'shadcn' | 'unstyled';
   serverAction: boolean;
 };
+
+function renderLiteralProp(value: unknown): string | undefined {
+  if (typeof value === 'string') {
+    return `"${value.replace(/"/g, '\\"')}"`;
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return `{${String(value)}}`;
+  }
+  return undefined;
+}
+
+function renderOverrideProps(props: Record<string, unknown> | undefined): string {
+  if (!props) {
+    return '';
+  }
+
+  const attrs = Object.entries(props)
+    .map(([key, value]) => {
+      const rendered = renderLiteralProp(value);
+      return rendered ? ` ${key}=${rendered}` : '';
+    })
+    .join('');
+
+  return attrs;
+}
+
+function getMappedFieldComponent(
+  field: FormField,
+  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined
+): {
+  componentName?: string;
+  override?: FieldOverride;
+} {
+  const mapping = resolveFieldMapping(field.key, field.component, componentConfig);
+
+  if (!mapping.entry) {
+    return {};
+  }
+
+  return {
+    componentName: mapping.entry.component,
+    override: mapping.override
+  };
+}
+
+function collectMappedComponentNames(
+  fields: FormField[],
+  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined,
+  out = new Set<string>()
+): Set<string> {
+  for (const field of fields) {
+    const mapping = getMappedFieldComponent(field, componentConfig);
+    if (mapping.componentName) {
+      out.add(mapping.componentName);
+    }
+
+    if (field.children?.length) {
+      collectMappedComponentNames(field.children, componentConfig, out);
+    }
+
+    if (field.arrayItem) {
+      collectMappedComponentNames([field.arrayItem], componentConfig, out);
+    }
+  }
+
+  return out;
+}
+
+export function resolveFieldMapping<TComponents extends Record<string, unknown>>(
+  fieldKey: string,
+  fieldType: string | undefined,
+  componentConfig: ZodToFormComponentConfig<TComponents> | undefined
+): {
+  entry?: ComponentEntry<TComponents>;
+  override?: FieldOverride;
+  source: 'fields' | 'fieldTypes' | 'none';
+} {
+  if (!componentConfig) {
+    return { source: 'none' };
+  }
+
+  const override = componentConfig.fields?.[fieldKey];
+  if (override) {
+    return {
+      entry: componentConfig.fieldTypes[override.fieldType],
+      override,
+      source: 'fields'
+    };
+  }
+
+  if (fieldType && componentConfig.fieldTypes[fieldType]) {
+    return {
+      entry: componentConfig.fieldTypes[fieldType],
+      source: 'fieldTypes'
+    };
+  }
+
+  return { source: 'none' };
+}
 
 function getSchemaImportPath(config: CodegenConfig): string {
   const relative = path
@@ -42,9 +144,13 @@ function collectArrayFields(fields: FormField[]): FormField[] {
   return result;
 }
 
-function renderNestedBlock(field: FormField, indent: string): string {
+function renderNestedBlock(
+  field: FormField,
+  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined,
+  indent: string
+): string {
   const children = (field.children ?? [])
-    .map((child) => renderFieldBlock(child, `${indent}  `))
+    .map((child) => renderFieldBlockWithConfig(child, componentConfig, `${indent}  `))
     .join('\n');
 
   return [
@@ -58,11 +164,18 @@ function renderNestedBlock(field: FormField, indent: string): string {
   ].join('\n');
 }
 
-function renderArrayBlock(field: FormField, indent: string): string {
+function renderArrayBlock(
+  field: FormField,
+  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined,
+  indent: string
+): string {
   const varName = toVarName(field.key);
   const itemField = field.arrayItem;
+  const mappedItem = itemField ? getMappedFieldComponent(itemField, componentConfig) : {};
   const itemJsx = itemField
-    ? renderField({ ...itemField, key: `\${${varName}Fields[index].id}` })
+    ? mappedItem.componentName
+      ? `<${mappedItem.componentName} {...register('${field.key}.0')}${renderOverrideProps(mappedItem.override?.props)} />`
+      : renderField({ ...itemField, key: `\${${varName}Fields[index].id}` })
     : `<input {...register(\`${field.key}.\${index}\`)} />`;
 
   return [
@@ -83,7 +196,13 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function renderFieldBlock(field: FormField, indent = '      '): string {
+function renderFieldBlockWithConfig(
+  field: FormField,
+  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined,
+  indent = '      '
+): string {
+  const mapping = getMappedFieldComponent(field, componentConfig);
+
   if (field.hasCustomRender) {
     const styleAttr = field.gridColumn ? ` style={{ gridColumn: '${field.gridColumn}' }}` : '';
     return [
@@ -95,11 +214,23 @@ function renderFieldBlock(field: FormField, indent = '      '): string {
   }
 
   if (field.component === 'Fieldset') {
-    return renderNestedBlock(field, indent);
+    return renderNestedBlock(field, componentConfig, indent);
   }
 
   if (field.component === 'ArrayField') {
-    return renderArrayBlock(field, indent);
+    return renderArrayBlock(field, componentConfig, indent);
+  }
+
+  if (mapping.componentName) {
+    const styleAttr = field.gridColumn ? ` style={{ gridColumn: '${field.gridColumn}' }}` : '';
+    const overrideProps = renderOverrideProps(mapping.override?.props);
+
+    return [
+      `${indent}<div${styleAttr}>`,
+      `${indent}  <label htmlFor="${field.key}">${field.label}</label>`,
+      `${indent}  <${mapping.componentName} id="${field.key}" {...register('${field.key}')}${overrideProps} />`,
+      `${indent}</div>`
+    ].join('\n');
   }
 
   const styleAttr = field.gridColumn ? ` style={{ gridColumn: '${field.gridColumn}' }}` : '';
@@ -120,8 +251,23 @@ export async function generateFormComponent(
   const arrayFields = collectArrayFields(fields);
   const hasArrays = arrayFields.length > 0;
 
-  const header = getFileHeader(schemaImportPath, config.exportName, hasArrays);
-  const body = fields.map((field) => renderFieldBlock(field)).join('\n');
+  const mappedComponents = collectMappedComponentNames(fields, config.componentConfig);
+
+  const componentImportLine =
+    config.componentConfig && mappedComponents.size > 0
+      ? `import { ${Array.from(mappedComponents).sort().join(', ')} } from '${config.componentConfig.components}';`
+      : undefined;
+
+  const header = getFileHeader(
+    schemaImportPath,
+    config.exportName,
+    hasArrays,
+    config.mode,
+    componentImportLine
+  );
+  const body = fields
+    .map((field) => renderFieldBlockWithConfig(field, config.componentConfig, '      '))
+    .join('\n');
 
   // useFieldArray hook declarations
   const arrayHooks = arrayFields
@@ -131,25 +277,59 @@ export async function generateFormComponent(
     })
     .join('\n');
 
-  const useFormDestructure = hasArrays
-    ? `{ register, handleSubmit, control }`
-    : `{ register, handleSubmit }`;
+  const useFormDestructure =
+    config.mode === 'auto-save'
+      ? hasArrays
+        ? `{ register, watch, control }`
+        : `{ register, watch }`
+      : hasArrays
+        ? `{ register, handleSubmit, control }`
+        : `{ register, handleSubmit }`;
+
+  const propsLines =
+    config.mode === 'auto-save'
+      ? [`  onValueChange?: (data: FormData) => void;`, `  onSubmit?: (data: FormData) => void;`]
+      : [`  onSubmit: (data: FormData) => void;`];
+
+  const autoSaveEffect =
+    config.mode === 'auto-save'
+      ? [
+          `  useEffect(() => {`,
+          `    const subscription = watch((values) => {`,
+          `      props.onValueChange?.(values as FormData);`,
+          `    });`,
+          ``,
+          `    return () => subscription.unsubscribe();`,
+          `  }, [watch, props.onValueChange]);`,
+          ``
+        ]
+      : [];
+
+  const formOpen =
+    config.mode === 'auto-save'
+      ? `    <form>`
+      : `    <form onSubmit={handleSubmit(props.onSubmit)}>`;
+
+  const formTail =
+    config.mode === 'auto-save' ? [] : [`      <button type="submit">Submit</button>`];
 
   return [
     header,
     '',
     `export function ${config.componentName}(props: {`,
-    `  onSubmit: (data: FormData) => void;`,
+    ...propsLines,
     `}) {`,
     `  const ${useFormDestructure} = useForm<FormData>({`,
-    `    resolver: zodResolver(${config.exportName})`,
+    `    resolver: zodResolver(${config.exportName}),`,
+    ...(config.mode === 'auto-save' ? [`    mode: 'onChange'`] : []),
     `  });`,
     ...(hasArrays ? [arrayHooks] : []),
+    ...autoSaveEffect,
     '',
     `  return (`,
-    `    <form onSubmit={handleSubmit(props.onSubmit)}>`,
+    formOpen,
     body,
-    `      <button type="submit">Submit</button>`,
+    ...formTail,
     `    </form>`,
     `  );`,
     `}`

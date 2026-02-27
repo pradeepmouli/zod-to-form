@@ -169,6 +169,59 @@ Renders a select for `type`, then reveals only the fields for the selected varia
 
 The core walker dispatches by `def.type` to a processor registry. Each processor reads `schema._zod.def` for structure and `schema._zod.bag` for constraint data, writing into a `FormField` descriptor. The same `FormField[]` tree drives both the runtime renderer and the CLI codegen — ensuring identical behavior (SC-003).
 
+## Custom Processors
+
+You can import built-in processors from the public entrypoint and override specific schema types.
+
+```typescript
+import { z } from 'zod';
+import { walkSchema } from '@zod-to-form/core';
+import { processString } from '@zod-to-form/core/processors';
+import type { FormProcessor } from '@zod-to-form/core';
+
+const uppercaseStringProcessor: FormProcessor = (schema, ctx, field, params) => {
+  processString(schema, ctx, field, params);
+  field.component = 'Input';
+  field.props['textTransform'] = 'uppercase';
+};
+
+const schema = z.object({
+  name: z.string().min(1)
+});
+
+const fields = walkSchema(schema, {
+  processors: {
+    string: uppercaseStringProcessor
+  }
+});
+```
+
+You can also annotate specific fields through a `ZodFormRegistry` and combine that metadata with processors.
+
+```typescript
+import { z } from 'zod';
+import { walkSchema, type FormMeta } from '@zod-to-form/core';
+
+const formRegistry = z.registry<FormMeta>();
+
+const schema = z.object({
+  title: z.string(),
+  superType: z.string()
+});
+
+formRegistry.add(schema.shape.title, {
+  fieldType: 'textarea',
+  order: 1
+});
+
+formRegistry.add(schema.shape.superType, {
+  fieldType: 'cross-ref',
+  props: { refType: 'Data' }
+});
+
+const fields = walkSchema(schema, { formRegistry });
+```
+
 ## Development
 
 ```bash

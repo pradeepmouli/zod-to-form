@@ -41,4 +41,28 @@ describe('metadata resolution', () => {
     expect(roleField).toMatchObject({ label: 'Account Role', order: 1 });
     expect(secretField?.hidden).toBe(true);
   });
+
+  it('prefers custom processor output over overlapping FormMeta fieldType', () => {
+    const formRegistry = z.registry<{
+      fieldType?: string;
+    }>();
+
+    const name = z.string();
+    formRegistry.add(name, { fieldType: 'textarea' });
+
+    const schema = z.object({ name });
+    const fields = walkSchema(schema, {
+      formRegistry,
+      processors: {
+        string: (_schema, _ctx, field) => {
+          field.component = 'CustomInput';
+          field.props['source'] = 'processor';
+        }
+      }
+    });
+
+    const field = fields.find((entry) => entry.key === 'name');
+    expect(field?.component).toBe('CustomInput');
+    expect(field?.props['source']).toBe('processor');
+  });
 });

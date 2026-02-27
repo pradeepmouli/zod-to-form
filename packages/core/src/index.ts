@@ -17,3 +17,4 @@ export { inferLabel, joinPath, createBaseField } from './utils.js';
 
 export { walkSchema } from './walker.js';
 export { builtinProcessors, createProcessors } from './registry.js';
+export * as processors from './processors/index.js';

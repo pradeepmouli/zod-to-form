@@ -7,15 +7,126 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { Command } from 'commander';
+import type { Paths as TypeFestPaths } from 'type-fest';
 import { walkSchema } from '@zod-to-form/core';
 import { generateFormComponent } from './codegen.js';
-import { loadSchema } from './loader.js';
+import { loadComponentConfig, loadSchema } from './loader.js';
 import { generateServerAction } from './server-action.js';
 import { startWatch } from './watcher.js';
+
+export type ComponentEntry<T extends Record<string, unknown> = Record<string, unknown>> = {
+  component: keyof T & string;
+  render?: () => Promise<unknown>;
+};
+
+type NormalizeArrayPath<TPath extends string> =
+  TPath extends `${infer Prefix}[${number}]${infer Suffix}`
+    ? NormalizeArrayPath<`${Prefix}[]${Suffix}`>
+    : TPath extends `${infer Prefix}.${number}.${infer Suffix}`
+      ? NormalizeArrayPath<`${Prefix}[].${Suffix}`>
+      : TPath extends `${infer Prefix}.${number}`
+        ? NormalizeArrayPath<`${Prefix}[]`>
+        : TPath;
+
+export type FieldPath<TValues extends Record<string, unknown>> =
+  TypeFestPaths<TValues> extends infer TPath
+    ? TPath extends string
+      ? TPath | NormalizeArrayPath<TPath>
+      : never
+    : never;
+
+export type FieldOverride = {
+  fieldType: string;
+  props?: Record<string, unknown>;
+};
+
+export type ZodToFormComponentConfig<
+  T extends Record<string, unknown> = Record<string, unknown>,
+  TFieldPath extends string = string
+> = {
+  components: string;
+  fieldTypes: Record<string, ComponentEntry<T>>;
+  fields?: Partial<Record<TFieldPath, FieldOverride>>;
+};
+
+export function defineComponentConfig<
+  TComponents extends Record<string, unknown>,
+  TValues extends Record<string, unknown>
+>(
+  config: ZodToFormComponentConfig<TComponents, FieldPath<TValues>>
+): ZodToFormComponentConfig<TComponents, FieldPath<TValues>> {
+  return config;
+}
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+export function validateComponentConfig(
+  value: unknown,
+  source = 'component-config'
+): ZodToFormComponentConfig<Record<string, unknown>> {
+  if (!isObjectRecord(value)) {
+    throw new Error(`${source} must be an object.`);
+  }
+
+  const components = value['components'];
+  if (typeof components !== 'string' || components.trim().length === 0) {
+    throw new Error(`${source}.components must be a non-empty string.`);
+  }
+
+  const fieldTypes = value['fieldTypes'];
+  if (!isObjectRecord(fieldTypes)) {
+    throw new Error(`${source}.fieldTypes must be an object.`);
+  }
+
+  for (const [fieldType, entryValue] of Object.entries(fieldTypes)) {
+    if (!isObjectRecord(entryValue)) {
+      throw new Error(`${source}.fieldTypes.${fieldType} must be an object.`);
+    }
+
+    const component = entryValue['component'];
+    if (typeof component !== 'string' || component.trim().length === 0) {
+      throw new Error(`${source}.fieldTypes.${fieldType}.component must be a non-empty string.`);
+    }
+
+    const render = entryValue['render'];
+    if (render !== undefined && typeof render !== 'function') {
+      throw new Error(`${source}.fieldTypes.${fieldType}.render must be a function when provided.`);
+    }
+  }
+
+  const fields = value['fields'];
+  if (fields !== undefined) {
+    if (!isObjectRecord(fields)) {
+      throw new Error(`${source}.fields must be an object when provided.`);
+    }
+
+    for (const [fieldPath, overrideValue] of Object.entries(fields)) {
+      if (!isObjectRecord(overrideValue)) {
+        throw new Error(`${source}.fields.${fieldPath} must be an object.`);
+      }
+
+      const fieldType = overrideValue['fieldType'];
+      if (typeof fieldType !== 'string' || fieldType.trim().length === 0) {
+        throw new Error(`${source}.fields.${fieldPath}.fieldType must be a non-empty string.`);
+      }
+
+      const props = overrideValue['props'];
+      if (props !== undefined && !isObjectRecord(props)) {
+        throw new Error(`${source}.fields.${fieldPath}.props must be an object when provided.`);
+      }
+    }
+  }
+
+  return value as ZodToFormComponentConfig<Record<string, unknown>>;
+}
 
 type GenerateOptions = {
   schema: string;
   export: string;
+  mode?: 'submit' | 'auto-save';
+  componentConfig?: string;
   out?: string;
   name?: string;
   ui?: 'shadcn' | 'unstyled';
@@ -77,12 +188,17 @@ export async function runGenerate(options: GenerateOptions): Promise<{
   const outputPath = resolveOutputPath(cwd, options.out, componentName);
   const schema = await loadSchema(schemaPath, exportName);
   const fields = walkSchema(schema as never);
+  const componentConfig = options.componentConfig
+    ? await loadComponentConfig(path.resolve(cwd, options.componentConfig))
+    : undefined;
 
   const config = {
     schemaPath,
     exportName,
     outputPath,
     componentName,
+    mode: options.mode ?? 'submit',
+    componentConfig,
     ui: options.ui ?? 'shadcn',
     serverAction: options.serverAction ?? false
   };
@@ -129,6 +245,8 @@ export function createProgram(): Command {
     .command('generate')
     .requiredOption('--schema <path>', 'Path to schema file')
     .requiredOption('--export <name>', 'Named export containing the schema')
+    .option('--mode <mode>', 'Generation mode (submit|auto-save)', 'submit')
+    .option('--component-config <path>', 'Path to component config (.json or .ts)')
     .option('--out <path>', 'Output directory or file path')
     .option('--name <componentName>', 'Generated component name')
     .option('--ui <preset>', 'UI preset (shadcn|unstyled)', 'shadcn')
