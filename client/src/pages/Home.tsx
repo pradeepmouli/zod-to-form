@@ -204,70 +204,94 @@ function Card({ children, title }: { children: React.ReactNode, title: string })
 function LogoIcon({ size = "md", variant = "default" }: { size?: "sm" | "md" | "lg" | "xl", variant?: "default" | "outline" | "monochrome" }) {
   const sizes = {
     sm: 32,
-    md: 48,
-    lg: 64,
+    md: 52,
+    lg: 72,
     xl: 120
   };
-  const s = sizes[size];
+  const h = sizes[size];
+  const w = h * 1.217; // Aspect ratio of Zod logo (1309 / 1075)
   
-  // SVG path for rounded pentagon (flat top, straight sides dropping to 60%, angling to bottom point)
-  const pentagonPath = "M 15 5 L 85 5 Q 95 5, 95 15 L 95 60 Q 95 65, 91 68 L 54 96 Q 50 99, 46 96 L 9 68 Q 5 65, 5 60 L 5 15 Q 5 5, 15 5 Z";
+  // Official Zod logo gem shape
+  const zodPath = "M258.188,0.987c-51.217,0 -96.967,32.03 -114.488,80.159l-132.717,364.517c-17.279,47.47 -3.479,100.679 34.7,133.762l536.4,464.825c46.192,40.029 114.892,39.638 160.625,-0.912l520.988,-461.934c37.296,-33.071 50.687,-85.525 33.808,-132.425l-132.241,-367.412c-17.4,-48.346 -63.259,-80.58 -114.638,-80.58l-792.438,0.001Z";
+
+  // Shared internal form renderer to ensure consistency
+  const renderInnerForm = (isOutline: boolean, isMonochrome: boolean) => {
+    const bgColor = isOutline ? "transparent" : isMonochrome ? "white" : "white";
+    const lineColor = isOutline ? "#0F172A" : isMonochrome ? "#0F172A" : "rgb(226, 232, 240)"; // slate-200
+    const checkBg = isOutline ? "transparent" : isMonochrome ? "#0F172A" : "#14B8A6"; // brand-teal
+    const checkColor = isOutline ? "#0F172A" : "white";
+    const borderStyle = isOutline ? "border-[2px] border-[#0F172A]" : isMonochrome ? "border-2 border-slate-900" : "shadow-sm";
+    const checkBorderStyle = isOutline ? "border-[2px] border-[#0F172A]" : "";
+
+    return (
+      <div
+        className={`relative z-10 flex flex-col justify-between rounded-sm ${borderStyle}`}
+        style={{
+          width: w * 0.55,
+          height: h * 0.5,
+          padding: w * 0.05,
+          marginTop: h * -0.05, // Shift up to center visually in the gem
+          backgroundColor: bgColor
+        }}
+      >
+        <div className="w-[85%] rounded-full" style={{ height: h * 0.04, backgroundColor: lineColor }}></div>
+        <div className="w-[60%] rounded-full" style={{ height: h * 0.04, backgroundColor: lineColor }}></div>
+        
+        <div className="flex justify-between items-end w-full">
+          <div className="w-[40%] rounded-full mb-[2%]" style={{ height: h * 0.04, backgroundColor: lineColor }}></div>
+          <div
+            className={`rounded-[2px] flex items-center justify-center ${checkBorderStyle}`}
+            style={{
+              width: w * 0.16,
+              height: w * 0.16,
+              backgroundColor: checkBg
+            }}
+          >
+            <Check
+              color={checkColor}
+              strokeWidth={5}
+              style={{ width: w * 0.11, height: w * 0.11 }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   if (variant === "outline") {
     return (
-      <div className="relative flex items-center justify-center" style={{ width: s, height: s }}>
-        <svg width={s} height={s} viewBox="0 0 100 100" className="absolute inset-0" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d={pentagonPath} stroke="#0F172A" strokeWidth="8" strokeLinejoin="round" />
+      <div className="relative flex items-center justify-center" style={{ width: w, height: h }}>
+        <svg width={w} height={h} viewBox="0 0 1309 1075" className="absolute inset-0" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d={zodPath} stroke="#0F172A" strokeWidth="60" strokeLinejoin="round" />
         </svg>
-        <div
-          className="relative z-10 flex flex-col rounded-sm border-[3px] border-[#0F172A]"
-          style={{
-            width: s * 0.5,
-            height: s * 0.35,
-            padding: s * 0.04,
-            gap: s * 0.03,
-            backgroundColor: "transparent"
-          }}
-        >
-          <div className="w-[50%] bg-[#0F172A] rounded-full" style={{ height: s * 0.03 }}></div>
-          <div className="w-[80%] bg-[#0F172A] rounded-full" style={{ height: s * 0.03 }}></div>
-          <div className="w-[40%] bg-[#0F172A] rounded-full mt-auto" style={{ height: s * 0.03 }}></div>
-        </div>
+        {renderInnerForm(true, false)}
       </div>
     );
   }
 
   if (variant === "monochrome") {
     return (
-      <div className="relative flex items-center justify-center bg-slate-900 rounded-full" style={{ width: s * 1.2, height: s * 1.2 }}>
-        <svg width={s} height={s} viewBox="0 0 100 100" className="absolute" fill="white" xmlns="http://www.w3.org/2000/svg">
-          <path d={pentagonPath} />
-        </svg>
-        <div
-          className="relative z-10 flex flex-col rounded-sm border-2 border-slate-900 bg-white"
-          style={{
-            width: s * 0.5,
-            height: s * 0.35,
-            padding: s * 0.04,
-            gap: s * 0.03
-          }}
-        >
-          <div className="w-[50%] bg-slate-900 rounded-full" style={{ height: s * 0.03 }}></div>
-          <div className="w-[80%] bg-slate-900 rounded-full" style={{ height: s * 0.03 }}></div>
-          <div className="w-[40%] bg-slate-900 rounded-full mt-auto" style={{ height: s * 0.03 }}></div>
+      <div className="relative flex items-center justify-center bg-slate-900 rounded-full" style={{ width: h * 1.3, height: h * 1.3 }}>
+        <div className="relative flex items-center justify-center" style={{ width: w * 0.8, height: h * 0.8 }}>
+          <svg width="100%" height="100%" viewBox="0 0 1309 1075" className="absolute inset-0" fill="white" xmlns="http://www.w3.org/2000/svg">
+            <path d={zodPath} />
+          </svg>
+          <div className="transform scale-[0.85] origin-center w-full h-full flex items-center justify-center">
+             {renderInnerForm(false, true)}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative flex items-center justify-center drop-shadow-md" style={{ width: s, height: s }}>
+    <div className="relative flex items-center justify-center drop-shadow-md" style={{ width: w, height: h }}>
       {/* SVG Background */}
       <svg
-        width={s}
-        height={s}
-        viewBox="0 0 100 100"
-        className="absolute inset-0 drop-shadow-sm"
+        width={w}
+        height={h}
+        viewBox="0 0 1309 1075"
+        className="absolute inset-0"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -277,39 +301,10 @@ function LogoIcon({ size = "md", variant = "default" }: { size?: "sm" | "md" | "
             <stop offset="100%" stopColor="#E11D8E" />
           </linearGradient>
         </defs>
-        <path d={pentagonPath} fill="url(#pinkGrad)" />
+        <path d={zodPath} fill="url(#pinkGrad)" />
       </svg>
 
-      {/* Inner White Form */}
-      <div
-        className="bg-white relative z-10 flex flex-col shadow-sm rounded-md"
-        style={{
-          width: s * 0.60,
-          height: s * 0.45,
-          padding: s * 0.06,
-          gap: s * 0.04
-        }}
-      >
-        <div className="w-[50%] bg-slate-200 rounded-full" style={{ height: s * 0.04 }}></div>
-        <div className="w-[80%] bg-slate-200 rounded-full" style={{ height: s * 0.04 }}></div>
-        
-        <div className="flex justify-between items-end w-full mt-auto">
-          <div className="w-[40%] bg-slate-200 rounded-full mb-[2%]" style={{ height: s * 0.04 }}></div>
-          <div
-            className="bg-brand-teal rounded-sm flex items-center justify-center"
-            style={{
-              width: s * 0.16,
-              height: s * 0.16,
-            }}
-          >
-            <Check
-              className="text-white"
-              strokeWidth={4}
-              style={{ width: s * 0.1, height: s * 0.1 }}
-            />
-          </div>
-        </div>
-      </div>
+      {renderInnerForm(false, false)}
     </div>
   );
 }
