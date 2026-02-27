@@ -1,6 +1,6 @@
 {
   "name": "@zod-to-form/core",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "Schema walker and processor registry for Zod v4 form generation",
   "license": "MIT",
   "homepage": "https://github.com/pradeepmouli/zodforms#readme",
@@ -24,7 +24,8 @@
   ],
   "scripts": {
     "build": "tsgo -p tsconfig.build.json",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist tsconfig.build.tsbuildinfo tsconfig.tsbuildinfo",
+    "prepublishOnly": "pnpm run clean && pnpm run build",
     "dev": "tsgo -p tsconfig.build.json --watch",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
