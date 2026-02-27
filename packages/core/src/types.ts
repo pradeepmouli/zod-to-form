@@ -53,6 +53,10 @@ export interface FormField {
   constraints: FormFieldConstraints;
   /** Original Zod def.type for reference */
   zodType: string;
+  /** Whether a custom render function is registered for this field (runtime only) */
+  hasCustomRender?: boolean;
+  /** Custom render function from FormMeta (runtime only, not serialisable) */
+  render?: (field: FormField, props: Record<string, unknown>) => unknown;
 }
 
 // ─── FormMeta: Registry Annotation ────────────────────────────────────
@@ -94,6 +98,12 @@ export interface FormProcessorContext {
   maxDepth: number;
   /** Current recursion depth */
   currentDepth: number;
+  /**
+   * Process a child schema into a FormField.
+   * Provided by the walker for use in nesting processors (object, array, union).
+   * Undefined only in unit-test contexts where nesting is not being tested.
+   */
+  processChild?: (schema: ZodType, key: string) => FormField;
 }
 
 export type FormProcessor = (

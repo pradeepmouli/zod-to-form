@@ -1,13 +1,17 @@
 import type { FormProcessor } from './types.js';
+import { processArray, processTuple } from './processors/array.js';
 import { processBoolean } from './processors/boolean.js';
 import { processDate } from './processors/date.js';
 import { processEnum, processLiteral } from './processors/enum.js';
 import { processFallback } from './processors/fallback.js';
 import { processFile } from './processors/file.js';
 import { processNumber } from './processors/number.js';
+import { processObject, processIntersection } from './processors/object.js';
 import { processString, processTemplateLiteral } from './processors/string.js';
+import { processUnion } from './processors/union.js';
 import {
   processDefault,
+  processLazy,
   processNullable,
   processOptional,
   processPipe,
@@ -25,6 +29,12 @@ export const builtinProcessors: Record<string, FormProcessor> = {
   nativeEnum: processEnum,
   literal: processLiteral,
   file: processFile,
+  object: processObject,
+  array: processArray,
+  tuple: processTuple,
+  union: processUnion,
+  intersection: processIntersection,
+  lazy: processLazy,
   optional: processOptional,
   nullable: processNullable,
   default: processDefault,

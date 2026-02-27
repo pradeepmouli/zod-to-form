@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 import type { HTMLAttributes, LabelHTMLAttributes } from 'react';
 import { Checkbox } from './Checkbox.js';
+import { ComboboxFallback } from './Combobox.js';
 import { DatePicker } from './DatePicker.js';
 import { FileInput } from './FileInput.js';
 import { Input } from './Input.js';
@@ -29,6 +30,7 @@ export const defaultComponentMap = {
   Input,
   Textarea,
   Checkbox,
+  Combobox: ComboboxFallback,
   Switch,
   Select,
   DatePicker,

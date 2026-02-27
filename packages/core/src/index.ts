@@ -1,4 +1,5 @@
-// @zodform/core — Public API
+// @zod-to-form/core — Public API
+// All exports are named exports only (no default, no `export *`) for full tree-shakeability.
 
 export type {
   FormField,
@@ -14,6 +15,5 @@ export type {
 
 export { inferLabel, joinPath, createBaseField } from './utils.js';
 
-// Walker and processors — stubs until Phase 3 implementation
 export { walkSchema } from './walker.js';
 export { builtinProcessors, createProcessors } from './registry.js';

@@ -3,9 +3,7 @@ import { processFallback } from './fallback.js';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
 
 function getDef(schema: ZodType): Record<string, unknown> {
-  return (
-    (schema as unknown as { _zod?: { def?: Record<string, unknown> } })['_zod']?.['def'] ?? {}
-  );
+  return (schema as unknown as { _zod?: { def?: Record<string, unknown> } })['_zod']?.['def'] ?? {};
 }
 
 function runInner(
@@ -15,8 +13,7 @@ function runInner(
   params: ProcessParams
 ): void {
   const innerDef = getDef(innerSchema);
-  const innerType =
-    typeof innerDef['type'] === 'string' ? (innerDef['type'] as string) : 'unknown';
+  const innerType = typeof innerDef['type'] === 'string' ? (innerDef['type'] as string) : 'unknown';
   const processor = ctx.processors[innerType];
 
   if (processor) {
@@ -105,4 +102,36 @@ export function processPipe(
   if (inputType) {
     runInner(inputType, ctx, field, params);
   }
+}
+
+export function processLazy(
+  schema: ZodType,
+  ctx: FormProcessorContext,
+  field: FormField,
+  params: ProcessParams
+): void {
+  if (ctx.currentDepth >= ctx.maxDepth) {
+    field.component = 'Input';
+    field.props['type'] = 'text';
+    return;
+  }
+
+  const def = getDef(schema);
+  const getter = def['getter'] as (() => ZodType) | undefined;
+
+  if (!getter) {
+    field.component = 'Input';
+    field.props['type'] = 'text';
+    return;
+  }
+
+  const innerSchema = getter();
+
+  if (ctx.seen.has(innerSchema)) {
+    field.component = 'Input';
+    field.props['type'] = 'text';
+    return;
+  }
+
+  runInner(innerSchema, { ...ctx, currentDepth: ctx.currentDepth + 1 }, field, params);
 }

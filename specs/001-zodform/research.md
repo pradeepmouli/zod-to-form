@@ -147,21 +147,21 @@ function process(schema: ZodType, ctx: FormProcessorContext, params: ProcessPara
 
 ### Decision: Strict peer dependencies per constitution Principle IV
 
-**Core (`@zodform/core`)**:
+**Core (`@zod-to-form/core`)**:
 - peerDependencies: `zod: ">=4.0.0"`
 - dependencies: (none)
 
-**React (`@zodform/react`)**:
-- peerDependencies: `react: ">=18"`, `react-hook-form: ">=7"`, `@hookform/resolvers: ">=3"`, `zod: ">=4.0.0"`, `@zodform/core: workspace:*`
+**React (`@zod-to-form/react`)**:
+- peerDependencies: `react: ">=18"`, `react-hook-form: ">=7"`, `@hookform/resolvers: ">=3"`, `zod: ">=4.0.0"`, `@zod-to-form/core: workspace:*`
 - dependencies: (none)
 
-**CLI (`@zodform/cli`)**:
-- peerDependencies: `zod: ">=4.0.0"`, `@zodform/core: workspace:*`
+**CLI (`@zod-to-form/cli`)**:
+- peerDependencies: `zod: ">=4.0.0"`, `@zod-to-form/core: workspace:*`
 - dependencies: `commander`, `jiti`, `prettier`, `chokidar` (justified CLI tooling)
 - bin: `zodform`
 
 **Alternatives considered**:
-- Bundle RHF in @zodform/react → Rejected: version conflicts, bloated bundle
+- Bundle RHF in @zod-to-form/react → Rejected: version conflicts, bloated bundle
 - Make core a devDependency → Rejected: needed at runtime for type resolution
 
 ## 7. Metadata Precedence

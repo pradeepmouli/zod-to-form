@@ -2,15 +2,11 @@ import type { ZodType } from 'zod';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
 
 function getDef(schema: ZodType): Record<string, unknown> {
-  return (
-    (schema as unknown as { _zod?: { def?: Record<string, unknown> } })['_zod']?.['def'] ?? {}
-  );
+  return (schema as unknown as { _zod?: { def?: Record<string, unknown> } })['_zod']?.['def'] ?? {};
 }
 
 function getBag(schema: ZodType): Record<string, unknown> {
-  return (
-    (schema as unknown as { _zod?: { bag?: Record<string, unknown> } })['_zod']?.['bag'] ?? {}
-  );
+  return (schema as unknown as { _zod?: { bag?: Record<string, unknown> } })['_zod']?.['bag'] ?? {};
 }
 
 export function processNumber(
@@ -27,8 +23,7 @@ export function processNumber(
   const checks = Array.isArray(def['checks']) ? def['checks'] : [];
   const hasIntegerConstraint = checks.some((check) => {
     const value = check as Record<string, unknown>;
-    const nested =
-      ((value['_zod'] as { def?: Record<string, unknown> } | undefined)?.['def']) ?? {};
+    const nested = (value['_zod'] as { def?: Record<string, unknown> } | undefined)?.['def'] ?? {};
     return (
       value['kind'] === 'int' ||
       value['check'] === 'int' ||

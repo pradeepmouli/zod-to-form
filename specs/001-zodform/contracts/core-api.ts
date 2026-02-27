@@ -1,12 +1,12 @@
 /**
- * @zodform/core — API Contract
+ * @zod-to-form/core — API Contract
  *
  * This file defines the public TypeScript interfaces for the core package.
  * It serves as the contract between core and its consumers (react, cli).
  * Implementation MUST satisfy these interfaces.
  */
 
-import type { ZodType, ZodRegistry } from "zod";
+import type { ZodType, ZodRegistry } from 'zod';
 
 // ─── FormField: Intermediate Representation ───────────────────────────
 
@@ -129,10 +129,7 @@ export interface WalkOptions {
  * @param options - Optional configuration for the walk
  * @returns FormField[] - Ordered array of field descriptors
  */
-export declare function walkSchema(
-  schema: ZodType,
-  options?: WalkOptions
-): FormField[];
+export declare function walkSchema(schema: ZodType, options?: WalkOptions): FormField[];
 
 /**
  * Create a custom processor registry by merging with built-in processors.

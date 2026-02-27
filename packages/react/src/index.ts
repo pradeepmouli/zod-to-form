@@ -1,4 +1,4 @@
-// @zodform/react — Public API
+// @zod-to-form/react — Public API
 
 // Re-export core types consumers may need
 export type {
@@ -7,9 +7,10 @@ export type {
   FormFieldConstraints,
   FormMeta,
   WalkOptions
-} from '@zodform/core';
+} from '@zod-to-form/core';
 
 // Runtime renderer — stubs until Phase 3 implementation
 export { ZodForm } from './ZodForm.js';
 export { useZodForm } from './useZodForm.js';
 export { defaultComponentMap } from './components/index.js';
+export { shadcnComponentMap } from './shadcn/index.js';

@@ -15,9 +15,7 @@ import type {
   ProcessParams
 } from '../../src/types.js';
 
-function createContext(
-  processor: FormProcessor
-): FormProcessorContext {
+function createContext(processor: FormProcessor): FormProcessorContext {
   return {
     processors: {
       string: processor,

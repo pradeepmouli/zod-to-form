@@ -2,11 +2,14 @@ import type { ZodType } from 'zod';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
 
 export function processBoolean(
-  _schema: ZodType,
-  _ctx: FormProcessorContext,
+  schema: ZodType,
+  ctx: FormProcessorContext,
   field: FormField,
   _params: ProcessParams
 ): void {
-  field.component = 'Checkbox';
+  const meta = ctx.formRegistry?.get(schema);
+  const fieldType = meta?.fieldType?.toLowerCase();
+
+  field.component = fieldType === 'switch' ? 'Switch' : 'Checkbox';
   field.required = true;
 }

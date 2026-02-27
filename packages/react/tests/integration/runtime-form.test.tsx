@@ -19,7 +19,7 @@ describe('runtime form integration', () => {
 
     render(
       <ZodForm schema={schema} onSubmit={onSubmit}>
-        <button type='submit'>Create</button>
+        <button type="submit">Create</button>
       </ZodForm>
     );
 
@@ -51,6 +51,88 @@ describe('runtime form integration', () => {
 
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalled();
+    });
+  });
+
+  it('renders nested object fields inside a fieldset element', async () => {
+    const schema = z.object({
+      address: z.object({
+        street: z.string(),
+        city: z.string()
+      })
+    });
+
+    render(
+      <ZodForm schema={schema} onSubmit={() => {}}>
+        <button type="submit">Submit</button>
+      </ZodForm>
+    );
+
+    expect(document.querySelector('fieldset')).toBeInTheDocument();
+    expect(screen.getByLabelText('Street')).toBeInTheDocument();
+    expect(screen.getByLabelText('City')).toBeInTheDocument();
+  });
+
+  it('renders array field with Add button and disabled Remove at min', async () => {
+    const schema = z.object({
+      tags: z.array(z.string()).min(1)
+    });
+
+    render(
+      <ZodForm schema={schema} onSubmit={() => {}}>
+        <button type="submit">Submit</button>
+      </ZodForm>
+    );
+
+    const addButton = screen.getByRole('button', { name: /add/i });
+    expect(addButton).toBeInTheDocument();
+
+    // Initially 0 items added to the RHF list → Add to get an item
+    fireEvent.click(addButton);
+
+    // After adding 1 item, Remove button should be disabled (at minLength=1)
+    await waitFor(() => {
+      const removeButton = screen.getByRole('button', { name: /remove/i });
+      expect(removeButton).toBeInTheDocument();
+      expect(removeButton).toBeDisabled();
+    });
+  });
+
+  it('renders discriminated union and shows variant fields on select change', async () => {
+    const schema = z.object({
+      profile: z.discriminatedUnion('role', [
+        z.object({ role: z.literal('admin'), level: z.number() }),
+        z.object({ role: z.literal('user'), name: z.string() })
+      ])
+    });
+
+    render(
+      <ZodForm schema={schema} onSubmit={() => {}}>
+        <button type="submit">Submit</button>
+      </ZodForm>
+    );
+
+    // Select should render the discriminator options
+    const select = screen.getByLabelText('Profile');
+    expect(select).toBeInTheDocument();
+
+    // Initially no variant-specific fields visible
+    expect(screen.queryByLabelText('Level')).not.toBeInTheDocument();
+
+    // Select admin variant
+    fireEvent.change(select, { target: { value: 'admin' } });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Level')).toBeInTheDocument();
+      expect(screen.queryByLabelText('Name')).not.toBeInTheDocument();
+    });
+
+    // Switch to user variant
+    fireEvent.change(select, { target: { value: 'user' } });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Name')).toBeInTheDocument();
+      expect(screen.queryByLabelText('Level')).not.toBeInTheDocument();
     });
   });
 });

@@ -16,9 +16,9 @@
 ## Path Conventions
 
 Monorepo with three packages under `packages/`:
-- `packages/core/src/` — `@zodform/core`
-- `packages/react/src/` — `@zodform/react`
-- `packages/cli/src/` — `@zodform/cli`
+- `packages/core/src/` — `@zod-to-form/core`
+- `packages/react/src/` — `@zod-to-form/react`
+- `packages/cli/src/` — `@zod-to-form/cli`
 
 ---
 
@@ -30,9 +30,9 @@ Monorepo with three packages under `packages/`:
 - [x] T002 [P] Create packages/core/ directory structure: src/processors/, tests/processors/, tests/integration/ per plan.md
 - [x] T003 [P] Create packages/react/ directory structure: src/components/, src/shadcn/, tests/integration/ per plan.md
 - [x] T004 [P] Create packages/cli/ directory structure: src/, tests/integration/ per plan.md
-- [x] T005 [P] Create packages/core/package.json with name `@zodform/core`, peerDependencies: zod ^4.0.0, exports map for tree-shaking
-- [x] T006 [P] Create packages/react/package.json with name `@zodform/react`, peerDependencies: react, react-hook-form, @hookform/resolvers, zod; exports map including `./shadcn` subpath
-- [x] T007 [P] Create packages/cli/package.json with name `@zodform/cli`, dependencies: commander, jiti, prettier, chokidar; bin entry `zodform`
+- [x] T005 [P] Create packages/core/package.json with name `@zod-to-form/core`, peerDependencies: zod ^4.0.0, exports map for tree-shaking
+- [x] T006 [P] Create packages/react/package.json with name `@zod-to-form/react`, peerDependencies: react, react-hook-form, @hookform/resolvers, zod; exports map including `./shadcn` subpath
+- [x] T007 [P] Create packages/cli/package.json with name `@zod-to-form/cli`, dependencies: commander, jiti, prettier, chokidar; bin entry `zodform`
 - [x] T008 [P] Create packages/core/tsconfig.json extending root tsconfig, strict mode, targeting ESNext, composite: true
 - [x] T009 [P] Create packages/react/tsconfig.json extending root tsconfig, strict mode, jsx: react-jsx, composite: true
 - [x] T010 [P] Create packages/cli/tsconfig.json extending root tsconfig, strict mode, module: NodeNext, composite: true
@@ -84,30 +84,30 @@ Monorepo with three packages under `packages/`:
 
 ### Implementation for User Story 1
 
-- [ ] T032 [P] [US1] Implement packages/core/src/processors/string.ts: processString reads def.type === 'string', reads bag.format for email/url/uuid to set props.type, reads bag.minLength/maxLength for constraints, sets component = 'Input'; processTemplateLiteral handles def.type === 'template_literal' → component = 'Input', zodType = 'template_literal'
-- [ ] T033 [P] [US1] Implement packages/core/src/processors/number.ts: processNumber reads def.type === 'number'|'bigint', reads bag.minimum/maximum, sets component = 'Input', props.type = 'number'
-- [ ] T034 [P] [US1] Implement packages/core/src/processors/boolean.ts: processBoolean sets component = 'Checkbox', required = true (booleans are always present)
-- [ ] T035 [P] [US1] Implement packages/core/src/processors/date.ts: processDate sets component = 'DatePicker'
-- [ ] T036 [P] [US1] Implement packages/core/src/processors/enum.ts: processEnum reads def.entries for z.enum(), reads def.values for z.nativeEnum(), maps to options array, sets component = 'Select'; processLiteral sets single fixed option, readOnly=true
-- [ ] T037 [P] [US1] Implement packages/core/src/processors/file.ts: processFile sets component = 'FileInput'
-- [ ] T038 [P] [US1] Implement packages/core/src/processors/wrappers.ts: each wrapper unwraps def.innerType and re-processes, setting required/defaultValue/readOnly flags as appropriate; processOptional sets required=false; processNullable sets required=false; processDefault reads def.defaultValue; processReadonly sets readOnly=true; processPipe processes def.in (input type)
-- [ ] T039 [P] [US1] Implement packages/core/src/processors/fallback.ts: processFallback for transform, custom, any, unknown → component = 'Input', zodType preserved for reference; processRecord reads def.keyType and def.valueType, produces component = 'Input' with zodType = 'record' and arrayItem-like template for key-value pairs
-- [ ] T040 [US1] Implement packages/core/src/registry.ts: export builtinProcessors Record<string, FormProcessor> mapping all def.type strings to processors from T032-T039; export createProcessors(custom) that merges with builtinProcessors
-- [ ] T041 [US1] Implement packages/core/src/walker.ts: walkSchema(schema, options) validates top-level is z.object(), creates FormProcessorContext with seen WeakSet, maxDepth=5, calls process() on each shape entry, returns sorted FormField[] (by order if set, then schema declaration order)
-- [ ] T042 [US1] Update packages/core/src/index.ts to export real implementations of walkSchema, createProcessors, builtinProcessors from T040 and T041
-- [ ] T043 [P] [US1] Implement packages/react/src/components/Input.tsx: renders native `<input>` forwarding all props, adds id from field.key, aria-invalid from error state
-- [ ] T044 [P] [US1] Implement packages/react/src/components/Textarea.tsx: renders native `<textarea>` forwarding props
-- [ ] T045 [P] [US1] Implement packages/react/src/components/Checkbox.tsx: renders native `<input type="checkbox">` forwarding props
-- [ ] T046 [P] [US1] Implement packages/react/src/components/Switch.tsx: renders native `<input type="checkbox" role="switch">` forwarding props
-- [ ] T047 [P] [US1] Implement packages/react/src/components/Select.tsx: renders native `<select>` with `<option>` per entry from options prop, forwarding props
-- [ ] T048 [P] [US1] Implement packages/react/src/components/DatePicker.tsx: renders native `<input type="date">` forwarding props
-- [ ] T049 [P] [US1] Implement packages/react/src/components/FileInput.tsx: renders native `<input type="file">` forwarding props
-- [ ] T050 [P] [US1] Implement packages/react/src/components/RadioGroup.tsx: renders `<fieldset>` with `<input type="radio">` per option
-- [ ] T051 [US1] Implement packages/react/src/components/index.ts: export defaultComponentMap with all components from T043-T050, plus FormField/FormLabel/FormDescription/FormMessage HTML primitive wrappers (div/label/p/p)
-- [ ] T052 [US1] Implement packages/react/src/useZodForm.ts: hook that calls walkSchema memoized via useMemo(schema reference), calls useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema), defaultValues }) from RHF, returns { form, fields }
-- [ ] T053 [US1] Implement packages/react/src/FieldRenderer.tsx: recursive component that maps FormField to JSX using ComponentMap, renders label with htmlFor, input with aria-invalid/required, description text, and error message; handles field.hidden by rendering null; applies field.order sorting to children
-- [ ] T054 [US1] Implement packages/react/src/ZodForm.tsx: wraps useZodForm, passes form to FormProvider from RHF, renders `<form onSubmit={form.handleSubmit(onSubmit)}>` with FieldRenderer for each field, renders children (submit button etc.), accepts schema/onSubmit/defaultValues/components/formRegistry/processors/className props
-- [ ] T055 [US1] Update packages/react/src/index.ts to export ZodForm, useZodForm, defaultComponentMap with real implementations
+- [x] T032 [P] [US1] Implement packages/core/src/processors/string.ts: processString reads def.type === 'string', reads bag.format for email/url/uuid to set props.type, reads bag.minLength/maxLength for constraints, sets component = 'Input'; processTemplateLiteral handles def.type === 'template_literal' → component = 'Input', zodType = 'template_literal'
+- [x] T033 [P] [US1] Implement packages/core/src/processors/number.ts: processNumber reads def.type === 'number'|'bigint', reads bag.minimum/maximum, sets component = 'Input', props.type = 'number'
+- [x] T034 [P] [US1] Implement packages/core/src/processors/boolean.ts: processBoolean sets component = 'Checkbox', required = true (booleans are always present)
+- [x] T035 [P] [US1] Implement packages/core/src/processors/date.ts: processDate sets component = 'DatePicker'
+- [x] T036 [P] [US1] Implement packages/core/src/processors/enum.ts: processEnum reads def.entries for z.enum(), reads def.values for z.nativeEnum(), maps to options array, sets component = 'Select'; processLiteral sets single fixed option, readOnly=true
+- [x] T037 [P] [US1] Implement packages/core/src/processors/file.ts: processFile sets component = 'FileInput'
+- [x] T038 [P] [US1] Implement packages/core/src/processors/wrappers.ts: each wrapper unwraps def.innerType and re-processes, setting required/defaultValue/readOnly flags as appropriate; processOptional sets required=false; processNullable sets required=false; processDefault reads def.defaultValue; processReadonly sets readOnly=true; processPipe processes def.in (input type)
+- [x] T039 [P] [US1] Implement packages/core/src/processors/fallback.ts: processFallback for transform, custom, any, unknown → component = 'Input', zodType preserved for reference; processRecord reads def.keyType and def.valueType, produces component = 'Input' with zodType = 'record' and arrayItem-like template for key-value pairs
+- [x] T040 [US1] Implement packages/core/src/registry.ts: export builtinProcessors Record<string, FormProcessor> mapping all def.type strings to processors from T032-T039; export createProcessors(custom) that merges with builtinProcessors
+- [x] T041 [US1] Implement packages/core/src/walker.ts: walkSchema(schema, options) validates top-level is z.object(), creates FormProcessorContext with seen WeakSet, maxDepth=5, calls process() on each shape entry, returns sorted FormField[] (by order if set, then schema declaration order)
+- [x] T042 [US1] Update packages/core/src/index.ts to export real implementations of walkSchema, createProcessors, builtinProcessors from T040 and T041
+- [x] T043 [P] [US1] Implement packages/react/src/components/Input.tsx: renders native `<input>` forwarding all props, adds id from field.key, aria-invalid from error state
+- [x] T044 [P] [US1] Implement packages/react/src/components/Textarea.tsx: renders native `<textarea>` forwarding props
+- [x] T045 [P] [US1] Implement packages/react/src/components/Checkbox.tsx: renders native `<input type="checkbox">` forwarding props
+- [x] T046 [P] [US1] Implement packages/react/src/components/Switch.tsx: renders native `<input type="checkbox" role="switch">` forwarding props
+- [x] T047 [P] [US1] Implement packages/react/src/components/Select.tsx: renders native `<select>` with `<option>` per entry from options prop, forwarding props
+- [x] T048 [P] [US1] Implement packages/react/src/components/DatePicker.tsx: renders native `<input type="date">` forwarding props
+- [x] T049 [P] [US1] Implement packages/react/src/components/FileInput.tsx: renders native `<input type="file">` forwarding props
+- [x] T050 [P] [US1] Implement packages/react/src/components/RadioGroup.tsx: renders `<fieldset>` with `<input type="radio">` per option
+- [x] T051 [US1] Implement packages/react/src/components/index.ts: export defaultComponentMap with all components from T043-T050, plus FormField/FormLabel/FormDescription/FormMessage HTML primitive wrappers (div/label/p/p)
+- [x] T052 [US1] Implement packages/react/src/useZodForm.ts: hook that calls walkSchema memoized via useMemo(schema reference), calls useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema), defaultValues }) from RHF, returns { form, fields }
+- [x] T053 [US1] Implement packages/react/src/FieldRenderer.tsx: recursive component that maps FormField to JSX using ComponentMap, renders label with htmlFor, input with aria-invalid/required, description text, and error message; handles field.hidden by rendering null; applies field.order sorting to children
+- [x] T054 [US1] Implement packages/react/src/ZodForm.tsx: wraps useZodForm, passes form to FormProvider from RHF, renders `<form onSubmit={form.handleSubmit(onSubmit)}>` with FieldRenderer for each field, renders children (submit button etc.), accepts schema/onSubmit/defaultValues/components/formRegistry/processors/className props
+- [x] T055 [US1] Update packages/react/src/index.ts to export ZodForm, useZodForm, defaultComponentMap with real implementations
 
 **Checkpoint**: `<ZodForm schema={flatSchema} onSubmit={fn}>` renders correctly, validates, and submits typed data. All US1 tests pass.
 
@@ -121,17 +121,17 @@ Monorepo with three packages under `packages/`:
 
 ### Tests for User Story 2 (TDD — write FIRST, verify they FAIL before implementing)
 
-- [ ] T056 [P] [US2] Write failing metadata resolver tests in packages/core/tests/metadata.test.ts: form registry fieldType overrides global, .meta({ title }) sets label, .meta({ examples: ["x"] }) sets placeholder, .describe("...") sets description, form registry hidden sets hidden=true, form registry order sets order, form registry gridColumn sets gridColumn on FormField
-- [ ] T057 [US2] Write failing metadata integration tests in packages/react/tests/ZodForm.test.tsx (extend): textarea renders for fieldType=textarea, switch renders for fieldType=switch, custom label appears, placeholder from examples, hidden field absent from DOM but present in form state, order=1 field renders first, gridColumn='1 / -1' applies style={{ gridColumn: '1 / -1' }} on field wrapper
+- [x] T056 [P] [US2] Write failing metadata resolver tests in packages/core/tests/metadata.test.ts: form registry fieldType overrides global, .meta({ title }) sets label, .meta({ examples: ["x"] }) sets placeholder, .describe("...") sets description, form registry hidden sets hidden=true, form registry order sets order, form registry gridColumn sets gridColumn on FormField
+- [x] T057 [US2] Write failing metadata integration tests in packages/react/tests/ZodForm.test.tsx (extend): textarea renders for fieldType=textarea, switch renders for fieldType=switch, custom label appears, placeholder from examples, hidden field absent from DOM but present in form state, order=1 field renders first, gridColumn='1 / -1' applies style={{ gridColumn: '1 / -1' }} on field wrapper
 
 ### Implementation for User Story 2
 
-- [ ] T058 [US2] Implement packages/core/src/metadata.ts: resolveMetadata(schema, formRegistry, globalRegistry) function that reads (1) formRegistry.get(schema) for fieldType/order/hidden/gridColumn/render, (2) schema._zod.bag or globalRegistry for title/description/examples/deprecated; returns merged FormMeta; form registry takes precedence
-- [ ] T059 [US2] Update packages/core/src/walker.ts to call resolveMetadata() in process() and apply results to FormField before returning: set field.label from title, field.description from description, field.placeholder from examples[0], field.hidden from hidden, field.order from order, field.gridColumn from gridColumn
-- [ ] T060 [US2] Update packages/core/src/processors/string.ts to apply fieldType override from metadata (e.g., fieldType='textarea' → component = 'Textarea')
-- [ ] T061 [US2] Update packages/core/src/processors/boolean.ts to apply fieldType override from metadata (e.g., fieldType='switch' → component = 'Switch')
-- [ ] T062 [US2] Update packages/react/src/FieldRenderer.tsx to apply fieldType overrides: check field.component and render the mapped component from ComponentMap; if field.gridColumn is set, apply `style={{ gridColumn: field.gridColumn }}` on the field wrapper element
-- [ ] T063 [US2] Update packages/react/src/ZodForm.tsx to accept formRegistry prop and pass it through useZodForm → walkSchema → metadata resolver
+- [x] T058 [US2] Implement packages/core/src/metadata.ts: resolveMetadata(schema, formRegistry, globalRegistry) function that reads (1) formRegistry.get(schema) for fieldType/order/hidden/gridColumn/render, (2) schema._zod.bag or globalRegistry for title/description/examples/deprecated; returns merged FormMeta; form registry takes precedence
+- [x] T059 [US2] Update packages/core/src/walker.ts to call resolveMetadata() in process() and apply results to FormField before returning: set field.label from title, field.description from description, field.placeholder from examples[0], field.hidden from hidden, field.order from order, field.gridColumn from gridColumn
+- [x] T060 [US2] Update packages/core/src/processors/string.ts to apply fieldType override from metadata (e.g., fieldType='textarea' → component = 'Textarea')
+- [x] T061 [US2] Update packages/core/src/processors/boolean.ts to apply fieldType override from metadata (e.g., fieldType='switch' → component = 'Switch')
+- [x] T062 [US2] Update packages/react/src/FieldRenderer.tsx to apply fieldType overrides: check field.component and render the mapped component from ComponentMap; if field.gridColumn is set, apply `style={{ gridColumn: field.gridColumn }}` on the field wrapper element
+- [x] T063 [US2] Update packages/react/src/ZodForm.tsx to accept formRegistry prop and pass it through useZodForm → walkSchema → metadata resolver
 
 **Checkpoint**: Form registry annotations take effect in rendered output. All US2 tests pass. US1 tests still pass.
 
@@ -145,19 +145,19 @@ Monorepo with three packages under `packages/`:
 
 ### Tests for User Story 3 (TDD — write FIRST, verify they FAIL before implementing)
 
-- [ ] T064 [P] [US3] Write failing loader tests in packages/cli/tests/loader.test.ts: loadSchema resolves named export from a .ts file via jiti, throws clear error when file not found, throws clear error when export name not found, throws clear error when export is not a Zod schema
-- [ ] T065 [P] [US3] Write failing codegen tests in packages/cli/tests/codegen.test.ts: generateFormComponent from flat FormField[] produces valid TSX string with useForm/zodResolver imports, correct FormField JSX per field type, no @zodform/* imports in output, all field names appear in output
-- [ ] T066 [US3] Write failing CLI e2e test in packages/cli/tests/integration/cli-e2e.test.ts: `generate` command with valid --schema/--export/--out writes a file to disk; --dry-run prints output without writing; re-run does not error; --force re-generates
-- [ ] T067 [US3] Write failing generated-compiles test in packages/cli/tests/integration/generated-compiles.test.ts: generated UserForm.tsx passes `tsc --noEmit` in strict mode with no errors
+- [x] T064 [P] [US3] Write failing loader tests in packages/cli/tests/loader.test.ts: loadSchema resolves named export from a .ts file via jiti, throws clear error when file not found, throws clear error when export name not found, throws clear error when export is not a Zod schema
+- [x] T065 [P] [US3] Write failing codegen tests in packages/cli/tests/codegen.test.ts: generateFormComponent from flat FormField[] produces valid TSX string with useForm/zodResolver imports, correct FormField JSX per field type, no @zod-to-form/* imports in output, all field names appear in output
+- [x] T066 [US3] Write failing CLI e2e test in packages/cli/tests/integration/cli-e2e.test.ts: `generate` command with valid --schema/--export/--out writes a file to disk; --dry-run prints output without writing; re-run does not error; --force re-generates
+- [x] T067 [US3] Write failing generated-compiles test in packages/cli/tests/integration/generated-compiles.test.ts: generated UserForm.tsx passes `tsc --noEmit` in strict mode with no errors
 
 ### Implementation for User Story 3
 
-- [ ] T068 [US3] Implement packages/cli/src/loader.ts: loadSchema(schemaPath, exportName) uses createJiti(import.meta.url) to dynamically import the schema file, reads the named export, validates it is a Zod schema (has _zod property), throws descriptive errors for each failure mode
-- [ ] T069 [P] [US3] Implement packages/cli/src/templates.ts: template functions that return code strings for: file header (imports from react-hook-form, zod, @hookform/resolvers/zod, UI components), useForm setup block, FormField JSX for each field type (Input/Textarea/Select/Checkbox/DatePicker/FileInput/RadioGroup), form wrapper JSX
-- [ ] T070 [US3] Implement packages/cli/src/codegen.ts: generateFormComponent(fields, config) assembles .tsx source from templates, walks FormField[] to emit JSX for each field using shadcn or unstyled UI imports per config.ui; zero @zodform/* imports in output; if field.gridColumn is set, emit `style={{ gridColumn: '<value>' }}` on the generated field wrapper element
-- [ ] T071 [US3] Implement packages/cli/src/format.ts: formatCode(code, outputPath) calls prettier.resolveConfig(outputPath) then prettier.format(code, { filepath: outputPath, ...config }) to respect user's prettier config
-- [ ] T072 [US3] Implement packages/cli/src/index.ts: add `generate` subcommand to commander program with options --schema, --export, --out, --name, --ui (default: shadcn), --force, --dry-run; action calls loadSchema → walkSchema → generateFormComponent → formatCode → write file (or print if --dry-run); skips writing if output file exists and --force not set
-- [ ] T073 [US3] Create packages/react/src/shadcn/index.ts: export shadcnComponentMap that maps ComponentMap keys to shadcn/ui form component imports (Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage, Input, Textarea, Checkbox, Switch, Select, etc.)
+- [x] T068 [US3] Implement packages/cli/src/loader.ts: loadSchema(schemaPath, exportName) uses createJiti(import.meta.url) to dynamically import the schema file, reads the named export, validates it is a Zod schema (has _zod property), throws descriptive errors for each failure mode
+- [x] T069 [P] [US3] Implement packages/cli/src/templates.ts: template functions that return code strings for: file header (imports from react-hook-form, zod, @hookform/resolvers/zod, UI components), useForm setup block, FormField JSX for each field type (Input/Textarea/Select/Checkbox/DatePicker/FileInput/RadioGroup), form wrapper JSX
+- [x] T070 [US3] Implement packages/cli/src/codegen.ts: generateFormComponent(fields, config) assembles .tsx source from templates, walks FormField[] to emit JSX for each field using shadcn or unstyled UI imports per config.ui; zero @zod-to-form/* imports in output; if field.gridColumn is set, emit `style={{ gridColumn: '<value>' }}` on the generated field wrapper element
+- [x] T071 [US3] Implement packages/cli/src/format.ts: formatCode(code, outputPath) calls prettier.resolveConfig(outputPath) then prettier.format(code, { filepath: outputPath, ...config }) to respect user's prettier config
+- [x] T072 [US3] Implement packages/cli/src/index.ts: add `generate` subcommand to commander program with options --schema, --export, --out, --name, --ui (default: shadcn), --force, --dry-run; action calls loadSchema → walkSchema → generateFormComponent → formatCode → write file (or print if --dry-run); skips writing if output file exists and --force not set
+- [x] T073 [US3] Create packages/react/src/shadcn/index.ts: export shadcnComponentMap that maps ComponentMap keys to shadcn/ui form component imports (Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage, Input, Textarea, Checkbox, Switch, Select, etc.)
 
 **Checkpoint**: `zodform generate --schema ./test-schema.ts --export testSchema --out ./out/` writes a compilable UserForm.tsx. All US3 tests pass. US1 and US2 tests still pass.
 
@@ -171,14 +171,14 @@ Monorepo with three packages under `packages/`:
 
 ### Tests for User Story 4 (TDD — write FIRST, verify they FAIL before implementing)
 
-- [ ] T074 [P] [US4] Write failing tests for custom render function in packages/react/tests/FieldRenderer.test.tsx (extend): field with FormMeta.render function → custom render function is called with (field, props); field with fieldType='combobox' → combobox component used
-- [ ] T075 [P] [US4] Write failing tests in packages/cli/tests/codegen.test.ts (extend): field with render function in FormMeta → output contains `{/* TODO: custom renderer for fieldName */}` comment
+- [X] T074 [P] [US4] Write failing tests for custom render function in packages/react/tests/FieldRenderer.test.tsx (extend): field with FormMeta.render function → custom render function is called with (field, props); field with fieldType='combobox' → combobox component used
+- [X] T075 [P] [US4] Write failing tests in packages/cli/tests/codegen.test.ts (extend): field with render function in FormMeta → output contains `{/* TODO: custom renderer for fieldName */}` comment
 
 ### Implementation for User Story 4
 
-- [ ] T076 [US4] Update packages/react/src/FieldRenderer.tsx: if field has FormMeta.render function in resolved metadata, call render(field, rhfProps) instead of standard component; wrap result in field wrapper with label/error
-- [ ] T077 [US4] Add combobox to packages/react/src/components/index.ts defaultComponentMap: export a ComboboxFallback using native `<datalist>` + `<input list>` as unstyled primitive; update ComponentMap interface in types.ts to include Combobox
-- [ ] T078 [US4] Update packages/cli/src/codegen.ts: detect when FormField has a custom render function (render key present in FormMeta) and emit `{/* TODO: custom renderer for {fieldName} — replace with your component */}` in the generated JSX output
+- [X] T076 [US4] Update packages/react/src/FieldRenderer.tsx: if field has FormMeta.render function in resolved metadata, call render(field, rhfProps) instead of standard component; wrap result in field wrapper with label/error
+- [X] T077 [US4] Add combobox to packages/react/src/components/index.ts defaultComponentMap: export a ComboboxFallback using native `<datalist>` + `<input list>` as unstyled primitive; update ComponentMap interface in types.ts to include Combobox
+- [X] T078 [US4] Update packages/cli/src/codegen.ts: detect when FormField has a custom render function (render key present in FormMeta) and emit `{/* TODO: custom renderer for {fieldName} — replace with your component */}` in the generated JSX output
 
 **Checkpoint**: Custom render function executes at runtime; combobox variant renders; codegen emits TODO. All US4 tests pass. All prior tests still pass.
 
@@ -192,22 +192,22 @@ Monorepo with three packages under `packages/`:
 
 ### Tests for User Story 5 (TDD — write FIRST, verify they FAIL before implementing)
 
-- [ ] T079 [P] [US5] Write failing object processor tests in packages/core/tests/processors/object.test.ts: processObject recurses into def.shape, returns FormField with children array, each child has correct key (e.g., "address.street"), label inferred from child key
-- [ ] T080 [P] [US5] Write failing array processor tests in packages/core/tests/processors/array.test.ts: processArray processes def.element as arrayItem template, reads bag for min/max constraints, returns FormField with arrayItem set; tuple returns children with positional keys
-- [ ] T081 [P] [US5] Write failing union processor tests in packages/core/tests/processors/union.test.ts: processUnion generates options from union variants (literal labels), processDiscriminatedUnion generates Select for discriminator key + children per variant
-- [ ] T082 [US5] Write failing nested form integration test in packages/react/tests/integration/runtime-form.test.tsx (extend): nested object form renders address.street and address.city fields; array form renders with add/remove buttons; remove disabled when at min(1); discriminatedUnion shows correct variant fields after select change
+- [X] T079 [P] [US5] Write failing object processor tests in packages/core/tests/processors/object.test.ts: processObject recurses into def.shape, returns FormField with children array, each child has correct key (e.g., "address.street"), label inferred from child key
+- [X] T080 [P] [US5] Write failing array processor tests in packages/core/tests/processors/array.test.ts: processArray processes def.element as arrayItem template, reads bag for min/max constraints, returns FormField with arrayItem set; tuple returns children with positional keys
+- [X] T081 [P] [US5] Write failing union processor tests in packages/core/tests/processors/union.test.ts: processUnion generates options from union variants (literal labels), processDiscriminatedUnion generates Select for discriminator key + children per variant
+- [X] T082 [US5] Write failing nested form integration test in packages/react/tests/integration/runtime-form.test.tsx (extend): nested object form renders address.street and address.city fields; array form renders with add/remove buttons; remove disabled when at min(1); discriminatedUnion shows correct variant fields after select change
 
 ### Implementation for User Story 5
 
-- [ ] T083 [US5] Implement packages/core/src/processors/object.ts: processObject iterates def.shape entries, calls walker.process() recursively on each child schema with updated path, returns field with children = FormField[] sorted by order; handles z.intersection() by merging shapes from both sides
-- [ ] T084 [US5] Implement packages/core/src/processors/array.ts: processArray calls walker.process() on def.element with isArrayItem=true to produce arrayItem template; reads bag.minLength/maxLength for constraints; processTuple produces children with index-keyed paths ("items.0", "items.1", etc.)
-- [ ] T085 [US5] Implement packages/core/src/processors/union.ts: processUnion generates options from union variant literal labels, component='Select'; processDiscriminatedUnion generates a Select for the discriminator field (component='Select') plus a variants map (discriminator value → children FormField[]) stored in field.props._variants; both handle cycle detection via ctx.seen
-- [ ] T086 [US5] Update packages/core/src/registry.ts to include object, array, tuple, union, discriminatedUnion, intersection processors from T083-T085
-- [ ] T087 [US5] Update packages/core/src/processors/wrappers.ts to add processLazy: checks ctx.seen for cycle, returns fallback Input if cycle detected or maxDepth reached, otherwise processes def.getter() result
-- [ ] T088 [US5] Update packages/react/src/FieldRenderer.tsx to render field.children as a grouped `<fieldset>` with `<legend>` label (nested object sections)
-- [ ] T089 [US5] Update packages/react/src/FieldRenderer.tsx to render field.arrayItem using useFieldArray from RHF: renders each array item with FieldRenderer, add button (calls append), remove button (calls remove, disabled when at constraints.minLength)
-- [ ] T090 [US5] Update packages/react/src/FieldRenderer.tsx to render discriminatedUnion fields: renders discriminator Select using watch(), conditionally renders the correct variant children from props._variants based on current discriminator value, calls unregister on variant switch
-- [ ] T091 [US5] Update packages/cli/src/codegen.ts and packages/cli/src/templates.ts to emit correct JSX for nested objects (indented FormField groups) and array fields (useFieldArray loop with append/remove) in generated output
+- [X] T083 [US5] Implement packages/core/src/processors/object.ts: processObject iterates def.shape entries, calls walker.process() recursively on each child schema with updated path, returns field with children = FormField[] sorted by order; handles z.intersection() by merging shapes from both sides
+- [X] T084 [US5] Implement packages/core/src/processors/array.ts: processArray calls walker.process() on def.element with isArrayItem=true to produce arrayItem template; reads bag.minLength/maxLength for constraints; processTuple produces children with index-keyed paths ("items.0", "items.1", etc.)
+- [X] T085 [US5] Implement packages/core/src/processors/union.ts: processUnion generates options from union variant literal labels, component='Select'; processDiscriminatedUnion generates a Select for the discriminator field (component='Select') plus a variants map (discriminator value → children FormField[]) stored in field.props._variants; both handle cycle detection via ctx.seen
+- [X] T086 [US5] Update packages/core/src/registry.ts to include object, array, tuple, union, discriminatedUnion, intersection processors from T083-T085
+- [X] T087 [US5] Update packages/core/src/processors/wrappers.ts to add processLazy: checks ctx.seen for cycle, returns fallback Input if cycle detected or maxDepth reached, otherwise processes def.getter() result
+- [X] T088 [US5] Update packages/react/src/FieldRenderer.tsx to render field.children as a grouped `<fieldset>` with `<legend>` label (nested object sections)
+- [X] T089 [US5] Update packages/react/src/FieldRenderer.tsx to render field.arrayItem using useFieldArray from RHF: renders each array item with FieldRenderer, add button (calls append), remove button (calls remove, disabled when at constraints.minLength)
+- [X] T090 [US5] Update packages/react/src/FieldRenderer.tsx to render discriminatedUnion fields: renders discriminator Select using watch(), conditionally renders the correct variant children from props._variants based on current discriminator value, calls unregister on variant switch
+- [X] T091 [US5] Update packages/cli/src/codegen.ts and packages/cli/src/templates.ts to emit correct JSX for nested objects (indented FormField groups) and array fields (useFieldArray loop with append/remove) in generated output
 
 **Checkpoint**: Nested objects render as grouped sections; arrays have working add/remove; discriminated unions show correct variant. All US5 tests pass. All prior tests still pass.
 
@@ -221,12 +221,12 @@ Monorepo with three packages under `packages/`:
 
 ### Tests for User Story 6 (TDD — write FIRST, verify they FAIL before implementing)
 
-- [ ] T092 [P] [US6] Write failing server action generator tests in packages/cli/tests/server-action.test.ts: generateServerAction produces string with "use server" directive, safeParse call on formData, fieldErrors in return value, correct TypeScript types for state; no @zodform/* imports
+- [X] T092 [P] [US6] Write failing server action generator tests in packages/cli/tests/server-action.test.ts: generateServerAction produces string with "use server" directive, safeParse call on formData, fieldErrors in return value, correct TypeScript types for state; no @zod-to-form/* imports
 
 ### Implementation for User Story 6
 
-- [ ] T093 [US6] Implement packages/cli/src/server-action.ts: generateServerAction(config) emits a TypeScript source string with "use server" directive, schema import, ProfileFormState type (errors: Partial<Record<fieldName, string[]>>, message: string | null), async action function that calls schema.safeParse(Object.fromEntries(formData)), returns fieldErrors on failure, success message on pass
-- [ ] T094 [US6] Update packages/cli/src/index.ts to support --server-action flag: when set, call generateServerAction(config) → formatCode → write alongside form component; filename: `{name.toLowerCase()}-action.ts`
+- [X] T093 [US6] Implement packages/cli/src/server-action.ts: generateServerAction(config) emits a TypeScript source string with "use server" directive, schema import, ProfileFormState type (errors: Partial<Record<fieldName, string[]>>, message: string | null), async action function that calls schema.safeParse(Object.fromEntries(formData)), returns fieldErrors on failure, success message on pass
+- [X] T094 [US6] Update packages/cli/src/index.ts to support --server-action flag: when set, call generateServerAction(config) → formatCode → write alongside form component; filename: `{name.toLowerCase()}-action.ts`
 
 **Checkpoint**: `--server-action` flag produces a compilable, typed server action file. All US6 tests pass. All prior tests still pass.
 
@@ -240,12 +240,12 @@ Monorepo with three packages under `packages/`:
 
 ### Tests for User Story 7 (TDD — write FIRST, verify they FAIL before implementing)
 
-- [ ] T095 [P] [US7] Write failing watcher tests in packages/cli/tests/integration/cli-e2e.test.ts (extend): watch mode detects schema file change, triggers regeneration; config files not overwritten on re-generation; regeneration completes within 1 second of change event
+- [X] T095 [P] [US7] Write failing watcher tests in packages/cli/tests/integration/cli-e2e.test.ts (extend): watch mode detects schema file change, triggers regeneration; config files not overwritten on re-generation; regeneration completes within 1 second of change event
 
 ### Implementation for User Story 7
 
-- [ ] T096 [US7] Implement packages/cli/src/watcher.ts: startWatch(schemaPath, regenerate) uses chokidar.watch(schemaPath, { persistent: true, ignoreInitial: true }), debounces change events by 200ms, calls regenerate() on each change event, logs change detected and regeneration complete messages; handles SIGINT for graceful shutdown (watcher.close())
-- [ ] T097 [US7] Update packages/cli/src/index.ts to support --watch flag: when set, after initial generation call startWatch(schemaPath, () => runGenerate(config)) using T096; log "Watching for changes..." on start
+- [X] T096 [US7] Implement packages/cli/src/watcher.ts: startWatch(schemaPath, regenerate) uses chokidar.watch(schemaPath, { persistent: true, ignoreInitial: true }), debounces change events by 200ms, calls regenerate() on each change event, logs change detected and regeneration complete messages; handles SIGINT for graceful shutdown (watcher.close())
+- [X] T097 [US7] Update packages/cli/src/index.ts to support --watch flag: when set, after initial generation call startWatch(schemaPath, () => runGenerate(config)) using T096; log "Watching for changes..." on start
 
 **Checkpoint**: Watch mode detects changes and regenerates within 1 second. All US7 tests pass. All prior tests still pass.
 
@@ -255,15 +255,15 @@ Monorepo with three packages under `packages/`:
 
 **Purpose**: Integration tests, behavioral equivalence validation, type checking, and quickstart validation.
 
-- [ ] T098 [P] Implement packages/core/tests/integration/full-schema.test.ts: walkSchema on a 20+ field schema covering all supported Zod types completes in <10ms, produces correct FormField[] with correct components, labels, constraints, and nesting
-- [ ] T099 [P] Implement packages/react/tests/integration/equivalence.test.tsx: render runtime `<ZodForm>` and the CLI-generated static form side-by-side with identical schemas, verify they produce the same field count, same field labels, same validation behavior on submit (SC-003)
-- [ ] T100 [P] Update packages/core/src/index.ts to ensure tree-shakeable exports (named exports only, no barrel side effects)
-- [ ] T101 [P] Update packages/react/src/shadcn/index.ts shadcnComponentMap to wire actual shadcn/ui components (Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage, Input, Textarea, Checkbox, Switch, Select, Button) using correct shadcn import paths from `@/components/ui/*`
-- [ ] T102 Run `pnpm type-check` across all packages and fix any TypeScript strict mode violations
-- [ ] T103 Run `pnpm test` across all packages and verify all tests pass with no failures
-- [ ] T104 Run `pnpm run lint` with oxlint and fix any lint violations
-- [ ] T105 Validate all quickstart.md scenarios manually: runtime ZodForm renders, shadcn component map works, CLI generate runs, nested/array/discriminated union schemas render correctly
-- [ ] T106 [P] Add CLI end-to-end performance benchmark in packages/cli/tests/integration/cli-e2e.test.ts (extend): time `zodform generate` on a 50-field schema end-to-end (load → walk → codegen → format → write) and assert completes in <10 seconds (SC-002)
+- [X] T098 [P] Implement packages/core/tests/integration/full-schema.test.ts: walkSchema on a 20+ field schema covering all supported Zod types completes in <10ms, produces correct FormField[] with correct components, labels, constraints, and nesting
+- [X] T099 [P] Implement packages/react/tests/integration/equivalence.test.tsx: render runtime `<ZodForm>` and the CLI-generated static form side-by-side with identical schemas, verify they produce the same field count, same field labels, same validation behavior on submit (SC-003)
+- [X] T100 [P] Update packages/core/src/index.ts to ensure tree-shakeable exports (named exports only, no barrel side effects)
+- [X] T101 [P] Update packages/react/src/shadcn/index.ts shadcnComponentMap to wire actual shadcn/ui components (Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage, Input, Textarea, Checkbox, Switch, Select, Button) using correct shadcn import paths from `@/components/ui/*`
+- [X] T102 Run `pnpm type-check` across all packages and fix any TypeScript strict mode violations
+- [X] T103 Run `pnpm test` across all packages and verify all tests pass with no failures
+- [X] T104 Run `pnpm run lint` with oxlint and fix any lint violations
+- [X] T105 Validate all quickstart.md scenarios manually: runtime ZodForm renders, shadcn component map works, CLI generate runs, nested/array/discriminated union schemas render correctly
+- [X] T106 [P] Add CLI end-to-end performance benchmark in packages/cli/tests/integration/cli-e2e.test.ts (extend): time `zodform generate` on a 50-field schema end-to-end (load → walk → codegen → format → write) and assert completes in <10 seconds (SC-002)
 
 ---
 

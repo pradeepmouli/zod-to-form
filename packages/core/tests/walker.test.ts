@@ -13,11 +13,7 @@ describe('walkSchema', () => {
     const fields = walkSchema(schema);
 
     expect(fields).toHaveLength(3);
-    expect(fields.map((field) => field.key)).toEqual([
-      'firstName',
-      'age',
-      'isActive'
-    ]);
+    expect(fields.map((field) => field.key)).toEqual(['firstName', 'age', 'isActive']);
   });
 
   it('falls through to fallback for unknown def.type', () => {

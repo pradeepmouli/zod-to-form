@@ -1,5 +1,5 @@
 import type { SelectHTMLAttributes } from 'react';
-import type { FormFieldOption } from '@zodform/core';
+import type { FormFieldOption } from '@zod-to-form/core';
 
 type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   options?: FormFieldOption[];

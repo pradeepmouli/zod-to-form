@@ -1,16 +1,9 @@
 import type { ZodType } from 'zod';
 import { inferLabel } from '../utils.js';
-import type {
-  FormField,
-  FormFieldOption,
-  FormProcessorContext,
-  ProcessParams
-} from '../types.js';
+import type { FormField, FormFieldOption, FormProcessorContext, ProcessParams } from '../types.js';
 
 function getDef(schema: ZodType): Record<string, unknown> {
-  return (
-    (schema as unknown as { _zod?: { def?: Record<string, unknown> } })['_zod']?.['def'] ?? {}
-  );
+  return (schema as unknown as { _zod?: { def?: Record<string, unknown> } })['_zod']?.['def'] ?? {};
 }
 
 function normalizeOptions(values: unknown[]): FormFieldOption[] {
@@ -42,7 +35,7 @@ export function processEnum(
   const entries = def['entries'] as Record<string, unknown> | undefined;
   const values = def['values'] as unknown[] | undefined;
 
-  const enumValues = entries ? Object.values(entries) : values ?? [];
+  const enumValues = entries ? Object.values(entries) : (values ?? []);
 
   field.component = 'Select';
   field.options = normalizeOptions(enumValues);
@@ -56,8 +49,7 @@ export function processLiteral(
 ): void {
   const def = getDef(schema);
   const literalValuesRaw =
-    (def['values'] as unknown[] | undefined) ??
-    (def['value'] !== undefined ? [def['value']] : []);
+    (def['values'] as unknown[] | undefined) ?? (def['value'] !== undefined ? [def['value']] : []);
 
   field.component = 'Select';
   field.readOnly = true;

@@ -1,5 +1,5 @@
 import type { InputHTMLAttributes } from 'react';
-import type { FormFieldOption } from '@zodform/core';
+import type { FormFieldOption } from '@zod-to-form/core';
 
 type RadioGroupProps = InputHTMLAttributes<HTMLInputElement> & {
   name: string;
@@ -13,7 +13,7 @@ export function RadioGroup({ options, name, ...props }: RadioGroupProps) {
         <label key={`${option.value}`}>
           <input
             {...props}
-            type='radio'
+            type="radio"
             name={name}
             value={option.value}
             disabled={option.disabled}

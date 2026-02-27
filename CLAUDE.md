@@ -17,9 +17,9 @@ Auto-generated from all feature plans. Last updated: 2026-02-26
 
 ```text
 packages/
-├── core/     # @zodform/core — schema walker & processors (zero deps, zod peer)
-├── react/    # @zodform/react — runtime <ZodForm> renderer (peer deps only)
-└── cli/      # @zodform/cli — build-time codegen CLI
+├── core/     # @zod-to-form/core — schema walker & processors (zero deps, zod peer)
+├── react/    # @zod-to-form/react — runtime <ZodForm> renderer (peer deps only)
+└── cli/      # @zod-to-form/cli — build-time codegen CLI
 
 specs/
 └── 001-zodform/  # Feature specification, plan, and design artifacts

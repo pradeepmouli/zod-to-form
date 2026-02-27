@@ -1,18 +1,14 @@
 /**
- * @zodform/react — API Contract
+ * @zod-to-form/react — API Contract
  *
  * This file defines the public TypeScript interfaces for the React package.
  * Implementation MUST satisfy these interfaces.
  */
 
-import type { ComponentType, ReactNode } from "react";
-import type { ZodType, ZodObject, ZodRegistry } from "zod";
-import type {
-  FieldValues,
-  UseFormReturn,
-  SubmitHandler,
-} from "react-hook-form";
-import type { FormField, FormMeta, FormProcessor } from "./core-api";
+import type { ComponentType, ReactNode } from 'react';
+import type { ZodObject, ZodRegistry } from 'zod';
+import type { UseFormReturn, SubmitHandler } from 'react-hook-form';
+import type { FormField, FormMeta, FormProcessor } from './core-api';
 
 // ─── ComponentMap ─────────────────────────────────────────────────────
 
@@ -43,9 +39,9 @@ export interface ZodFormProps<TSchema extends ZodObject<any>> {
   /** The Zod object schema to render as a form */
   schema: TSchema;
   /** Typed submit handler receiving validated data */
-  onSubmit: SubmitHandler<TSchema["_zod"]["output"]>;
+  onSubmit: SubmitHandler<TSchema['_zod']['output']>;
   /** Optional default values matching schema shape */
-  defaultValues?: Partial<TSchema["_zod"]["output"]>;
+  defaultValues?: Partial<TSchema['_zod']['output']>;
   /** Custom component map (overrides default unstyled primitives) */
   components?: Partial<ComponentMap>;
   /** Form-specific metadata registry */
@@ -76,7 +72,7 @@ export declare function ZodForm<TSchema extends ZodObject<any>>(
 
 export interface UseZodFormReturn<TSchema extends ZodObject<any>> {
   /** React Hook Form instance */
-  form: UseFormReturn<TSchema["_zod"]["output"]>;
+  form: UseFormReturn<TSchema['_zod']['output']>;
   /** FormField[] tree from walking the schema */
   fields: FormField[];
 }
@@ -92,7 +88,7 @@ export interface UseZodFormReturn<TSchema extends ZodObject<any>> {
 export declare function useZodForm<TSchema extends ZodObject<any>>(
   schema: TSchema,
   options?: {
-    defaultValues?: Partial<TSchema["_zod"]["output"]>;
+    defaultValues?: Partial<TSchema['_zod']['output']>;
     formRegistry?: ZodRegistry<FormMeta>;
     processors?: Record<string, FormProcessor>;
   }
@@ -103,5 +99,5 @@ export declare function useZodForm<TSchema extends ZodObject<any>>(
 /** Default unstyled HTML primitives */
 export declare const defaultComponentMap: ComponentMap;
 
-/** shadcn/ui component map (optional import from @zodform/react/shadcn) */
+/** shadcn/ui component map (optional import from @zod-to-form/react/shadcn) */
 export declare const shadcnComponentMap: ComponentMap;

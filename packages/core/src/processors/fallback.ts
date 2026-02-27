@@ -3,9 +3,7 @@ import { createBaseField } from '../utils.js';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
 
 function getDef(schema: ZodType): Record<string, unknown> {
-  return (
-    (schema as unknown as { _zod?: { def?: Record<string, unknown> } })['_zod']?.['def'] ?? {}
-  );
+  return (schema as unknown as { _zod?: { def?: Record<string, unknown> } })['_zod']?.['def'] ?? {};
 }
 
 function processRecord(field: FormField): void {

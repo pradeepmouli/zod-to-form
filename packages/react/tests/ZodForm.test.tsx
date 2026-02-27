@@ -13,7 +13,7 @@ describe('ZodForm', () => {
 
     render(
       <ZodForm schema={schema} onSubmit={vi.fn()}>
-        <button type='submit'>Submit</button>
+        <button type="submit">Submit</button>
       </ZodForm>
     );
 
@@ -29,7 +29,7 @@ describe('ZodForm', () => {
 
     render(
       <ZodForm schema={schema} onSubmit={vi.fn()}>
-        <button type='submit'>Submit</button>
+        <button type="submit">Submit</button>
       </ZodForm>
     );
 
@@ -49,7 +49,7 @@ describe('ZodForm', () => {
 
     render(
       <ZodForm schema={schema} onSubmit={onSubmit}>
-        <button type='submit'>Submit</button>
+        <button type="submit">Submit</button>
       </ZodForm>
     );
 
@@ -64,6 +64,70 @@ describe('ZodForm', () => {
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledWith(
         expect.objectContaining({ name: 'Ada', age: 42 }),
+        expect.anything()
+      );
+    });
+  });
+
+  it('applies form metadata overrides in rendering', async () => {
+    const formRegistry = z.registry<{
+      fieldType?: string;
+      order?: number;
+      hidden?: boolean;
+      gridColumn?: string;
+    }>();
+    const onSubmit = vi.fn();
+
+    const bio = z
+      .string()
+      .meta({ title: 'Biography', examples: ['Write a short bio'] })
+      .describe('Shown on your public profile');
+    const isActive = z.boolean().meta({ title: 'Active User' });
+    const hiddenToken = z.string();
+
+    formRegistry.add(bio, { fieldType: 'textarea', order: 2, gridColumn: '1 / -1' });
+    formRegistry.add(isActive, { fieldType: 'switch', order: 1 });
+    formRegistry.add(hiddenToken, { hidden: true });
+
+    const schema = z.object({ bio, isActive, hiddenToken });
+
+    render(
+      <ZodForm
+        schema={schema}
+        formRegistry={formRegistry}
+        defaultValues={{ hiddenToken: 'secret-value' }}
+        onSubmit={onSubmit}
+      >
+        <button type="submit">Save</button>
+      </ZodForm>
+    );
+
+    expect(screen.getByLabelText('Biography').tagName).toBe('TEXTAREA');
+    expect(screen.getByLabelText('Active User')).toHaveAttribute('role', 'switch');
+    expect(screen.getByLabelText('Biography')).toHaveAttribute('placeholder', 'Write a short bio');
+    expect(screen.getByText('Shown on your public profile')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Hidden Token')).not.toBeInTheDocument();
+
+    const labels = Array.from(document.querySelectorAll('label')).map((label) =>
+      label.textContent?.trim()
+    );
+    expect(labels[0]).toBe('Active User');
+
+    const bioWrapper = screen.getByLabelText('Biography').closest('div');
+    expect(bioWrapper).toHaveStyle({ gridColumn: '1 / -1' });
+
+    fireEvent.change(screen.getByLabelText('Biography'), {
+      target: { value: 'Hello world' }
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bio: 'Hello world',
+          isActive: false,
+          hiddenToken: 'secret-value'
+        }),
         expect.anything()
       );
     });

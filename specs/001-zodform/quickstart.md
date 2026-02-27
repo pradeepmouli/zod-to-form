@@ -4,13 +4,13 @@
 
 ```bash
 # Core + React runtime
-pnpm add @zodform/core @zodform/react
+pnpm add @zod-to-form/core @zod-to-form/react
 
 # Peer dependencies (must be installed by the consumer)
 pnpm add zod react react-hook-form @hookform/resolvers
 
 # CLI for code generation (optional)
-pnpm add -D @zodform/cli
+pnpm add -D @zod-to-form/cli
 ```
 
 ## Runtime Form Rendering
@@ -33,7 +33,7 @@ const userSchema = z.object({
 ### 2. Render with `<ZodForm>`
 
 ```tsx
-import { ZodForm } from "@zodform/react";
+import { ZodForm } from "@zod-to-form/react";
 import { userSchema } from "./schemas/user";
 
 function App() {
@@ -96,8 +96,8 @@ formRegistry.register(userSchema.shape.role, { order: 1 }); // Show first
 ### 4. Use shadcn/ui Components
 
 ```tsx
-import { ZodForm } from "@zodform/react";
-import { shadcnComponentMap } from "@zodform/react/shadcn";
+import { ZodForm } from "@zod-to-form/react";
+import { shadcnComponentMap } from "@zod-to-form/react/shadcn";
 
 <ZodForm
   schema={userSchema}
@@ -122,7 +122,7 @@ npx zodform generate \
 
 This generates `src/components/UserForm.tsx` — a complete form component that:
 - Reads like hand-written code
-- Has zero runtime dependency on `@zodform/*`
+- Has zero runtime dependency on `@zod-to-form/*`
 - Imports only from `react-hook-form`, `zod`, and your UI library
 - Compiles with `tsc --noEmit` in strict mode
 

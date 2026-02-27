@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { FormProvider } from 'react-hook-form';
 import type { ZodObject } from 'zod';
-import type { FormMeta, FormProcessor } from '@zodform/core';
+import type { FormProcessor, ZodFormRegistry } from '@zod-to-form/core';
 import { FieldRenderer } from './FieldRenderer.js';
 import { defaultComponentMap } from './components/index.js';
 import { useZodForm } from './useZodForm.js';
@@ -11,18 +11,13 @@ type ZodFormProps<TSchema extends ZodObject> = {
   onSubmit: (data: TSchema['_zod']['output']) => unknown;
   defaultValues?: Partial<TSchema['_zod']['output']>;
   components?: Partial<typeof defaultComponentMap>;
-  formRegistry?: {
-    get(schema: TSchema): FormMeta | undefined;
-    has(schema: TSchema): boolean;
-  };
+  formRegistry?: ZodFormRegistry;
   processors?: Record<string, FormProcessor>;
   className?: string;
   children?: ReactNode;
 };
 
-export function ZodForm<TSchema extends ZodObject>(
-  props: ZodFormProps<TSchema>
-): ReactNode {
+export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>): ReactNode {
   const {
     schema,
     onSubmit,
@@ -43,7 +38,7 @@ export function ZodForm<TSchema extends ZodObject>(
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className={className}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className={className} noValidate>
         {fields.map((field) => (
           <FieldRenderer key={field.key} field={field} components={mergedComponents} />
         ))}

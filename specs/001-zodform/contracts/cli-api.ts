@@ -1,5 +1,5 @@
 /**
- * @zodform/cli — API Contract
+ * @zod-to-form/cli — API Contract
  *
  * This file defines the CLI interface and codegen configuration.
  * Implementation MUST satisfy these interfaces.
@@ -17,7 +17,7 @@ export interface CLIOptions {
   /** Component name for the generated form (default: inferred from export) */
   name?: string;
   /** UI library preset: "shadcn" | "unstyled" (default: "shadcn") */
-  ui?: "shadcn" | "unstyled";
+  ui?: 'shadcn' | 'unstyled';
   /** Generate a Next.js server action alongside the form */
   serverAction?: boolean;
   /** Watch mode: regenerate on schema file changes */
@@ -55,7 +55,7 @@ export interface CodegenConfig {
   /** Generated component name (PascalCase) */
   componentName: string;
   /** UI library preset */
-  ui: "shadcn" | "unstyled";
+  ui: 'shadcn' | 'unstyled';
   /** Whether to generate a server action */
   serverAction: boolean;
 }
@@ -74,12 +74,12 @@ export interface CodegenConfig {
  * - Schema import: imports the original schema for zodResolver
  * - Component: explicit JSX with register/Controller for each field
  * - Types: z.infer<typeof schema> for form data
- * - NO runtime dependency on @zodform/* packages
+ * - NO runtime dependency on @zod-to-form/* packages
  */
 
 // ─── Codegen Functions ────────────────────────────────────────────────
 
-import type { FormField } from "./core-api";
+import type { FormField } from './core-api';
 
 /**
  * Generate a form component .tsx file from FormField[].
@@ -99,9 +99,7 @@ export declare function generateFormComponent(
  * @param config - Codegen configuration
  * @returns Generated TypeScript source code string
  */
-export declare function generateServerAction(
-  config: CodegenConfig
-): Promise<string>;
+export declare function generateServerAction(config: CodegenConfig): Promise<string>;
 
 /**
  * Load a Zod schema from a TypeScript file using jiti.
@@ -111,7 +109,4 @@ export declare function generateServerAction(
  * @returns The Zod schema object
  * @throws Error if the file cannot be loaded or the export is not a Zod schema
  */
-export declare function loadSchema(
-  schemaPath: string,
-  exportName: string
-): Promise<unknown>;
+export declare function loadSchema(schemaPath: string, exportName: string): Promise<unknown>;

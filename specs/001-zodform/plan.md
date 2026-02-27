@@ -58,7 +58,7 @@ specs/001-zodform/
 
 ```text
 packages/
-├── core/                        # @zodform/core — schema walker & processors
+├── core/                        # @zod-to-form/core — schema walker & processors
 │   ├── src/
 │   │   ├── index.ts             # Public API exports
 │   │   ├── types.ts             # FormField, FormProcessor, FormProcessorContext, FormMeta
@@ -99,7 +99,7 @@ packages/
 │   ├── tsconfig.json
 │   └── vitest.config.ts
 │
-├── react/                       # @zodform/react — runtime renderer
+├── react/                       # @zod-to-form/react — runtime renderer
 │   ├── src/
 │   │   ├── index.ts             # Public API exports
 │   │   ├── ZodForm.tsx          # <ZodForm> component
@@ -128,7 +128,7 @@ packages/
 │   ├── tsconfig.json
 │   └── vitest.config.ts
 │
-└── cli/                         # @zodform/cli — build-time code generator
+└── cli/                         # @zod-to-form/cli — build-time code generator
     ├── src/
     │   ├── index.ts             # CLI entry point (commander setup)
     │   ├── codegen.ts           # FormField[] → .tsx source string
