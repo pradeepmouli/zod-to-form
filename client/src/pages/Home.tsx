@@ -69,10 +69,7 @@ export default function Home() {
             <Card title="Horizontal">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-brand-pink transform rotate-3 rounded-lg"></div>
-                  <div className="bg-white relative p-2 border-2 border-slate-900 rounded-lg flex items-center justify-center">
-                    <span className="font-bold text-slate-900">Z</span>
-                  </div>
+                  <LogoIcon size="md" />
                 </div>
                 <ArrowRight className="text-brand-teal w-6 h-6" />
                 <div className="bg-white p-2 border-2 border-slate-900 rounded-lg">
@@ -98,12 +95,13 @@ export default function Home() {
 
             <Card title="App Icon">
               <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-brand-pink to-brand-magenta flex items-center justify-center shadow-lg shadow-brand-pink/20">
-                <div className="w-14 h-10 bg-white rounded-lg p-2 shadow-sm">
-                  <div className="w-8 h-1.5 bg-slate-200 rounded-full mb-2"></div>
-                  <div className="flex gap-2 items-center">
-                    <div className="w-4 h-1.5 bg-slate-200 rounded-full"></div>
-                    <div className="w-3 h-3 bg-brand-teal rounded-sm flex items-center justify-center">
-                      <Check className="w-2 h-2 text-white" strokeWidth={4} />
+                <div className="w-14 h-10 bg-white rounded-lg p-2 shadow-sm flex flex-col justify-between">
+                  <div className="w-[60%] h-1.5 bg-slate-200 rounded-full"></div>
+                  <div className="w-[85%] h-1.5 bg-slate-200 rounded-full"></div>
+                  <div className="flex gap-2 items-end justify-between w-full">
+                    <div className="w-[45%] h-1.5 bg-slate-200 rounded-full mb-0.5"></div>
+                    <div className="w-3.5 h-3.5 bg-brand-teal rounded-sm flex items-center justify-center">
+                      <Check className="w-2.5 h-2.5 text-white" strokeWidth={4} />
                     </div>
                   </div>
                 </div>
@@ -176,32 +174,11 @@ export default function Home() {
             <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
               <h3 className="text-xs font-bold tracking-widest text-slate-400 uppercase mb-6 text-center">ICONS</h3>
               
-              <div className="flex justify-center items-end gap-6">
+              <div className="flex justify-center items-end gap-6 h-[80px]">
                 <LogoIcon size="lg" />
                 <LogoIcon size="md" />
-                
-                {/* Monochromatic Variant */}
-                <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center">
-                   <div className="w-6 h-6 border-2 border-white rounded flex items-center justify-center p-1">
-                     <div className="w-full flex flex-col gap-0.5">
-                       <div className="w-full h-0.5 bg-white rounded-full"></div>
-                       <div className="flex gap-0.5">
-                          <div className="w-1/2 h-0.5 bg-white rounded-full"></div>
-                          <div className="w-1/2 h-0.5 bg-white rounded-full"></div>
-                       </div>
-                     </div>
-                   </div>
-                </div>
-
-                {/* Dark Outline Variant */}
-                <div className="relative">
-                  <div className="w-12 h-12 bg-white border-2 border-slate-900 rounded-xl flex items-center justify-center rotate-45 transform">
-                     <div className="-rotate-45 flex flex-col gap-1 w-5">
-                       <div className="w-full h-1 bg-slate-900 rounded-full"></div>
-                       <div className="w-2/3 h-1 bg-slate-900 rounded-full"></div>
-                     </div>
-                  </div>
-                </div>
+                <LogoIcon size="md" variant="monochrome" />
+                <LogoIcon size="md" variant="outline" />
               </div>
             </div>
           </div>
@@ -224,44 +201,112 @@ function Card({ children, title }: { children: React.ReactNode, title: string })
   );
 }
 
-function LogoIcon({ size = "md" }: { size?: "sm" | "md" | "lg" | "xl" }) {
+function LogoIcon({ size = "md", variant = "default" }: { size?: "sm" | "md" | "lg" | "xl", variant?: "default" | "outline" | "monochrome" }) {
   const sizes = {
-    sm: "w-8 h-8",
-    md: "w-12 h-12",
-    lg: "w-16 h-16",
-    xl: "w-24 h-24"
+    sm: 32,
+    md: 48,
+    lg: 64,
+    xl: 120
   };
+  const s = sizes[size];
+  
+  // SVG path for rounded pentagon (flat top, straight sides dropping to 60%, angling to bottom point)
+  const pentagonPath = "M 15 5 L 85 5 Q 95 5, 95 15 L 95 60 Q 95 65, 91 68 L 54 96 Q 50 99, 46 96 L 9 68 Q 5 65, 5 60 L 5 15 Q 5 5, 15 5 Z";
 
-  const innerSizes = {
-    sm: "w-4 h-3 p-0.5",
-    md: "w-7 h-5 p-1",
-    lg: "w-9 h-6 p-1.5",
-    xl: "w-14 h-10 p-2"
-  };
+  if (variant === "outline") {
+    return (
+      <div className="relative flex items-center justify-center" style={{ width: s, height: s }}>
+        <svg width={s} height={s} viewBox="0 0 100 100" className="absolute inset-0" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d={pentagonPath} stroke="#0F172A" strokeWidth="8" strokeLinejoin="round" />
+        </svg>
+        <div
+          className="relative z-10 flex flex-col rounded-sm border-[3px] border-[#0F172A]"
+          style={{
+            width: s * 0.5,
+            height: s * 0.35,
+            padding: s * 0.04,
+            gap: s * 0.03,
+            backgroundColor: "transparent"
+          }}
+        >
+          <div className="w-[50%] bg-[#0F172A] rounded-full" style={{ height: s * 0.03 }}></div>
+          <div className="w-[80%] bg-[#0F172A] rounded-full" style={{ height: s * 0.03 }}></div>
+          <div className="w-[40%] bg-[#0F172A] rounded-full mt-auto" style={{ height: s * 0.03 }}></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (variant === "monochrome") {
+    return (
+      <div className="relative flex items-center justify-center bg-slate-900 rounded-full" style={{ width: s * 1.2, height: s * 1.2 }}>
+        <svg width={s} height={s} viewBox="0 0 100 100" className="absolute" fill="white" xmlns="http://www.w3.org/2000/svg">
+          <path d={pentagonPath} />
+        </svg>
+        <div
+          className="relative z-10 flex flex-col rounded-sm border-2 border-slate-900 bg-white"
+          style={{
+            width: s * 0.5,
+            height: s * 0.35,
+            padding: s * 0.04,
+            gap: s * 0.03
+          }}
+        >
+          <div className="w-[50%] bg-slate-900 rounded-full" style={{ height: s * 0.03 }}></div>
+          <div className="w-[80%] bg-slate-900 rounded-full" style={{ height: s * 0.03 }}></div>
+          <div className="w-[40%] bg-slate-900 rounded-full mt-auto" style={{ height: s * 0.03 }}></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className={`${sizes[size]} relative flex items-center justify-center drop-shadow-md`}>
-      {/* Pentagon background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-brand-pink to-brand-magenta transform rotate-[-5deg] rounded-[20%] skew-x-[-5deg] scale-y-110" style={{
-        clipPath: 'polygon(50% 100%, 0 70%, 0 0, 100% 0, 100% 70%)'
-      }}></div>
-      
+    <div className="relative flex items-center justify-center drop-shadow-md" style={{ width: s, height: s }}>
+      {/* SVG Background */}
+      <svg
+        width={s}
+        height={s}
+        viewBox="0 0 100 100"
+        className="absolute inset-0 drop-shadow-sm"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="pinkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FF4D8D" />
+            <stop offset="100%" stopColor="#E11D8E" />
+          </linearGradient>
+        </defs>
+        <path d={pentagonPath} fill="url(#pinkGrad)" />
+      </svg>
+
       {/* Inner White Form */}
-      <div className={`bg-white rounded-sm ${innerSizes[size]} relative z-10 shadow-sm flex flex-col justify-between`}>
-        {/* Top Line */}
-        <div className="w-full bg-slate-200 rounded-full" style={{ height: size === 'xl' ? '6px' : size === 'lg' ? '4px' : '2px' }}></div>
+      <div
+        className="bg-white relative z-10 flex flex-col shadow-sm rounded-md"
+        style={{
+          width: s * 0.60,
+          height: s * 0.45,
+          padding: s * 0.06,
+          gap: s * 0.04
+        }}
+      >
+        <div className="w-[50%] bg-slate-200 rounded-full" style={{ height: s * 0.04 }}></div>
+        <div className="w-[80%] bg-slate-200 rounded-full" style={{ height: s * 0.04 }}></div>
         
-        {/* Bottom Area with Checkmark */}
-        <div className="flex gap-1 items-end justify-between w-full h-full pb-[2px]">
-          <div className="w-[50%] bg-slate-200 rounded-full" style={{ height: size === 'xl' ? '6px' : size === 'lg' ? '4px' : '2px' }}></div>
-          <div className="bg-brand-teal rounded-sm flex items-center justify-center" style={{ 
-            width: size === 'xl' ? '16px' : size === 'lg' ? '12px' : size === 'md' ? '8px' : '6px',
-            height: size === 'xl' ? '16px' : size === 'lg' ? '12px' : size === 'md' ? '8px' : '6px'
-          }}>
-            <Check className="text-white" strokeWidth={4} style={{
-              width: size === 'xl' ? '10px' : size === 'lg' ? '8px' : size === 'md' ? '6px' : '4px',
-              height: size === 'xl' ? '10px' : size === 'lg' ? '8px' : size === 'md' ? '6px' : '4px'
-            }} />
+        <div className="flex justify-between items-end w-full mt-auto">
+          <div className="w-[40%] bg-slate-200 rounded-full mb-[2%]" style={{ height: s * 0.04 }}></div>
+          <div
+            className="bg-brand-teal rounded-sm flex items-center justify-center"
+            style={{
+              width: s * 0.16,
+              height: s * 0.16,
+            }}
+          >
+            <Check
+              className="text-white"
+              strokeWidth={4}
+              style={{ width: s * 0.1, height: s * 0.1 }}
+            />
           </div>
         </div>
       </div>
