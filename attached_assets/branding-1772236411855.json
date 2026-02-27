@@ -1,0 +1,86 @@
+{
+  "colorScheme": "light",
+  "fonts": [
+    {
+      "family": "Inter",
+      "role": "body"
+    }
+  ],
+  "colors": {
+    "primary": "#B81481",
+    "accent": "#B81481",
+    "background": "#FAFAFA",
+    "textPrimary": "#737373",
+    "link": "#B81481"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Inter",
+      "heading": "Inter"
+    },
+    "fontStacks": {
+      "heading": [
+        "Inter"
+      ],
+      "body": [
+        "Inter"
+      ],
+      "paragraph": [
+        "Inter"
+      ]
+    },
+    "fontSizes": {
+      "h1": "30px",
+      "h2": "24px",
+      "body": "14px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "0px"
+  },
+  "components": {},
+  "images": {
+    "logo": "File saved at: attached_assets/logo.png",
+    "favicon": "File saved at: attached_assets/favicon.png",
+    "ogImage": "https://zod.dev/og.png?title=Intro&description=Introduction%20to%20Zod%20-%20TypeScript-first%20schema%20validation%20library%20with%20static%20type%20inference&path=zod.dev",
+    "logoHref": "File saved at: attached_assets/logoHref.html",
+    "logoAlt": "Zod logo"
+  },
+  "__llm_logo_reasoning": {
+    "selectedIndex": 1,
+    "reasoning": "Selected #1 because it is visible, located in the header, links to the homepage, and has alt text matching the brand 'Zod'.",
+    "confidence": 0.95,
+    "source": "llm"
+  },
+  "personality": {
+    "tone": "modern",
+    "energy": "medium",
+    "targetAudience": "developers"
+  },
+  "designSystem": {
+    "framework": "custom",
+    "componentLibrary": ""
+  },
+  "confidence": {
+    "buttons": 0,
+    "colors": 0.9,
+    "overall": 0.45
+  },
+  "__llm_metadata": {
+    "logoSelection": {
+      "llmCalled": true,
+      "llmSucceeded": true,
+      "finalSource": "llm",
+      "rawLogoSelection": {
+        "selectedLogoIndex": 1,
+        "selectedLogoReasoning": "Selected #1 because it is visible, located in the header, links to the homepage, and has alt text matching the brand 'Zod'.",
+        "confidence": 0.95
+      }
+    },
+    "buttonClassification": {
+      "llmCalled": false,
+      "llmSucceeded": false
+    }
+  }
+}
