@@ -225,12 +225,14 @@ function LogoIcon({ size = "md", variant = "default" }: { size?: "sm" | "md" | "
 
     return (
       <div
-        className={`relative z-10 flex flex-col justify-between rounded-sm ${borderStyle}`}
+        className={`absolute z-10 flex flex-col justify-between rounded-sm ${borderStyle}`}
         style={{
           width: w * 0.55,
           height: h * 0.5,
           padding: w * 0.05,
-          marginTop: h * -0.05, // Shift up to center visually in the gem
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
           backgroundColor: bgColor
         }}
       >
@@ -276,9 +278,7 @@ function LogoIcon({ size = "md", variant = "default" }: { size?: "sm" | "md" | "
           <svg width="100%" height="100%" viewBox="0 0 1309 1075" className="absolute inset-0" fill="white" xmlns="http://www.w3.org/2000/svg">
             <path d={zodPath} />
           </svg>
-          <div className="transform scale-[0.85] origin-center w-full h-full flex items-center justify-center">
-             {renderInnerForm(false, true)}
-          </div>
+          {renderInnerForm(false, true)}
         </div>
       </div>
     );
