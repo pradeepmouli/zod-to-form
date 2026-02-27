@@ -65,6 +65,45 @@ describe('processString', () => {
 
     expect(field.required).toBe(false);
   });
+
+  it('sets pattern constraint from .regex()', () => {
+    const schema = z.string().regex(/^\d{3}-\d{2}-\d{4}$/, 'Invalid SSN');
+    const field = createBaseField('ssn', 'string');
+
+    processString(schema, createContext(), field, {});
+
+    expect(field.constraints.pattern).toBe('^\\d{3}-\\d{2}-\\d{4}$');
+    expect(field.props['pattern']).toBe('^\\d{3}-\\d{2}-\\d{4}$');
+  });
+
+  it('adds inputMask for a structurally translatable pattern (SSN)', () => {
+    const schema = z.string().regex(/^\d{3}-\d{2}-\d{4}$/);
+    const field = createBaseField('ssn', 'string');
+
+    processString(schema, createContext(), field, {});
+
+    expect(field.props['inputMask']).toBe('999-99-9999');
+  });
+
+  it('adds inputMask for a date pattern dd/mm/yyyy', () => {
+    const schema = z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/);
+    const field = createBaseField('dob', 'string');
+
+    processString(schema, createContext(), field, {});
+
+    expect(field.props['inputMask']).toBe('99/99/9999');
+  });
+
+  it('does not add inputMask for complex patterns like email regex', () => {
+    const schema = z.string().regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/);
+    const field = createBaseField('email2', 'string');
+
+    processString(schema, createContext(), field, {});
+
+    expect(field.props['inputMask']).toBeUndefined();
+    // pattern constraint still set for validation
+    expect(field.constraints.pattern).toBeDefined();
+  });
 });
 
 describe('processTemplateLiteral', () => {

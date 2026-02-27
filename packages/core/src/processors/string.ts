@@ -1,5 +1,6 @@
 import type { ZodType } from 'zod';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
+import { regexToMask } from '../utils.js';
 
 function getDef(schema: ZodType): Record<string, unknown> {
   return (schema as unknown as { _zod?: { def?: Record<string, unknown> } })['_zod']?.['def'] ?? {};
@@ -21,7 +22,12 @@ export function processString(
   const format = typeof bag['format'] === 'string' ? bag['format'] : undefined;
   const minimum = typeof bag['minimum'] === 'number' ? bag['minimum'] : undefined;
   const maximum = typeof bag['maximum'] === 'number' ? bag['maximum'] : undefined;
-  const pattern = typeof bag['pattern'] === 'string' ? bag['pattern'] : undefined;
+  // bag.patterns holds a Set<RegExp> — take the first regex's source
+  const patternsSet = bag['patterns'];
+  const pattern =
+    patternsSet instanceof Set && patternsSet.size > 0
+      ? ([...patternsSet][0] as RegExp).source
+      : undefined;
 
   field.component = fieldType === 'textarea' ? 'Textarea' : 'Input';
   field.props = {
@@ -43,6 +49,10 @@ export function processString(
   if (pattern) {
     field.constraints.pattern = pattern;
     field.props['pattern'] = pattern;
+    const mask = regexToMask(pattern);
+    if (mask !== null) {
+      field.props['inputMask'] = mask;
+    }
   }
 }
 
