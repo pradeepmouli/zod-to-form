@@ -9,14 +9,14 @@ Implement processor API usability improvements, auto-save runtime lifecycle supp
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x (strict mode)  
-**Primary Dependencies**: Zod v4, React 18+, React Hook Form 7+, `@hookform/resolvers`, commander, jiti, prettier, chokidar  
-**Storage**: N/A  
-**Testing**: Vitest (unit + integration), TypeScript compile checks for generated output  
-**Target Platform**: Node.js CLI + React runtime for browser-compatible apps  
-**Project Type**: pnpm workspace monorepo libraries (`core`, `react`, `cli`)  
-**Performance Goals**: Preserve existing walker/codegen throughput; cache runtime module import for configured components after first load  
-**Constraints**: No Next.js-specific dependency; generated code must remain standalone; TDD and strict typing required by constitution  
+**Language/Version**: TypeScript 5.x (strict mode)
+**Primary Dependencies**: Zod v4, React 18+, React Hook Form 7+, `@hookform/resolvers`, commander, jiti, prettier, chokidar
+**Storage**: N/A
+**Testing**: Vitest (unit + integration), TypeScript compile checks for generated output
+**Target Platform**: Node.js CLI + React runtime for browser-compatible apps
+**Project Type**: pnpm workspace monorepo libraries (`core`, `react`, `cli`)
+**Performance Goals**: Preserve existing walker/codegen throughput; cache runtime module import for configured components after first load
+**Constraints**: No Next.js-specific dependency; generated code must remain standalone; TDD and strict typing required by constitution
 **Scale/Scope**: Updates across `packages/core`, `packages/react`, `packages/cli`, docs, and tests
 
 ## Constitution Check

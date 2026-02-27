@@ -378,7 +378,7 @@ export function FieldRenderer({ field, components, componentConfig }: FieldRende
     required: field.required,
     readOnly: field.readOnly,
     ...field.props,
-    ...(mapping.override?.props ?? {}),
+    ...mapping.override?.props,
     ...registration
   };
 

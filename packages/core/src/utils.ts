@@ -99,7 +99,7 @@ export function regexToMask(pattern: string): string | null {
         continue;
       }
       // Escaped separator (\/ \- \. etc.) — treat as the literal char
-      if (/[-\/() .:_]/.test(next)) {
+      if (/[-/() .:_]/.test(next)) {
         result += next;
         i += 2;
         continue;
@@ -108,7 +108,7 @@ export function regexToMask(pattern: string): string | null {
 
     // Literal separator characters (not quantifiers)
     const ch = p[i]!;
-    if (/[-\/() .:_]/.test(ch)) {
+    if (/[-/() .:_]/.test(ch)) {
       result += ch;
       i++;
       continue;
