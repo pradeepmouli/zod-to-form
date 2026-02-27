@@ -60,7 +60,7 @@ describe('generateServerAction', () => {
 
   it('does not import any @zod-to-form/* packages', async () => {
     const code = await generateServerAction(makeConfig());
-    expect(code).not.toContain('@zodform');
+    expect(code).not.toContain('@zod-to-form');
   });
 
   it('returns success message on validation pass', async () => {

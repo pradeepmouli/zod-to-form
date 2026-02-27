@@ -1,24 +1,10 @@
 import type { ZodType } from 'zod';
 import { resolveMetadata } from './metadata.js';
 import { processFallback } from './processors/fallback.js';
+import { getDef, getShape } from './processors/_utils.js';
 import { createProcessors } from './registry.js';
 import { createBaseField } from './utils.js';
 import type { FormField, WalkOptions } from './types.js';
-
-function getDef(schema: ZodType): Record<string, unknown> {
-  return (schema as unknown as { _zod?: { def?: Record<string, unknown> } })['_zod']?.['def'] ?? {};
-}
-
-function getShape(def: Record<string, unknown>): Record<string, ZodType> {
-  const rawShape = def['shape'];
-
-  if (typeof rawShape === 'function') {
-    const computed = rawShape as () => unknown;
-    return (computed() as Record<string, ZodType>) ?? {};
-  }
-
-  return (rawShape as Record<string, ZodType>) ?? {};
-}
 
 function processField(
   schema: ZodType,

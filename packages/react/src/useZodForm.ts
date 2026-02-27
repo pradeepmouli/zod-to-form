@@ -59,7 +59,7 @@ export function useZodForm<TSchema extends ZodObject>(
   schema: TSchema,
   options?: UseZodFormOptions<TSchema>
 ) {
-  const baseResolver = zodResolver(schema);
+  const baseResolver = useMemo(() => zodResolver(schema), [schema]);
 
   const fields = useMemo(
     () =>
@@ -100,7 +100,7 @@ export function useZodForm<TSchema extends ZodObject>(
     return () => {
       subscription.unsubscribe();
     };
-  }, [form, options?.onValueChange, schema]);
+  }, [options?.onValueChange, schema]);
 
   return {
     form,
