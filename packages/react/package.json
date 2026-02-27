@@ -9,7 +9,14 @@
     "url": "https://github.com/pradeepmouli/zodforms.git",
     "directory": "packages/react"
   },
-  "keywords": ["zod", "react", "forms", "form-generation", "react-hook-form", "typescript"],
+  "keywords": [
+    "zod",
+    "react",
+    "forms",
+    "form-generation",
+    "react-hook-form",
+    "typescript"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -29,7 +36,7 @@
   "scripts": {
     "build": "tsgo -p tsconfig.build.json",
     "clean": "rm -rf dist tsconfig.build.tsbuildinfo tsconfig.tsbuildinfo",
-    "prepublishOnly": "pnpm run clean && pnpm run build",
+    "prepublishOnly": "npm run clean && npm run build",
     "dev": "tsgo -p tsconfig.build.json --watch",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
