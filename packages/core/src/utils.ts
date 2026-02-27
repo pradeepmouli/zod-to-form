@@ -92,7 +92,7 @@ export function regexToMask(pattern: string): string | null {
 
     // \\( and \\) — escaped literal parens, and other escaped separator chars (e.g. \/)
     if (p[i] === '\\' && i + 1 < p.length) {
-      const next = p[i + 1];
+      const next = p[i + 1]!;
       if (next === '(' || next === ')') {
         result += next;
         i += 2;
@@ -107,7 +107,7 @@ export function regexToMask(pattern: string): string | null {
     }
 
     // Literal separator characters (not quantifiers)
-    const ch = p[i];
+    const ch = p[i]!;
     if (/[-\/() .:_]/.test(ch)) {
       result += ch;
       i++;
