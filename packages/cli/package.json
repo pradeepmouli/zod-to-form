@@ -3,10 +3,10 @@
   "version": "0.2.3",
   "description": "Build-time code generator for Zod v4 form components",
   "license": "MIT",
-  "homepage": "https://github.com/pradeepmouli/zodforms#readme",
+  "homepage": "https://github.com/pradeepmouli/zod-to-form#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/pradeepmouli/zodforms.git",
+    "url": "https://github.com/pradeepmouli/zod-to-form.git",
     "directory": "packages/cli"
   },
   "keywords": [

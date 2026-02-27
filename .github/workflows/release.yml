@@ -13,7 +13,7 @@
 # 2. Enable "Trusted Publishers" under Publishing Access
 # 3. Add GitHub Actions as a trusted publisher:
 #    - Provider: GitHub Actions
-#    - Repository: your-org/your-repo
+#    - Repository: pradeepmouli/zod-to-form
 #    - Workflow: release.yml
 #    - Environment: (leave empty)
 #

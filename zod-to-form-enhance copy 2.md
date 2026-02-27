@@ -1,6 +1,6 @@
 # Enhancement: zod-to-form Additions for rune-langium Integration
 
-**Package**: `@zod-to-form` ([pradeepmouli/zodforms](https://github.com/pradeepmouli/zodforms), `001-zodforms` branch)
+**Package**: `@zod-to-form` ([pradeepmouli/zod-to-form](https://github.com/pradeepmouli/zod-to-form), `001-zod-to-form` branch)
 **Requested by**: [`rune-langium`](https://github.com/pradeepmouli/rune-langium) spec 004 + 005
 **Date**: 2026-02-27
 

@@ -19,7 +19,7 @@
   Follow-up TODOs: None.
 -->
 
-# zodforms Constitution
+# zod-to-form Constitution
 
 ## Core Principles
 
@@ -42,7 +42,7 @@ source of truth:
 
 **Rationale**: Zod v4 was explicitly designed as a "validation substrate"
 for library authors. Using its internals directly eliminates round-trip
-information loss and keeps zodforms forward-compatible with Zod core.
+information loss and keeps zod-to-form forward-compatible with Zod core.
 
 ### II. Processor Registry Pattern
 
@@ -68,7 +68,7 @@ that is consumed by two independent output modes:
 - **Runtime renderer** (`zodform/react`): `FormField[]` → React elements
   at runtime via a pluggable `ComponentMap`
 - **Build-time codegen** (`zodform/cli`): `FormField[]` → static `.tsx`
-  source code with no runtime dependency on zodforms
+  source code with no runtime dependency on zod-to-form
 
 Both modes MUST share the same core traversal and processor registry.
 The same schema MUST produce identical form behavior regardless of mode.
@@ -86,7 +86,7 @@ Dependency discipline MUST be maintained across all packages:
   `react-hook-form`, `@hookform/resolvers`, `zod`, UI components)
 - `zodform/cli` MAY have direct dependencies for build tooling (`jiti`,
   `commander`, `prettier`, `chokidar`)
-- Generated `.tsx` files MUST have zero runtime dependency on zodforms —
+- Generated `.tsx` files MUST have zero runtime dependency on zod-to-form —
   they import only from `react-hook-form`, `zod`, and the user's UI library
 - No dependency MUST be added without explicit justification
 
@@ -122,7 +122,7 @@ Full TypeScript strict mode MUST be enabled across all packages:
 - `any` and `as` casts are prohibited unless explicitly justified
   with an inline comment explaining why
 
-**Rationale**: zodforms targets TypeScript-first Zod users. Type safety
+**Rationale**: zod-to-form targets TypeScript-first Zod users. Type safety
 from schema definition through form submission is a core value
 proposition over loosely-typed alternatives.
 
@@ -145,7 +145,7 @@ users and violate WCAG guidelines.
 
 ## Technology Stack
 
-The following technology choices are mandatory for zodforms:
+The following technology choices are mandatory for zod-to-form:
 
 - **Language**: TypeScript 5.x with strict mode
 - **Schema Library**: Zod v4 (v4.0.0+) — the `_zod` internals API
@@ -189,7 +189,7 @@ Quality gates that MUST pass before merge:
 ## Governance
 
 This constitution supersedes all other development practices for the
-zodforms project. All pull requests and code reviews MUST verify
+zod-to-form project. All pull requests and code reviews MUST verify
 compliance with the seven core principles.
 
 - **Amendments**: Require documented rationale, review, and a migration

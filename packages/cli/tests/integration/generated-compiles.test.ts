@@ -111,7 +111,7 @@ describe('generated component compilation', () => {
 
     try {
       execFileSync('pnpm', ['exec', 'tsc', '--noEmit', '-p', tsconfigPath], {
-        cwd: '/Users/pmouli/GitHub.nosync/zodforms',
+        cwd: '/Users/pmouli/GitHub.nosync/zod-to-form',
         stdio: 'pipe'
       });
     } catch (error) {

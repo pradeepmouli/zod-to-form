@@ -1,4 +1,4 @@
-# zodforms Development Guidelines
+# zod-to-form Development Guidelines
 
 Auto-generated from all feature plans. Last updated: 2026-02-27
 

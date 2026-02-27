@@ -3,7 +3,7 @@
 This repository is designed for multi-agent collaboration (Copilot, Claude, Gemini, Codex). Use this guide to stay consistent when automating tasks.
 
 ## Project Metadata
-- Name: zodforms
+- Name: zod-to-form
 - Language: TypeScript (pnpm workspaces)
 - Tooling: pnpm, oxlint, oxfmt, Vitest, simple-git-hooks, lint-staged
 

@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-zodforms is a schema-driven form generation library for Zod v4. It walks
+zod-to-form is a schema-driven form generation library for Zod v4. It walks
 Zod's internal type tree using the same processor registry pattern as
 `z.toJSONSchema()`, but emits React form components instead of JSON Schema
 nodes. The library supports two modes: **runtime rendering** (a drop-in
@@ -23,7 +23,7 @@ tooling configuration, and project constitution.
 
 ### Directory Layout
 ```
-zodforms/
+zod-to-form/
 ├── .changeset/              # Changeset release management config
 ├── .claude/                 # Claude Code agent skills and commands
 │   ├── agents/              # Spec-kit agent definitions
@@ -155,7 +155,7 @@ features (from the project specification) are:
    Zod schema and `onSubmit` handler, gets a fully validated form
 2. **Build-Time Code Generation**: Developer runs `npx zodform --schema`
    to generate an explicit `.tsx` form component with no runtime
-   dependency on zodforms
+   dependency on zod-to-form
 3. **Metadata Annotation**: Developer uses `z.registry<FormMeta>()` and
    `.meta()` to customize field rendering (labels, types, ordering)
 
