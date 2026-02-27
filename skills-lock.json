@@ -5,6 +5,21 @@
       "source": "vercel-labs/skills",
       "sourceType": "github",
       "computedHash": "6412eb4eb3b91595ebab937f0c69501240e7ba761b3d82510b5cf506ec5c7adc"
+    },
+    "react-modernization": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "9cc6a02dc54119eedafac54a503b9275f73ba37c46d82022dfdc84f12f805219"
+    },
+    "shadcn-ui": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "computedHash": "fc286bef24c7ed9f6d22410ee524b3a83cc38825fb06313d46b5b13a90454135"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "4365be772fd3b41994a72ad478472c6d680678e7f3859860ab010e9c46e48ee0"
     }
   }
 }
