@@ -138,7 +138,7 @@ At baseline, no application features are implemented. The planned
 features (from the project specification) are:
 
 1. **Core Type Tree Walker** — Recursive schema traversal via
-   `schema._zod.def` dispatching to processors by type
+   `schema.def` (fallback `schema._zod.def`) dispatching to processors by type
 2. **Form Processor Registry** — 18+ processors covering all Zod types
    (string, number, boolean, date, enum, file, object, array, union, etc.)
 3. **Runtime Renderer** — `<ZodForm>` React component for drop-in form

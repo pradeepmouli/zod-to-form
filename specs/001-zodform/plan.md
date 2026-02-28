@@ -26,7 +26,7 @@ zodform is a schema-driven form generation library for Zod v4 that walks Zod's i
 
 | Principle | Status | Evidence |
 |-----------|--------|----------|
-| I. Zod-Native Architecture | PASS | All introspection uses `schema._zod.def`, `schema._zod.bag`, `schema._zod.parent`, `schema._zod.optin/optout`. No intermediate JSON Schema conversion. Metadata via `z.globalRegistry` and `z.registry<FormMeta>()`. |
+| I. Zod-Native Architecture | PASS | Structural introspection uses `schema.def` (fallback `schema._zod.def`); constraints use `schema._zod.bag`; wrapper/optionality use `schema._zod.parent` and `schema._zod.optin/optout`. No intermediate JSON Schema conversion. Metadata via `z.globalRegistry` and `z.registry<FormMeta>()`. |
 | II. Processor Registry Pattern | PASS | Core walker dispatches by `def.type` to registered processors. Adding a new Zod type requires only a new processor entry. Custom processors registrable by consumers. |
 | III. Dual-Mode Output | PASS | Core produces `FormField[]` consumed independently by runtime renderer and CLI codegen. Both share identical walker and processors. |
 | IV. Zero Unnecessary Dependencies | PASS | `core` has zero deps (zod peer). `react` uses only peer deps. `cli` has justified direct deps (commander, jiti, prettier, chokidar). Generated code imports only from RHF, zod, and user's UI lib. |

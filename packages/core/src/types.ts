@@ -49,7 +49,7 @@ export interface FormField {
   children?: FormField[];
   /** Template for array items */
   arrayItem?: FormField;
-  /** Validation constraints extracted from _zod.bag */
+  /** Validation constraints extracted from Zod v4 constraint bag (_zod.bag) */
   constraints: FormFieldConstraints;
   /** Original Zod def.type for reference */
   zodType: string;

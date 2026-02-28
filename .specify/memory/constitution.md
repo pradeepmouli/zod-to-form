@@ -28,7 +28,7 @@
 All schema introspection MUST use Zod v4's native internals as the single
 source of truth:
 
-- Access structural data exclusively via `schema._zod.def`
+- Access structural data via `schema.def`, with fallback to `schema._zod.def`
 - Access constraints exclusively via `schema._zod.bag`
 - Navigate wrapper chains via `schema._zod.parent`
 - Detect optionality via `schema._zod.optin` / `schema._zod.optout`

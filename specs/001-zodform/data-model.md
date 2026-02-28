@@ -115,7 +115,7 @@ ZodType schema
            ▼
 ┌──────────────────────┐
 │     FormProcessor     │ ◄── one per def.type
-│  reads: _zod.def     │
+│  reads: def (_zod.def fallback) │
 │  reads: _zod.bag     │
 │  reads: registries   │
 │  writes: FormField   │

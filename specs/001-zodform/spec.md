@@ -145,7 +145,7 @@ As a developer iterating on my data model, I want the CLI to watch for schema ch
 
 ### Functional Requirements
 
-- **FR-001**: The system MUST implement a recursive type tree walker that traverses Zod v4 schemas by reading `schema._zod.def` for structural data, `schema._zod.bag` for constraint data, and dispatching to type-specific processors by `def.type`
+- **FR-001**: The system MUST implement a recursive type tree walker that traverses Zod v4 schemas by reading `schema.def` (fallback `schema._zod.def`) for structural data, `schema._zod.bag` for constraint data, and dispatching to type-specific processors by `def.type`
 - **FR-002**: The system MUST implement a processor registry with handlers for at minimum: string, number, boolean, date, enum, literal, file, object, array, union (including discriminated unions), tuple, nullable, optional, default, pipe, readonly, and template_literal Zod types. Discriminated unions MUST render using a select-then-reveal pattern: a select/radio for the discriminator field with conditional rendering of variant-specific fields. Processors for transform, custom, lazy, intersection, record, and other types MUST be provided with sensible defaults or configurable fallbacks.
 - **FR-003**: Each processor MUST output a FormField descriptor containing: key (field path), component name, props, label, description, placeholder, required flag, default value, read-only flag, hidden flag, order, options (for enums/unions), children (for nested objects), array item template, and constraint data (min, max, minLength, maxLength, pattern, format)
 - **FR-004**: The system MUST read metadata from two sources in precedence order: (1) form-specific registry via `z.registry<FormMeta>()` for fieldType, order, hidden, gridColumn, render overrides; (2) global registry via `z.globalRegistry` / `.meta()` / `.describe()` for title, description, examples, deprecated
@@ -153,7 +153,7 @@ As a developer iterating on my data model, I want the CLI to watch for schema ch
 - **FR-006**: The renderer MUST default to unstyled HTML primitives (native `<input>`, `<select>`, `<textarea>`, etc.) and use a pluggable component map (Input, Textarea, Checkbox, Switch, Select, DatePicker, FileInput, RadioGroup) allowing users to override individual components or provide entirely custom maps for different UI libraries. A pre-built shadcn/ui component map MUST be provided as an optional import.
 - **FR-007**: The CLI MUST dynamically import the user's Zod schema file, call the core walker to produce FormField[], and emit a static `.tsx` file with explicit form markup that has zero runtime dependency on zodform — importing only from react-hook-form, zod, and the user's UI library
 - **FR-008**: All rendered and generated form components MUST include: label elements with htmlFor linking, validation error display via FormMessage, description text via FormDescription when metadata is present, aria-invalid on inputs when errors exist, proper required attributes, and logical tab order (schema declaration order, overridable via order in form registry)
-- **FR-009**: The system MUST support Zod v4 (v4.0.0+) exclusively, using the `_zod` internals API (`schema._zod.def`, `schema._zod.bag`, `schema._zod.parent`, `schema._zod.optin/optout`). Zod v3 support is NOT a goal.
+- **FR-009**: The system MUST support Zod v4 (v4.0.0+) exclusively, using Zod v4 internals (`schema.def` with fallback to `schema._zod.def`, plus `schema._zod.bag`, `schema._zod.parent`, `schema._zod.optin/optout`). Zod v3 support is NOT a goal.
 - **FR-010**: The system MUST handle nested objects by recursing into `def.shape` and rendering grouped sections, and arrays by providing useFieldArray with add/remove controls using `def.element` as the item template, respecting `.min()` and `.max()` constraints
 - **FR-011**: The CLI MUST support `--schema`, `--export`, `--out`, `--name`, `--ui`, `--server-action`, `--watch`, `--force`, and `--dry-run` options
 - **FR-012**: The CLI MUST NOT overwrite user-owned config files on re-runs unless `--force` is specified. Generated form files are always regenerated; config files are generated once.
@@ -191,7 +191,7 @@ As a developer iterating on my data model, I want the CLI to watch for schema ch
 - For runtime rendering: React 18+, React Hook Form 7+, and `@hookform/resolvers` are available in the consumer's project as peer dependencies (not bundled by zodform)
 - For build-time codegen: shadcn/ui form components are installed in the consumer's project
 - The Zod schema is exported as a named export from a TypeScript file
-- `schema._zod.def`, `schema._zod.bag`, `schema._zod.parent`, `schema._zod.optin/optout` remain stable across Zod v4.x releases (documented as the library substrate API)
+- `schema.def` or `schema._zod.def`, plus `schema._zod.bag`, `schema._zod.parent`, `schema._zod.optin/optout` remain stable across Zod v4.x releases (documented as the library substrate API)
 - The runtime renderer defaults to unstyled HTML primitives; shadcn/ui is available as a pre-built optional component map. The CLI defaults to shadcn/ui imports in generated code.
 - Zod v3 support is explicitly out of scope for v1
 

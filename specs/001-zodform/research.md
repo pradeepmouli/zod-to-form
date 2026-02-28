@@ -4,13 +4,13 @@
 
 ## 1. Zod v4 Internals API
 
-### Decision: Use `schema._zod` substrate API exclusively
+### Decision: Prefer `schema.def` with `_zod` substrate fallback
 
 **Rationale**: Zod v4 exposes a documented internals API designed for library authors (the "substrate"). This is the same API that `z.toJSONSchema()` uses internally. Using it directly avoids information loss from intermediate representations.
 
 **Key structures**:
 
-- `schema._zod.def` — Type definition object with `type` discriminator
+- `schema.def` (fallback `schema._zod.def`) — Type definition object with `type` discriminator
   - `def.type`: string identifier (e.g., `"string"`, `"number"`, `"object"`, `"array"`, `"union"`, `"enum"`, `"literal"`, `"optional"`, `"nullable"`, `"default"`, `"pipe"`, etc.)
   - `def.shape`: Record of named child schemas (for `object` type)
   - `def.element`: Child schema (for `array` type)
@@ -58,7 +58,9 @@ const processors: Record<string, FormProcessor> = {
 
 function process(schema: ZodType, ctx: FormProcessorContext, params: ProcessParams): FormField {
   const field = createBaseField(schema, ctx, params);
-  const processor = ctx.processors[schema._zod.def.type];
+  const def = (schema as { def?: { type?: string }; _zod?: { def?: { type?: string } } }).def
+    ?? (schema as { _zod?: { def?: { type?: string } } })._zod?.def;
+  const processor = def?.type ? ctx.processors[def.type] : undefined;
   if (processor) {
     processor(schema, ctx, field, params);
   } else {
