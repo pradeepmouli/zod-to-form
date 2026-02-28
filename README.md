@@ -498,18 +498,13 @@ The Zod-to-form generation space has one dominant player ([AutoForm](https://git
 <details>
 <summary><strong>vs AutoForm</strong> (~165K npm/month, 3.4K stars)</summary>
 
-AutoForm is the market leader and the feature set to match. However:
-
-- **Maintenance stalled** — last commit Aug 2025, 32+ unanswered issues, solo maintainer.
-- **Incomplete v3→v4 migration** — still reads `_def` (Zod v3 internals) instead of the `_zod` substrate API Zod v4 provides for library authors.
-- **Custom annotation hack** — uses `fieldConfig()` injected via `.superRefine()` to piggyback metadata on the refinement system. Zod v4's native `.meta()` and `z.registry()` make this unnecessary.
+- **Incomplete v4 support** — still reads `_def` (Zod v3 internals) instead of the `_zod` substrate API Zod v4 provides for library authors.
+- **Custom annotation approach** — uses `fieldConfig()` injected via `.superRefine()` to piggyback metadata on the refinement system. Zod v4's native `.meta()` and `z.registry()` make this unnecessary.
 - **Runtime only** — no option to generate static `.tsx` files.
 </details>
 
 <details>
 <summary><strong>vs uniforms</strong> (~68K npm/month core, 2K stars)</summary>
-
-The most mature project in the space (backed by Vazco), with a well-designed Bridge abstraction and 6 UI themes.
 
 - **Zod is second-class** — the Zod bridge has only ~1.2K downloads/month, targets Zod v3 only, and has no v4 support.
 - **No shadcn/ui theme** — available themes (AntD, Bootstrap, MUI, Semantic) don't include today's dominant React component library.
@@ -520,8 +515,6 @@ The most mature project in the space (backed by Vazco), with a well-designed Bri
 <details>
 <summary><strong>vs SnowForm</strong> (~920 npm/month, 11 stars)</summary>
 
-The freshest competitor (Jan 2026) with the right RHF foundation.
-
 - **Global singleton** — `setupSnowForm()` uses a module-level global, problematic for testing, SSR, and multi-config apps.
 - **Limited type coverage** — docs only show basic types; no evidence of array/object/union/discriminatedUnion handling.
 - **No Zod v4 metadata** — uses its own override system rather than `.meta()` or `z.registry()`.
@@ -529,8 +522,6 @@ The freshest competitor (Jan 2026) with the right RHF foundation.
 
 <details>
 <summary><strong>vs react-formgen</strong> (~180 npm/month, 68 stars)</summary>
-
-A headless, Zustand-based form generator with a multi-schema plugin architecture.
 
 - **Permanently alpha** — still at `0.0.0-alpha.27` after 1.5+ years.
 - **Zustand instead of RHF** — loses the entire React Hook Form ecosystem: `zodResolver`, `useFieldArray`, validation modes, focus management, dirty/touched tracking.
@@ -544,8 +535,6 @@ The three capabilities no competitor offers are what define zod-to-form:
 1. **Zod v4 native introspection** — reads `def` (with `_zod.def` fallback), reads `_zod.bag`, uses `.meta()` and `z.registry()` — aligned with Zod v4 internals and no invented IR.
 2. **Build-time codegen** — generates readable `.tsx` files you can inspect, modify, and commit. Aligns with the "copy into your project" philosophy (shadcn/ui, Tailwind over CSS-in-JS).
 3. **Zero-dependency core** — `@zod-to-form/core` has zero runtime dependencies (Zod is a peer). The same `FormField[]` drives both runtime rendering and static codegen.
-
-> *Analysis date: February 2026. Data from npm registry, GitHub API, and package source inspection.*
 
 ## FAQ
 
