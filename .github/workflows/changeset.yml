@@ -141,7 +141,11 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # PAT_TOKEN is required because GITHUB_TOKEN cannot create PRs when
+          # "Allow GitHub Actions to create and approve pull requests" is disabled
+          # in repository Settings > Actions > General > Workflow permissions.
+          # Create a PAT with 'repo' scope and add it as a repository secret named PAT_TOKEN.
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           commit-message: 'chore: add auto-generated changeset for ${{ steps.generate.outputs.type }} release'
           title: 'chore: add auto-generated changeset (${{ steps.generate.outputs.type }})'
           body: |
