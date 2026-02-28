@@ -1,0 +1,23 @@
+<svg width="1309" height="1075" viewBox="0 0 1309 1075" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pinkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF4D8D" />
+      <stop offset="100%" stop-color="#E11D8E" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="15" stdDeviation="25" flood-color="#000000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  <path d="M258.188,0.987c-51.217,0 -96.967,32.03 -114.488,80.159l-132.717,364.517c-17.279,47.47 -3.479,100.679 34.7,133.762l536.4,464.825c46.192,40.029 114.892,39.638 160.625,-0.912l520.988,-461.934c37.296,-33.071 50.687,-85.525 33.808,-132.425l-132.241,-367.412c-17.4,-48.346 -63.259,-80.58 -114.638,-80.58l-792.438,0.001Z" fill="url(#pinkGrad)" />
+  
+  <g filter="url(#shadow)">
+    <rect x="261.8" y="268.75" width="785.4" height="473" rx="104.72" fill="white" />
+    <rect x="301.07" y="308.02" width="667.59" height="37.625" rx="18.81" fill="#E2E8F0" />
+    <rect x="301.07" y="387.44" width="471.24" height="37.625" rx="18.81" fill="#E2E8F0" />
+    <rect x="301.07" y="649.15" width="274.89" height="37.625" rx="18.81" fill="#E2E8F0" />
+    <rect x="772.31" y="466.86" width="235.62" height="235.62" rx="45.81" fill="#14B8A6" />
+    <svg x="811.58" y="506.13" width="157.08" height="157.08" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  </g>
+</svg>
