@@ -1,7 +1,5 @@
 <p align="center">
-  <a href="https://github.com/pradeepmouli/zod-to-form">
-    <img src="https://raw.githubusercontent.com/pradeepmouli/zod-to-form/master/attached_assets/logo.png" alt="zod-to-form logo" height="32" />
-  </a>
+  <img src="https://raw.githubusercontent.com/pradeepmouli/zod-to-form/master/attached_assets/banner.svg" alt="zod-to-form banner" />
 </p>
 
 # @zod-to-form/core
