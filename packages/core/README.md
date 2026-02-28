@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../../attached_assets/logo.png" alt="zod-to-form logo" height="32" />
+  <img src="https://github.com/zod-to-form/zod-to-form/raw/main/attached_assets/logo.png" alt="zod-to-form logo" height="32" />
 </p>
 
 # @zod-to-form/core
