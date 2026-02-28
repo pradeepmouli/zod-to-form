@@ -154,7 +154,7 @@ import { shadcnComponentMap } from '@zod-to-form/react/shadcn';
 
 ### CLI Code Generation
 
-Generate a static, zero-dependency `.tsx` form component:
+Generate a static `.tsx` form component that has **zero runtime dependency** on zod-to-form:
 
 ```bash
 npx zodform generate \
@@ -164,7 +164,86 @@ npx zodform generate \
   --name UserForm
 ```
 
-Generates `src/components/UserForm.tsx` — reads like hand-written code, imports only from `react-hook-form` and your UI library, compiles in strict mode.
+This produces a file like the following — notice it imports only `react-hook-form`, `@hookform/resolvers`, and your schema. No `@zod-to-form/*` imports appear in the output:
+
+```tsx
+// src/components/UserForm.tsx (generated)
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { userSchema } from '../schemas/user';
+
+type FormData = (typeof userSchema)['_zod']['output'];
+
+export function UserForm(props: {
+  onSubmit: (data: FormData) => void;
+}) {
+  const { register, handleSubmit } = useForm<FormData>({
+    resolver: zodResolver(userSchema),
+  });
+
+  return (
+    <form onSubmit={handleSubmit(props.onSubmit)}>
+      <div>
+        <label htmlFor="name">Name</label>
+        <input id="name" type="text" {...register('name')} />
+      </div>
+      <div>
+        <label htmlFor="email">Email</label>
+        <input id="email" type="email" {...register('email')} />
+      </div>
+      <div>
+        <label htmlFor="role">Role</label>
+        <select id="role" {...register('role')}>
+          <option value="admin">Admin</option>
+          <option value="editor">Editor</option>
+          <option value="viewer">Viewer</option>
+        </select>
+      </div>
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+```
+
+The generated code reads like something you'd write by hand. Inspect it, customize it, commit it.
+
+**Auto-save mode** generates a `watch` + `useEffect` pattern instead of `handleSubmit`:
+
+```bash
+npx zodform generate --schema src/schemas/user.ts --export userSchema --mode auto-save
+```
+
+```tsx
+// Generated in auto-save mode
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { userSchema } from '../schemas/user';
+
+type FormData = (typeof userSchema)['_zod']['output'];
+
+export function UserForm(props: {
+  onValueChange?: (data: FormData) => void;
+}) {
+  const { register, watch } = useForm<FormData>({
+    resolver: zodResolver(userSchema),
+    mode: 'onChange'
+  });
+
+  useEffect(() => {
+    const subscription = watch((values) => {
+      props.onValueChange?.(values as FormData);
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, props.onValueChange]);
+
+  return (
+    <form>
+      {/* fields — no submit button */}
+    </form>
+  );
+}
+```
 
 **With Next.js server action:**
 
@@ -172,11 +251,82 @@ Generates `src/components/UserForm.tsx` — reads like hand-written code, import
 npx zodform generate --schema src/schemas/user.ts --export userSchema --server-action
 ```
 
-**Watch mode:**
+**Watch mode** (re-generates on schema changes):
 
 ```bash
 npx zodform generate --schema src/schemas/user.ts --export userSchema --watch
 ```
+
+### Shared Component Configuration
+
+Both the runtime renderer and the CLI codegen accept the **same component config shape**. Define it once, use it in both paths — the forms are functionally identical.
+
+**1. Define the config:**
+
+```typescript
+// src/config/form-components.ts
+import { defineComponentConfig } from '@zod-to-form/cli';
+
+export default defineComponentConfig({
+  components: '@/components/ui',
+  fieldTypes: {
+    Input: { component: 'TextInput' },
+    Textarea: { component: 'TextareaInput' },
+    Select: { component: 'SelectInput' },
+    Checkbox: { component: 'CheckboxInput' },
+    DatePicker: { component: 'DateInput' },
+    'cross-ref': { component: 'TypeSelector' },
+  },
+  fields: {
+    bio: { fieldType: 'Textarea', props: { rows: 6 } },
+    'address.country': { fieldType: 'cross-ref', props: { refType: 'Country' } },
+  },
+});
+```
+
+**2a. Use with the CLI** — generates static imports and JSX:
+
+```bash
+npx zodform generate \
+  --schema src/schemas/user.ts \
+  --export userSchema \
+  --component-config src/config/form-components.ts \
+  --out src/components/
+```
+
+The generated file will contain:
+
+```tsx
+// Static imports from your config
+import { TextInput, TextareaInput, TypeSelector } from '@/components/ui';
+
+// ...
+<TextareaInput id="bio" {...register('bio')} rows={6} />
+<TypeSelector id="address.country" {...register('address.country')} refType="Country" />
+```
+
+**2b. Use with the runtime** — loads the same components dynamically:
+
+```tsx
+import { ZodForm } from '@zod-to-form/react';
+import componentConfig from '@/config/form-components';
+
+<ZodForm
+  schema={userSchema}
+  componentConfig={componentConfig}
+  onSubmit={handleSubmit}
+>
+  <button type="submit">Save</button>
+</ZodForm>
+```
+
+Both paths resolve the same config in the same priority order:
+
+1. **Per-field override** (`config.fields['bio']`) — highest priority
+2. **Field type mapping** (`config.fieldTypes['Textarea']`) — fallback
+3. **Default rendering** — built-in `<input>`, `<select>`, etc.
+
+The difference is only in *when* resolution happens: the CLI resolves at build time and emits static code, the runtime resolves at render time and loads components dynamically. The resulting form structure, field mapping, and override props are identical.
 
 ### Nested Objects and Arrays
 
@@ -369,7 +519,7 @@ Yes. There are two approaches:
 - **Runtime:** Pass a `components` map to `<ZodForm>` that maps field types to your React components. A `shadcnComponentMap` is included out of the box.
 - **CLI:** Use `--ui shadcn` (default) or `--ui unstyled`, and optionally provide a `--component-config` file to map field types to your own component imports.
 
-Both paths are fully pluggable — zod-to-form never hard-codes a specific UI library.
+Both paths accept the same config shape — you can define your component mapping once and share it across runtime and CLI. See [Shared Component Configuration](#shared-component-configuration) for a full example.
 </details>
 
 <details>
@@ -385,7 +535,7 @@ Yes. The `useZodForm()` hook returns the underlying React Hook Form `form` insta
 
 **CLI (`zodform generate`)** reads your schema at build time and outputs a static `.tsx` file. The generated file has zero dependency on zod-to-form at runtime — it imports only `react-hook-form` and your UI components. You own the output and can hand-edit it.
 
-Both use the same `@zod-to-form/core` walker, so they produce identical field structures. Use runtime for speed, CLI for control.
+Both use the same `@zod-to-form/core` walker, so they produce identical field structures. Use runtime for speed, CLI for control. See the [Shared Component Configuration](#shared-component-configuration) section for how to use a single config file to make both paths produce functionally identical forms.
 </details>
 
 <details>
