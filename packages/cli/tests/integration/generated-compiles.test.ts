@@ -2,9 +2,12 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import type { FormField } from '@zod-to-form/core';
 import { generateFormComponent } from '../../src/codegen.js';
+
+const workspaceRoot = path.resolve(fileURLToPath(import.meta.url), '../../../..');
 
 describe('generated component compilation', () => {
   it('falls back to default input rendering when component config is not provided', async () => {
@@ -111,7 +114,7 @@ describe('generated component compilation', () => {
 
     try {
       execFileSync('pnpm', ['exec', 'tsc', '--noEmit', '-p', tsconfigPath], {
-        cwd: process.cwd(),
+        cwd: workspaceRoot,
         stdio: 'pipe'
       });
     } catch (error) {
