@@ -1,0 +1,51 @@
+{
+  "changesets": [
+    {
+      "releases": [
+        {
+          "name": "@zod-to-form/core",
+          "type": "patch"
+        },
+        {
+          "name": "@zod-to-form/react",
+          "type": "patch"
+        },
+        {
+          "name": "@zod-to-form/cli",
+          "type": "patch"
+        }
+      ],
+      "summary": "### Changes\\n\\n• \\n",
+      "id": "1772254520"
+    }
+  ],
+  "releases": [
+    {
+      "name": "@zod-to-form/core",
+      "type": "patch",
+      "oldVersion": "0.2.3",
+      "changesets": [
+        "1772254520"
+      ],
+      "newVersion": "0.2.4"
+    },
+    {
+      "name": "@zod-to-form/react",
+      "type": "patch",
+      "oldVersion": "0.2.3",
+      "changesets": [
+        "1772254520"
+      ],
+      "newVersion": "0.2.4"
+    },
+    {
+      "name": "@zod-to-form/cli",
+      "type": "patch",
+      "oldVersion": "0.2.3",
+      "changesets": [
+        "1772254520"
+      ],
+      "newVersion": "0.2.4"
+    }
+  ]
+}
