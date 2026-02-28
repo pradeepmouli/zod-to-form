@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./attached_assets/IMG_0178_1772235954643.jpeg" alt="zod-to-form banner" width="100%" />
+  <img src="./attached_assets/IMG_0178_1772235954643.jpeg" alt="zod-to-form banner" style="width: 100%;" />
 </p>
 
 <h1 align="center">zod-to-form</h1>
