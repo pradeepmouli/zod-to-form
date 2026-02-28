@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, memo, useState } from 'react';
 import type { ComponentType, ReactNode } from 'react';
 import type { FormField } from '@zod-to-form/core';
 import { useFieldArray, useFormContext } from 'react-hook-form';
@@ -174,7 +174,11 @@ type FieldRendererProps = {
 
 // ─── T088: Fieldset block for nested object fields ────────────────────
 
-function FieldsetBlock({ field, components, componentConfig }: FieldRendererProps) {
+const FieldsetBlock = memo(function FieldsetBlock({
+  field,
+  components,
+  componentConfig
+}: FieldRendererProps) {
   const componentMap = { ...defaultComponentMap, ...components };
   const FormFieldComponent = componentMap.FormField;
 
@@ -198,7 +202,7 @@ function FieldsetBlock({ field, components, componentConfig }: FieldRendererProp
       </fieldset>
     </FormFieldComponent>
   );
-}
+});
 
 // ─── T089: Array block with useFieldArray ─────────────────────────────
 
@@ -209,7 +213,11 @@ function getDefaultAppendValue(arrayItem: FormField | undefined): unknown {
   return '';
 }
 
-function ArrayBlock({ field, components, componentConfig }: FieldRendererProps) {
+const ArrayBlock = memo(function ArrayBlock({
+  field,
+  components,
+  componentConfig
+}: FieldRendererProps) {
   const componentMap = { ...defaultComponentMap, ...components };
   const { control } = useFormContext();
   const { fields: items, append, remove } = useFieldArray({ control, name: field.key });
@@ -248,11 +256,15 @@ function ArrayBlock({ field, components, componentConfig }: FieldRendererProps) 
       </button>
     </fieldset>
   );
-}
+});
 
 // ─── T090: Discriminated union block with watch ───────────────────────
 
-function DiscriminatedUnionBlock({ field, components, componentConfig }: FieldRendererProps) {
+const DiscriminatedUnionBlock = memo(function DiscriminatedUnionBlock({
+  field,
+  components,
+  componentConfig
+}: FieldRendererProps) {
   const componentMap = { ...defaultComponentMap, ...components };
   const { register, watch } = useFormContext();
   const discriminator = field.props['_discriminator'] as string;
@@ -289,9 +301,13 @@ function DiscriminatedUnionBlock({ field, components, componentConfig }: FieldRe
       ))}
     </FormFieldComponent>
   );
-}
+});
 
-export function FieldRenderer({ field, components, componentConfig }: FieldRendererProps) {
+export const FieldRenderer = memo(function FieldRenderer({
+  field,
+  components,
+  componentConfig
+}: FieldRendererProps) {
   // Always call hooks first (React hooks rule — no conditional hook calls)
   const { register, formState } = useFormContext();
   const componentMap = { ...defaultComponentMap, ...components };
@@ -407,4 +423,4 @@ export function FieldRenderer({ field, components, componentConfig }: FieldRende
       {errorMessage ? <FormMessageComponent>{errorMessage}</FormMessageComponent> : null}
     </FormFieldComponent>
   );
-}
+});

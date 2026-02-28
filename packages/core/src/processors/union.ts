@@ -1,18 +1,7 @@
 import type { ZodType } from 'zod';
 import type { FormField, FormFieldOption, FormProcessorContext, ProcessParams } from '../types.js';
 import { inferLabel } from '../utils.js';
-
-function getDef(schema: ZodType): Record<string, unknown> {
-  return (schema as unknown as { _zod?: { def?: Record<string, unknown> } })['_zod']?.['def'] ?? {};
-}
-
-function getShape(def: Record<string, unknown>): Record<string, ZodType> {
-  const rawShape = def['shape'];
-  if (typeof rawShape === 'function') {
-    return ((rawShape as () => unknown)() as Record<string, ZodType>) ?? {};
-  }
-  return (rawShape as Record<string, ZodType>) ?? {};
-}
+import { getDef, getShape } from './_utils.js';
 
 function getLiteralValues(schema: ZodType): (string | number | boolean)[] {
   const def = getDef(schema);

@@ -1,13 +1,6 @@
 import type { ZodType } from 'zod';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
-
-function getDef(schema: ZodType): Record<string, unknown> {
-  return (schema as unknown as { _zod?: { def?: Record<string, unknown> } })['_zod']?.['def'] ?? {};
-}
-
-function getBag(schema: ZodType): Record<string, unknown> {
-  return (schema as unknown as { _zod?: { bag?: Record<string, unknown> } })['_zod']?.['bag'] ?? {};
-}
+import { getDef, getBag } from './_utils.js';
 
 export function processArray(
   schema: ZodType,

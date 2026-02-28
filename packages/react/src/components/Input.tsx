@@ -1,5 +1,6 @@
+import { memo } from 'react';
 import type { InputHTMLAttributes } from 'react';
 
-export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
+export const Input = memo(function Input(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} />;
-}
+});

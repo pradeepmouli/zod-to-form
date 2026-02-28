@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useMemo } from 'react';
 import { FormProvider } from 'react-hook-form';
 import type { ZodObject } from 'zod';
 import type { FormProcessor, ZodFormRegistry } from '@zod-to-form/core';
@@ -35,7 +36,10 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
     className,
     children
   } = props;
-  const mergedComponents = { ...defaultComponentMap, ...components };
+  const mergedComponents = useMemo(
+    () => ({ ...defaultComponentMap, ...components }),
+    [components]
+  );
 
   const { form, fields } = useZodForm(schema, {
     defaultValues,

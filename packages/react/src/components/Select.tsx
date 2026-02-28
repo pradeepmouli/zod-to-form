@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { SelectHTMLAttributes } from 'react';
 import type { FormFieldOption } from '@zod-to-form/core';
 
@@ -5,7 +6,7 @@ type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   options?: FormFieldOption[];
 };
 
-export function Select({ options, ...props }: SelectProps) {
+export const Select = memo(function Select({ options, ...props }: SelectProps) {
   return (
     <select {...props}>
       {options?.map((option) => (
@@ -15,4 +16,4 @@ export function Select({ options, ...props }: SelectProps) {
       ))}
     </select>
   );
-}
+});

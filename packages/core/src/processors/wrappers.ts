@@ -1,10 +1,7 @@
 import type { ZodType } from 'zod';
 import { processFallback } from './fallback.js';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
-
-function getDef(schema: ZodType): Record<string, unknown> {
-  return (schema as unknown as { _zod?: { def?: Record<string, unknown> } })['_zod']?.['def'] ?? {};
-}
+import { getDef } from './_utils.js';
 
 function runInner(
   innerSchema: ZodType,

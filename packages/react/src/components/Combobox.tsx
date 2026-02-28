@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { InputHTMLAttributes } from 'react';
 import type { FormFieldOption } from '@zod-to-form/core';
 
@@ -9,7 +10,11 @@ type ComboboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'list'> & {
  * Unstyled native combobox using `<datalist>` + `<input list>`.
  * Provides browser-native autocomplete from the options list.
  */
-export function ComboboxFallback({ options, id, ...props }: ComboboxProps) {
+export const ComboboxFallback = memo(function ComboboxFallback({
+  options,
+  id,
+  ...props
+}: ComboboxProps) {
   const listId = id ? `${id}-list` : undefined;
 
   return (
@@ -24,4 +29,4 @@ export function ComboboxFallback({ options, id, ...props }: ComboboxProps) {
       </datalist>
     </>
   );
-}
+});
