@@ -152,29 +152,55 @@ import { shadcnComponentMap } from '@zod-to-form/react/shadcn';
 </ZodForm>
 ```
 
-#### Extending a base component map
+#### Extending shadcn with custom components
 
-Spread the built-in map and override individual entries to swap in your own components while keeping the rest:
+Use a shared component config to keep shadcn as the base while overriding specific field types with your own components. The same config file drives both the runtime and CLI — see [Shared Component Configuration](#shared-component-configuration).
+
+```typescript
+// src/config/form-components.ts
+import { defineComponentConfig } from '@zod-to-form/cli';
+
+export default defineComponentConfig({
+  components: '@/components/ui',
+  fieldTypes: {
+    DatePicker: { component: 'MyDatePicker' },
+    Textarea: { component: 'MyRichTextEditor' },
+    // All other field types fall through to shadcn defaults
+  },
+  fields: {
+    bio: { fieldType: 'Textarea', props: { rows: 6 } },
+  },
+});
+```
+
+**Runtime** — pass shadcn as the base and the config for overrides:
 
 ```tsx
 import { shadcnComponentMap } from '@zod-to-form/react/shadcn';
-import { MyDatePicker } from '@/components/ui/date-picker';
-import { MyRichTextEditor } from '@/components/ui/rich-text-editor';
+import componentConfig from '@/config/form-components';
 
 <ZodForm
   schema={schema}
-  components={{
-    ...shadcnComponentMap,
-    DatePicker: MyDatePicker,
-    Textarea: MyRichTextEditor,
-  }}
+  components={shadcnComponentMap}
+  componentConfig={componentConfig}
   onSubmit={handleSubmit}
 >
   <button type="submit">Save</button>
 </ZodForm>
 ```
 
-This works because `ZodForm` merges the `components` prop into the default component map — your overrides take precedence. The same pattern works with `defaultComponentMap` or any custom base map.
+**CLI** — `--ui shadcn` provides the base, `--component-config` applies overrides:
+
+```bash
+npx zodform generate \
+  --schema src/schemas/user.ts \
+  --export userSchema \
+  --ui shadcn \
+  --component-config src/config/form-components.ts \
+  --out src/components/
+```
+
+Fields matched by the config get your custom components; everything else renders with shadcn defaults.
 
 ### CLI Code Generation
 
@@ -388,12 +414,12 @@ Renders a select for `type`, then reveals only the fields for the selected varia
 ## Architecture
 
 ```
-@zod-to-form/core     schema._zod.def → FormField[]   (zero deps, Zod peer)
+@zod-to-form/core     schema.def (fallback _zod.def) → FormField[]   (zero deps, Zod peer)
 @zod-to-form/react    FormField[] → <ZodForm>          (React + RHF peers)
 @zod-to-form/cli      FormField[] → UserForm.tsx       (static codegen, no runtime dep)
 ```
 
-The core walker dispatches by `def.type` to a processor registry. Each processor reads `schema._zod.def` for structure and `schema._zod.bag` for constraint data, writing into a `FormField` descriptor. The same `FormField[]` tree drives both the runtime renderer and the CLI codegen — ensuring identical behavior (SC-003).
+The core walker dispatches by `def.type` to a processor registry. Each processor reads `schema.def` (with `_zod.def` fallback) for structure and `schema._zod.bag` for constraint data, writing into a `FormField` descriptor. The same `FormField[]` tree drives both the runtime renderer and the CLI codegen — ensuring identical behavior (SC-003).
 
 ## Custom Processors
 
@@ -515,7 +541,7 @@ A headless, Zustand-based form generator with a multi-schema plugin architecture
 
 The three capabilities no competitor offers are what define zod-to-form:
 
-1. **Zod v4 native introspection** — walks `_zod.def`, reads `_zod.bag`, uses `.meta()` and `z.registry()` — the same pattern as `toJSONSchema`. No invented IR, no `_def` hacks.
+1. **Zod v4 native introspection** — reads `def` (with `_zod.def` fallback), reads `_zod.bag`, uses `.meta()` and `z.registry()` — aligned with Zod v4 internals and no invented IR.
 2. **Build-time codegen** — generates readable `.tsx` files you can inspect, modify, and commit. Aligns with the "copy into your project" philosophy (shadcn/ui, Tailwind over CSS-in-JS).
 3. **Zero-dependency core** — `@zod-to-form/core` has zero runtime dependencies (Zod is a peer). The same `FormField[]` drives both runtime rendering and static codegen.
 
@@ -542,7 +568,7 @@ No. zod-to-form targets **Zod v4 only** (`zod@^4.0.0`). It relies on Zod v4's `_
 
 Yes. There are two approaches:
 
-- **Runtime:** Pass a `components` map to `<ZodForm>` that maps field types to your React components. A `shadcnComponentMap` is included out of the box. You can extend any base map by spreading it and overriding specific entries — see [Extending a base component map](#extending-a-base-component-map).
+- **Runtime:** Pass a `components` map to `<ZodForm>` that maps field types to your React components. A `shadcnComponentMap` is included out of the box. Extend it with a shared config file that overrides specific field types — see [Extending shadcn with custom components](#extending-shadcn-with-custom-components).
 - **CLI:** Use `--ui shadcn` (default) or `--ui unstyled`, and optionally provide a `--component-config` file to map field types to your own component imports.
 
 Both paths accept the same config shape — you can define your component mapping once and share it across runtime and CLI. See [Shared Component Configuration](#shared-component-configuration) for a full example.

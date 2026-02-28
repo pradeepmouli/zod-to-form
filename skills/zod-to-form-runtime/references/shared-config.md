@@ -120,6 +120,57 @@ export default defineComponentConfig<Components, Values>({
 });
 ```
 
+## Extending a Base Preset (e.g. shadcn/ui)
+
+Define a config that overrides only the field types that need custom components. Combine with a base preset so unmatched fields fall through to defaults.
+
+```typescript
+// src/config/form-components.ts
+import { defineComponentConfig } from '@zod-to-form/cli';
+
+export default defineComponentConfig({
+  components: '@/components/ui',
+  fieldTypes: {
+    DatePicker: { component: 'MyDatePicker' },
+    Textarea: { component: 'MyRichTextEditor' },
+    // Other field types (Input, Select, Checkbox, etc.) are not listed —
+    // they fall through to the base preset (shadcn or unstyled)
+  },
+  fields: {
+    bio: { fieldType: 'Textarea', props: { rows: 6 } },
+  },
+});
+```
+
+### Runtime — shadcn base + config overrides
+
+```tsx
+import { shadcnComponentMap } from '@zod-to-form/react/shadcn';
+import componentConfig from '@/config/form-components';
+
+<ZodForm
+  schema={schema}
+  components={shadcnComponentMap}
+  componentConfig={componentConfig}
+  onSubmit={handleSubmit}
+>
+  <button type="submit">Save</button>
+</ZodForm>
+```
+
+### CLI — `--ui shadcn` base + `--component-config` overrides
+
+```bash
+npx zodform generate \
+  --schema src/schemas/user.ts \
+  --export userSchema \
+  --ui shadcn \
+  --component-config src/config/form-components.ts \
+  --out src/components/
+```
+
+In both paths, `componentConfig` field/type overrides take precedence. Unmatched fields resolve through the base component map (shadcn), then fall back to built-in HTML elements.
+
 ## When to Use Shared Config
 
 - Use the same config for both paths when prototyping with runtime and deploying with codegen.
