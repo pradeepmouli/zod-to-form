@@ -16,7 +16,10 @@ export function processNumber(
   const checks = Array.isArray(def['checks']) ? def['checks'] : [];
   const hasIntegerConstraint = checks.some((check) => {
     const value = check as Record<string, unknown>;
-    const nested = (value['_zod'] as { def?: Record<string, unknown> } | undefined)?.['def'] ?? {};
+    const nested =
+      (value['def'] as Record<string, unknown> | undefined) ??
+      (value['_zod'] as { def?: Record<string, unknown> } | undefined)?.['def'] ??
+      {};
     return (
       value['kind'] === 'int' ||
       value['check'] === 'int' ||

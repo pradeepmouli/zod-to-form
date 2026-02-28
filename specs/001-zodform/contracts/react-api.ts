@@ -6,7 +6,7 @@
  */
 
 import type { ComponentType, ReactNode } from 'react';
-import type { ZodObject, ZodRegistry } from 'zod';
+import type { output, ZodObject, ZodRegistry } from 'zod';
 import type { UseFormReturn, SubmitHandler } from 'react-hook-form';
 import type { FormField, FormMeta, FormProcessor } from './core-api';
 
@@ -39,9 +39,9 @@ export interface ZodFormProps<TSchema extends ZodObject<any>> {
   /** The Zod object schema to render as a form */
   schema: TSchema;
   /** Typed submit handler receiving validated data */
-  onSubmit: SubmitHandler<TSchema['_zod']['output']>;
+  onSubmit: SubmitHandler<output<TSchema>>;
   /** Optional default values matching schema shape */
-  defaultValues?: Partial<TSchema['_zod']['output']>;
+  defaultValues?: Partial<output<TSchema>>;
   /** Custom component map (overrides default unstyled primitives) */
   components?: Partial<ComponentMap>;
   /** Form-specific metadata registry */
@@ -72,7 +72,7 @@ export declare function ZodForm<TSchema extends ZodObject<any>>(
 
 export interface UseZodFormReturn<TSchema extends ZodObject<any>> {
   /** React Hook Form instance */
-  form: UseFormReturn<TSchema['_zod']['output']>;
+  form: UseFormReturn<output<TSchema>>;
   /** FormField[] tree from walking the schema */
   fields: FormField[];
 }
@@ -88,7 +88,7 @@ export interface UseZodFormReturn<TSchema extends ZodObject<any>> {
 export declare function useZodForm<TSchema extends ZodObject<any>>(
   schema: TSchema,
   options?: {
-    defaultValues?: Partial<TSchema['_zod']['output']>;
+    defaultValues?: Partial<output<TSchema>>;
     formRegistry?: ZodRegistry<FormMeta>;
     processors?: Record<string, FormProcessor>;
   }

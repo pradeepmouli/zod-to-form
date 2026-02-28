@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
 import { FormProvider } from 'react-hook-form';
-import type { ZodObject } from 'zod';
+import type { output, ZodObject } from 'zod';
 import type { FormProcessor, ZodFormRegistry } from '@zod-to-form/core';
 import { FieldRenderer } from './FieldRenderer.js';
 import { defaultComponentMap } from './components/index.js';
@@ -10,10 +10,10 @@ import { useZodForm } from './useZodForm.js';
 
 type ZodFormProps<TSchema extends ZodObject> = {
   schema: TSchema;
-  onSubmit?: (data: TSchema['_zod']['output']) => unknown;
-  onValueChange?: (data: TSchema['_zod']['output']) => void;
+  onSubmit?: (data: output<TSchema>) => unknown;
+  onValueChange?: (data: output<TSchema>) => void;
   mode?: 'onSubmit' | 'onChange' | 'onBlur';
-  defaultValues?: Partial<TSchema['_zod']['output']>;
+  defaultValues?: Partial<output<TSchema>>;
   components?: Partial<typeof defaultComponentMap>;
   componentConfig?: RuntimeComponentConfig;
   formRegistry?: ZodFormRegistry;
@@ -36,10 +36,7 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
     className,
     children
   } = props;
-  const mergedComponents = useMemo(
-    () => ({ ...defaultComponentMap, ...components }),
-    [components]
-  );
+  const mergedComponents = useMemo(() => ({ ...defaultComponentMap, ...components }), [components]);
 
   const { form, fields } = useZodForm(schema, {
     defaultValues,

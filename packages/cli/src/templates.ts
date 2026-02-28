@@ -17,10 +17,11 @@ export function getFileHeader(
     ...(reactImports ? [reactImports] : []),
     rhfImports,
     `import { zodResolver } from '@hookform/resolvers/zod';`,
+    `import { z } from 'zod';`,
     ...(componentImportLine ? [componentImportLine] : []),
     `import { ${exportName} } from '${schemaImportPath}';`,
     ``,
-    `type FormData = (typeof ${exportName})['_zod']['output'];`
+    `type FormData = z.output<typeof ${exportName}>;`
   ].join('\n');
 }
 

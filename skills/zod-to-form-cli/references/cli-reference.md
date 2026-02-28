@@ -49,9 +49,10 @@ zodform generate --schema src/user.ts --export userSchema --name ProfileEditor
 ```tsx
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { userSchema } from './schema';
 
-type FormData = (typeof userSchema)['_zod']['output'];
+type FormData = z.output<typeof userSchema>;
 
 export function UserForm(props: {
   onSubmit: (data: FormData) => void;
@@ -75,9 +76,10 @@ export function UserForm(props: {
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { userSchema } from './schema';
 
-type FormData = (typeof userSchema)['_zod']['output'];
+type FormData = z.output<typeof userSchema>;
 
 export function UserForm(props: {
   onValueChange?: (data: FormData) => void;
