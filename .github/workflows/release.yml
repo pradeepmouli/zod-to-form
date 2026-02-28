@@ -110,7 +110,7 @@ jobs:
             echo "Packages to publish: $PACKAGES_TO_PUBLISH"
 
             # Version packages
-            pnpm changeset:version
+            pnpm changeset version
 
             # Commit version changes
             git add -A
