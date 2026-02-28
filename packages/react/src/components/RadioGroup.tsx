@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { InputHTMLAttributes } from 'react';
 import type { FormFieldOption } from '@zod-to-form/core';
 
@@ -6,7 +7,7 @@ type RadioGroupProps = InputHTMLAttributes<HTMLInputElement> & {
   options?: FormFieldOption[];
 };
 
-export function RadioGroup({ options, name, ...props }: RadioGroupProps) {
+export const RadioGroup = memo(function RadioGroup({ options, name, ...props }: RadioGroupProps) {
   return (
     <fieldset>
       {options?.map((option) => (
@@ -23,4 +24,4 @@ export function RadioGroup({ options, name, ...props }: RadioGroupProps) {
       ))}
     </fieldset>
   );
-}
+});

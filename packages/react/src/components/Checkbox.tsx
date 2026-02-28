@@ -1,5 +1,6 @@
+import { memo } from 'react';
 import type { InputHTMLAttributes } from 'react';
 
-export function Checkbox(props: InputHTMLAttributes<HTMLInputElement>) {
+export const Checkbox = memo(function Checkbox(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input type="checkbox" {...props} />;
-}
+});
