@@ -67,9 +67,10 @@ The generated `src/components/UserForm.tsx` imports only `react-hook-form`, `@ho
 ```tsx
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { userSchema } from '../schemas/user';
 
-type FormData = (typeof userSchema)['_zod']['output'];
+type FormData = z.output<typeof userSchema>;
 
 export function UserForm(props: {
   onSubmit: (data: FormData) => void;

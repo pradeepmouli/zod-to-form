@@ -152,6 +152,30 @@ import { shadcnComponentMap } from '@zod-to-form/react/shadcn';
 </ZodForm>
 ```
 
+#### Extending a base component map
+
+Spread the built-in map and override individual entries to swap in your own components while keeping the rest:
+
+```tsx
+import { shadcnComponentMap } from '@zod-to-form/react/shadcn';
+import { MyDatePicker } from '@/components/ui/date-picker';
+import { MyRichTextEditor } from '@/components/ui/rich-text-editor';
+
+<ZodForm
+  schema={schema}
+  components={{
+    ...shadcnComponentMap,
+    DatePicker: MyDatePicker,
+    Textarea: MyRichTextEditor,
+  }}
+  onSubmit={handleSubmit}
+>
+  <button type="submit">Save</button>
+</ZodForm>
+```
+
+This works because `ZodForm` merges the `components` prop into the default component map — your overrides take precedence. The same pattern works with `defaultComponentMap` or any custom base map.
+
 ### CLI Code Generation
 
 Generate a static `.tsx` form component that has **zero runtime dependency** on zod-to-form:
@@ -170,9 +194,10 @@ This produces a file like the following — notice it imports only `react-hook-f
 // src/components/UserForm.tsx (generated)
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { userSchema } from '../schemas/user';
 
-type FormData = (typeof userSchema)['_zod']['output'];
+type FormData = z.output<typeof userSchema>;
 
 export function UserForm(props: {
   onSubmit: (data: FormData) => void;
@@ -218,9 +243,10 @@ npx zodform generate --schema src/schemas/user.ts --export userSchema --mode aut
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { userSchema } from '../schemas/user';
 
-type FormData = (typeof userSchema)['_zod']['output'];
+type FormData = z.output<typeof userSchema>;
 
 export function UserForm(props: {
   onValueChange?: (data: FormData) => void;
@@ -516,7 +542,7 @@ No. zod-to-form targets **Zod v4 only** (`zod@^4.0.0`). It relies on Zod v4's `_
 
 Yes. There are two approaches:
 
-- **Runtime:** Pass a `components` map to `<ZodForm>` that maps field types to your React components. A `shadcnComponentMap` is included out of the box.
+- **Runtime:** Pass a `components` map to `<ZodForm>` that maps field types to your React components. A `shadcnComponentMap` is included out of the box. You can extend any base map by spreading it and overriding specific entries — see [Extending a base component map](#extending-a-base-component-map).
 - **CLI:** Use `--ui shadcn` (default) or `--ui unstyled`, and optionally provide a `--component-config` file to map field types to your own component imports.
 
 Both paths accept the same config shape — you can define your component mapping once and share it across runtime and CLI. See [Shared Component Configuration](#shared-component-configuration) for a full example.

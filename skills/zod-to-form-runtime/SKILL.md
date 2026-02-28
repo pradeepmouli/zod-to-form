@@ -112,6 +112,30 @@ import { shadcnComponentMap } from '@zod-to-form/react/shadcn';
 </ZodForm>
 ```
 
+### Extending a Base Component Map
+
+Spread the built-in map and override individual entries to swap in custom components while keeping the rest:
+
+```tsx
+import { shadcnComponentMap } from '@zod-to-form/react/shadcn';
+import { MyDatePicker } from '@/components/ui/date-picker';
+import { MyRichTextEditor } from '@/components/ui/rich-text-editor';
+
+<ZodForm
+  schema={schema}
+  components={{
+    ...shadcnComponentMap,
+    DatePicker: MyDatePicker,
+    Textarea: MyRichTextEditor,
+  }}
+  onSubmit={handleSubmit}
+>
+  <button type="submit">Save</button>
+</ZodForm>
+```
+
+`ZodForm` merges the `components` prop into the default component map — overrides take precedence. The same pattern works with `defaultComponentMap` or any custom base map.
+
 ### Using a Component Config
 
 Pass a `componentConfig` prop to map field types to custom components. This same config format works with the CLI codegen path — define the config once and use it in both paths. See `references/shared-config.md` for the full config shape, type-safe patterns, and resolution priority.
