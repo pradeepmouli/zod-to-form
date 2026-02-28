@@ -23,20 +23,65 @@ import { ZodForm } from '@zod-to-form/react';
 | [`@zod-to-form/react`](packages/react) | `<ZodForm>` runtime renderer + shadcn/ui component map |
 | [`@zod-to-form/cli`](packages/cli) | `zodform generate` CLI for static codegen |
 
-## Installation
+## Get Started
+
+There are two ways to use zod-to-form. Pick one or use both — they share the same core walker and produce identical form behavior.
+
+### Path A: Runtime rendering
+
+Install and render a form in under a minute. Define a Zod schema, pass it to `<ZodForm>`, done.
 
 ```bash
-# Runtime rendering
-pnpm add @zod-to-form/core @zod-to-form/react
-
-# Peer dependencies (install in your project)
-pnpm add zod react react-hook-form @hookform/resolvers
-
-# CLI code generation (optional, dev dependency)
-pnpm add -D @zod-to-form/cli
+pnpm add @zod-to-form/core @zod-to-form/react zod react react-hook-form @hookform/resolvers
 ```
 
-## Quick Start
+```tsx
+import { z } from 'zod';
+import { ZodForm } from '@zod-to-form/react';
+
+const signupSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+  role: z.enum(['admin', 'editor', 'viewer']),
+});
+
+export function SignupForm() {
+  return (
+    <ZodForm schema={signupSchema} onSubmit={(data) => save(data)}>
+      <button type="submit">Sign Up</button>
+    </ZodForm>
+  );
+}
+```
+
+`<ZodForm>` reads the schema, infers input types, derives labels, wires validation, and renders the form — no manual field mapping.
+
+### Path B: CLI codegen
+
+Generate a static `.tsx` component at build time. The output reads like hand-written code, imports only `react-hook-form` and your UI library, and has zero runtime dependency on zod-to-form.
+
+```bash
+pnpm add -D @zod-to-form/cli zod
+```
+
+```bash
+npx zodform generate --schema src/schemas/signup.ts --export signupSchema --out src/components/
+```
+
+This produces `src/components/SignupForm.tsx` — inspect it, customize it, commit it. Regenerate with `--watch` during development.
+
+### When to use which?
+
+| | Runtime `<ZodForm>` | CLI `zodform generate` |
+|---|---|---|
+| **Best for** | Rapid prototyping, admin panels, CRUD forms | Production forms, design system integration |
+| **Output** | React component at runtime | Static `.tsx` file you own |
+| **Schema changes** | Instant — form updates on re-render | Regenerate with `--watch` or CI step |
+| **Bundle impact** | Includes `@zod-to-form/core` + `react` package | Zero — generated code stands alone |
+
+---
+
+## Usage
 
 ### Runtime — `<ZodForm>`
 
@@ -226,6 +271,134 @@ formRegistry.add(schema.shape.superType, {
 
 const fields = walkSchema(schema, { formRegistry });
 ```
+
+## Why zod-to-form?
+
+The Zod-to-form generation space has one dominant player ([AutoForm](https://github.com/vantezzen/autoform)) and several smaller entrants. **None use the substrate API that Zod v4 explicitly designed for library authors**, and none offer build-time codegen.
+
+### Comparison
+
+| Capability | AutoForm | uniforms | SnowForm | react-formgen | **zod-to-form** |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Zod v4 `_zod` substrate API | | | | | **Yes** |
+| Zod v4 `.meta()` / `z.registry()` | | | | | **Yes** |
+| Build-time static codegen | | | | | **Yes** |
+| React Hook Form integration | Yes | | Yes | | **Yes** |
+| shadcn/ui support | Yes | | Via registration | Via templates | **Yes** |
+| Multi-UI-library pluggable | Yes | Yes | Yes | Yes | **Yes** |
+| Nested objects | Yes | Yes | | Yes | **Yes** |
+| Array fields (add/remove) | Partial | Yes | | Yes | **Yes** |
+| Zero-dependency core | | | | | **Yes** |
+| Server action generation | | | | | **Yes** |
+
+### How we differ from each
+
+<details>
+<summary><strong>vs AutoForm</strong> (~165K npm/month, 3.4K stars)</summary>
+
+AutoForm is the market leader and the feature set to match. However:
+
+- **Maintenance stalled** — last commit Aug 2025, 32+ unanswered issues, solo maintainer.
+- **Incomplete v3→v4 migration** — still reads `_def` (Zod v3 internals) instead of the `_zod` substrate API Zod v4 provides for library authors.
+- **Custom annotation hack** — uses `fieldConfig()` injected via `.superRefine()` to piggyback metadata on the refinement system. Zod v4's native `.meta()` and `z.registry()` make this unnecessary.
+- **Runtime only** — no option to generate static `.tsx` files.
+</details>
+
+<details>
+<summary><strong>vs uniforms</strong> (~68K npm/month core, 2K stars)</summary>
+
+The most mature project in the space (backed by Vazco), with a well-designed Bridge abstraction and 6 UI themes.
+
+- **Zod is second-class** — the Zod bridge has only ~1.2K downloads/month, targets Zod v3 only, and has no v4 support.
+- **No shadcn/ui theme** — available themes (AntD, Bootstrap, MUI, Semantic) don't include today's dominant React component library.
+- **Heavy dependencies** — requires `invariant`, `lodash`, `tslib` even for the bridge.
+- **Meteor-era API** — `AutoForm`/`AutoField`/`SubmitField` reflects SimpleSchema origins; modern React patterns feel bolted on.
+</details>
+
+<details>
+<summary><strong>vs SnowForm</strong> (~920 npm/month, 11 stars)</summary>
+
+The freshest competitor (Jan 2026) with the right RHF foundation.
+
+- **Global singleton** — `setupSnowForm()` uses a module-level global, problematic for testing, SSR, and multi-config apps.
+- **Limited type coverage** — docs only show basic types; no evidence of array/object/union/discriminatedUnion handling.
+- **No Zod v4 metadata** — uses its own override system rather than `.meta()` or `z.registry()`.
+</details>
+
+<details>
+<summary><strong>vs react-formgen</strong> (~180 npm/month, 68 stars)</summary>
+
+A headless, Zustand-based form generator with a multi-schema plugin architecture.
+
+- **Permanently alpha** — still at `0.0.0-alpha.27` after 1.5+ years.
+- **Zustand instead of RHF** — loses the entire React Hook Form ecosystem: `zodResolver`, `useFieldArray`, validation modes, focus management, dirty/touched tracking.
+- **Too headless** — zero default UI means every user builds from scratch.
+</details>
+
+### Core differentiators
+
+The three capabilities no competitor offers are what define zod-to-form:
+
+1. **Zod v4 native introspection** — walks `_zod.def`, reads `_zod.bag`, uses `.meta()` and `z.registry()` — the same pattern as `toJSONSchema`. No invented IR, no `_def` hacks.
+2. **Build-time codegen** — generates readable `.tsx` files you can inspect, modify, and commit. Aligns with the "copy into your project" philosophy (shadcn/ui, Tailwind over CSS-in-JS).
+3. **Zero-dependency core** — `@zod-to-form/core` has zero runtime dependencies (Zod is a peer). The same `FormField[]` drives both runtime rendering and static codegen.
+
+> *Analysis date: February 2026. Data from npm registry, GitHub API, and package source inspection.*
+
+## FAQ
+
+<details>
+<summary><strong>Does this replace <code>zodResolver</code>?</strong></summary>
+
+No — it builds on top of it. `@zod-to-form/react` uses `zodResolver` from `@hookform/resolvers` internally to connect your Zod schema to React Hook Form's validation. You still get the same Zod validation you're used to; zod-to-form adds the **form generation** layer (field inference, component mapping, layout) that `zodResolver` doesn't provide.
+
+If you're already using `react-hook-form` + `zodResolver` and manually writing `<Controller>` / `register()` calls for each field, zod-to-form automates that wiring.
+</details>
+
+<details>
+<summary><strong>Does this work with Zod v3?</strong></summary>
+
+No. zod-to-form targets **Zod v4 only** (`zod@^4.0.0`). It relies on Zod v4's `_zod` substrate API, `.meta()`, and `z.registry()` — none of which exist in v3. If you're on Zod v3, consider [AutoForm](https://github.com/vantezzen/autoform) or [uniforms](https://github.com/vazco/uniforms) until you upgrade.
+</details>
+
+<details>
+<summary><strong>Can I use my own components (shadcn/ui, MUI, custom)?</strong></summary>
+
+Yes. There are two approaches:
+
+- **Runtime:** Pass a `components` map to `<ZodForm>` that maps field types to your React components. A `shadcnComponentMap` is included out of the box.
+- **CLI:** Use `--ui shadcn` (default) or `--ui unstyled`, and optionally provide a `--component-config` file to map field types to your own component imports.
+
+Both paths are fully pluggable — zod-to-form never hard-codes a specific UI library.
+</details>
+
+<details>
+<summary><strong>Can I still use <code>useForm()</code> / <code>useFieldArray()</code> directly?</strong></summary>
+
+Yes. The `useZodForm()` hook returns the underlying React Hook Form `form` instance, so you have full access to `form.watch()`, `form.setValue()`, `form.formState`, and everything else from RHF. zod-to-form doesn't wrap or hide the form state — it just automates the initial wiring.
+</details>
+
+<details>
+<summary><strong>What's the difference between runtime rendering and CLI codegen?</strong></summary>
+
+**Runtime (`<ZodForm>`)** reads your schema at render time and generates the form dynamically. Great for rapid iteration — change the schema and the form updates instantly.
+
+**CLI (`zodform generate`)** reads your schema at build time and outputs a static `.tsx` file. The generated file has zero dependency on zod-to-form at runtime — it imports only `react-hook-form` and your UI components. You own the output and can hand-edit it.
+
+Both use the same `@zod-to-form/core` walker, so they produce identical field structures. Use runtime for speed, CLI for control.
+</details>
+
+<details>
+<summary><strong>Does the CLI-generated code stay in sync with schema changes?</strong></summary>
+
+Use `--watch` mode during development — it re-generates the `.tsx` file whenever the schema module changes. In CI, add a `zodform generate` step to your build pipeline. The generated file is meant to be committed, so you can review diffs when the schema evolves.
+</details>
+
+<details>
+<summary><strong>How does this handle arrays and nested objects?</strong></summary>
+
+Both runtime and CLI support nested `z.object()` (rendered as fieldset groups) and `z.array()` (rendered as repeaters with add/remove controls). Array minimum/maximum constraints from the schema are respected — e.g., `.min(1)` disables the remove button when only one item remains. See the [Nested Objects and Arrays](#nested-objects-and-arrays) section for an example.
+</details>
 
 ## Development
 
