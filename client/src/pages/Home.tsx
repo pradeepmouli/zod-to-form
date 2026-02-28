@@ -228,9 +228,9 @@ function LogoIcon({ size = "md", variant = "default" }: { size?: "sm" | "md" | "
         className={`absolute z-10 flex flex-col justify-between rounded-sm ${borderStyle}`}
         style={{
           width: w * 0.55,
-          height: h * 0.5,
+          height: h * 0.45,
           padding: w * 0.05,
-          top: "50%",
+          top: "47%", // slightly above center due to the optical center of the gem shape
           left: "50%",
           transform: "translate(-50%, -50%)",
           backgroundColor: bgColor
