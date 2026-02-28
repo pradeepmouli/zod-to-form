@@ -220,39 +220,41 @@ function LogoIcon({ size = "md", variant = "default" }: { size?: "sm" | "md" | "
     const lineColor = isOutline ? "#0F172A" : isMonochrome ? "#0F172A" : "rgb(226, 232, 240)"; // slate-200
     const checkBg = isOutline ? "transparent" : isMonochrome ? "#0F172A" : "#14B8A6"; // brand-teal
     const checkColor = isOutline ? "#0F172A" : "white";
-    const borderStyle = isOutline ? "border-[2px] border-[#0F172A]" : isMonochrome ? "border-2 border-slate-900" : "shadow-sm";
+    const borderStyle = isOutline ? "border-[2px] border-[#0F172A]" : isMonochrome ? "border-2 border-slate-900" : "shadow-md";
     const checkBorderStyle = isOutline ? "border-[2px] border-[#0F172A]" : "";
 
     return (
       <div
-        className={`absolute z-10 flex flex-col justify-between rounded-sm ${borderStyle}`}
+        className={`absolute z-10 flex flex-col justify-between ${borderStyle}`}
         style={{
-          width: w * 0.55,
-          height: h * 0.45,
+          width: w * 0.60,
+          height: h * 0.44,
           padding: w * 0.05,
-          top: "47%", // slightly above center due to the optical center of the gem shape
+          top: "47%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          backgroundColor: bgColor
+          backgroundColor: bgColor,
+          borderRadius: w * 0.08
         }}
       >
-        <div className="w-[85%] rounded-full" style={{ height: h * 0.04, backgroundColor: lineColor }}></div>
-        <div className="w-[60%] rounded-full" style={{ height: h * 0.04, backgroundColor: lineColor }}></div>
+        <div className="w-[85%] rounded-full" style={{ height: h * 0.035, backgroundColor: lineColor }}></div>
+        <div className="w-[60%] rounded-full" style={{ height: h * 0.035, backgroundColor: lineColor }}></div>
         
         <div className="flex justify-between items-end w-full">
-          <div className="w-[40%] rounded-full mb-[2%]" style={{ height: h * 0.04, backgroundColor: lineColor }}></div>
+          <div className="w-[35%] rounded-full mb-[2%]" style={{ height: h * 0.035, backgroundColor: lineColor }}></div>
           <div
-            className={`rounded-[2px] flex items-center justify-center ${checkBorderStyle}`}
+            className={`flex items-center justify-center ${checkBorderStyle}`}
             style={{
-              width: w * 0.16,
-              height: w * 0.16,
-              backgroundColor: checkBg
+              width: w * 0.18,
+              height: w * 0.18,
+              backgroundColor: checkBg,
+              borderRadius: w * 0.035
             }}
           >
             <Check
               color={checkColor}
               strokeWidth={5}
-              style={{ width: w * 0.11, height: w * 0.11 }}
+              style={{ width: w * 0.12, height: w * 0.12 }}
             />
           </div>
         </div>
