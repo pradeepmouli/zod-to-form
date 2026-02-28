@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="../../attached_assets/logo.png" alt="zod-to-form logo" height="32" />
-</p>
-
 # @zod-to-form/cli
 
 Build-time code generator for Zod v4 form components.
