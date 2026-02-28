@@ -1,6 +1,17 @@
-# zod-to-form
+<p align="center">
+  <img src="./attached_assets/IMG_0178_1772235954643.jpeg" alt="zod-to-form banner" width="100%" />
+</p>
 
-**Schema-driven form generation for Zod v4.** Walk a Zod schema once — render a validated form at runtime or generate a static, hand-readable `.tsx` component at build time.
+<h1 align="center">zod-to-form</h1>
+
+<p align="center">
+  <strong>Schema-driven form generation for Zod v4.</strong><br>
+  Walk a Zod schema once — render a validated form at runtime or generate a static, hand-readable <code>.tsx</code> component at build time.
+</p>
+
+<p align="center">
+  <img src="./attached_assets/logo.png" alt="zod-to-form logo" height="40" />
+</p>
 
 ```tsx
 import { ZodForm } from '@zod-to-form/react';

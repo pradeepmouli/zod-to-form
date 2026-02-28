@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="../../attached_assets/logo.png" alt="zod-to-form logo" height="32" />
+</p>
+
 # @zod-to-form/core
 
 Schema walker and processor registry for Zod v4 form generation.
