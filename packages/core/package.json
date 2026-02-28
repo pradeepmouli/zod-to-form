@@ -1,36 +1,50 @@
 {
-  "name": "@company/core",
-  "version": "0.1.0",
-  "description": "Core utilities for the monorepo",
+  "name": "@zod-to-form/core",
+  "version": "0.2.3",
+  "description": "Schema walker and processor registry for Zod v4 form generation",
+  "license": "MIT",
+  "homepage": "https://github.com/pradeepmouli/zod-to-form#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pradeepmouli/zod-to-form.git",
+    "directory": "packages/core"
+  },
+  "keywords": [
+    "zod",
+    "forms",
+    "form-generation",
+    "schema",
+    "typescript"
+  ],
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": "./dist/index.js"
+    },
+    "./processors": {
+      "types": "./dist/processors/index.d.ts",
+      "import": "./dist/processors/index.js"
     }
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsgo -p tsconfig.json",
-    "clean": "rm -rf dist",
-    "dev": "tsx watch src/index.ts",
-    "type-check": "tsgo --noEmit -p tsconfig.json",
+    "build": "tsgo -p tsconfig.build.json",
+    "clean": "rm -rf dist tsconfig.build.tsbuildinfo tsconfig.tsbuildinfo",
+    "prepublishOnly": "npm run clean && npm run build",
+    "dev": "tsgo -p tsconfig.build.json --watch",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:coverage": "vitest run --coverage",
+    "type-check": "tsgo --noEmit"
   },
-  "dependencies": {
-    "zod": "^4.3.6"
+  "peerDependencies": {
+    "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@types/node": "^25.2.2",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
-  },
-  "keywords": [
-    "core",
-    "utilities"
-  ],
-  "license": "MIT"
+    "zod": "^4.3.6"
+  }
 }

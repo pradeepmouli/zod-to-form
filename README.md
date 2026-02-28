@@ -1,438 +1,280 @@
-# TypeScript Monorepo Template
+<p align="center">
+  <img src="./attached_assets/IMG_0178_1772235954643.jpeg" alt="zod-to-form banner" style="width: 100%;" />
+</p>
 
-> **🎯 This is a template repository.** To start using it for your project, run the initialization script to customize all files with your project information. See [Quick Start](#quick-start) below.
+<h1 align="center">zod-to-form</h1>
 
-<!-- TEMPLATE: Update badges with your repository URL -->
-[![CI](https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](package.json)
-[![pnpm](https://img.shields.io/badge/pnpm-8.15.0-yellow)](package.json)
+<p align="center">
+  <strong>Schema-driven form generation for Zod v4.</strong><br>
+  Walk a Zod schema once — render a validated form at runtime or generate a static, hand-readable <code>.tsx</code> component at build time.
+</p>
 
-<!-- TEMPLATE: Replace this description with your project's description -->
-A modern, enterprise-ready **TypeScript monorepo template** with best practices, comprehensive tooling, and multi-package support.
+<p align="center">
+  <a href="https://github.com/pradeepmouli/zod-to-form">
+    <img src="./attached_assets/logo.png" alt="zod-to-form logo" height="40" />
+  </a>
+</p>
 
-Perfect for starting scalable projects with:
-- **Multiple interconnected packages**
-- **Shared utilities and components**
-- **Monorepo best practices**
-- **Enterprise-grade setup**
+```tsx
+import { ZodForm } from '@zod-to-form/react';
 
-## Features
+<ZodForm schema={userSchema} onSubmit={(data) => console.log(data)}>
+  <button type="submit">Submit</button>
+</ZodForm>
+```
 
-### 🛠 Technology Stack
+## Packages
 
-- **TypeScript 5.9.3** - Strict type checking, ES2022 target
-- **pnpm 8.15.0** - Fast, efficient package manager with workspaces
-- **Vitest 4.0.16** - Lightning-fast unit/integration testing
-- **oxlint 1.36.0** - Ultra-fast Rust-based linting (10-20x faster)
-- **oxfmt 0.21.0** - Ultra-fast Rust-based formatting
-- **Playwright** - E2E testing across browsers
-- **GitHub Actions** - Automated CI/CD pipeline
-- **Changesets** - Monorepo-friendly versioning and publishing
-- **simple-git-hooks + lint-staged** - Git hooks for code quality
-- **Renovate** - Intelligent dependency updates
+| Package | Description |
+|---|---|
+| [`@zod-to-form/core`](packages/core) | Schema walker & processor registry — zero runtime deps |
+| [`@zod-to-form/react`](packages/react) | `<ZodForm>` runtime renderer + shadcn/ui component map |
+| [`@zod-to-form/cli`](packages/cli) | `zodform generate` CLI for static codegen |
 
-### ✨ Included Packages
+## Installation
 
-<!-- TEMPLATE: Update with your actual packages or remove example packages -->
-- **@company/core** - Core utilities (validation, API helpers, async utilities)
-- **@company/utils** - String and array manipulation utilities
-- **@company/test-utils** - Shared testing utilities and fixtures
+```bash
+# Runtime rendering
+pnpm add @zod-to-form/core @zod-to-form/react
 
-### 🤖 Multi-Agent Support
+# Peer dependencies (install in your project)
+pnpm add zod react react-hook-form @hookform/resolvers
 
-This template is designed for **multi-agent collaboration** with:
-- **GitHub Copilot** - With specify and specify-extend integration
-- **Claude** - AI-powered code assistance
-- **Gemini** - Google's AI model
-- **Codex** - OpenAI's code model
-
-Each agent has access to specialized skills in `.copilot/`, `.claude/`, `.codex/`, and `.gemini/` directories, including:
-- Frontend design patterns
-- GitHub Actions templates
-- TypeScript advanced types
-- Dependency management
-- And many more...
-
-### 📚 Documentation
-
-- [Quick Start](#quick-start)
-- [Workspace Guide](docs/WORKSPACE.md) - Managing packages in the monorepo
-- [Development Workflow](docs/DEVELOPMENT.md) - Development process and conventions
-- [Testing Guide](docs/TESTING.md) - Unit, integration, and E2E testing
-- [Examples](docs/EXAMPLES.md) - Real-world usage examples
-- [Architecture Decisions](docs/adr/) - ADRs for key technology choices
-
-### 🎯 Key Features
-
-- ✅ **Monorepo setup** with pnpm workspaces
-- ✅ **Workspace protocol** for seamless package references
-- ✅ **Comprehensive testing** - unit, integration, and E2E
-- ✅ **Performance benchmarking** built-in
-- ✅ **Type-safe** across all packages
-- ✅ **Pre-commit hooks** with simple-git-hooks for code quality
-- ✅ **Automated CI/CD** with GitHub Actions
-- ✅ **Intelligent dependency updates** with Renovate
-- ✅ **Architecture Documentation** with ADRs
-- ✅ **Multi-browser E2E testing** with Playwright
-- ✅ **Bundle size tracking** with size-limit
-- ✅ **Code coverage** reporting with Vitest
+# CLI code generation (optional, dev dependency)
+pnpm add -D @zod-to-form/cli
+```
 
 ## Quick Start
 
-### Installation
-
-```bash
-# Clone the repository
-git clone <your-repo-url>
-cd template-ts
-
-# Install dependencies
-pnpm install
-
-# Initialize git hooks
-pnpm prepare
-```
-
-### Initialize as Template
-
-When using this repository as a template for a new project:
-
-```bash
-# Run the interactive initialization script with intelligent defaults
-node scripts/init-template.mjs
-```
-
-This will:
-- Automatically detect defaults from git config and directory name
-- Prompt you for project details with intelligent suggestions
-- Discover and recommend relevant skills based on your project description
-- Install specify and specify-extend for GitHub Copilot
-- Set up the project structure and dependencies
-
-See [scripts/TEMPLATE_INITIALIZATION.md](scripts/TEMPLATE_INITIALIZATION.md) for detailed instructions.
-
-### First Commands
-
-```bash
-# Start development (watch mode for all packages)
-pnpm run dev
-
-# Run all tests
-pnpm run test
-
-# Type check all packages
-pnpm run type-check
-
-# Lint and format code
-pnpm run lint
-pnpm run format
-
-# Build all packages
-pnpm run build
-```
-
-### Creating a New Package
-
-See [Workspace Guide](docs/WORKSPACE.md#adding-new-packages) for detailed instructions.
-
-## Usage
-
-### Using Packages from the Monorepo
+### Runtime — `<ZodForm>`
 
 ```typescript
-// Use workspace protocol for local development
-import { isValidEmail, delay } from '@company/core';
-import { capitalize, unique } from '@company/utils';
-import { createMockUser } from '@company/test-utils';
+import { z } from 'zod';
 
-const email = 'user@example.com';
-if (isValidEmail(email)) {
-  await delay(1000);
-  console.log(capitalize('hello'));
+const userSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Invalid email address'),
+  age: z.number().min(18).optional(),
+  role: z.enum(['admin', 'editor', 'viewer']),
+  bio: z.string().optional(),
+  newsletter: z.boolean().default(false),
+});
+```
+
+```tsx
+import { ZodForm } from '@zod-to-form/react';
+
+function App() {
+  return (
+    <ZodForm
+      schema={userSchema}
+      onSubmit={(data) => console.log(data)} // typed as z.infer<typeof userSchema>
+    >
+      <button type="submit">Create User</button>
+    </ZodForm>
+  );
 }
 ```
 
-### Cross-Package Testing
+Renders a complete form with correct input types, labels derived from field names, and validation errors from the Zod schema — no manual wiring required.
+
+### Metadata Annotations
+
+Control rendering via Zod v4's native registry API:
 
 ```typescript
-// integration.test.ts - Test interactions between packages
-import { isValidEmail } from '@company/core';
-import { capitalize } from '@company/utils';
+const formRegistry = z.registry<{
+  fieldType?: string;
+  order?: number;
+  hidden?: boolean;
+}>();
 
-it('should validate and process email', () => {
-  const email = 'john@example.com';
-  if (isValidEmail(email)) {
-    const name = capitalize('john');
-    expect(name).toBe('John');
+const schema = z.object({
+  name: z.string().meta({ title: 'Full Name' }),
+  email: z.string().email().meta({ examples: ['alice@example.com'] }),
+  bio: z.string().optional(),
+});
+
+formRegistry.register(schema.shape.bio, { fieldType: 'textarea' });
+```
+
+```tsx
+<ZodForm schema={schema} formRegistry={formRegistry} onSubmit={handleSubmit}>
+  <button type="submit">Save</button>
+</ZodForm>
+```
+
+### shadcn/ui Components
+
+```tsx
+import { ZodForm } from '@zod-to-form/react';
+import { shadcnComponentMap } from '@zod-to-form/react/shadcn';
+
+<ZodForm schema={schema} components={shadcnComponentMap} onSubmit={handleSubmit}>
+  <button type="submit">Save</button>
+</ZodForm>
+```
+
+### CLI Code Generation
+
+Generate a static, zero-dependency `.tsx` form component:
+
+```bash
+npx zodform generate \
+  --schema src/schemas/user.ts \
+  --export userSchema \
+  --out src/components/ \
+  --name UserForm
+```
+
+Generates `src/components/UserForm.tsx` — reads like hand-written code, imports only from `react-hook-form` and your UI library, compiles in strict mode.
+
+**With Next.js server action:**
+
+```bash
+npx zodform generate --schema src/schemas/user.ts --export userSchema --server-action
+```
+
+**Watch mode:**
+
+```bash
+npx zodform generate --schema src/schemas/user.ts --export userSchema --watch
+```
+
+### Nested Objects and Arrays
+
+```typescript
+const orderSchema = z.object({
+  customer: z.object({
+    name: z.string(),
+    email: z.string().email(),
+  }),
+  items: z.array(
+    z.object({ product: z.string(), quantity: z.number().min(1) })
+  ).min(1),
+});
+```
+
+Renders a `customer` fieldset group and an `items` repeater with add/remove controls. Remove is disabled when the minimum count is reached.
+
+### Discriminated Unions
+
+```typescript
+const paymentSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('credit_card'), cardNumber: z.string() }),
+  z.object({ type: z.literal('paypal'), email: z.string().email() }),
+]);
+```
+
+Renders a select for `type`, then reveals only the fields for the selected variant.
+
+## Supported Zod Types
+
+`string` · `number` · `boolean` · `date` · `enum` · `literal` · `file` · `object` · `array` · `tuple` · `union` · `discriminatedUnion` · `intersection` · `nullable` · `optional` · `default` · `pipe` · `readonly` · `lazy` (cycle-safe)
+
+## Architecture
+
+```
+@zod-to-form/core     schema._zod.def → FormField[]   (zero deps, Zod peer)
+@zod-to-form/react    FormField[] → <ZodForm>          (React + RHF peers)
+@zod-to-form/cli      FormField[] → UserForm.tsx       (static codegen, no runtime dep)
+```
+
+The core walker dispatches by `def.type` to a processor registry. Each processor reads `schema._zod.def` for structure and `schema._zod.bag` for constraint data, writing into a `FormField` descriptor. The same `FormField[]` tree drives both the runtime renderer and the CLI codegen — ensuring identical behavior (SC-003).
+
+## Custom Processors
+
+You can import built-in processors from the public entrypoint and override specific schema types.
+
+```typescript
+import { z } from 'zod';
+import { walkSchema } from '@zod-to-form/core';
+import { processString } from '@zod-to-form/core/processors';
+import type { FormProcessor } from '@zod-to-form/core';
+
+const uppercaseStringProcessor: FormProcessor = (schema, ctx, field, params) => {
+  processString(schema, ctx, field, params);
+  field.component = 'Input';
+  field.props['textTransform'] = 'uppercase';
+};
+
+const schema = z.object({
+  name: z.string().min(1)
+});
+
+const fields = walkSchema(schema, {
+  processors: {
+    string: uppercaseStringProcessor
   }
 });
+```
+
+You can also annotate specific fields through a `ZodFormRegistry` and combine that metadata with processors.
+
+```typescript
+import { z } from 'zod';
+import { walkSchema, type FormMeta } from '@zod-to-form/core';
+
+const formRegistry = z.registry<FormMeta>();
+
+const schema = z.object({
+  title: z.string(),
+  superType: z.string()
+});
+
+formRegistry.add(schema.shape.title, {
+  fieldType: 'textarea',
+  order: 1
+});
+
+formRegistry.add(schema.shape.superType, {
+  fieldType: 'cross-ref',
+  props: { refType: 'Data' }
+});
+
+const fields = walkSchema(schema, { formRegistry });
+```
+
+## Development
+
+```bash
+pnpm install        # Install dependencies
+pnpm test           # Run all tests (110 tests across 3 packages)
+pnpm run type-check # TypeScript strict mode check
+pnpm run lint       # oxlint
+pnpm run build      # Build all packages
+pnpm run format     # oxfmt
 ```
 
 ## Project Structure
 
 ```
-template-ts/
-├── packages/
-│   ├── core/              # Core utilities
-│   │   ├── src/
-│   │   │   └── index.ts
-│   │   ├── src/index.test.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   ├── utils/             # String/array utilities
-│   │   ├── src/
-│   │   │   ├── string.ts
-│   │   │   ├── array.ts
-│   │   │   └── index.ts
-│   │   ├── src/index.test.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   └── test-utils/        # Shared testing utilities
-│       ├── src/
-│       │   ├── mocks.ts
-│       │   ├── fixtures.ts
-│       │   └── index.ts
-│       ├── package.json
-│       └── tsconfig.json
-├── e2e/                   # Playwright E2E tests
-│   └── example.spec.ts
-├── scripts/               # Helper scripts
-│   └── init-template.sh
-├── docs/                  # Documentation
-│   ├── WORKSPACE.md
-│   ├── TESTING.md
-│   ├── DEVELOPMENT.md
-│   ├── EXAMPLES.md
-│   └── adr/              # Architecture Decision Records
-│       ├── 001-pnpm-workspaces.md
-│       ├── 002-oxlint-oxfmt.md
-│       ├── 003-esm-modules.md
-│       ├── 004-vitest-over-jest.md
-│       └── 005-changesets.md
-├── .github/workflows/     # CI/CD pipelines
-│   ├── ci.yml
-│   ├── changeset.yml
-│   ├── codeql.yml
-│   └── npm-publish.yml
-├── pnpm-workspace.yaml
-├── package.json
-├── tsconfig.json
-├── playwright.config.ts
-├── vitest.config.ts
-├── oxlintrc.json
-├── renovate.json
-└── README.md
+packages/
+├── core/    # @zod-to-form/core  — schema walker & processors
+├── react/   # @zod-to-form/react — <ZodForm> runtime renderer
+└── cli/     # @zod-to-form/cli   — zodform generate CLI
+specs/
+└── 001-zodform/  # Feature spec, plan, tasks, contracts
+docs/
+└── DEVELOPMENT.md · TESTING.md · WORKSPACE.md
 ```
-
-## Scripts
-
-### Development
-
-| Script | Purpose |
-|--------|---------|
-| `pnpm run dev` | Start dev servers (watch mode) |
-| `pnpm run build` | Build all packages |
-| `pnpm run clean` | Clean build artifacts |
-| `pnpm run fresh` | Clean and reinstall (nuclear option) |
-
-### Code Quality
-
-| Script | Purpose |
-|--------|---------|
-| `pnpm run lint` | Lint all packages |
-| `pnpm run lint:fix` | Fix linting issues |
-| `pnpm run format` | Format all code |
-| `pnpm run format:check` | Check formatting |
-| `pnpm run type-check` | Type check all packages |
-
-### Testing
-
-| Script | Purpose |
-|--------|---------|
-| `pnpm run test` | Run all tests |
-| `pnpm run test:watch` | Watch mode testing |
-| `pnpm run test:coverage` | Generate coverage report |
-| `pnpm run test:ui` | Interactive test UI |
-
-### Dependencies
-
-| Script | Purpose |
-|--------|---------|
-| `pnpm run audit` | Security audit |
-| `pnpm run outdated` | Check outdated packages |
-| `pnpm run update:deps` | Update dependencies |
-
-### Publishing
-
-| Script | Purpose |
-|--------|---------|
-| `pnpm run changeset` | Create a changeset |
-| `pnpm run changeset:version` | Bump versions |
-| `pnpm run changeset:publish` | Publish to npm |
-
-## Helper Scripts
-
-Template initialization and project management scripts in `scripts/`:
-
-| Script | Purpose |
-|--------|---------|
-| `scripts/init-template.mjs` | Interactive template initialization |
-| `scripts/create-package.mjs` | Create new package scaffold |
-| `scripts/rename-scope.mjs` | Rename package scope (@company → @myorg) |
-| `scripts/verify-setup.mjs` | Verify setup and dependencies |
-
-**Usage**:
-```bash
-# Initialize template (run first when using as template)
-node scripts/init-template.mjs
-
-# Create a new package
-node scripts/create-package.mjs my-feature
-
-# Rename package scope
-node scripts/rename-scope.mjs company myorg
-
-# Verify everything is configured
-node scripts/verify-setup.mjs
-```
-
-See [scripts/TEMPLATE_INITIALIZATION.md](scripts/TEMPLATE_INITIALIZATION.md) for detailed guide.
 
 ## Documentation
 
-Comprehensive guides for development and deployment:
-
-- **[Template Initialization Guide](scripts/TEMPLATE_INITIALIZATION.md)** - Using this template for new projects
-- **[Workspace Guide](docs/WORKSPACE.md)** - Managing monorepo packages
-- **[Development Workflow](docs/DEVELOPMENT.md)** - Day-to-day development process
-- **[Testing Guide](docs/TESTING.md)** - Unit, integration, and E2E testing
-- **[Examples](docs/EXAMPLES.md)** - Real-world usage examples
-- **[Architecture Decisions](docs/adr/)** - Technology choices and rationale
-
-## Configuration Files
-
-### TypeScript (`tsconfig.json`)
-
-- Strict type checking enabled
-- ES2022 target with ESNext modules
-- Decorator support enabled
-- Source maps and declarations generated
-
-### Package Manager
-
-- Uses pnpm with workspaces support
-- Minimum pnpm version: 9.0.0
-- Minimum Node.js version: 20.0.0
-
-## Coding Standards
-
-This project follows strict coding standards:
-
-### Naming Conventions
-
-- **camelCase**: Variables and functions
-- **PascalCase**: Classes, types, interfaces, components, files/folders
-- **snake_case**: Script files (non-module)
-- **#prefix**: Private class fields (ES2022)
-
-### Code Style
-
-- 2 spaces for indentation
-- Single quotes for strings
-- Semicolons required
-- No trailing commas
-
-### Best Practices
-
-- Async/await over Promises
-- Strict equality (`===`)
-- Explicit return types
-- JSDoc for public APIs only
-- Dependency injection with decorators
-
-See [AGENTS.md](AGENTS.md) for complete guidelines.
-
-## Version Management
-
-This project uses [Changesets](https://github.com/changesets/changesets) for version management:
-
-### Creating a Changeset
-
-When you make changes that should be released:
-
-```bash
-pnpm changeset
-```
-
-Follow the prompts to:
-1. Select the type of change (major, minor, patch)
-2. Describe your changes
-
-### Releasing
-
-The release process is automated via GitHub Actions:
-
-1. **Make changes** and create changesets
-2. **Merge to main** - GitHub Actions will create a "Version Packages" PR
-3. **Review and merge** the Version Packages PR
-4. **Automatic release** - Package is published to npm and GitHub release is created
-
-### Manual Release
-
-If needed, you can release manually:
-
-```bash
-pnpm version  # Update versions
-git add .
-git commit -m "chore: version packages"
-pnpm release  # Publish to npm
-```
-
-## CI/CD Workflows
-
-### CI Workflow (`.github/workflows/ci.yml`)
-
-Runs on push and pull requests:
-- Code quality checks (formatting, linting, type checking)
-- Tests on Node.js 20 and 22
-- Build verification
-- Coverage reporting
-
-### Release Workflow (`.github/workflows/release.yml`)
-
-Runs on main branch:
-- Creates version PRs using Changesets
-- Publishes to npm when version PR is merged
-- Creates GitHub releases automatically
-- Supports pre-release versions
-
-### Dependency Updates
-
-Dependabot is configured to:
-- Check for npm package updates weekly
-- Check for GitHub Actions updates weekly
-- Group updates by category (TypeScript, testing, etc.)
-- Auto-label and assign PRs
-
-## Pre-commit Hooks
-
-simple-git-hooks and lint-staged are configured to run on every commit:
-- Format code with oxfmt
-- Lint and fix with oxlint
-- Ensure code quality before commits
+- [Development Workflow](docs/DEVELOPMENT.md)
+- [Testing Guide](docs/TESTING.md)
+- [Workspace Guide](docs/WORKSPACE.md)
+- [Feature Spec](specs/001-zodform/spec.md)
+- [Quickstart](specs/001-zodform/quickstart.md)
 
 ## Contributing
 
-1. Follow the coding standards in [AGENTS.md](AGENTS.md)
-2. Write tests for new features
-3. Use conventional commits
-4. Ensure all tests pass before submitting PR
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE) for details.
 
 ---
 
-_Generated from template-ts on December 19, 2025_
+**Author**: Pradeep Mouli · **Version**: 0.2.0 · **Zod**: v4.x only

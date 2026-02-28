@@ -1,0 +1,54 @@
+{
+  "name": "@zod-to-form/cli",
+  "version": "0.2.3",
+  "description": "Build-time code generator for Zod v4 form components",
+  "license": "MIT",
+  "homepage": "https://github.com/pradeepmouli/zod-to-form#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pradeepmouli/zod-to-form.git",
+    "directory": "packages/cli"
+  },
+  "keywords": [
+    "zod",
+    "codegen",
+    "forms",
+    "form-generation",
+    "cli",
+    "typescript"
+  ],
+  "type": "module",
+  "bin": {
+    "zodform": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsgo -p tsconfig.build.json",
+    "clean": "rm -rf dist tsconfig.build.tsbuildinfo tsconfig.tsbuildinfo",
+    "prepublishOnly": "npm run clean && npm run build",
+    "dev": "tsgo -p tsconfig.build.json --watch",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "type-check": "tsgo --noEmit"
+  },
+  "dependencies": {
+    "@zod-to-form/core": "workspace:*",
+    "chokidar": "^5.0.0",
+    "commander": "^14.0.3",
+    "jiti": "^2.6.1",
+    "type-fest": "^5.4.4"
+  },
+  "devDependencies": {
+    "zod": "^4.3.6"
+  }
+}

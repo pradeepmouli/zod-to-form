@@ -18,6 +18,7 @@
     "dist",
     "build",
     "coverage",
+    "specs/**",
     "*.config.ts",
     "*.config.js",
     ".github",
