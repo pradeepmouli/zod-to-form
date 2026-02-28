@@ -230,8 +230,8 @@ function LogoIcon({ size = "md", variant = "default" }: { size?: "sm" | "md" | "
           width: w * 0.55,
           height: h * 0.5,
           padding: w * 0.05,
-          top: "50%",
-          left: "50%",
+          top: "45%",  // Shifted slightly up
+          left: "45%", // Shifted slightly left based on screenshot
           transform: "translate(-50%, -50%)",
           backgroundColor: bgColor
         }}
