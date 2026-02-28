@@ -1,13 +1,13 @@
 name: Security Audit
 
 on:
-  # Run on every push to main and PRs
+  # Run on every push to master and PRs
   push:
     branches:
-      - main
+      - master
   pull_request:
     branches:
-      - main
+      - master
   # Run weekly on Monday at 3am UTC
   schedule:
     - cron: '0 3 * * 1'
