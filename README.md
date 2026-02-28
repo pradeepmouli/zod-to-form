@@ -10,7 +10,9 @@
 </p>
 
 <p align="center">
-  <img src="./attached_assets/logo.png" alt="zod-to-form logo" height="40" />
+  <a href="https://github.com/pradeepmouli/zod-to-form">
+    <img src="./attached_assets/logo.png" alt="zod-to-form logo" height="40" />
+  </a>
 </p>
 
 ```tsx

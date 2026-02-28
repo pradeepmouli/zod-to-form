@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://github.com/pradeepmouli/zod-to-form">
+    <img src="https://raw.githubusercontent.com/pradeepmouli/zod-to-form/master/attached_assets/logo.png" alt="zod-to-form logo" height="32" />
+  </a>
+</p>
+
 # @zod-to-form/cli
 
 Build-time code generator for Zod v4 form components.
