@@ -42,12 +42,12 @@
     x="337"
     y="112"
     dominant-baseline="middle"
-    font-family="Helvetica Neue,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+    font-family="'Outfit',Helvetica Neue,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
     font-size="52"
     font-weight="700"
     letter-spacing="-1"
     fill="#0F172A"
-  ><tspan fill="#14B8A6">zod</tspan><tspan>-to-</tspan><tspan fill="#EC4899">form</tspan></text>
+  ><tspan fill="#14B8A6">zod</tspan><tspan font-weight="500">-to-</tspan><tspan fill="#EC4899">form</tspan></text>
 
   <!-- Tagline — centred below the logo+title row -->
   <text
