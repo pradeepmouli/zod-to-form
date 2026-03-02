@@ -516,14 +516,13 @@ The Zod-to-form generation space has one dominant player ([AutoForm](https://git
 <summary><strong>vs SnowForm</strong> (~920 npm/month, 11 stars)</summary>
 
 - **Global singleton** — `setupSnowForm()` uses a module-level global, problematic for testing, SSR, and multi-config apps.
-- **Limited type coverage** — docs only show basic types; no evidence of array/object/union/discriminatedUnion handling.
+- **Limited type coverage** — limited support for array/object/union/discriminatedUnion handling.
 - **No Zod v4 metadata** — uses its own override system rather than `.meta()` or `z.registry()`.
 </details>
 
 <details>
 <summary><strong>vs react-formgen</strong> (~180 npm/month, 68 stars)</summary>
 
-- **Permanently alpha** — still at `0.0.0-alpha.27` after 1.5+ years.
 - **Zustand instead of RHF** — loses the entire React Hook Form ecosystem: `zodResolver`, `useFieldArray`, validation modes, focus management, dirty/touched tracking.
 - **Too headless** — zero default UI means every user builds from scratch.
 </details>
