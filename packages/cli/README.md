@@ -22,16 +22,18 @@ pnpm add -D @zod-to-form/cli zod
 ## CLI Usage
 
 ```bash
-zodform generate --config ./component-config.ts --schema ./src/schema.ts --export userSchema
+zod-to-form generate --config ./component-config.ts --schema ./src/schema.ts --export userSchema
 ```
 
 ```bash
-zodform init
+zod-to-form init
 ```
+
+Alias: `z2f`.
 
 ### Command
 
-`zodform generate`
+`zod-to-form generate`
 
 Required options:
 
@@ -68,13 +70,13 @@ Default config discovery order (used by runtime helpers / existing workflows) is
 
 ### Command
 
-`zodform init`
+`zod-to-form init`
 
-Creates `component-config.ts` using sensible defaults and introspection of shadcn `components.json` when available.
+Creates `z2f.config.ts` using sensible defaults and introspection of shadcn `components.json` when available.
 
 Optional options:
 
-- `--out <path>`: output file or directory (default `component-config.ts`)
+- `--out <path>`: output file or directory (default `z2f.config.ts`)
 - `--components <modulePath>`: module path assigned to `components` in generated config (overrides inference)
 - `--force`: overwrite existing config file
 - `--dry-run`: print generated config and skip file writes
@@ -90,13 +92,13 @@ Output behavior:
 Generate to default output (`<DerivedName>Form.tsx`):
 
 ```bash
-zodform generate --schema ./src/user.schema.ts --export userSchema
+zod-to-form generate --schema ./src/user.schema.ts --export userSchema
 ```
 
 Generate to specific directory with custom component name:
 
 ```bash
-zodform generate \
+zod-to-form generate \
   --config ./component-config.ts \
   --schema ./src/user.schema.ts \
   --export userSchema \
@@ -107,7 +109,7 @@ zodform generate \
 Generate in auto-save mode with server action:
 
 ```bash
-zodform generate \
+zod-to-form generate \
   --config ./component-config.ts \
   --schema ./src/user.schema.ts \
   --export userSchema \
@@ -118,19 +120,19 @@ zodform generate \
 Dry run to inspect generated output:
 
 ```bash
-zodform generate --config ./component-config.ts --schema ./src/user.schema.ts --export userSchema --dry-run
+zod-to-form generate --config ./component-config.ts --schema ./src/user.schema.ts --export userSchema --dry-run
 ```
 
 Initialize config with verbose diagnostics:
 
 ```bash
-zodform init --verbose
+zod-to-form init --verbose
 ```
 
 Initialize config with explicit components module path:
 
 ```bash
-zodform init --components ../../src/components/zod-form-components
+zod-to-form init --components ../../src/components/zod-form-components
 ```
 
 ## Type-Safe Component Config
@@ -177,6 +179,24 @@ export default defineComponentConfig<Components, Values>({
 ```
 
 `formPrimitives` is optional. When provided, generated fields use those wrappers instead of raw `div`/`label` markup.
+
+Common examples:
+
+```ts
+formPrimitives: {
+  field: 'Field',
+  label: 'FieldLabel',
+  control: 'FieldControl'
+}
+```
+
+```ts
+formPrimitives: {
+  field: 'FormField',
+  label: 'FormLabel',
+  control: 'FormControl'
+}
+```
 
 ### `validateComponentConfig(...)`
 

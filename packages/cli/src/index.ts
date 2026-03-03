@@ -192,7 +192,7 @@ export function createProgram(): Command {
   const program = new Command();
 
   program
-    .name('zodform')
+    .name('zod-to-form')
     .description('Generate form components from Zod v4 schemas')
     .version('0.0.0');
 
@@ -251,12 +251,12 @@ export function createProgram(): Command {
   program
     .command('init')
     .description(
-      'Create component-config.ts with sensible defaults and optional shadcn introspection'
+      'Create z2f.config.ts with sensible defaults and optional shadcn introspection'
     )
-    .option('--out <path>', 'Output path to write component-config.ts', 'component-config.ts')
+    .option('--out <path>', 'Output path to write z2f.config.ts', 'z2f.config.ts')
     .option(
       '--components <modulePath>',
-      'Module path used in generated component-config.ts (overrides shadcn inference)'
+      'Module path used in generated z2f.config.ts (overrides shadcn inference)'
     )
     .option('--force', 'Overwrite existing component config file', false)
     .option('--dry-run', 'Print generated config without writing files', false)

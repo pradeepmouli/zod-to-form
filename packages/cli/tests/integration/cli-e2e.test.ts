@@ -48,7 +48,7 @@ describe('CLI generate command', () => {
     await program.parseAsync(
       [
         'node',
-        'zodform',
+        'zod-to-form',
         'generate',
         '--config',
         './component-config.ts',
@@ -72,7 +72,7 @@ describe('CLI generate command', () => {
     await noOverwriteProgram.parseAsync(
       [
         'node',
-        'zodform',
+        'zod-to-form',
         'generate',
         '--config',
         './component-config.ts',
@@ -111,7 +111,7 @@ describe('CLI generate command', () => {
     await overwriteProgram.parseAsync(
       [
         'node',
-        'zodform',
+        'zod-to-form',
         'generate',
         '--config',
         './component-config.overwrite.ts',
@@ -133,7 +133,7 @@ describe('CLI generate command', () => {
     await dryRunProgram.parseAsync(
       [
         'node',
-        'zodform',
+        'zod-to-form',
         'generate',
         '--config',
         './component-config.ts',
@@ -182,7 +182,7 @@ describe('CLI generate command', () => {
     await program.parseAsync(
       [
         'node',
-        'zodform',
+        'zod-to-form',
         'generate',
         '--config',
         './component-config.types.ts',
@@ -326,7 +326,7 @@ describe('CLI generate performance benchmark', () => {
     await program.parseAsync(
       [
         'node',
-        'zodform',
+        'zod-to-form',
         'generate',
         '--config',
         './component-config.ts',
