@@ -9,6 +9,7 @@ async function createFixture() {
   const dir = await mkdtemp(path.join(tmpdir(), 'zodform-cli-e2e-'));
   const schemaPath = path.join(dir, 'schema.ts');
   const outDir = path.join(dir, 'out');
+  const configPath = path.join(dir, 'component-config.ts');
 
   await writeFile(
     schemaPath,
@@ -16,12 +17,29 @@ async function createFixture() {
     'utf8'
   );
 
-  return { dir, schemaPath, outDir };
+  await writeFile(
+    configPath,
+    [
+      'export default {',
+      "  components: '@app/components',",
+      '  overwrite: false,',
+      '  fieldTypes: {',
+      "    string: { component: 'Input' },",
+      "    number: { component: 'Input' },",
+      "    Input: { component: 'Input' },",
+      "    Checkbox: { component: 'Checkbox' }",
+      '  }',
+      '};'
+    ].join('\n'),
+    'utf8'
+  );
+
+  return { dir, schemaPath, outDir, configPath };
 }
 
 describe('CLI generate command', () => {
-  it('writes file, supports dry-run, and force overwrites', async () => {
-    const { schemaPath, outDir } = await createFixture();
+  it('writes file, supports dry-run, and config overwrite behavior', async () => {
+    const { schemaPath, outDir, dir } = await createFixture();
 
     const originalCwd = process.cwd();
     process.chdir(path.dirname(schemaPath));
@@ -30,8 +48,10 @@ describe('CLI generate command', () => {
     await program.parseAsync(
       [
         'node',
-        'zodform',
+        'zod-to-form',
         'generate',
+        '--config',
+        './component-config.ts',
         '--schema',
         './schema.ts',
         '--export',
@@ -46,12 +66,16 @@ describe('CLI generate command', () => {
     const firstContent = await readFile(outputPath, 'utf8');
     expect(firstContent).toContain('function UserForm');
 
-    const afterSecondRunProgram = createProgram();
-    await afterSecondRunProgram.parseAsync(
+    await writeFile(outputPath, 'changed by test', 'utf8');
+
+    const noOverwriteProgram = createProgram();
+    await noOverwriteProgram.parseAsync(
       [
         'node',
-        'zodform',
+        'zod-to-form',
         'generate',
+        '--config',
+        './component-config.ts',
         '--schema',
         './schema.ts',
         '--export',
@@ -62,37 +86,57 @@ describe('CLI generate command', () => {
       { from: 'node' }
     );
 
-    const contentAfterSecondRun = await readFile(outputPath, 'utf8');
-    expect(contentAfterSecondRun).toBe(firstContent);
+    const unchangedContent = await readFile(outputPath, 'utf8');
+    expect(unchangedContent).toBe('changed by test');
 
-    await writeFile(outputPath, 'changed by test', 'utf8');
-    const forceProgram = createProgram();
-    await forceProgram.parseAsync(
+    const overwriteConfigPath = path.join(dir, 'component-config.overwrite.ts');
+    await writeFile(
+      overwriteConfigPath,
+      [
+        'export default {',
+        "  components: '@app/components',",
+        '  overwrite: true,',
+        '  fieldTypes: {',
+        "    string: { component: 'Input' },",
+        "    number: { component: 'Input' },",
+        "    Input: { component: 'Input' },",
+        "    Checkbox: { component: 'Checkbox' }",
+        '  }',
+        '};'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const overwriteProgram = createProgram();
+    await overwriteProgram.parseAsync(
       [
         'node',
-        'zodform',
+        'zod-to-form',
         'generate',
+        '--config',
+        './component-config.overwrite.ts',
         '--schema',
         './schema.ts',
         '--export',
         'userSchema',
         '--out',
-        outDir,
-        '--force'
+        outDir
       ],
       { from: 'node' }
     );
 
-    const forcedContent = await readFile(outputPath, 'utf8');
-    expect(forcedContent).toContain('function UserForm');
+    const overwrittenContent = await readFile(outputPath, 'utf8');
+    expect(overwrittenContent).toContain('function UserForm');
 
     const stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
     const dryRunProgram = createProgram();
     await dryRunProgram.parseAsync(
       [
         'node',
-        'zodform',
+        'zod-to-form',
         'generate',
+        '--config',
+        './component-config.ts',
         '--schema',
         './schema.ts',
         '--export',
@@ -106,6 +150,54 @@ describe('CLI generate command', () => {
 
     expect(stdoutSpy).toHaveBeenCalled();
     stdoutSpy.mockRestore();
+    process.chdir(originalCwd);
+  });
+
+  it('uses config.types when --export is omitted', async () => {
+    const { schemaPath, outDir, dir } = await createFixture();
+    const configWithTypesPath = path.join(dir, 'component-config.types.ts');
+
+    await writeFile(
+      configWithTypesPath,
+      [
+        'export default {',
+        "  components: '@app/components',",
+        "  types: ['userSchema'],",
+        '  overwrite: true,',
+        '  fieldTypes: {',
+        "    string: { component: 'Input' },",
+        "    number: { component: 'Input' },",
+        "    Input: { component: 'Input' },",
+        "    Checkbox: { component: 'Checkbox' }",
+        '  }',
+        '};'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const originalCwd = process.cwd();
+    process.chdir(path.dirname(schemaPath));
+
+    const program = createProgram();
+    await program.parseAsync(
+      [
+        'node',
+        'zod-to-form',
+        'generate',
+        '--config',
+        './component-config.types.ts',
+        '--schema',
+        './schema.ts',
+        '--out',
+        outDir
+      ],
+      { from: 'node' }
+    );
+
+    const outputPath = path.join(outDir, 'UserForm.tsx');
+    const content = await readFile(outputPath, 'utf8');
+    expect(content).toContain('function UserForm');
+
     process.chdir(originalCwd);
   });
 });
@@ -190,6 +282,7 @@ describe('CLI generate performance benchmark', () => {
     const dir = await mkdtemp(path.join(tmpdir(), 'zodform-bench-'));
     const schemaPath = path.join(dir, 'big-schema.ts');
     const outDir = path.join(dir, 'out');
+    const configPath = path.join(dir, 'component-config.ts');
 
     const fields50 = Array.from({ length: 50 }, (_: unknown, i: number) => {
       const mod = i % 5;
@@ -206,6 +299,25 @@ describe('CLI generate performance benchmark', () => {
       'utf8'
     );
 
+    await writeFile(
+      configPath,
+      [
+        'export default {',
+        "  components: '@app/components',",
+        '  overwrite: true,',
+        '  fieldTypes: {',
+        "    string: { component: 'Input' },",
+        "    number: { component: 'Input' },",
+        "    boolean: { component: 'Checkbox' },",
+        "    Select: { component: 'Select' },",
+        "    Input: { component: 'Input' },",
+        "    Checkbox: { component: 'Checkbox' }",
+        '  }',
+        '};'
+      ].join('\n'),
+      'utf8'
+    );
+
     const originalCwd = process.cwd();
     process.chdir(path.dirname(schemaPath));
 
@@ -214,15 +326,16 @@ describe('CLI generate performance benchmark', () => {
     await program.parseAsync(
       [
         'node',
-        'zodform',
+        'zod-to-form',
         'generate',
+        '--config',
+        './component-config.ts',
         '--schema',
         './big-schema.ts',
         '--export',
         'bigSchema',
         '--out',
-        outDir,
-        '--force'
+        outDir
       ],
       { from: 'node' }
     );
@@ -230,7 +343,6 @@ describe('CLI generate performance benchmark', () => {
 
     process.chdir(originalCwd);
 
-    // SC-002: full generate pipeline must complete in under 10 seconds
     expect(elapsed).toBeLessThan(10_000);
   });
 });

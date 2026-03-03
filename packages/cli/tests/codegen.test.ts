@@ -46,6 +46,7 @@ describe('generateFormComponent', () => {
 
     expect(output).toContain(`import { useForm } from 'react-hook-form';`);
     expect(output).toContain(`import { zodResolver } from '@hookform/resolvers/zod';`);
+    expect(output).toContain(`import { userSchema } from './schema.js';`);
     expect(output).toContain('function UserForm');
     expect(output).toContain(`register('name')`);
     expect(output).toContain(`register('role')`);
@@ -194,5 +195,290 @@ describe('generateFormComponent', () => {
       `<TypeSelector id="DataForm.superType" {...register('DataForm.superType')} refType="Data" />`
     );
     expect(output).not.toContain(`<input id="DataForm.superType"`);
+  });
+
+  it('uses configured formPrimitives wrappers for generated fields', async () => {
+    const fields: FormField[] = [
+      {
+        key: 'name',
+        component: 'Input',
+        props: { type: 'text' },
+        label: 'Name',
+        required: true,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'string'
+      }
+    ];
+
+    const output = await generateFormComponent(fields, {
+      schemaPath: '/tmp/schema.ts',
+      exportName: 'userSchema',
+      outputPath: '/tmp/UserForm.tsx',
+      componentName: 'UserForm',
+      mode: 'submit',
+      ui: 'shadcn',
+      serverAction: false,
+      componentConfig: {
+        components: '@app/components',
+        formPrimitives: {
+          field: 'Field',
+          label: 'FieldLabel',
+          control: 'FieldControl'
+        },
+        fieldTypes: {
+          string: { component: 'Input' }
+        }
+      }
+    });
+
+    expect(output).toContain(`import { Field, FieldControl, FieldLabel } from '@app/components';`);
+    expect(output).toContain('<Field>');
+    expect(output).toContain('<FieldLabel htmlFor="name">Name</FieldLabel>');
+    expect(output).toContain('<FieldControl>');
+    expect(output).toContain(`<input id="name" type="text" {...register('name')} />`);
+  });
+
+  it('normalizes schema import extension from .mts to .mjs', async () => {
+    const fields: FormField[] = [
+      {
+        key: 'name',
+        component: 'Input',
+        props: { type: 'text' },
+        label: 'Name',
+        required: true,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'string'
+      }
+    ];
+
+    const output = await generateFormComponent(fields, {
+      schemaPath: '/tmp/schema.mts',
+      exportName: 'userSchema',
+      outputPath: '/tmp/UserForm.tsx',
+      componentName: 'UserForm',
+      mode: 'submit',
+      ui: 'shadcn',
+      serverAction: false
+    });
+
+    expect(output).toContain(`import { userSchema } from './schema.mjs';`);
+  });
+
+  it('emits stripped index-signature FormData type for loose object compatibility', async () => {
+    const fields: FormField[] = [
+      {
+        key: 'name',
+        component: 'Input',
+        props: { type: 'text' },
+        label: 'Name',
+        required: true,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'string'
+      }
+    ];
+
+    const output = await generateFormComponent(fields, {
+      schemaPath: '/tmp/schema.ts',
+      exportName: 'userSchema',
+      outputPath: '/tmp/UserForm.tsx',
+      componentName: 'UserForm',
+      mode: 'submit',
+      ui: 'shadcn',
+      serverAction: false
+    });
+
+    expect(output).toContain('type StripIndexSignature<T> = T extends readonly (infer U)[]');
+    expect(output).toContain('type FormData = StripIndexSignature<z.output<typeof userSchema>>;');
+  });
+
+  it('generates object-array item paths with template-literal register calls and object append defaults', async () => {
+    const fields: FormField[] = [
+      {
+        key: 'attributes',
+        component: 'ArrayField',
+        props: {},
+        label: 'Attributes',
+        required: false,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'array',
+        arrayItem: {
+          key: 'attributes.0',
+          component: 'Fieldset',
+          props: {},
+          label: 'Attribute',
+          required: true,
+          readOnly: false,
+          hidden: false,
+          constraints: {},
+          zodType: 'object',
+          children: [
+            {
+              key: 'attributes.0.name',
+              component: 'Input',
+              props: { type: 'text' },
+              label: 'Name',
+              required: true,
+              readOnly: false,
+              hidden: false,
+              constraints: {},
+              zodType: 'string'
+            },
+            {
+              key: 'attributes.0.optionalValue',
+              component: 'Input',
+              props: { type: 'text' },
+              label: 'Optional Value',
+              required: false,
+              readOnly: false,
+              hidden: false,
+              constraints: {},
+              zodType: 'string'
+            }
+          ]
+        }
+      }
+    ];
+
+    const output = await generateFormComponent(fields, {
+      schemaPath: '/tmp/schema.ts',
+      exportName: 'userSchema',
+      outputPath: '/tmp/UserForm.tsx',
+      componentName: 'UserForm',
+      mode: 'submit',
+      ui: 'shadcn',
+      serverAction: false
+    });
+
+    expect(output).toContain(
+      `useFieldArray<FormData, 'attributes'>({ control, name: 'attributes' })`
+    );
+    expect(output).toContain(`register(\`attributes.\${index}.name\`)`);
+    expect(output).toContain(`register(\`attributes.\${index}.optionalValue\`)`);
+    expect(output).toContain(`appendAttributes({ "name": '', "optionalValue": '' })`);
+  });
+
+  it('uses literal select option defaults in object-array append payloads', async () => {
+    const fields: FormField[] = [
+      {
+        key: 'items',
+        component: 'ArrayField',
+        props: {},
+        label: 'Items',
+        required: false,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'array',
+        arrayItem: {
+          key: 'items.0',
+          component: 'Fieldset',
+          props: {},
+          label: 'Item',
+          required: true,
+          readOnly: false,
+          hidden: false,
+          constraints: {},
+          zodType: 'object',
+          children: [
+            {
+              key: 'items.0.$type',
+              component: 'Select',
+              props: {},
+              label: '$type',
+              required: true,
+              readOnly: true,
+              hidden: false,
+              constraints: {},
+              zodType: 'literal',
+              options: [{ value: 'Item', label: 'Item' }]
+            }
+          ]
+        }
+      }
+    ];
+
+    const output = await generateFormComponent(fields, {
+      schemaPath: '/tmp/schema.ts',
+      exportName: 'userSchema',
+      outputPath: '/tmp/UserForm.tsx',
+      componentName: 'UserForm',
+      mode: 'submit',
+      ui: 'shadcn',
+      serverAction: false
+    });
+
+    expect(output).toContain(`appendItems({ "$type": "Item" })`);
+  });
+
+  it('emits nested-array fallback message instead of invalid dynamic hooks', async () => {
+    const fields: FormField[] = [
+      {
+        key: 'items',
+        component: 'ArrayField',
+        props: {},
+        label: 'Items',
+        required: false,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'array',
+        arrayItem: {
+          key: 'items.0',
+          component: 'Fieldset',
+          props: {},
+          label: 'Item',
+          required: true,
+          readOnly: false,
+          hidden: false,
+          constraints: {},
+          zodType: 'object',
+          children: [
+            {
+              key: 'items.0.tags',
+              component: 'ArrayField',
+              props: {},
+              label: 'Tags',
+              required: false,
+              readOnly: false,
+              hidden: false,
+              constraints: {},
+              zodType: 'array',
+              arrayItem: {
+                key: 'items.0.tags.0',
+                component: 'Input',
+                props: { type: 'text' },
+                label: 'Tag',
+                required: false,
+                readOnly: false,
+                hidden: false,
+                constraints: {},
+                zodType: 'string'
+              }
+            }
+          ]
+        }
+      }
+    ];
+
+    const output = await generateFormComponent(fields, {
+      schemaPath: '/tmp/schema.ts',
+      exportName: 'userSchema',
+      outputPath: '/tmp/UserForm.tsx',
+      componentName: 'UserForm',
+      mode: 'submit',
+      ui: 'shadcn',
+      serverAction: false
+    });
+
+    expect(output).toContain('Nested array editing is not auto-generated for dynamic paths.');
+    expect(output).not.toContain('itemsIndexTagsFields');
   });
 });

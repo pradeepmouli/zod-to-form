@@ -13,6 +13,15 @@ export type {
   ZodFormRegistry
 } from './types.js';
 
+export type {
+  ComponentEntry,
+  FormPrimitivesConfig,
+  FieldOverride,
+  ZodToFormComponentConfig
+} from './component-config.js';
+
+export { defineComponentConfig, validateComponentConfig } from './component-config.js';
+
 export { inferLabel, joinPath, createBaseField } from './utils.js';
 
 export { walkSchema } from './walker.js';

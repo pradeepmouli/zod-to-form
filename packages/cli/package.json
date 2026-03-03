@@ -19,7 +19,8 @@
   ],
   "type": "module",
   "bin": {
-    "zodform": "./dist/index.js"
+    "zod-to-form": "./dist/index.js",
+    "z2f": "./dist/index.js"
   },
   "exports": {
     ".": {
