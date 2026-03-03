@@ -15,6 +15,7 @@ export type {
 
 export type {
   ComponentEntry,
+  FormPrimitivesConfig,
   FieldOverride,
   ZodToFormComponentConfig
 } from './component-config.js';

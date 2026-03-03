@@ -38,6 +38,21 @@ export function validateComponentConfig(
     }
   }
 
+  const formPrimitives = value['formPrimitives'];
+  if (formPrimitives !== undefined) {
+    if (!isObjectRecord(formPrimitives)) {
+      throw new Error(`${source}.formPrimitives must be an object when provided.`);
+    }
+
+    for (const [primitiveName, primitiveValue] of Object.entries(formPrimitives)) {
+      if (typeof primitiveValue !== 'string' || primitiveValue.trim().length === 0) {
+        throw new Error(
+          `${source}.formPrimitives.${primitiveName} must be a non-empty string when provided.`
+        );
+      }
+    }
+  }
+
   const fields = value['fields'];
   if (fields !== undefined) {
     if (!isObjectRecord(fields)) {

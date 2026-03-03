@@ -8,12 +8,19 @@ export type FieldOverride = {
   props?: Record<string, unknown>;
 };
 
+export type FormPrimitivesConfig<T extends Record<string, unknown> = Record<string, unknown>> = {
+  field?: keyof T & string;
+  label?: keyof T & string;
+  control?: keyof T & string;
+};
+
 export type ZodToFormComponentConfig<
   T extends Record<string, unknown> = Record<string, unknown>,
   TFieldPath extends string = string
 > = {
   components: string;
   fieldTypes: Record<string, ComponentEntry<T>>;
+  formPrimitives?: FormPrimitivesConfig<T>;
   fields?: Partial<Record<TFieldPath, FieldOverride>>;
 };
 
@@ -52,6 +59,21 @@ export function validateComponentConfig(
     const render = entryValue['render'];
     if (render !== undefined && typeof render !== 'function') {
       throw new Error(`${source}.fieldTypes.${fieldType}.render must be a function when provided.`);
+    }
+  }
+
+  const formPrimitives = value['formPrimitives'];
+  if (formPrimitives !== undefined) {
+    if (!isObjectRecord(formPrimitives)) {
+      throw new Error(`${source}.formPrimitives must be an object when provided.`);
+    }
+
+    for (const [primitiveName, primitiveValue] of Object.entries(formPrimitives)) {
+      if (typeof primitiveValue !== 'string' || primitiveValue.trim().length === 0) {
+        throw new Error(
+          `${source}.formPrimitives.${primitiveName} must be a non-empty string when provided.`
+        );
+      }
     }
   }
 

@@ -46,6 +46,12 @@ export type FieldOverride = {
   props?: Record<string, unknown>;
 };
 
+export type FormPrimitivesConfig<T extends Record<string, unknown> = Record<string, unknown>> = {
+  field?: keyof T & string;
+  label?: keyof T & string;
+  control?: keyof T & string;
+};
+
 export type ZodToFormComponentConfig<
   T extends Record<string, unknown> = Record<string, unknown>,
   TFieldPath extends string = string
@@ -56,6 +62,7 @@ export type ZodToFormComponentConfig<
   exclude?: string[];
   types?: string[];
   fieldTypes: Record<string, ComponentEntry<T>>;
+  formPrimitives?: FormPrimitivesConfig<T>;
   fields?: Partial<Record<TFieldPath, FieldOverride>>;
 };
 
