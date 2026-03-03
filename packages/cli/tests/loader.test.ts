@@ -120,6 +120,33 @@ describe('loadComponentConfig', () => {
     );
   });
 
+  it('throws clear error for invalid formPrimitives values', async () => {
+    const dir = await createTempDir();
+    const configPath = path.join(dir, 'bad-primitives.json');
+
+    await writeFile(
+      configPath,
+      JSON.stringify(
+        {
+          components: '@app/components',
+          fieldTypes: {
+            string: { component: 'Input' }
+          },
+          formPrimitives: {
+            control: ''
+          }
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    await expect(loadComponentConfig(configPath)).rejects.toThrow(
+      /formPrimitives\.control must be a non-empty string/
+    );
+  });
+
   it('loads a valid ts component config via jiti', async () => {
     const dir = await createTempDir();
     const configPath = path.join(dir, 'component-config.ts');

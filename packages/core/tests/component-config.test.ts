@@ -21,6 +21,11 @@ describe('component config contracts', () => {
   it('validateComponentConfig accepts valid component config object', () => {
     const parsed = validateComponentConfig({
       components: '@app/components',
+      formPrimitives: {
+        field: 'Field',
+        label: 'FieldLabel',
+        control: 'FieldControl'
+      },
       fieldTypes: {
         Input: { component: 'TextInput' }
       }
@@ -28,6 +33,20 @@ describe('component config contracts', () => {
 
     expect(parsed.components).toBe('@app/components');
     expect(parsed.fieldTypes['Input']?.component).toBe('TextInput');
+  });
+
+  it('validateComponentConfig rejects invalid formPrimitives shape', () => {
+    expect(() =>
+      validateComponentConfig({
+        components: '@app/components',
+        fieldTypes: {
+          Input: { component: 'TextInput' }
+        },
+        formPrimitives: {
+          label: ''
+        }
+      })
+    ).toThrow(/formPrimitives\.label must be a non-empty string/);
   });
 
   it('validateComponentConfig rejects invalid fields shape', () => {

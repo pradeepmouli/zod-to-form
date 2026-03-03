@@ -27,6 +27,10 @@ describe('runInit', () => {
     const content = await readFile(result.outputPath, 'utf8');
     expect(content).toContain(`defineComponentConfig`);
     expect(content).toContain(`components: '@/components/zod-form-components'`);
+    expect(content).toContain(`formPrimitives: {`);
+    expect(content).toContain(`field: 'Field'`);
+    expect(content).toContain(`label: 'FieldLabel'`);
+    expect(content).toContain(`control: 'FieldControl'`);
 
     process.chdir(originalCwd);
   });

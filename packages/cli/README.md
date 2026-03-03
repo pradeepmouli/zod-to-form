@@ -160,6 +160,11 @@ export default defineComponentConfig<Components, Values>({
   types: ['userSchema'],
   include: ['*Schema'],
   exclude: ['Internal*'],
+  formPrimitives: {
+    field: 'Field',
+    label: 'FieldLabel',
+    control: 'FieldControl'
+  },
   fieldTypes: {
     Input: { component: 'TextInput' },
     textarea: { component: 'TextareaInput' }
@@ -170,6 +175,8 @@ export default defineComponentConfig<Components, Values>({
   }
 });
 ```
+
+`formPrimitives` is optional. When provided, generated fields use those wrappers instead of raw `div`/`label` markup.
 
 ### `validateComponentConfig(...)`
 

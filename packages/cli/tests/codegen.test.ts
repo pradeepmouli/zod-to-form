@@ -197,6 +197,49 @@ describe('generateFormComponent', () => {
     expect(output).not.toContain(`<input id="DataForm.superType"`);
   });
 
+  it('uses configured formPrimitives wrappers for generated fields', async () => {
+    const fields: FormField[] = [
+      {
+        key: 'name',
+        component: 'Input',
+        props: { type: 'text' },
+        label: 'Name',
+        required: true,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'string'
+      }
+    ];
+
+    const output = await generateFormComponent(fields, {
+      schemaPath: '/tmp/schema.ts',
+      exportName: 'userSchema',
+      outputPath: '/tmp/UserForm.tsx',
+      componentName: 'UserForm',
+      mode: 'submit',
+      ui: 'shadcn',
+      serverAction: false,
+      componentConfig: {
+        components: '@app/components',
+        formPrimitives: {
+          field: 'Field',
+          label: 'FieldLabel',
+          control: 'FieldControl'
+        },
+        fieldTypes: {
+          string: { component: 'Input' }
+        }
+      }
+    });
+
+    expect(output).toContain(`import { Field, FieldControl, FieldLabel } from '@app/components';`);
+    expect(output).toContain('<Field>');
+    expect(output).toContain('<FieldLabel htmlFor="name">Name</FieldLabel>');
+    expect(output).toContain('<FieldControl>');
+    expect(output).toContain(`<input id="name" type="text" {...register('name')} />`);
+  });
+
   it('normalizes schema import extension from .mts to .mjs', async () => {
     const fields: FormField[] = [
       {
