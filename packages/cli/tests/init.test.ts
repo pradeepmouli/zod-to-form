@@ -110,6 +110,19 @@ describe('runInit', () => {
     process.chdir(originalCwd);
   });
 
+  it('creates parent directory when --out points to a non-existent directory', async () => {
+    const dir = await createTempDir();
+    process.chdir(dir);
+
+    const result = await runInit({ out: './nested/config' });
+
+    expect(result.wroteFile).toBe(true);
+    const content = await readFile(path.join(dir, 'nested', 'config', 'component-config.ts'), 'utf8');
+    expect(content).toContain('defineComponentConfig');
+
+    process.chdir(originalCwd);
+  });
+
   it('emits verbose details when verbose is enabled', async () => {
     const dir = await createTempDir();
     process.chdir(dir);

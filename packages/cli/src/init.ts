@@ -1,4 +1,4 @@
-import { access, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 export type InitOptions = {
@@ -70,7 +70,7 @@ function resolveComponentModulePath(options: InitOptions, snapshot: ShadcnConfig
 
 function buildConfigTemplate(modulePath: string): string {
   return [
-    `import { defineComponentConfig } from '@zod-to-form/cli';`,
+    `import { defineComponentConfig } from '@zod-to-form/core';`,
     ``,
     `export default defineComponentConfig({`,
     `  components: '${modulePath}',`,
@@ -198,6 +198,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   }
 
   logStep('[4/4] Writing component config');
+  await mkdir(path.dirname(outputPath), { recursive: true });
   await writeFile(outputPath, code, 'utf8');
   const summary = `Wrote ${toPosixPath(path.relative(cwd, outputPath))}${
     shadcn.exists ? ' using shadcn defaults.' : ' using baseline defaults.'
