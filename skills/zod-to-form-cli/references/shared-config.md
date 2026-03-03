@@ -10,16 +10,22 @@ type ComponentConfig = {
   components: string;
 
   // Map field component types to named exports from that module
-  fieldTypes: Record<string, {
-    component: string;
-    render?: () => Promise<unknown>;  // runtime only
-  }>;
+  fieldTypes: Record<
+    string,
+    {
+      component: string;
+      render?: () => Promise<unknown>; // runtime only
+    }
+  >;
 
   // Per-field overrides (highest priority)
-  fields?: Record<string, {
-    fieldType: string;    // must exist in fieldTypes
-    props?: Record<string, unknown>;  // pass-through props
-  }>;
+  fields?: Record<
+    string,
+    {
+      fieldType: string; // must exist in fieldTypes
+      props?: Record<string, unknown>; // pass-through props
+    }
+  >;
 };
 ```
 
@@ -37,12 +43,12 @@ export default defineComponentConfig({
     Select: { component: 'SelectInput' },
     Checkbox: { component: 'CheckboxInput' },
     DatePicker: { component: 'DateInput' },
-    'cross-ref': { component: 'TypeSelector' },
+    'cross-ref': { component: 'TypeSelector' }
   },
   fields: {
     bio: { fieldType: 'Textarea', props: { rows: 6 } },
-    'address.country': { fieldType: 'cross-ref', props: { refType: 'Country' } },
-  },
+    'address.country': { fieldType: 'cross-ref', props: { refType: 'Country' } }
+  }
 });
 ```
 
@@ -72,13 +78,9 @@ import { TextInput, TextareaInput, TypeSelector } from '@/components/ui';
 import { ZodForm } from '@zod-to-form/react';
 import componentConfig from '@/config/form-components';
 
-<ZodForm
-  schema={userSchema}
-  componentConfig={componentConfig}
-  onSubmit={handleSubmit}
->
+<ZodForm schema={userSchema} componentConfig={componentConfig} onSubmit={handleSubmit}>
   <button type="submit">Save</button>
-</ZodForm>
+</ZodForm>;
 ```
 
 The runtime resolves the config at render time and dynamically loads components from the module path.
@@ -110,13 +112,13 @@ type Components = {
 export default defineComponentConfig<Components, Values>({
   components: '@/components/ui',
   fieldTypes: {
-    Input: { component: 'TextInput' },       // autocompletes component names
-    Textarea: { component: 'TextareaInput' },
+    Input: { component: 'TextInput' }, // autocompletes component names
+    Textarea: { component: 'TextareaInput' }
   },
   fields: {
-    bio: { fieldType: 'Textarea', props: { rows: 6 } },  // autocompletes field paths
-    'address.country': { fieldType: 'cross-ref' },
-  },
+    bio: { fieldType: 'Textarea', props: { rows: 6 } }, // autocompletes field paths
+    'address.country': { fieldType: 'cross-ref' }
+  }
 });
 ```
 
@@ -132,13 +134,13 @@ export default defineComponentConfig({
   components: '@/components/ui',
   fieldTypes: {
     DatePicker: { component: 'MyDatePicker' },
-    Textarea: { component: 'MyRichTextEditor' },
+    Textarea: { component: 'MyRichTextEditor' }
     // Other field types (Input, Select, Checkbox, etc.) are not listed —
     // they fall through to the base preset (shadcn or unstyled)
   },
   fields: {
-    bio: { fieldType: 'Textarea', props: { rows: 6 } },
-  },
+    bio: { fieldType: 'Textarea', props: { rows: 6 } }
+  }
 });
 ```
 
@@ -155,7 +157,7 @@ import componentConfig from '@/config/form-components';
   onSubmit={handleSubmit}
 >
   <button type="submit">Save</button>
-</ZodForm>
+</ZodForm>;
 ```
 
 ### CLI — `--ui shadcn` base + `--component-config` overrides

@@ -1,14 +1,6 @@
 ---
 name: zod-to-form-runtime
-description: >
-  This skill should be used when the user asks to "set up zod-to-form",
-  "create a form from a Zod schema", "add ZodForm to my project",
-  "render a form from schema", "schema to form", "auto-generate form fields",
-  "use zod-to-form runtime", "install zod-to-form", "dynamic form generation",
-  "useZodForm hook", "ZodForm component", "form builder from zod",
-  or wants to generate React forms from Zod v4 schemas at runtime using the
-  ZodForm component. Covers installation, ZodForm props, metadata annotations
-  via z.registry(), component customization, and the useZodForm hook.
+description: 'This skill should be used when the user asks to "set up zod-to-form", "create a form from a Zod schema", "add ZodForm to my project", "render a form from schema", "schema to form", "auto-generate form fields", "use zod-to-form runtime", "install zod-to-form", "dynamic form generation", "useZodForm hook", "ZodForm component", "form builder from zod", or wants to generate React forms from Zod v4 schemas at runtime using the ZodForm component. Covers installation, ZodForm props, metadata annotations via z.registry(), component customization, and the useZodForm hook.'
 ---
 
 # zod-to-form Runtime Setup

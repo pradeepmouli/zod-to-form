@@ -6,6 +6,7 @@
  * pipeline is driven by the same walkSchema call so this test forms the
  * shared contract baseline for both paths.
  */
+// @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
