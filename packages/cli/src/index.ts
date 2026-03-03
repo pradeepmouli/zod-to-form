@@ -89,7 +89,6 @@ type GenerateOptions = {
 };
 
 import { applyExportFilters } from './filters.js';
-export { applyExportFilters } from './filters.js';
 
 function toPascalCase(value: string): string {
   return value
