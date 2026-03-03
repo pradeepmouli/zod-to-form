@@ -13,8 +13,7 @@
     "verbatimModuleSyntax": true,
     "noEmit": false,
     "paths": {
-      "*": ["../../*"],
-      "@/*": ["./packages/*/src"]
+      "*": ["../..src"]
     },
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -30,7 +29,7 @@
     "node_modules",
     "dist",
     "build",
-    "specs",
+    "specs*",
     "coverage",
     ".github",
     ".gemini",
@@ -39,6 +38,7 @@
     ".claude",
     ".agents",
     ".changeset",
-    ".vscode"
+    ".vscode",
+    "specs/001-zodform/contracts/core-api.ts"
   ]
 }

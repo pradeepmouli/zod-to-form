@@ -8,32 +8,32 @@ zodform generate [options]
 
 ### Required Options
 
-| Flag | Description |
-|---|---|
+| Flag              | Description                                                        |
+| ----------------- | ------------------------------------------------------------------ |
 | `--schema <path>` | Path to the TypeScript/JavaScript module containing the Zod schema |
-| `--export <name>` | Named export that contains the `z.object(...)` schema |
+| `--export <name>` | Named export that contains the `z.object(...)` schema              |
 
 ### Optional Flags
 
-| Flag | Default | Description |
-|---|---|---|
-| `--out <path>` | `./<Name>Form.tsx` | Output directory or `.tsx` file path |
-| `--name <name>` | Derived from `--export` | Component name (e.g., `UserForm`). If omitted, derived by stripping `Schema` suffix and appending `Form` |
-| `--mode <mode>` | `submit` | `submit` — standard `handleSubmit` pattern; `auto-save` — `watch` + `useEffect` pattern |
-| `--ui <preset>` | `shadcn` | `shadcn` or `unstyled` |
-| `--component-config <path>` | — | Path to component config file (`.json` or `.ts`) |
-| `--force` | `false` | Overwrite existing output file |
-| `--dry-run` | `false` | Print generated code to stdout without writing files |
-| `--server-action` | `false` | Generate a Next.js server action alongside the form |
-| `--watch` | `false` | Watch the schema file and regenerate on changes |
+| Flag                        | Default                 | Description                                                                                              |
+| --------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| `--out <path>`              | `./<Name>Form.tsx`      | Output directory or `.tsx` file path                                                                     |
+| `--name <name>`             | Derived from `--export` | Component name (e.g., `UserForm`). If omitted, derived by stripping `Schema` suffix and appending `Form` |
+| `--mode <mode>`             | `submit`                | `submit` — standard `handleSubmit` pattern; `auto-save` — `watch` + `useEffect` pattern                  |
+| `--ui <preset>`             | `shadcn`                | `shadcn` or `unstyled`                                                                                   |
+| `--component-config <path>` | —                       | Path to component config file (`.json` or `.ts`)                                                         |
+| `--force`                   | `false`                 | Overwrite existing output file                                                                           |
+| `--dry-run`                 | `false`                 | Print generated code to stdout without writing files                                                     |
+| `--server-action`           | `false`                 | Generate a Next.js server action alongside the form                                                      |
+| `--watch`                   | `false`                 | Watch the schema file and regenerate on changes                                                          |
 
 ## Naming Conventions
 
-| `--export` value | Derived `--name` | Output file |
-|---|---|---|
-| `userSchema` | `UserForm` | `UserForm.tsx` |
-| `orderSchema` | `OrderForm` | `OrderForm.tsx` |
-| `loginData` | `LoginDataForm` | `LoginDataForm.tsx` |
+| `--export` value | Derived `--name` | Output file         |
+| ---------------- | ---------------- | ------------------- |
+| `userSchema`     | `UserForm`       | `UserForm.tsx`      |
+| `orderSchema`    | `OrderForm`      | `OrderForm.tsx`     |
+| `loginData`      | `LoginDataForm`  | `LoginDataForm.tsx` |
 
 Override with `--name`:
 
@@ -54,11 +54,9 @@ import { userSchema } from './schema';
 
 type FormData = z.output<typeof userSchema>;
 
-export function UserForm(props: {
-  onSubmit: (data: FormData) => void;
-}) {
+export function UserForm(props: { onSubmit: (data: FormData) => void }) {
   const { register, handleSubmit } = useForm<FormData>({
-    resolver: zodResolver(userSchema),
+    resolver: zodResolver(userSchema)
   });
 
   return (
@@ -97,11 +95,7 @@ export function UserForm(props: {
     return () => subscription.unsubscribe();
   }, [watch, props.onValueChange]);
 
-  return (
-    <form>
-      {/* fields — no submit button */}
-    </form>
-  );
+  return <form>{/* fields — no submit button */}</form>;
 }
 ```
 
@@ -133,19 +127,19 @@ const result = await runGenerate({
   mode: 'submit',
   ui: 'shadcn',
   force: true,
-  serverAction: true,
+  serverAction: true
 });
 ```
 
 **Returns:**
 
-| Property | Type | Description |
-|---|---|---|
-| `outputPath` | `string` | Absolute path to the generated `.tsx` file |
-| `code` | `string` | Generated TypeScript source |
-| `wroteFile` | `boolean` | Whether the file was written (false in dry-run or if exists without `--force`) |
-| `actionPath` | `string \| undefined` | Path to server action file (when `serverAction: true`) |
-| `actionCode` | `string \| undefined` | Server action source |
+| Property     | Type                  | Description                                                                    |
+| ------------ | --------------------- | ------------------------------------------------------------------------------ |
+| `outputPath` | `string`              | Absolute path to the generated `.tsx` file                                     |
+| `code`       | `string`              | Generated TypeScript source                                                    |
+| `wroteFile`  | `boolean`             | Whether the file was written (false in dry-run or if exists without `--force`) |
+| `actionPath` | `string \| undefined` | Path to server action file (when `serverAction: true`)                         |
+| `actionCode` | `string \| undefined` | Server action source                                                           |
 
 ### `createProgram()`
 

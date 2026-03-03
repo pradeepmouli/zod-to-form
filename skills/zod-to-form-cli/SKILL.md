@@ -1,14 +1,6 @@
 ---
 name: zod-to-form-cli
-description: >
-  This skill should be used when the user asks to "generate a form from a Zod schema",
-  "use zodform CLI", "codegen form component", "generate tsx from zod",
-  "set up zod-to-form codegen", "create a static form from schema",
-  "build-time form generation", "zodform generate command", "CLI form generator",
-  "zodform watch mode", "zodform server action", or wants to generate static .tsx
-  form components from Zod v4 schemas using the zodform generate CLI. Covers the
-  generate command, component configuration, auto-save mode, server actions, watch
-  mode, and the programmatic API.
+description: "This skill should be used when the user asks to generate a form from a Zod schema, use zodform CLI, codegen form component, generate tsx from zod, set up zod-to-form codegen, create a static form from schema, build-time form generation, zodform generate command, CLI form generator, zodform watch mode, zodform server action, or wants to generate static .tsx form components from Zod v4 schemas using the zodform generate CLI. Covers the generate command, component configuration, auto-save mode, server actions, watch mode, and the programmatic API."
 ---
 
 # zod-to-form CLI Codegen Setup
@@ -46,7 +38,7 @@ export const userSchema = z.object({
   email: z.string().email('Invalid email address'),
   role: z.enum(['admin', 'editor', 'viewer']),
   bio: z.string().optional(),
-  newsletter: z.boolean().default(false),
+  newsletter: z.boolean().default(false)
 });
 ```
 
@@ -72,11 +64,9 @@ import { userSchema } from '../schemas/user';
 
 type FormData = z.output<typeof userSchema>;
 
-export function UserForm(props: {
-  onSubmit: (data: FormData) => void;
-}) {
+export function UserForm(props: { onSubmit: (data: FormData) => void }) {
   const { register, handleSubmit } = useForm<FormData>({
-    resolver: zodResolver(userSchema),
+    resolver: zodResolver(userSchema)
   });
 
   return (
@@ -143,11 +133,11 @@ export default defineComponentConfig({
     Input: { component: 'TextInput' },
     Textarea: { component: 'TextareaInput' },
     Select: { component: 'SelectInput' },
-    Checkbox: { component: 'CheckboxInput' },
+    Checkbox: { component: 'CheckboxInput' }
   },
   fields: {
-    bio: { fieldType: 'Textarea', props: { rows: 6 } },
-  },
+    bio: { fieldType: 'Textarea', props: { rows: 6 } }
+  }
 });
 ```
 
@@ -166,7 +156,7 @@ The generated file will include static imports from the config's `components` pa
 ```tsx
 import { TextInput, TextareaInput } from '@/components/ui';
 // ...
-<TextareaInput id="bio" {...register('bio')} rows={6} />
+<TextareaInput id="bio" {...register('bio')} rows={6} />;
 ```
 
 Resolution priority: per-field override → field type mapping → default rendering. Use `defineComponentConfig<TComponents, TValues>()` for type-safe autocomplete. See `references/shared-config.md` for the full config shape, type-safe patterns, and resolution details.

@@ -22,7 +22,11 @@ pnpm add -D @zod-to-form/cli zod
 ## CLI Usage
 
 ```bash
-zodform generate --schema ./src/schema.ts --export userSchema
+zodform generate --config ./component-config.ts --schema ./src/schema.ts --export userSchema
+```
+
+```bash
+zodform init
 ```
 
 ### Command
@@ -37,14 +41,49 @@ Required options:
 Optional options:
 
 - `--mode <mode>`: `submit | auto-save` (default `submit`)
-- `--component-config <path>`: path to component config (`.json` or `.ts`)
+- `--config <path>`: path to generate config (`.json` or `.ts`) **required**
 - `--out <path>`: output directory or `.tsx` file path
 - `--name <componentName>`: generated component name override
 - `--ui <preset>`: `shadcn | unstyled` (default `shadcn`)
-- `--force`: overwrite existing output file
 - `--dry-run`: print generated code to stdout without writing files
 - `--server-action`: generate Next.js server action next to form output
 - `--watch`: watch schema file and regenerate on changes
+
+Generation selection/overwrite is now config-driven:
+
+- `overwrite`: overwrite existing output files
+- `types`: explicit list of schema exports to generate (used when `--export` is omitted)
+- `include`: wildcard include patterns for schema export names
+- `exclude`: wildcard exclude patterns for schema export names
+
+When generating with `--config`, component mapping and generation controls come from the same file.
+Default config discovery order (used by runtime helpers / existing workflows) is still:
+
+1. `component-config.ts`
+2. `component-config.js`
+3. `component-config.json`
+4. `z2f.config.ts`
+5. `z2f.config.js`
+6. `z2f.config.json`
+
+### Command
+
+`zodform init`
+
+Creates `component-config.ts` using sensible defaults and introspection of shadcn `components.json` when available.
+
+Optional options:
+
+- `--out <path>`: output file or directory (default `component-config.ts`)
+- `--components <modulePath>`: module path assigned to `components` in generated config (overrides inference)
+- `--force`: overwrite existing config file
+- `--dry-run`: print generated config and skip file writes
+- `--verbose`: print detailed diagnostics for each step
+
+Output behavior:
+
+- default: concise progress + final summary
+- `--verbose`: adds detailed diagnostics (detected config source/aliases)
 
 ## Examples
 
@@ -58,6 +97,7 @@ Generate to specific directory with custom component name:
 
 ```bash
 zodform generate \
+  --config ./component-config.ts \
   --schema ./src/user.schema.ts \
   --export userSchema \
   --out ./src/forms \
@@ -68,6 +108,7 @@ Generate in auto-save mode with server action:
 
 ```bash
 zodform generate \
+  --config ./component-config.ts \
   --schema ./src/user.schema.ts \
   --export userSchema \
   --mode auto-save \
@@ -77,7 +118,19 @@ zodform generate \
 Dry run to inspect generated output:
 
 ```bash
-zodform generate --schema ./src/user.schema.ts --export userSchema --dry-run
+zodform generate --config ./component-config.ts --schema ./src/user.schema.ts --export userSchema --dry-run
+```
+
+Initialize config with verbose diagnostics:
+
+```bash
+zodform init --verbose
+```
+
+Initialize config with explicit components module path:
+
+```bash
+zodform init --components ../../src/components/zod-form-components
 ```
 
 ## Type-Safe Component Config
@@ -103,6 +156,15 @@ type Components = {
 
 export default defineComponentConfig<Components, Values>({
   components: '@/components/form-components',
+  overwrite: true,
+  types: ['userSchema'],
+  include: ['*Schema'],
+  exclude: ['Internal*'],
+  formPrimitives: {
+    field: 'Field',
+    label: 'FieldLabel',
+    control: 'FieldControl'
+  },
   fieldTypes: {
     Input: { component: 'TextInput' },
     textarea: { component: 'TextareaInput' }
@@ -113,6 +175,8 @@ export default defineComponentConfig<Components, Values>({
   }
 });
 ```
+
+`formPrimitives` is optional. When provided, generated fields use those wrappers instead of raw `div`/`label` markup.
 
 ### `validateComponentConfig(...)`
 
