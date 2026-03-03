@@ -118,11 +118,11 @@ function getSchemaImportPath(config: CodegenConfig): string {
     .relative(path.dirname(config.outputPath), config.schemaPath)
     .replace(/\\/g, '/');
 
-  if (relative.startsWith('.')) {
-    return relative;
-  }
-
-  return `./${relative}`;
+  const withDot = relative.startsWith('.') ? relative : `./${relative}`;
+  return withDot
+    .replace(/\.mts$/i, '.mjs')
+    .replace(/\.cts$/i, '.cjs')
+    .replace(/\.tsx?$/i, '.js');
 }
 
 /** Convert a field key to a safe camelCase variable prefix (e.g. 'address.street' → 'addressStreet') */
@@ -134,7 +134,7 @@ function toVarName(key: string): string {
 function collectArrayFields(fields: FormField[]): FormField[] {
   const result: FormField[] = [];
   for (const field of fields) {
-    if (field.component === 'ArrayField') {
+    if (field.component === 'ArrayField' && !field.key.includes('.0.')) {
       result.push(field);
     }
     if (field.component === 'Fieldset' && field.children) {
@@ -142,6 +142,88 @@ function collectArrayFields(fields: FormField[]): FormField[] {
     }
   }
   return result;
+}
+
+function replaceArrayIndexToken(key: string, arrayKey: string): string {
+  const prefix = `${arrayKey}.0`;
+  if (key === prefix) {
+    return `${arrayKey}.${'${index}'}`;
+  }
+  if (key.startsWith(`${prefix}.`)) {
+    return `${arrayKey}.${'${index}'}.${key.slice(prefix.length + 1)}`;
+  }
+  return key;
+}
+
+function cloneFieldWithArrayIndex(field: FormField, arrayKey: string): FormField {
+  return {
+    ...field,
+    key: replaceArrayIndexToken(field.key, arrayKey),
+    children: field.children?.map((child) => cloneFieldWithArrayIndex(child, arrayKey)),
+    arrayItem: field.arrayItem ? cloneFieldWithArrayIndex(field.arrayItem, arrayKey) : undefined
+  };
+}
+
+function getObjectPropertyName(path: string): string {
+  const lastSegment = path.split('.').at(-1) ?? path;
+  return JSON.stringify(lastSegment);
+}
+
+function getDefaultArrayItemExpression(field: FormField | undefined): string {
+  if (!field) {
+    return `''`;
+  }
+
+  if (field.defaultValue !== undefined) {
+    return JSON.stringify(field.defaultValue);
+  }
+
+  if (field.options && field.options.length > 0) {
+    return JSON.stringify(field.options[0]!.value);
+  }
+
+  if (field.component === 'Checkbox' || field.component === 'Switch') {
+    return 'false';
+  }
+
+  if (field.component === 'Input') {
+    const inputType = typeof field.props['type'] === 'string' ? field.props['type'] : 'text';
+    if (inputType === 'number') {
+      return '0';
+    }
+    if (inputType === 'checkbox') {
+      return 'false';
+    }
+  }
+
+  if (field.component === 'Fieldset') {
+    const children = field.children ?? [];
+    if (children.length === 0) {
+      return '{}';
+    }
+
+    const entries = children
+      .map(
+        (child) => `${getObjectPropertyName(child.key)}: ${getDefaultArrayItemExpression(child)}`
+      )
+      .join(', ');
+
+    return `{ ${entries} }`;
+  }
+
+  if (field.component === 'ArrayField') {
+    return '[]';
+  }
+
+  if (field.zodType === 'number' || field.zodType === 'bigint') {
+    return '0';
+  }
+
+  if (field.zodType === 'boolean') {
+    return 'false';
+  }
+
+  return `''`;
 }
 
 function renderNestedBlock(
@@ -169,25 +251,37 @@ function renderArrayBlock(
   componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined,
   indent: string
 ): string {
+  if (field.key.includes('${')) {
+    return [
+      `${indent}<div>`,
+      `${indent}  <label>${field.label}</label>`,
+      `${indent}  <p>Nested array editing is not auto-generated for dynamic paths. Use a custom renderer for ${field.key}.</p>`,
+      `${indent}</div>`
+    ].join('\n');
+  }
+
   const varName = toVarName(field.key);
   const itemField = field.arrayItem;
-  const mappedItem = itemField ? getMappedFieldComponent(itemField, componentConfig) : {};
-  const itemJsx = itemField
+  const indexedItemField = itemField ? cloneFieldWithArrayIndex(itemField, field.key) : undefined;
+  const mappedItem = indexedItemField
+    ? getMappedFieldComponent(indexedItemField, componentConfig)
+    : {};
+  const itemJsx = indexedItemField
     ? mappedItem.componentName
-      ? `<${mappedItem.componentName} {...register('${field.key}.0')}${renderOverrideProps(mappedItem.override?.props)} />`
-      : renderField({ ...itemField, key: `\${${varName}Fields[index].id}` })
-    : `<input {...register(\`${field.key}.\${index}\`)} />`;
+      ? `<${mappedItem.componentName} {...register(\`${indexedItemField.key}\`)}${renderOverrideProps(mappedItem.override?.props)} />`
+      : renderFieldBlockWithConfig(indexedItemField, componentConfig, `${indent}      `)
+    : `${indent}      <input {...register(\`${field.key}.\${index}\`)} />`;
 
   return [
     `${indent}<div>`,
     `${indent}  <label>${field.label}</label>`,
     `${indent}  {${varName}Fields.map((item, index) => (`,
     `${indent}    <div key={item.id}>`,
-    `${indent}      ${itemJsx.replace(new RegExp(`register\\('${field.key}\\.0'\\)`), `register(\`${field.key}.\${index}\`)`)}`,
+    itemJsx,
     `${indent}      <button type="button" onClick={() => remove${capitalize(varName)}(index)}>Remove</button>`,
     `${indent}    </div>`,
     `${indent}  ))}`,
-    `${indent}  <button type="button" onClick={() => append${capitalize(varName)}('')}>Add</button>`,
+    `${indent}  <button type="button" onClick={() => append${capitalize(varName)}(${getDefaultArrayItemExpression(itemField)})}>Add</button>`,
     `${indent}</div>`
   ].join('\n');
 }
@@ -228,7 +322,7 @@ function renderFieldBlockWithConfig(
     return [
       `${indent}<div${styleAttr}>`,
       `${indent}  <label htmlFor="${field.key}">${field.label}</label>`,
-      `${indent}  <${mapping.componentName} id="${field.key}" {...register('${field.key}')}${overrideProps} />`,
+      `${indent}  <${mapping.componentName} id="${field.key}" {...${field.key.includes('${') ? `register(\`${field.key}\`)` : `register('${field.key}')`}}${overrideProps} />`,
       `${indent}</div>`
     ].join('\n');
   }
@@ -273,7 +367,7 @@ export async function generateFormComponent(
   const arrayHooks = arrayFields
     .map((f) => {
       const varName = toVarName(f.key);
-      return `  const { fields: ${varName}Fields, append: append${capitalize(varName)}, remove: remove${capitalize(varName)} } = useFieldArray({ control, name: '${f.key}' });`;
+      return `  const { fields: ${varName}Fields, append: append${capitalize(varName)}, remove: remove${capitalize(varName)} } = useFieldArray<FormData, '${f.key}'>({ control, name: '${f.key}' });`;
     })
     .join('\n');
 

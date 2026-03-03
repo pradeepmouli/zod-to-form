@@ -21,25 +21,38 @@ export function getFileHeader(
     ...(componentImportLine ? [componentImportLine] : []),
     `import { ${exportName} } from '${schemaImportPath}';`,
     ``,
-    `type FormData = z.output<typeof ${exportName}>;`
+    `type StripIndexSignature<T> = T extends readonly (infer U)[]`,
+    `  ? StripIndexSignature<U>[]`,
+    `  : T extends object`,
+    `    ? { [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: StripIndexSignature<T[K]> }`,
+    `    : T;`,
+    ``,
+    `type FormData = StripIndexSignature<z.output<typeof ${exportName}>>;`
   ].join('\n');
+}
+
+function registerPathExpr(path: string): string {
+  return path.includes('${') ? `register(\`${path}\`)` : `register('${path}')`;
 }
 
 function renderInput(field: FormField): string {
   const inputType = typeof field.props['type'] === 'string' ? field.props['type'] : 'text';
-  return `<input id="${field.key}" type="${inputType}" {...register('${field.key}')} />`;
+  return `<input id="${field.key}" type="${inputType}" {...${registerPathExpr(field.key)}} />`;
 }
 
 function renderCheckbox(field: FormField): string {
-  return `<input id="${field.key}" type="checkbox" {...register('${field.key}')} />`;
+  return `<input id="${field.key}" type="checkbox" {...${registerPathExpr(field.key)}} />`;
 }
 
 function renderDatePicker(field: FormField): string {
-  return `<input id="${field.key}" type="date" {...register('${field.key}', { valueAsDate: true })} />`;
+  const registerExpr = field.key.includes('${')
+    ? `register(\`${field.key}\`, { valueAsDate: true })`
+    : `register('${field.key}', { valueAsDate: true })`;
+  return `<input id="${field.key}" type="date" {...${registerExpr}} />`;
 }
 
 function renderFileInput(field: FormField): string {
-  return `<input id="${field.key}" type="file" {...register('${field.key}')} />`;
+  return `<input id="${field.key}" type="file" {...${registerPathExpr(field.key)}} />`;
 }
 
 function renderSelect(field: FormField): string {
@@ -47,7 +60,7 @@ function renderSelect(field: FormField): string {
     .map((option) => `<option value="${String(option.value)}">${option.label}</option>`)
     .join('');
 
-  return `<select id="${field.key}" {...register('${field.key}')}>${options}</select>`;
+  return `<select id="${field.key}" {...${registerPathExpr(field.key)}}>${options}</select>`;
 }
 
 export function renderField(field: FormField): string {
@@ -63,7 +76,7 @@ export function renderField(field: FormField): string {
     case 'RadioGroup':
       return renderSelect(field);
     case 'Textarea':
-      return `<textarea id="${field.key}" {...register('${field.key}')} />`;
+      return `<textarea id="${field.key}" {...${registerPathExpr(field.key)}} />`;
     default:
       return renderInput(field);
   }

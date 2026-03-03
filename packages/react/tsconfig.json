@@ -7,7 +7,7 @@
     "declaration": true,
     "declarationMap": true,
     "jsx": "react-jsx",
-	"types": ["node","react","react-dom"]
+    "types": ["node", "react", "react-dom"]
   },
   "include": ["src", "tests"],
   "exclude": ["node_modules", "dist"],

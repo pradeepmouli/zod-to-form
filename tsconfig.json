@@ -13,9 +13,7 @@
     "verbatimModuleSyntax": true,
     "noEmit": false,
     "paths": {
-      "*": [
-        "../..src"
-      ]
+      "*": ["../..src"]
     },
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -26,9 +24,7 @@
     "composite": true,
     "incremental": true
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "exclude": [
     "node_modules",
     "dist",
