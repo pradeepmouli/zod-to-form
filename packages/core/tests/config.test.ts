@@ -4,8 +4,6 @@ import {
   validateConfig,
   resolveFieldConfig,
   normalizeConfig,
-  SHADCN_FIELD_TYPES,
-  DEFAULT_FIELD_TYPES,
   defineComponentConfig,
   validateComponentConfig
 } from '../src/config.js';

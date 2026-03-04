@@ -110,28 +110,26 @@ Top-level `fields` backward compat:
 *CRITICAL: Complete BEFORE capturing baseline metrics - see testing-gaps.md*
 
 ### Pre-Baseline Testing Requirement
-- [ ] **Testing gaps assessment completed** (see `testing-gaps.md`)
-- [ ] **Critical gaps identified and addressed**
-- [ ] **All affected functionality has adequate test coverage**
-- [ ] **Ready to capture baseline metrics**
+- [x] **Testing gaps assessment completed** (see `testing-gaps.md`)
+- [x] **Critical gaps identified and addressed**
+- [x] **All affected functionality has adequate test coverage**
+- [x] **Ready to capture baseline metrics**
 
 **Rationale**: Refactoring requires behavior preservation validation. If code lacks test coverage, we cannot verify behavior is preserved. All impacted functionality MUST be tested BEFORE establishing the baseline.
 
 ### Testing Coverage Status
 **Affected Code Areas**:
-- `validateComponentConfig()`: Coverage TBD - [ ] ✅ Adequate [ ] ❌ Needs Tests
-- `defineComponentConfig()`: Coverage TBD - [ ] ✅ Adequate [ ] ❌ Needs Tests
-- `resolveMetadata()`: Coverage TBD - [ ] ✅ Adequate [ ] ❌ Needs Tests
-- `loadComponentConfig()` / `loadDefaultComponentConfig()`: Coverage TBD - [ ] ✅ Adequate [ ] ❌ Needs Tests
-- `resolveSchemaExportNames()`: Coverage TBD - [ ] ✅ Adequate [ ] ❌ Needs Tests
-- CLI `generate` command dispatch: Coverage TBD - [ ] ✅ Adequate [ ] ❌ Needs Tests
-- CLI `init` command with autodiscovery: Coverage TBD - [ ] ✅ Adequate [ ] ❌ Needs Tests
-- React `FieldRenderer` component resolution: Coverage TBD - [ ] ✅ Adequate [ ] ❌ Needs Tests
+- `validateComponentConfig()`: [x] ✅ Adequate — 23 tests in config.test.ts
+- `defineComponentConfig()`: [x] ✅ Adequate — tested in config.test.ts
+- `resolveMetadata()`: [x] ✅ Adequate — tested in metadata.test.ts
+- `loadComponentConfig()` / `loadDefaultComponentConfig()`: [x] ✅ Adequate — 14 tests in loader.test.ts
+- `resolveSchemaExportNames()`: [x] ✅ Adequate — tested in loader.test.ts
+- CLI `generate` command dispatch: [x] ✅ Adequate — 8 tests in cli-e2e.test.ts
+- CLI `init` command with autodiscovery: [x] ✅ Adequate — 16 tests in init.test.ts
+- React `FieldRenderer` component resolution: [x] ✅ Adequate — 8 tests in FieldRenderer.test.tsx
 
 **Action Taken**:
-- [ ] No gaps found - proceeded to baseline
-- [ ] Gaps found - added [N] tests before baseline
-- [ ] Gaps documented but deferred (with justification)
+- [x] No gaps found - proceeded to baseline
 
 ---
 
@@ -172,16 +170,16 @@ Top-level `fields` backward compat:
 *CRITICAL: Refactoring MUST NOT change external behavior*
 
 ### External Contracts Unchanged
-- [ ] Function signatures unchanged (or properly deprecated with backward compat)
-- [ ] Component props unchanged (or properly deprecated)
-- [ ] CLI arguments unchanged (new defaults added, existing flags preserved)
-- [ ] File formats unchanged (generated .tsx output identical)
-- [ ] Config file format backward compatible (old configs still load)
+- [x] Function signatures unchanged (or properly deprecated with backward compat)
+- [x] Component props unchanged (or properly deprecated)
+- [x] CLI arguments unchanged (new defaults added, existing flags preserved)
+- [x] File formats unchanged (generated .tsx output identical)
+- [x] Config file format backward compatible (old configs still load)
 
 ### Test Suite Validation
-- [ ] **All existing tests MUST pass WITHOUT modification**
-- [ ] If test needs changing, verify it was testing implementation detail, not behavior
-- [ ] Do NOT weaken assertions to make tests pass
+- [x] **All existing tests MUST pass WITHOUT modification**
+- [x] If test needs changing, verify it was testing implementation detail, not behavior
+- [x] Do NOT weaken assertions to make tests pass
 
 ### Behavioral Snapshot
 **Key behaviors to preserve**:
@@ -218,7 +216,7 @@ Top-level `fields` backward compat:
   - **Rollback**: Remove generic parameter, fall back to `string` keys
 
 ### Safety Measures
-- [ ] Incremental commits (can revert partially)
+- [x] Incremental commits (can revert partially)
 - [ ] Peer review required
 - [x] Backward compatibility via deprecated aliases
 
@@ -274,28 +272,28 @@ Revert if any of these occur:
 ## Verification Checklist
 
 ### Phase 0: Testing Gap Assessment
-- [ ] Testing gaps assessment completed
-- [ ] Critical gaps identified and documented
-- [ ] Tests added for all critical gaps
-- [ ] All new tests passing
+- [x] Testing gaps assessment completed
+- [x] Critical gaps identified and documented
+- [x] Tests added for all critical gaps
+- [x] All new tests passing
 
 ### Pre-Refactoring (Phase 1)
-- [ ] Baseline metrics captured
-- [ ] All tests passing
-- [ ] Behavioral snapshot created
-- [ ] Git tag created
+- [x] Baseline metrics captured
+- [x] All tests passing
+- [x] Behavioral snapshot created
+- [x] Git tag created
 
 ### During Refactoring
-- [ ] Incremental commits
-- [ ] External behavior unchanged
-- [ ] Backward compatibility maintained
-- [ ] Dead code removed
+- [x] Incremental commits
+- [x] External behavior unchanged
+- [x] Backward compatibility maintained
+- [x] Dead code removed
 
 ### Post-Refactoring
-- [ ] All tests passing
-- [ ] Target metrics achieved
-- [ ] Behavioral snapshot matches
-- [ ] No performance regression
+- [x] All tests passing
+- [x] Target metrics achieved
+- [x] Behavioral snapshot matches
+- [x] No performance regression
 - [ ] Code review approved
 
 ## Related Work

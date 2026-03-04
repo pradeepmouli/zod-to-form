@@ -1,6 +1,6 @@
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { SHADCN_FIELD_TYPES, DEFAULT_FIELD_TYPES } from '@zod-to-form/core';
+import { DEFAULT_FIELD_TYPES } from '@zod-to-form/core';
 import { resolveSchemaExportNames } from './loader.js';
 
 export type InitOptions = {
