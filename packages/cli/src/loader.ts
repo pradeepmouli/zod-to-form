@@ -2,8 +2,10 @@ import path from 'node:path';
 import { access } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { createJiti } from 'jiti';
-import { validateComponentConfig } from './component-config.js';
-import type { ZodToFormComponentConfig } from './index.js';
+import {
+  validateComponentConfig,
+  type ZodToFormComponentConfig
+} from '@zod-to-form/core';
 
 const requireFromHere = createRequire(import.meta.url);
 

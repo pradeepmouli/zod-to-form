@@ -3,7 +3,8 @@
     "allow": [
       "WebFetch(domain:skills.sh)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(.specify/scripts/bash/create-refactor.sh --json \"1. componentConfig -> config, z2f.config.ts/ZodFormsConfig<...> should cover everything available in FormMeta and commandline flags 2. Align FormMeta with field-level config 3. Add support for zodType \\(schema\\) level config - move field level config to be nested under zodType level config - add type inference for zodTypes based on mapped types from type import of schema namespace/model 4. Print autodiscovery results in init command line, generated form list in generated view\")"
     ]
   }
 }

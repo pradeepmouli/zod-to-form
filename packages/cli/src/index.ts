@@ -9,73 +9,32 @@ import { existsSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
-import type { Paths as TypeFestPaths } from 'type-fest';
 import {
+  defineComponentConfig,
+  validateComponentConfig,
+  type ComponentEntry,
+  type FieldOverride,
+  type FormPrimitivesConfig,
+  type ZodToFormComponentConfig,
   walkSchema
 } from '@zod-to-form/core';
 import { generateFormComponent } from './codegen.js';
 import { loadComponentConfig, loadSchema, resolveSchemaExportNames } from './loader.js';
 import { runInit, type InitOptions } from './init.js';
-import { validateComponentConfig } from './component-config.js';
 import { generateServerAction } from './server-action.js';
 import { startWatch } from './watcher.js';
 
-export type ComponentEntry<T extends Record<string, unknown> = Record<string, unknown>> = {
-  component: keyof T & string;
-  render?: () => Promise<unknown>;
+export {
+  defineComponentConfig,
+  validateComponentConfig
 };
 
-export { validateComponentConfig };
-
-type NormalizeArrayPath<TPath extends string> =
-  TPath extends `${infer Prefix}[${number}]${infer Suffix}`
-    ? NormalizeArrayPath<`${Prefix}[]${Suffix}`>
-    : TPath extends `${infer Prefix}.${number}.${infer Suffix}`
-      ? NormalizeArrayPath<`${Prefix}[].${Suffix}`>
-      : TPath extends `${infer Prefix}.${number}`
-        ? NormalizeArrayPath<`${Prefix}[]`>
-        : TPath;
-
-export type FieldPath<TValues extends Record<string, unknown>> =
-  TypeFestPaths<TValues> extends infer TPath
-    ? TPath extends string
-      ? TPath | NormalizeArrayPath<TPath>
-      : never
-    : never;
-
-export type FieldOverride = {
-  fieldType: string;
-  props?: Record<string, unknown>;
+export type {
+  ComponentEntry,
+  FieldOverride,
+  FormPrimitivesConfig,
+  ZodToFormComponentConfig
 };
-
-export type FormPrimitivesConfig<T extends Record<string, unknown> = Record<string, unknown>> = {
-  field?: keyof T & string;
-  label?: keyof T & string;
-  control?: keyof T & string;
-};
-
-export type ZodToFormComponentConfig<
-  T extends Record<string, unknown> = Record<string, unknown>,
-  TFieldPath extends string = string
-> = {
-  components: string;
-  overwrite?: boolean;
-  include?: string[];
-  exclude?: string[];
-  types?: string[];
-  fieldTypes: Record<string, ComponentEntry<T>>;
-  formPrimitives?: FormPrimitivesConfig<T>;
-  fields?: Partial<Record<TFieldPath, FieldOverride>>;
-};
-
-export function defineComponentConfig<
-  TComponents extends Record<string, unknown>,
-  TValues extends Record<string, unknown>
->(
-  config: ZodToFormComponentConfig<TComponents, FieldPath<TValues>>
-): ZodToFormComponentConfig<TComponents, FieldPath<TValues>> {
-  return config;
-}
 
 type GenerateOptions = {
   config: string;
@@ -244,7 +203,9 @@ export function createProgram(): Command {
         console.log('Watching for changes...');
         await startWatch(schemaPath, () =>
           Promise.all(
-            exportNames.map((exportName) => runGenerate({ ...commandOptions, export: exportName }))
+            exportNames.map((exportName: string) =>
+              runGenerate({ ...commandOptions, export: exportName })
+            )
           ).then(() => {})
         );
       }
