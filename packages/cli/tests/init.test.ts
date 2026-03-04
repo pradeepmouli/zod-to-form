@@ -15,7 +15,7 @@ describe('runInit', () => {
     originalCwd = process.cwd();
   });
 
-  it('writes z2f.config.ts with baseline defaults', async () => {
+  it('writes z2f.config.ts with defineConfig and defaults section (T050)', async () => {
     const dir = await createTempDir();
     process.chdir(dir);
 
@@ -25,12 +25,18 @@ describe('runInit', () => {
     expect(path.basename(result.outputPath)).toBe('z2f.config.ts');
 
     const content = await readFile(result.outputPath, 'utf8');
-    expect(content).toContain(`defineComponentConfig`);
+    expect(content).toContain(`defineConfig`);
     expect(content).toContain(`components: '@/components/zod-form-components'`);
     expect(content).toContain(`formPrimitives: {`);
     expect(content).toContain(`field: 'Field'`);
     expect(content).toContain(`label: 'FieldLabel'`);
     expect(content).toContain(`control: 'FieldControl'`);
+    // T050: Verify defaults section is present
+    expect(content).toContain(`defaults: {`);
+    expect(content).toContain(`mode: 'submit'`);
+    expect(content).toContain(`ui: 'shadcn'`);
+    expect(content).toContain(`overwrite: false`);
+    expect(content).toContain(`serverAction: false`);
 
     process.chdir(originalCwd);
   });
@@ -155,8 +161,201 @@ describe('runInit', () => {
 
     expect(result.wroteFile).toBe(true);
     const content = await readFile(path.join(dir, 'nested', 'config', 'z2f.config.ts'), 'utf8');
-    expect(content).toContain('defineComponentConfig');
+    expect(content).toContain('defineConfig');
 
+    process.chdir(originalCwd);
+  });
+
+  it('prints styled autodiscovery output with detected components (T051)', async () => {
+    const dir = await createTempDir();
+    process.chdir(dir);
+
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    await runInit({});
+
+    const output = logSpy.mock.calls.flat().join('\n');
+    expect(output).toContain('Detected components:');
+    expect(output).toContain('Field');
+    expect(output).toContain('Label');
+    expect(output).toContain('Control');
+    expect(output).toContain('Using components from:');
+
+    logSpy.mockRestore();
+    process.chdir(originalCwd);
+  });
+
+  it('discovers component exports from module path and uses them in fieldTypes', async () => {
+    const dir = await createTempDir();
+    process.chdir(dir);
+
+    await mkdir(path.join(dir, 'src', 'components', 'zod-form-components'), { recursive: true });
+    await writeFile(
+      path.join(dir, 'src', 'components', 'zod-form-components', 'index.ts'),
+      [
+        'export const Field = () => null;',
+        'export const FieldLabel = () => null;',
+        'export const FieldControl = () => null;',
+        'export const TextInput = () => null;',
+        'export const EmailInput = () => null;',
+        'export const SelectField = () => null;',
+        'export function useFormContext() { return {}; }',
+        'export const helperUtil = 42;'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const result = await runInit({});
+    const content = await readFile(result.outputPath, 'utf8');
+
+    // Discovered PascalCase components should be in fieldTypes
+    expect(content).toContain(`TextInput: { component: 'TextInput' }`);
+    expect(content).toContain(`EmailInput: { component: 'EmailInput' }`);
+    expect(content).toContain(`SelectField: { component: 'SelectField' }`);
+
+    // Form primitives should NOT be in fieldTypes
+    expect(content).not.toMatch(/fieldTypes:[\s\S]*Field: \{ component: 'Field' \}/);
+    expect(content).not.toContain(`FieldLabel: { component: 'FieldLabel' }`);
+    expect(content).not.toContain(`FieldControl: { component: 'FieldControl' }`);
+
+    // Hooks and non-PascalCase should NOT be in fieldTypes
+    expect(content).not.toContain('useFormContext');
+    expect(content).not.toContain('helperUtil');
+
+    // Hardcoded defaults should NOT appear when components are discovered
+    expect(content).not.toContain(`DatePicker: { component: 'DatePicker' }`);
+
+    process.chdir(originalCwd);
+  });
+
+  it('uses shadcn preset fieldTypes when components.json is present', async () => {
+    const dir = await createTempDir();
+    process.chdir(dir);
+
+    await writeFile(
+      path.join(dir, 'components.json'),
+      JSON.stringify({ aliases: { ui: '@/components/ui' } }, null, 2),
+      'utf8'
+    );
+
+    const result = await runInit({});
+    const content = await readFile(result.outputPath, 'utf8');
+
+    // Imports SHADCN_FIELD_TYPES alongside defineConfig
+    expect(content).toContain(`import { defineConfig, SHADCN_FIELD_TYPES } from '@zod-to-form/core'`);
+    // preset field emitted
+    expect(content).toContain(`preset: 'shadcn'`);
+    // Spread in fieldTypes
+    expect(content).toContain(`...SHADCN_FIELD_TYPES`);
+    // No individual preset entries listed (they come from the spread)
+    expect(content).not.toContain(`Input: { component: 'Input' }`);
+
+    process.chdir(originalCwd);
+  });
+
+  it('merges shadcn preset spread with discovered components', async () => {
+    const dir = await createTempDir();
+    process.chdir(dir);
+
+    await writeFile(
+      path.join(dir, 'components.json'),
+      JSON.stringify({ aliases: { ui: '@/components/ui' } }, null, 2),
+      'utf8'
+    );
+
+    await mkdir(path.join(dir, 'src', 'components', 'ui', 'zod-form-components'), { recursive: true });
+    await writeFile(
+      path.join(dir, 'src', 'components', 'ui', 'zod-form-components', 'index.ts'),
+      [
+        'export const Field = () => null;',
+        'export const FieldLabel = () => null;',
+        'export const FieldControl = () => null;',
+        'export const RichTextEditor = () => null;',
+        'export const ColorPicker = () => null;'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const result = await runInit({});
+    const content = await readFile(result.outputPath, 'utf8');
+
+    // Spread for preset base
+    expect(content).toContain(`...SHADCN_FIELD_TYPES`);
+    // Discovered entries listed after the spread
+    expect(content).toContain(`RichTextEditor: { component: 'RichTextEditor' }`);
+    expect(content).toContain(`ColorPicker: { component: 'ColorPicker' }`);
+
+    process.chdir(originalCwd);
+  });
+
+  it('falls back to hardcoded fieldTypes when no components found', async () => {
+    const dir = await createTempDir();
+    process.chdir(dir);
+
+    const result = await runInit({});
+    const content = await readFile(result.outputPath, 'utf8');
+
+    // No preset emitted without shadcn
+    expect(content).not.toContain('preset:');
+    expect(content).toContain(`Input: { component: 'Input' }`);
+    expect(content).toContain(`Select: { component: 'Select' }`);
+    expect(content).toContain(`Checkbox: { component: 'Checkbox' }`);
+
+    process.chdir(originalCwd);
+  });
+
+  it('discovers schemas via --schemas flag', async () => {
+    const dir = await createTempDir();
+    process.chdir(dir);
+
+    await writeFile(
+      path.join(dir, 'schemas.ts'),
+      [
+        "import { z } from 'zod';",
+        'export const UserSchema = z.object({ name: z.string(), email: z.string() });',
+        'export const OrderSchema = z.object({ total: z.number() });',
+        'export const notASchema = { foo: 42 };'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const result = await runInit({ schemas: './schemas.ts' });
+    const content = await readFile(result.outputPath, 'utf8');
+
+    expect(content).toContain('schemas: {');
+    expect(content).toContain('UserSchema: {}');
+    expect(content).toContain('OrderSchema: {}');
+    expect(content).not.toContain('notASchema');
+
+    process.chdir(originalCwd);
+  });
+
+  it('omits schemas section when none discovered', async () => {
+    const dir = await createTempDir();
+    process.chdir(dir);
+
+    const result = await runInit({});
+    const content = await readFile(result.outputPath, 'utf8');
+
+    expect(content).not.toContain('schemas:');
+
+    process.chdir(originalCwd);
+  });
+
+  it('prints styled discovery output for components and schemas', async () => {
+    const dir = await createTempDir();
+    process.chdir(dir);
+
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await runInit({});
+
+    const output = logSpy.mock.calls.flat().join('\n');
+    expect(output).toContain('Detected components:');
+    expect(output).toContain('Using default field types');
+    expect(output).toContain('No schemas discovered');
+    expect(output).toContain('Using components from:');
+
+    logSpy.mockRestore();
     process.chdir(originalCwd);
   });
 

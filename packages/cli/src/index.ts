@@ -10,29 +10,41 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
 import {
+  defineConfig,
+  validateConfig,
+  resolveFieldConfig,
+  // Deprecated re-exports
   defineComponentConfig,
   validateComponentConfig,
   type ComponentEntry,
+  type FieldConfig,
   type FieldOverride,
   type FormPrimitivesConfig,
+  type ZodFormsConfig,
   type ZodToFormComponentConfig,
   walkSchema
 } from '@zod-to-form/core';
 import { generateFormComponent } from './codegen.js';
-import { loadComponentConfig, loadSchema, resolveSchemaExportNames } from './loader.js';
+import { loadConfig, loadSchema, resolveSchemaExportNames } from './loader.js';
 import { runInit, type InitOptions } from './init.js';
 import { generateServerAction } from './server-action.js';
 import { startWatch } from './watcher.js';
 
 export {
+  defineConfig,
+  validateConfig,
+  // Deprecated aliases
   defineComponentConfig,
   validateComponentConfig
 };
 
 export type {
   ComponentEntry,
-  FieldOverride,
+  FieldConfig,
   FormPrimitivesConfig,
+  ZodFormsConfig,
+  // Deprecated aliases
+  FieldOverride,
   ZodToFormComponentConfig
 };
 
@@ -102,21 +114,36 @@ export async function runGenerate(options: GenerateOptions): Promise<{
     throw new Error('runGenerate requires an explicit export name.');
   }
   const exportName = options.export;
-  const componentName = resolveComponentName(exportName, options.name);
-  const outputPath = resolveOutputPath(cwd, options.out, componentName);
+  const componentConfig = await loadConfig(path.resolve(cwd, options.config));
+
+  // Merge config defaults with CLI flags (CLI flag > schemas.X.[prop] > defaults.[prop])
+  const schemaConfig = componentConfig.schemas?.[exportName];
+  const componentName = resolveComponentName(
+    exportName,
+    options.name ?? schemaConfig?.name
+  );
+  const effectiveMode = options.mode ?? schemaConfig?.mode ?? componentConfig.defaults?.mode ?? 'submit';
+  const effectiveOut = options.out ?? schemaConfig?.out ?? componentConfig.defaults?.out;
+  const effectiveServerAction = options.serverAction ?? schemaConfig?.serverAction ?? componentConfig.defaults?.serverAction ?? false;
+  const effectiveUi = options.ui ?? componentConfig.defaults?.ui ?? 'shadcn';
+  const effectiveOverwrite = componentConfig.defaults?.overwrite ?? false;
+
+  const outputPath = resolveOutputPath(cwd, effectiveOut, componentName);
   const schema = await loadSchema(schemaPath, exportName);
   const fields = walkSchema(schema as never);
-  const componentConfig = await loadComponentConfig(path.resolve(cwd, options.config));
+
+  // Merge field configs: schemas.X.fields over global fields
+  const mergedFields = resolveFieldConfig(componentConfig.fields, schemaConfig?.fields);
 
   const config = {
     schemaPath,
     exportName,
     outputPath,
     componentName,
-    mode: options.mode ?? 'submit',
-    componentConfig,
-    ui: options.ui ?? 'shadcn',
-    serverAction: options.serverAction ?? false
+    mode: effectiveMode,
+    componentConfig: { ...componentConfig, fields: Object.keys(mergedFields).length > 0 ? mergedFields : componentConfig.fields },
+    ui: effectiveUi,
+    serverAction: effectiveServerAction
   };
 
   const generated = await generateFormComponent(fields, config);
@@ -129,7 +156,7 @@ export async function runGenerate(options: GenerateOptions): Promise<{
 
   try {
     await readFile(outputPath, 'utf8');
-    if (!componentConfig.overwrite) {
+    if (!effectiveOverwrite) {
       return { outputPath, code, wroteFile: false };
     }
   } catch {}
@@ -138,7 +165,7 @@ export async function runGenerate(options: GenerateOptions): Promise<{
   await writeFile(outputPath, code, 'utf8');
 
   // Generate server action alongside the form component when requested
-  if (options.serverAction) {
+  if (effectiveServerAction) {
     const actionFileName = `${toKebabCase(componentName)}-action.ts`;
     const actionPath = path.join(path.dirname(outputPath), actionFileName);
     const actionCode = await generateServerAction({ ...config, outputPath: actionPath });
@@ -175,7 +202,7 @@ export function createProgram(): Command {
     .action(async (commandOptions: GenerateOptions) => {
       const cwd = process.cwd();
       const configPath = path.resolve(cwd, commandOptions.config);
-      const config = await loadComponentConfig(configPath);
+      const config = await loadConfig(configPath);
       const schemaPath = path.resolve(cwd, commandOptions.schema);
 
       const exportNames = commandOptions.export
@@ -194,8 +221,24 @@ export function createProgram(): Command {
         );
       }
 
+      const results: Array<{ componentName: string; outputPath: string }> = [];
       for (const exportName of exportNames) {
-        await runGenerate({ ...commandOptions, export: exportName });
+        const result = await runGenerate({ ...commandOptions, export: exportName });
+        const schemaConfig = config.schemas?.[exportName];
+        const componentName = resolveComponentName(
+          exportName,
+          commandOptions.name ?? schemaConfig?.name
+        );
+        results.push({ componentName, outputPath: result.outputPath });
+      }
+
+      // T043: Print styled list of generated forms
+      if (!commandOptions.dryRun && results.length > 0) {
+        console.log('\nGenerated forms:');
+        for (const { componentName, outputPath } of results) {
+          const relativePath = path.relative(cwd, outputPath);
+          console.log(`  \u2713 ${componentName} \u2192 ${relativePath}`);
+        }
       }
 
       if (commandOptions.watch) {
@@ -218,6 +261,10 @@ export function createProgram(): Command {
     .option(
       '--components <modulePath>',
       'Module path used in generated z2f.config.ts (overrides shadcn inference)'
+    )
+    .option(
+      '--schemas <path>',
+      'Path to schema file or directory for autodiscovery'
     )
     .option('--force', 'Overwrite existing component config file', false)
     .option('--dry-run', 'Print generated config without writing files', false)

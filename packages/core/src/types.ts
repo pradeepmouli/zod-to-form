@@ -59,9 +59,9 @@ export interface FormField {
   render?: (field: FormField, props: Record<string, unknown>) => unknown;
 }
 
-// ─── FormMeta: Registry Annotation ────────────────────────────────────
+// ─── FieldConfig: Serializable field configuration ────────────────────
 
-export interface FormMeta {
+export interface FieldConfig {
   /** Override component, e.g. "textarea", "switch", "combobox" */
   fieldType?: string;
   /** Display order override */
@@ -72,6 +72,11 @@ export interface FormMeta {
   gridColumn?: string;
   /** Arbitrary field metadata props forwarded by processors */
   props?: Record<string, unknown>;
+}
+
+// ─── FormMeta: Registry Annotation ────────────────────────────────────
+
+export interface FormMeta extends FieldConfig {
   /** Custom render function (runtime only, ignored in codegen) */
   render?: (field: FormField, props: unknown) => unknown;
 }

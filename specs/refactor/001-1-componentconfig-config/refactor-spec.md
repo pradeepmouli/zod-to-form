@@ -85,9 +85,26 @@ ZodFormsConfig<TComponents, TSchemas> (core — single source of truth)
 │     }
 │   }
 
-FieldConfig (aligned with FormMeta):
+FieldConfig = Omit<FormMeta, 'render'> (serializable subset):
   fieldType?, order?, hidden?, gridColumn?, props?
+FormMeta extends FieldConfig (adds runtime-only `render`)
+
+Config precedence (most-specific wins):
+  CLI flag > schemas.X.[prop] > defaults.[prop]
+
+Top-level `fields` backward compat:
+  Accepted as global field defaults (no warning).
+  schemas.X.fields overrides global fields per-schema.
 ```
+
+## Clarifications
+
+### Session 2026-03-04
+- Q: When multiple config layers set the same property (e.g., `mode`), what should the precedence order be? → A: CLI flag > `schemas.X.[prop]` > `defaults.[prop]` (most-specific wins)
+- Q: How should old-style configs with top-level `fields` be handled? → A: Accept as global field defaults; `schemas.X.fields` overrides per-schema (no warning, seamless backward compat)
+- Q: Should `FieldConfig` include `render` from `FormMeta`? → A: No. `FieldConfig = Omit<FormMeta, 'render'>`; `FormMeta extends FieldConfig` adds `render` as runtime-only
+- Q: What format for CLI autodiscovery and generated form output? → A: Styled list — labeled sections with indented items (e.g., `Found primitives:`, `Generated forms:`)
+- Q: Should deprecated APIs emit runtime warnings or JSDoc-only? → A: `@deprecated` JSDoc only — IDE/editor warnings, no runtime console output
 
 ## Phase 0: Testing Gap Assessment
 *CRITICAL: Complete BEFORE capturing baseline metrics - see testing-gaps.md*
@@ -189,7 +206,7 @@ FieldConfig (aligned with FormMeta):
 
 ### Potential Issues
 - **Risk 1**: Existing user configs (`z2f.config.ts`) break with new type shape
-  - **Mitigation**: Keep `ZodToFormComponentConfig` as deprecated alias; `defineComponentConfig` as deprecated alias for `defineConfig`; top-level `fields` still accepted and transformed internally
+  - **Mitigation**: Keep `ZodToFormComponentConfig` as `@deprecated` type alias; `defineComponentConfig` as `@deprecated` wrapper for `defineConfig` (JSDoc only, no runtime warnings); top-level `fields` accepted silently as global field defaults
   - **Rollback**: Revert to previous types
 
 - **Risk 2**: React runtime config resolution changes subtly
@@ -243,8 +260,8 @@ Revert if any of these occur:
 4. Update validation schema for new config shape (backward compat)
 5. Rename `component-config.ts` → `config.ts`, update exports
 6. Update CLI loader to use new names, add backward compat resolution
-7. Update CLI `init` to print autodiscovery results
-8. Update CLI `generate` to use config defaults, print generated form list
+7. Update CLI `init` to print autodiscovery results (styled list: labeled sections with indented items)
+8. Update CLI `generate` to use config defaults, print generated form list (styled list: labeled sections with indented items)
 9. Update React types to derive from core config
 10. Update all imports across packages
 

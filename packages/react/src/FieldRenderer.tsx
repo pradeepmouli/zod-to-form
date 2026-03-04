@@ -1,25 +1,20 @@
 import { useEffect, useMemo, memo, useState } from 'react';
 import type { ComponentType, ReactNode } from 'react';
-import type { FormField } from '@zod-to-form/core';
+import type { FormField, FieldConfig, ComponentEntry } from '@zod-to-form/core';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { defaultComponentMap } from './components/index.js';
 
 type ComponentMap = typeof defaultComponentMap;
 
-export type RuntimeComponentEntry = {
-  component: string;
-  render?: () => Promise<unknown>;
-};
+export type RuntimeComponentEntry = ComponentEntry;
 
-export type RuntimeFieldOverride = {
-  fieldType: string;
-  props?: Record<string, unknown>;
-};
+/** @deprecated Use FieldConfig instead */
+export type RuntimeFieldOverride = FieldConfig;
 
 export type RuntimeComponentConfig = {
   components: string;
   fieldTypes: Record<string, RuntimeComponentEntry>;
-  fields?: Partial<Record<string, RuntimeFieldOverride>>;
+  fields?: Record<string, FieldConfig>;
 };
 
 const moduleCache = new Map<string, Promise<Record<string, unknown>>>();
@@ -48,7 +43,7 @@ function resolveFieldOverride(
   const override = componentConfig.fields?.[field.key];
   if (override) {
     return {
-      entry: componentConfig.fieldTypes[override.fieldType],
+      entry: override.fieldType ? componentConfig.fieldTypes[override.fieldType] : undefined,
       override
     };
   }

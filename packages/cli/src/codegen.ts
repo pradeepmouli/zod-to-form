@@ -187,7 +187,7 @@ export function resolveFieldMapping<TComponents extends Record<string, unknown>>
   const override = componentConfig.fields?.[fieldKey] ?? componentConfig.fields?.[normalizeFieldKey(fieldKey)];
   if (override) {
     return {
-      entry: componentConfig.fieldTypes[override.fieldType],
+      entry: override.fieldType ? componentConfig.fieldTypes[override.fieldType] : undefined,
       override,
       source: 'fields'
     };

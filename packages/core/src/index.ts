@@ -8,6 +8,7 @@ export type {
   FormProcessor,
   FormProcessorContext,
   FormMeta,
+  FieldConfig,
   ProcessParams,
   WalkOptions,
   ZodFormRegistry
@@ -15,12 +16,28 @@ export type {
 
 export type {
   ComponentEntry,
+  FieldTypePreset,
   FormPrimitivesConfig,
+  TypedFieldConfig,
+  ZodFormsConfig,
+  ZodTypeConfig,
+  ConfigDefaults,
+  // Deprecated aliases
   FieldOverride,
   ZodToFormComponentConfig
-} from './component-config.js';
+} from './config.js';
 
-export { defineComponentConfig, validateComponentConfig } from './component-config.js';
+export {
+  defineConfig,
+  validateConfig,
+  resolveFieldConfig,
+  normalizeConfig,
+  SHADCN_FIELD_TYPES,
+  DEFAULT_FIELD_TYPES,
+  // Deprecated aliases
+  defineComponentConfig,
+  validateComponentConfig
+} from './config.js';
 
 export { inferLabel, joinPath, createBaseField } from './utils.js';
 
