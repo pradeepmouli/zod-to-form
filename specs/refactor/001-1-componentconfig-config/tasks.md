@@ -182,10 +182,10 @@
 
 **Purpose**: Address findings from code review (2026-03-04). All are low-severity, non-blocking.
 
-- [ ] T069 [P] Remove unused imports `SHADCN_FIELD_TYPES` and `DEFAULT_FIELD_TYPES` in packages/core/tests/config.test.ts
-- [ ] T070 [P] Remove unused import `SHADCN_FIELD_TYPES` in packages/cli/src/init.ts
-- [ ] T071 Update spec.md Phase 0 checkboxes (lines 113-134) and Verification Checklist (lines 276-300) to reflect completed work
-- [ ] T072 Run `pnpm run lint` and verify zero warnings after import cleanup (T069, T070)
+- [X] T069 [P] Remove unused imports `SHADCN_FIELD_TYPES` and `DEFAULT_FIELD_TYPES` in packages/core/tests/config.test.ts
+- [X] T070 [P] Remove unused import `SHADCN_FIELD_TYPES` in packages/cli/src/init.ts
+- [X] T071 Update spec.md Phase 0 checkboxes (lines 113-134) and Verification Checklist (lines 276-300) to reflect completed work
+- [X] T072 Run `pnpm run lint` and verify zero warnings after import cleanup (T069, T070)
 
 **Checkpoint**: All lint warnings resolved, spec documentation accurate.
 

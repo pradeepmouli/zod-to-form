@@ -23,7 +23,8 @@
       "Bash(pnpm test --filter @zod-to-form/cli)",
       "Bash(pnpm --filter @zod-to-form/core build)",
       "Bash(pnpm -r test)",
-      "Skill(speckit.review)"
+      "Skill(speckit.review)",
+      "Bash(git status -u)"
     ]
   }
 }
