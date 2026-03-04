@@ -1,73 +1,92 @@
-# Refactor Spec: [IMPROVEMENT DESCRIPTION]
+# Refactor Spec: Unified ZodFormsConfig with Schema-Level Configuration
 
-**Refactor ID**: refactor-###
-**Branch**: `refactor/###-short-description`
-**Created**: [DATE]
-**Type**: [ ] Performance | [ ] Maintainability | [ ] Security | [ ] Architecture | [ ] Tech Debt
-**Impact**: [ ] High Risk | [ ] Medium Risk | [ ] Low Risk
-**Status**: [ ] Planning | [ ] Baseline Captured | [ ] In Progress | [ ] Validation | [ ] Complete
+**Refactor ID**: refactor-001
+**Branch**: `refactor/001-1-componentconfig-config`
+**Created**: 2026-03-03
+**Type**: [x] Architecture | [x] Maintainability
+**Impact**: [x] Medium Risk
+**Status**: [x] Planning
 
 ## Input
-User description: "$ARGUMENTS"
+User description: "1. componentConfig -> config, z2f.config.ts/ZodFormsConfig<...> should cover everything available in FormMeta and commandline flags 2. Align FormMeta with field-level config 3. Add support for zodType (schema) level config - move field level config to be nested under zodType level config - add type inference for zodTypes based on mapped types from type import of schema namespace/model 4. Print autodiscovery results in init command line, generated form list in generated view"
 
 ## Motivation
 
 ### Current State Problems
 **Code Smell(s)**:
-- [ ] Duplication (DRY violation)
-- [ ] God Object/Class (too many responsibilities)
-- [ ] Long Method (too complex)
-- [ ] Feature Envy (accessing other object's data)
-- [ ] Primitive Obsession
-- [ ] Dead Code
-- [ ] Magic Numbers/Strings
-- [ ] Tight Coupling
-- [ ] Other: [describe]
+- [x] Tight Coupling
+- [x] Primitive Obsession
+- [x] Other: Fragmented configuration — config shape split across `ZodToFormComponentConfig`, `FormMeta`, `GenerateOptions` CLI flags, and `RuntimeComponentConfig` with overlapping but misaligned concerns
 
 **Concrete Examples**:
-- [File1.ts lines XX-YY: duplicated logic in 3 places]
-- [File2.tsx lines AA-BB: 200-line function doing too much]
-- [Service.ts: direct database access instead of using repository]
+- `packages/core/src/component-config.ts`: `ZodToFormComponentConfig` has `fields` at the top level but they logically belong scoped to a specific schema/zodType
+- `packages/core/src/types.ts:62-77`: `FormMeta` defines `fieldType`, `order`, `hidden`, `gridColumn`, `props` — but the config's `FieldOverride` only has `fieldType` and `props`, missing `order`, `hidden`, `gridColumn`
+- `packages/cli/src/index.ts`: CLI flags `--mode`, `--ui`, `--server-action`, `--name` have no config-file equivalents, forcing repeated CLI invocations
+- `packages/react/src/FieldRenderer.tsx`: `RuntimeComponentConfig` is a separate type that partially mirrors `ZodToFormComponentConfig` rather than sharing a single source of truth
+- `packages/cli/src/index.ts` init command: autodiscovery runs silently — no output showing what was found
+- `packages/cli/src/index.ts` generate command: no summary of what forms were generated
 
 ### Business/Technical Justification
-[Why is this refactoring needed NOW?]
-- [ ] Blocking new features
-- [ ] Performance degradation
-- [ ] Security vulnerability
-- [ ] Causing frequent bugs
-- [ ] Developer velocity impact
-- [ ] Technical debt accumulation
-- [ ] Other: [explain]
+- [x] Blocking new features — per-schema configuration (name, mode, server-action) is needed for multi-schema generation
+- [x] Developer velocity impact — misaligned FormMeta vs FieldOverride causes confusion; CLI flags must be repeated every run
+- [x] Technical debt accumulation — three separate config shapes that should be one
 
 ## Proposed Improvement
 
 ### Refactoring Pattern/Technique
-**Primary Technique**: [Extract Method | Extract Class | Introduce Parameter Object | Replace Conditional with Polymorphism | etc.]
+**Primary Technique**: Introduce Parameter Object + Extract Interface + Consolidate Conditional Expression
 
 **High-Level Approach**:
-[2-3 sentences explaining the refactoring strategy]
+Unify `ZodToFormComponentConfig`, `FormMeta` field-level properties, and CLI generation flags into a single `ZodFormsConfig<TComponents, TSchemas>` type. Introduce a `schemas` section keyed by schema export name (with mapped type inference from `typeof import('./schema')`), where each entry holds per-schema generation options and nested field-level config aligned with `FormMeta`. Add CLI output for autodiscovery results and generated form summaries.
 
 **Files Affected**:
-- **Modified**: [file1.ts, file2.tsx, file3.ts]
-- **Created**: [new-file.ts - extracted logic]
-- **Deleted**: [old-file.ts - no longer needed]
-- **Moved**: [util.ts → lib/util.ts]
+- **Modified**: `packages/core/src/component-config.ts` (rename to `config.ts`, rewrite types)
+- **Modified**: `packages/core/src/types.ts` (align `FormMeta` with `FieldConfig`)
+- **Modified**: `packages/core/src/metadata.ts` (update resolution to use new config shape)
+- **Modified**: `packages/core/src/index.ts` (update re-exports)
+- **Modified**: `packages/cli/src/index.ts` (use config defaults for CLI flags, print autodiscovery/generated list)
+- **Modified**: `packages/cli/src/loader.ts` (rename `loadComponentConfig` → `loadConfig`, update config resolution)
+- **Modified**: `packages/cli/src/init.ts` (print autodiscovery results)
+- **Modified**: `packages/react/src/ZodForm.tsx` (update props type)
+- **Modified**: `packages/react/src/FieldRenderer.tsx` (unify `RuntimeComponentConfig` with core config)
+- **Created**: `packages/core/src/config.ts` (new name for component-config.ts)
+- **Deleted**: `packages/core/src/component-config.ts` (renamed)
+- **Deleted**: `packages/cli/src/component-config.ts` (already deleted, was re-export)
 
 ### Design Improvements
 **Before**:
 ```
-[Simple diagram or description of current structure]
-ComponentA → DirectDatabaseAccess
-ComponentB → DirectDatabaseAccess
-ComponentC → DirectDatabaseAccess
+ZodToFormComponentConfig (core)         FormMeta (core)              CLI flags
+├── components: string                  ├── fieldType?: string       ├── --mode
+├── fieldTypes: Record<...>             ├── order?: number           ├── --ui
+├── formPrimitives: { ... }             ├── hidden?: boolean         ├── --name
+├── fields: Record<path, {              ├── gridColumn?: string      ├── --server-action
+│     fieldType, props }>  ← MISALIGNED ├── props?: Record<...>      ├── --out
+├── include/exclude/types               └── render?: Function        └── --overwrite
+└── overwrite
+                                        RuntimeComponentConfig (react) — partial duplicate
 ```
 
 **After**:
 ```
-[Simple diagram or description of improved structure]
-ComponentA → Repository → Database
-ComponentB → Repository → Database
-ComponentC → Repository → Database
+ZodFormsConfig<TComponents, TSchemas> (core — single source of truth)
+├── components: string
+├── fieldTypes: Record<string, ComponentEntry<TComponents>>
+├── formPrimitives?: FormPrimitivesConfig<TComponents>
+├── defaults?: {                          ← CLI defaults in config
+│     mode, ui, out, overwrite, serverAction
+│   }
+├── include?: string[]                    ← schema filtering
+├── exclude?: string[]
+├── schemas?: {                           ← NEW: per-zodType config
+│     [SchemaName]: {                       (type-safe via TSchemas)
+│       name?, mode?, out?, serverAction?,
+│       fields?: Record<path, FieldConfig>  ← ALIGNED with FormMeta
+│     }
+│   }
+
+FieldConfig (aligned with FormMeta):
+  fieldType?, order?, hidden?, gridColumn?, props?
 ```
 
 ## Phase 0: Testing Gap Assessment
@@ -83,9 +102,14 @@ ComponentC → Repository → Database
 
 ### Testing Coverage Status
 **Affected Code Areas**:
-- [File/Function 1]: Coverage [X%] - [ ] ✅ Adequate [ ] ❌ Needs Tests
-- [File/Function 2]: Coverage [X%] - [ ] ✅ Adequate [ ] ❌ Needs Tests
-- [File/Function 3]: Coverage [X%] - [ ] ✅ Adequate [ ] ❌ Needs Tests
+- `validateComponentConfig()`: Coverage TBD - [ ] ✅ Adequate [ ] ❌ Needs Tests
+- `defineComponentConfig()`: Coverage TBD - [ ] ✅ Adequate [ ] ❌ Needs Tests
+- `resolveMetadata()`: Coverage TBD - [ ] ✅ Adequate [ ] ❌ Needs Tests
+- `loadComponentConfig()` / `loadDefaultComponentConfig()`: Coverage TBD - [ ] ✅ Adequate [ ] ❌ Needs Tests
+- `resolveSchemaExportNames()`: Coverage TBD - [ ] ✅ Adequate [ ] ❌ Needs Tests
+- CLI `generate` command dispatch: Coverage TBD - [ ] ✅ Adequate [ ] ❌ Needs Tests
+- CLI `init` command with autodiscovery: Coverage TBD - [ ] ✅ Adequate [ ] ❌ Needs Tests
+- React `FieldRenderer` component resolution: Coverage TBD - [ ] ✅ Adequate [ ] ❌ Needs Tests
 
 **Action Taken**:
 - [ ] No gaps found - proceeded to baseline
@@ -98,60 +122,44 @@ ComponentC → Repository → Database
 *Captured AFTER testing gaps are addressed - see metrics-before.md*
 
 ### Code Complexity
-- **Cyclomatic Complexity**: [number or "not measured"]
-- **Cognitive Complexity**: [number or "not measured"]
-- **Lines of Code**: [number]
-- **Function Length (avg/max)**: [avg: X lines, max: Y lines]
-- **Class Size (avg/max)**: [avg: X lines, max: Y lines]
-- **Duplication**: [X% or "Y instances"]
+- **Lines of Code**: [see metrics-before.md]
+- **Function Length (avg/max)**: [see metrics-before.md]
 
 ### Test Coverage
-- **Overall Coverage**: [X%]
-- **Lines Covered**: [X/Y]
-- **Branches Covered**: [X/Y]
-- **Functions Covered**: [X/Y]
+- **Overall Coverage**: [see metrics-before.md]
 
 ### Performance
-- **Build Time**: [X seconds]
-- **Bundle Size**: [X KB]
-- **Runtime Performance**: [X ms for key operations]
-- **Memory Usage**: [X MB]
+- **Build Time**: [see metrics-before.md]
 
 ### Dependencies
-- **Direct Dependencies**: [count]
-- **Total Dependencies**: [count including transitive]
-- **Outdated Dependencies**: [count]
+- **Direct Dependencies**: [see metrics-before.md]
 
 ## Target Metrics
 *Goals to achieve - measurable success criteria*
 
 ### Code Quality Goals
-- **Cyclomatic Complexity**: Reduce to [target number] (from [baseline])
-- **Lines of Code**: Reduce to [target] or acceptable if increased due to clarity
-- **Duplication**: Eliminate [X instances] or reduce to [Y%]
-- **Function Length**: Max [N lines], avg [M lines]
-- **Test Coverage**: Maintain or increase to [X%]
+- **Config type definitions**: Reduce from 4 separate types to 1 unified type + 1 aligned field type
+- **Duplication**: Eliminate `RuntimeComponentConfig` as separate type; derive from `ZodFormsConfig`
+- **Test Coverage**: Maintain or increase
+- **API surface**: `defineComponentConfig` → `defineConfig` (simpler name, same purpose)
 
 ### Performance Goals
 - **Build Time**: Maintain or improve (no regression)
-- **Bundle Size**: Reduce by [X KB] or maintain
-- **Runtime Performance**: Maintain or improve (no regression > 5%)
-- **Memory Usage**: Maintain or reduce
+- **Bundle Size**: Maintain (type-only changes don't affect bundle)
+- **Runtime Performance**: Maintain (no algorithmic changes)
 
 ### Success Threshold
-**Minimum acceptable improvement**: [Define what "success" means]
-Example: "Reduce duplication by 50%, maintain test coverage, no performance regression"
+**Minimum acceptable improvement**: Single unified config type `ZodFormsConfig` replaces `ZodToFormComponentConfig` + `RuntimeComponentConfig`. `FieldConfig` aligned with `FormMeta`. Per-schema config with type inference working. Autodiscovery and generation output printed. All existing tests pass without modification.
 
 ## Behavior Preservation Guarantee
 *CRITICAL: Refactoring MUST NOT change external behavior*
 
 ### External Contracts Unchanged
-- [ ] API endpoints return same responses
-- [ ] Function signatures unchanged (or properly deprecated)
-- [ ] Component props unchanged
-- [ ] CLI arguments unchanged
-- [ ] Database schema unchanged
-- [ ] File formats unchanged
+- [ ] Function signatures unchanged (or properly deprecated with backward compat)
+- [ ] Component props unchanged (or properly deprecated)
+- [ ] CLI arguments unchanged (new defaults added, existing flags preserved)
+- [ ] File formats unchanged (generated .tsx output identical)
+- [ ] Config file format backward compatible (old configs still load)
 
 ### Test Suite Validation
 - [ ] **All existing tests MUST pass WITHOUT modification**
@@ -160,145 +168,133 @@ Example: "Reduce duplication by 50%, maintain test coverage, no performance regr
 
 ### Behavioral Snapshot
 **Key behaviors to preserve**:
-1. [Behavior 1: specific observable output for given input]
-2. [Behavior 2: specific side effect or state change]
-3. [Behavior 3: specific error handling]
+1. `defineComponentConfig({...})` returns the same config object (identity function)
+2. `validateComponentConfig(value)` throws formatted errors for invalid configs
+3. `loadComponentConfig(path)` loads and validates .ts/.js/.json config files via jiti
+4. CLI `generate` produces identical .tsx output for same inputs
+5. CLI `init` generates valid z2f.config.ts template
+6. React `ZodForm` renders identical form markup for same schema + config
+7. `resolveMetadata()` merges global + form registry with same precedence
 
 **Test**: Run before and after refactoring, outputs MUST be identical
 
 ## Risk Assessment
 
 ### Risk Level Justification
-**Why [High/Medium/Low] Risk**:
-[Explain based on: code touched, user impact, complexity, blast radius]
+**Why Medium Risk**:
+- Touches all three packages (core, cli, react) — wide blast radius
+- But changes are primarily type-level renames and restructuring
+- Runtime behavior preserved; config loading gains backward compat layer
+- Well-defined test surface exists (schema walking, form rendering, CLI generation)
 
 ### Potential Issues
-- **Risk 1**: [What could go wrong]
-  - **Mitigation**: [How to prevent/detect]
-  - **Rollback**: [How to undo if occurs]
+- **Risk 1**: Existing user configs (`z2f.config.ts`) break with new type shape
+  - **Mitigation**: Keep `ZodToFormComponentConfig` as deprecated alias; `defineComponentConfig` as deprecated alias for `defineConfig`; top-level `fields` still accepted and transformed internally
+  - **Rollback**: Revert to previous types
 
-- **Risk 2**: [Another potential issue]
-  - **Mitigation**: [Prevention strategy]
-  - **Rollback**: [Recovery plan]
+- **Risk 2**: React runtime config resolution changes subtly
+  - **Mitigation**: `RuntimeComponentConfig` becomes a derived view of `ZodFormsConfig`; resolution logic unchanged
+  - **Rollback**: Restore original `RuntimeComponentConfig` type
+
+- **Risk 3**: Type inference for `schemas` keys may not work with all TS configurations
+  - **Mitigation**: Make `TSchemas` generic optional with `Record<string, unknown>` default; test with `strict: true`
+  - **Rollback**: Remove generic parameter, fall back to `string` keys
 
 ### Safety Measures
-- [ ] Feature flag available for gradual rollout
-- [ ] Monitoring in place for key metrics
-- [ ] Rollback plan tested
 - [ ] Incremental commits (can revert partially)
 - [ ] Peer review required
-- [ ] Staging environment test required
+- [x] Backward compatibility via deprecated aliases
 
 ## Rollback Plan
 
 ### How to Undo
-1. [Step 1: revert commit range]
-2. [Step 2: any manual cleanup needed]
-3. [Step 3: verification steps]
+1. `git revert` the commit range on the refactor branch
+2. No manual cleanup needed — all changes are source-level
+3. Verify all tests pass after revert
 
 ### Rollback Triggers
-Revert if any of these occur within 24-48 hours:
+Revert if any of these occur:
 - [ ] Test suite failure
 - [ ] Performance regression > 10%
-- [ ] Production error rate increase
-- [ ] User-facing bug reports related to refactored area
-- [ ] Monitoring alerts
+- [ ] Type inference breaks downstream consumers
 
 ### Recovery Time Objective
-**RTO**: [How fast can we rollback? e.g., "< 30 minutes"]
+**RTO**: < 5 minutes (single `git revert`)
 
 ## Implementation Plan
 
 ### Phase 0: Testing Gap Assessment (Pre-Baseline)
-**CRITICAL FIRST STEP**: Assess and address testing gaps BEFORE baseline
-
-1. Review `testing-gaps.md` template
-2. Identify all code that will be modified during refactoring
+1. Review `testing-gaps.md`
+2. Identify all code that will be modified
 3. Assess test coverage for each affected area
-4. Document gaps (critical, important, nice-to-have)
-5. **Add tests for critical gaps** - DO NOT proceed without these
-6. Verify all new tests pass
-7. Mark testing gaps assessment as complete
-
-**Checkpoint**: Only proceed to Phase 1 when adequate test coverage exists
+4. Add tests for critical gaps
+5. Verify all new tests pass
 
 ### Phase 1: Baseline (Before Refactoring)
-1. Capture all baseline metrics (run `.specify/extensions/workflows/refactor/measure-metrics.sh --before`)
-2. Create behavioral snapshot (document current outputs)
-3. Ensure 100% test pass rate (including newly added tests)
-4. Tag current state in git: `git tag pre-refactor-### -m "Baseline before refactor-###"`
+1. Capture all baseline metrics
+2. Create behavioral snapshot
+3. Ensure 100% test pass rate
+4. Tag current state: `git tag pre-refactor-001`
 
 ### Phase 2: Refactoring (Incremental)
-1. [Step 1: small, atomic change]
-2. [Step 2: another small change]
-3. [Step 3: continue incrementally]
-
-**Principle**: Each step should compile and pass tests
+1. Create `FieldConfig` type aligned with `FormMeta` in core
+2. Create `ZodFormsConfig<TComponents, TSchemas>` with `schemas` section and `defaults`
+3. Add `defineConfig()` function, deprecate `defineComponentConfig()`
+4. Update validation schema for new config shape (backward compat)
+5. Rename `component-config.ts` → `config.ts`, update exports
+6. Update CLI loader to use new names, add backward compat resolution
+7. Update CLI `init` to print autodiscovery results
+8. Update CLI `generate` to use config defaults, print generated form list
+9. Update React types to derive from core config
+10. Update all imports across packages
 
 ### Phase 3: Validation
-1. Run full test suite (MUST pass 100%)
-2. Re-measure all metrics
-3. Compare behavioral snapshot (MUST be identical)
-4. Performance regression test
-5. Manual testing of critical paths
-
-### Phase 4: Deployment
-1. Code review focused on behavior preservation
-2. Deploy to staging
-3. Monitor for 24 hours
-4. Deploy to production with feature flag (if available)
-5. Monitor for 48-72 hours
-6. Remove feature flag if stable
+1. Run full test suite
+2. Re-measure metrics
+3. Compare behavioral snapshot
+4. Type-check all packages with `strict: true`
 
 ## Verification Checklist
 
 ### Phase 0: Testing Gap Assessment
-- [ ] Testing gaps assessment completed (testing-gaps.md)
-- [ ] All affected code areas identified
-- [ ] Test coverage assessed for each area
+- [ ] Testing gaps assessment completed
 - [ ] Critical gaps identified and documented
 - [ ] Tests added for all critical gaps
 - [ ] All new tests passing
-- [ ] Ready to proceed to baseline capture
 
 ### Pre-Refactoring (Phase 1)
-- [ ] Baseline metrics captured and documented
-- [ ] All tests passing (100% pass rate)
+- [ ] Baseline metrics captured
+- [ ] All tests passing
 - [ ] Behavioral snapshot created
 - [ ] Git tag created
-- [ ] Rollback plan prepared
 
 ### During Refactoring
-- [ ] Incremental commits (each one compiles and tests pass)
+- [ ] Incremental commits
 - [ ] External behavior unchanged
-- [ ] No new dependencies added (unless justified)
-- [ ] Comments updated to match code
+- [ ] Backward compatibility maintained
 - [ ] Dead code removed
 
 ### Post-Refactoring
-- [ ] All tests still passing (100% pass rate)
-- [ ] Target metrics achieved or improvement demonstrated
-- [ ] Behavioral snapshot matches (behavior unchanged)
+- [ ] All tests passing
+- [ ] Target metrics achieved
+- [ ] Behavioral snapshot matches
 - [ ] No performance regression
 - [ ] Code review approved
-- [ ] Documentation updated
-
-### Post-Deployment
-- [ ] Monitoring shows stable performance
-- [ ] No error rate increase
-- [ ] No user reports related to refactored area
-- [ ] 48-72 hour stability period completed
 
 ## Related Work
 
 ### Blocks
-[List features blocked by current technical debt that this refactoring unblocks]
+- Multi-schema generation from single config file
+- Per-schema mode/output configuration
+- Type-safe schema-level overrides
 
 ### Enables
-[List future refactorings or features this enables]
+- Schema-aware codegen with per-type settings
+- Config-driven generation without repeated CLI flags
+- Future: schema-level plugins and transformations
 
 ### Dependencies
-[List other refactorings that should happen first]
+- None — this is a foundational refactoring
 
 ---
 *Refactor spec created using `/refactor` workflow - See .specify/extensions/workflows/refactor/*
