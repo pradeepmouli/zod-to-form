@@ -50,16 +50,18 @@ function getMappedFieldComponent(
 ): {
   componentName?: string;
   override?: FieldOverride;
+  source: 'fields' | 'fieldTypes' | 'none';
 } {
   const mapping = resolveFieldMapping(field.key, field.component, componentConfig);
 
   if (!mapping.entry) {
-    return {};
+    return { source: mapping.source };
   }
 
   return {
     componentName: mapping.entry.component,
-    override: mapping.override
+    override: mapping.override,
+    source: mapping.source
   };
 }
 
@@ -131,7 +133,9 @@ function renderFieldContainer(
 
   const openField = fieldTag ? `<${fieldTag}${styleAttr}>` : `<div${styleAttr}>`;
   const closeField = fieldTag ? `</${fieldTag}>` : `</div>`;
-  const openLabel = labelTag ? `<${labelTag} htmlFor="${field.key}">` : `<label htmlFor="${field.key}">`;
+  const openLabel = labelTag
+    ? `<${labelTag} htmlFor="${field.key}">`
+    : `<label htmlFor="${field.key}">`;
   const closeLabel = labelTag ? `</${labelTag}>` : `</label>`;
 
   if (!controlTag) {
@@ -153,6 +157,19 @@ function renderFieldContainer(
   ].join('\n');
 }
 
+/**
+ * Normalise a concrete field key (e.g. `attributes.0.typeCall.type` or
+ * `attributes.${index}.typeCall.type`) to the bracket notation used in
+ * the user-facing `fields` config (e.g. `attributes[].typeCall.type`).
+ */
+function normalizeFieldKey(key: string): string {
+  // Replace `.0.` or `.${index}.` segments with `[].`
+  let result = key.replace(/\.(?:0|\$\{index\})\./g, '[].');
+  // Replace trailing `.0` or `.${index}`
+  result = result.replace(/\.(?:0|\$\{index\})$/, '[]');
+  return result;
+}
+
 export function resolveFieldMapping<TComponents extends Record<string, unknown>>(
   fieldKey: string,
   fieldType: string | undefined,
@@ -166,7 +183,8 @@ export function resolveFieldMapping<TComponents extends Record<string, unknown>>
     return { source: 'none' };
   }
 
-  const override = componentConfig.fields?.[fieldKey];
+  // Try exact match first, then normalised bracket-notation match
+  const override = componentConfig.fields?.[fieldKey] ?? componentConfig.fields?.[normalizeFieldKey(fieldKey)];
   if (override) {
     return {
       entry: componentConfig.fieldTypes[override.fieldType],
@@ -339,7 +357,7 @@ function renderArrayBlock(
   const indexedItemField = itemField ? cloneFieldWithArrayIndex(itemField, field.key) : undefined;
   const mappedItem = indexedItemField
     ? getMappedFieldComponent(indexedItemField, componentConfig)
-    : {};
+    : { source: 'none' as const };
   const itemJsx = indexedItemField
     ? mappedItem.componentName
       ? `<${mappedItem.componentName} {...register(\`${indexedItemField.key}\`)}${renderOverrideProps(mappedItem.override?.props)} />`
@@ -380,6 +398,15 @@ function renderFieldBlockWithConfig(
       `${indent}  {/* TODO: custom renderer for ${field.key} — replace with your component */}`,
       `${indent}</div>`
     ].join('\n');
+  }
+
+  // If a fields override maps this nested/array field to a custom component,
+  // render that component instead of expanding children.
+  if (mapping.source === 'fields' && mapping.componentName) {
+    const overrideProps = renderOverrideProps(mapping.override?.props);
+    const regExpr = field.key.includes('${') ? `register(\`${field.key}\`)` : `register('${field.key}')`;
+    const content = `<${mapping.componentName} id="${field.key}" {...${regExpr}}${overrideProps} />`;
+    return renderFieldContainer(field, content, indent, primitives);
   }
 
   if (field.component === 'Fieldset') {
@@ -426,7 +453,9 @@ export async function generateFormComponent(
     componentImportLine
   );
   const body = fields
-    .map((field) => renderFieldBlockWithConfig(field, config.componentConfig, formPrimitives, '      '))
+    .map((field) =>
+      renderFieldBlockWithConfig(field, config.componentConfig, formPrimitives, '      ')
+    )
     .join('\n');
 
   // useFieldArray hook declarations

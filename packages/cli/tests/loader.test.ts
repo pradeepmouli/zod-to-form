@@ -194,19 +194,19 @@ describe('loadComponentConfig', () => {
     );
   });
 
-  it('resolves default component-config.ts before legacy z2f.config.ts', async () => {
+  it('resolves default z2f.config.ts before component-config.ts', async () => {
     const dir = await createTempDir();
-    const preferredPath = path.join(dir, 'component-config.ts');
-    const legacyPath = path.join(dir, 'z2f.config.ts');
+    const preferredPath = path.join(dir, 'z2f.config.ts');
+    const secondaryPath = path.join(dir, 'component-config.ts');
 
     await writeFile(
       preferredPath,
-      `export default { components: '@new/components', fieldTypes: { string: { component: 'Input' } } };\n`,
+      `export default { components: '@preferred/components', fieldTypes: { string: { component: 'Input' } } };\n`,
       'utf8'
     );
     await writeFile(
-      legacyPath,
-      `export default { components: '@legacy/components', fieldTypes: { string: { component: 'Input' } } };\n`,
+      secondaryPath,
+      `export default { components: '@secondary/components', fieldTypes: { string: { component: 'Input' } } };\n`,
       'utf8'
     );
 
@@ -214,23 +214,23 @@ describe('loadComponentConfig', () => {
     expect(resolved).toBe(preferredPath);
 
     const config = await loadDefaultComponentConfig(dir);
-    expect(config?.components).toBe('@new/components');
+    expect(config?.components).toBe('@preferred/components');
   });
 
-  it('falls back to legacy z2f.config.ts when component-config is absent', async () => {
+  it('falls back to component-config.ts when z2f.config.ts is absent', async () => {
     const dir = await createTempDir();
-    const legacyPath = path.join(dir, 'z2f.config.ts');
+    const fallbackPath = path.join(dir, 'component-config.ts');
 
     await writeFile(
-      legacyPath,
-      `export default { components: '@legacy/components', fieldTypes: { string: { component: 'Input' } } };\n`,
+      fallbackPath,
+      `export default { components: '@fallback/components', fieldTypes: { string: { component: 'Input' } } };\n`,
       'utf8'
     );
 
     const resolved = await resolveDefaultComponentConfigPath(dir);
-    expect(resolved).toBe(legacyPath);
+    expect(resolved).toBe(fallbackPath);
 
     const config = await loadDefaultComponentConfig(dir);
-    expect(config?.components).toBe('@legacy/components');
+    expect(config?.components).toBe('@fallback/components');
   });
 });

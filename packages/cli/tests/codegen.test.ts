@@ -481,4 +481,261 @@ describe('generateFormComponent', () => {
     expect(output).toContain('Nested array editing is not auto-generated for dynamic paths.');
     expect(output).not.toContain('itemsIndexTagsFields');
   });
+
+  it('resolveFieldMapping normalizes .0. array index to bracket notation for fields lookup', () => {
+    const config: ZodToFormComponentConfig<{ Input: unknown; TypeSelector: unknown }> = {
+      components: '@app/components',
+      fieldTypes: {
+        string: { component: 'Input' },
+        'cross-ref': { component: 'TypeSelector' }
+      },
+      fields: {
+        'attributes[].typeCall.type': { fieldType: 'cross-ref' }
+      }
+    };
+
+    // Concrete `.0.` key should match the bracket-notation config key
+    const result = resolveFieldMapping('attributes.0.typeCall.type', 'string', config);
+
+    expect(result.source).toBe('fields');
+    expect(result.entry?.component).toBe('TypeSelector');
+  });
+
+  it('resolveFieldMapping normalizes ${index} template to bracket notation for fields lookup', () => {
+    const config: ZodToFormComponentConfig<{ Input: unknown; TypeSelector: unknown }> = {
+      components: '@app/components',
+      fieldTypes: {
+        string: { component: 'Input' },
+        'cross-ref': { component: 'TypeSelector' }
+      },
+      fields: {
+        'items[].name': { fieldType: 'cross-ref' }
+      }
+    };
+
+    const result = resolveFieldMapping('items.${index}.name', 'string', config);
+
+    expect(result.source).toBe('fields');
+    expect(result.entry?.component).toBe('TypeSelector');
+  });
+
+  it('resolveFieldMapping still matches exact field key before normalizing', () => {
+    const config: ZodToFormComponentConfig<{ Input: unknown; TypeSelector: unknown }> = {
+      components: '@app/components',
+      fieldTypes: {
+        string: { component: 'Input' },
+        'cross-ref': { component: 'TypeSelector' }
+      },
+      fields: {
+        superType: { fieldType: 'cross-ref' }
+      }
+    };
+
+    // Exact match — no normalization needed
+    const result = resolveFieldMapping('superType', 'string', config);
+
+    expect(result.source).toBe('fields');
+    expect(result.entry?.component).toBe('TypeSelector');
+  });
+
+  it('renders custom component instead of expanding Fieldset children when fields override exists', async () => {
+    const fields: FormField[] = [
+      {
+        key: 'superType',
+        component: 'Fieldset',
+        props: {},
+        label: 'Super Type',
+        required: false,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'object',
+        children: [
+          {
+            key: 'superType.$refText',
+            component: 'Input',
+            props: { type: 'text' },
+            label: '$Ref Text',
+            required: true,
+            readOnly: false,
+            hidden: false,
+            constraints: {},
+            zodType: 'string'
+          },
+          {
+            key: 'superType.ref',
+            component: 'Input',
+            props: { type: 'text' },
+            label: 'Ref',
+            required: true,
+            readOnly: false,
+            hidden: false,
+            constraints: {},
+            zodType: 'string'
+          }
+        ]
+      }
+    ];
+
+    const output = await generateFormComponent(fields, {
+      schemaPath: '/tmp/schema.ts',
+      exportName: 'dataSchema',
+      outputPath: '/tmp/DataForm.tsx',
+      componentName: 'DataForm',
+      mode: 'submit',
+      ui: 'shadcn',
+      serverAction: false,
+      componentConfig: {
+        components: '@app/components',
+        fieldTypes: {
+          string: { component: 'Input' },
+          'cross-ref': { component: 'TypeSelector' }
+        },
+        fields: {
+          superType: { fieldType: 'cross-ref' }
+        }
+      }
+    });
+
+    // Should render TypeSelector, not expand into sub-fields
+    expect(output).toContain(`<TypeSelector id="superType" {...register('superType')}`);
+    expect(output).not.toContain('superType.$refText');
+    expect(output).not.toContain('superType.ref');
+    expect(output).not.toContain('<fieldset>');
+  });
+
+  it('renders custom component for array-item nested fields using bracket-notation config keys', async () => {
+    const fields: FormField[] = [
+      {
+        key: 'attributes',
+        component: 'ArrayField',
+        props: {},
+        label: 'Attributes',
+        required: false,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'array',
+        arrayItem: {
+          key: 'attributes.0',
+          component: 'Fieldset',
+          props: {},
+          label: 'Attribute',
+          required: true,
+          readOnly: false,
+          hidden: false,
+          constraints: {},
+          zodType: 'object',
+          children: [
+            {
+              key: 'attributes.0.name',
+              component: 'Input',
+              props: { type: 'text' },
+              label: 'Name',
+              required: true,
+              readOnly: false,
+              hidden: false,
+              constraints: {},
+              zodType: 'string'
+            },
+            {
+              key: 'attributes.0.typeCall',
+              component: 'Fieldset',
+              props: {},
+              label: 'Type Call',
+              required: true,
+              readOnly: false,
+              hidden: false,
+              constraints: {},
+              zodType: 'object',
+              children: [
+                {
+                  key: 'attributes.0.typeCall.type',
+                  component: 'Fieldset',
+                  props: {},
+                  label: 'Type',
+                  required: true,
+                  readOnly: false,
+                  hidden: false,
+                  constraints: {},
+                  zodType: 'object',
+                  children: [
+                    {
+                      key: 'attributes.0.typeCall.type.$refText',
+                      component: 'Input',
+                      props: { type: 'text' },
+                      label: '$Ref Text',
+                      required: true,
+                      readOnly: false,
+                      hidden: false,
+                      constraints: {},
+                      zodType: 'string'
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              key: 'attributes.0.card',
+              component: 'Fieldset',
+              props: {},
+              label: 'Card',
+              required: true,
+              readOnly: false,
+              hidden: false,
+              constraints: {},
+              zodType: 'object',
+              children: [
+                {
+                  key: 'attributes.0.card.inf',
+                  component: 'Input',
+                  props: { type: 'number' },
+                  label: 'Inf',
+                  required: true,
+                  readOnly: false,
+                  hidden: false,
+                  constraints: {},
+                  zodType: 'number'
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ];
+
+    const output = await generateFormComponent(fields, {
+      schemaPath: '/tmp/schema.ts',
+      exportName: 'dataSchema',
+      outputPath: '/tmp/DataForm.tsx',
+      componentName: 'DataForm',
+      mode: 'submit',
+      ui: 'shadcn',
+      serverAction: false,
+      componentConfig: {
+        components: '@app/components',
+        fieldTypes: {
+          string: { component: 'Input' },
+          'cross-ref': { component: 'TypeSelector' },
+          cardinality: { component: 'CardinalitySelector' }
+        },
+        fields: {
+          'attributes[].typeCall.type': { fieldType: 'cross-ref' },
+          'attributes[].card': { fieldType: 'cardinality' }
+        }
+      }
+    });
+
+    // typeCall.type should be TypeSelector, not expanded sub-fields
+    expect(output).toContain('TypeSelector');
+    expect(output).toMatch(/TypeSelector.*typeCall\.type/s);
+    expect(output).not.toContain('typeCall.type.$refText');
+
+    // card should be CardinalitySelector, not expanded sub-fields
+    expect(output).toContain('CardinalitySelector');
+    expect(output).not.toContain('card.inf');
+
+    // name should still be a normal input
+    expect(output).toContain(`register(\`attributes.\${index}.name\`)`);
+  });
 });

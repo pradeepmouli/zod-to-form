@@ -141,9 +141,7 @@ describe('runInit', () => {
     expect(result.wroteFile).toBe(false);
     expect(writeSpy).toHaveBeenCalled();
 
-    await expect(
-      readFile(path.join(dir, 'nested', 'z2f.config.ts'), 'utf8')
-    ).rejects.toThrow();
+    await expect(readFile(path.join(dir, 'nested', 'z2f.config.ts'), 'utf8')).rejects.toThrow();
 
     writeSpy.mockRestore();
     process.chdir(originalCwd);

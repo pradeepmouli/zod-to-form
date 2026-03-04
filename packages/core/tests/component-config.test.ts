@@ -21,6 +21,10 @@ describe('component config contracts', () => {
   it('validateComponentConfig accepts valid component config object', () => {
     const parsed = validateComponentConfig({
       components: '@app/components',
+      overwrite: true,
+      types: ['userSchema'],
+      include: ['*Schema'],
+      exclude: ['Internal*'],
       formPrimitives: {
         field: 'Field',
         label: 'FieldLabel',
@@ -33,6 +37,18 @@ describe('component config contracts', () => {
 
     expect(parsed.components).toBe('@app/components');
     expect(parsed.fieldTypes['Input']?.component).toBe('TextInput');
+  });
+
+  it('validateComponentConfig rejects invalid include/exclude/types shape', () => {
+    expect(() =>
+      validateComponentConfig({
+        components: '@app/components',
+        fieldTypes: {
+          Input: { component: 'TextInput' }
+        },
+        include: [123]
+      })
+    ).toThrow(/include must be an array of strings/);
   });
 
   it('validateComponentConfig rejects invalid formPrimitives shape', () => {

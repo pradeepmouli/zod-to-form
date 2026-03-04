@@ -36,6 +36,11 @@ jobs:
       - name: Type check
         run: pnpm run type-check
 
+      - name: Type-focused unit tests
+        run: |
+          pnpm --filter @zod-to-form/core run test -- tests/component-config-types.test.ts
+          pnpm --filter @zod-to-form/cli run test -- tests/component-config-types.test.ts
+
       - name: Lint
         run: pnpm run lint
 

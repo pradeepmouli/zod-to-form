@@ -115,12 +115,12 @@ async function fileExists(filePath: string): Promise<boolean> {
 
 export async function resolveDefaultComponentConfigPath(cwd: string): Promise<string | undefined> {
   const candidates = [
-    'component-config.ts',
-    'component-config.js',
-    'component-config.json',
     'z2f.config.ts',
+    'component-config.ts',
     'z2f.config.js',
-    'z2f.config.json'
+    'component-config.js',
+    'z2f.config.json',
+    'component-config.json'
   ].map((candidate) => path.resolve(cwd, candidate));
 
   for (const candidate of candidates) {

@@ -135,7 +135,8 @@ function getCandidateFiles(basePath: string): string[] {
 
 function extractExportedNames(code: string): Set<string> {
   const names = new Set<string>();
-  const declarationRegex = /export\s+(?:const|function|class|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)/g;
+  const declarationRegex =
+    /export\s+(?:const|function|class|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)/g;
   const namedExportRegex = /export\s*\{([^}]+)\}/g;
 
   let declarationMatch: RegExpExecArray | null;
@@ -233,7 +234,11 @@ async function discoverFormPrimitives(
       : defaults.control;
 
   const sources = Array.from(
-    new Set([sourceByExport.get(field), sourceByExport.get(label), sourceByExport.get(control)]).values()
+    new Set([
+      sourceByExport.get(field),
+      sourceByExport.get(label),
+      sourceByExport.get(control)
+    ]).values()
   ).filter((value): value is string => typeof value === 'string');
 
   return {

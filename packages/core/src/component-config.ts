@@ -19,10 +19,39 @@ export type ZodToFormComponentConfig<
   TFieldPath extends string = string
 > = {
   components: string;
+  overwrite?: boolean;
+  include?: string[];
+  exclude?: string[];
+  types?: string[];
   fieldTypes: Record<string, ComponentEntry<T>>;
   formPrimitives?: FormPrimitivesConfig<T>;
   fields?: Partial<Record<TFieldPath, FieldOverride>>;
 };
+
+type Primitive = string | number | boolean | bigint | symbol | null | undefined | Date;
+
+type DotPath<T> = T extends Primitive
+  ? never
+  : T extends readonly (infer TItem)[]
+    ? `${number}` | `${number}.${DotPath<TItem>}`
+    : {
+        [TKey in Extract<keyof T, string>]: T[TKey] extends Primitive
+          ? TKey
+          : TKey | `${TKey}.${DotPath<T[TKey]>}`;
+      }[Extract<keyof T, string>];
+
+type NormalizeArrayPath<TPath extends string> =
+  TPath extends `${infer Prefix}.${number}.${infer Suffix}`
+    ? NormalizeArrayPath<`${Prefix}[].${Suffix}`>
+    : TPath extends `${infer Prefix}.${number}`
+      ? NormalizeArrayPath<`${Prefix}[]`>
+      : TPath;
+
+type FieldPath<TValues extends Record<string, unknown>> = DotPath<TValues> extends infer TPath
+  ? TPath extends string
+    ? TPath | NormalizeArrayPath<TPath>
+    : never
+  : never;
 
 function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
@@ -100,14 +129,40 @@ export function validateComponentConfig(
     }
   }
 
+  const overwrite = value['overwrite'];
+  if (overwrite !== undefined && typeof overwrite !== 'boolean') {
+    throw new Error(`${source}.overwrite must be a boolean when provided.`);
+  }
+
+  const types = value['types'];
+  if (types !== undefined) {
+    if (!Array.isArray(types) || types.some((entry) => typeof entry !== 'string')) {
+      throw new Error(`${source}.types must be an array of strings when provided.`);
+    }
+  }
+
+  const include = value['include'];
+  if (include !== undefined) {
+    if (!Array.isArray(include) || include.some((entry) => typeof entry !== 'string')) {
+      throw new Error(`${source}.include must be an array of strings when provided.`);
+    }
+  }
+
+  const exclude = value['exclude'];
+  if (exclude !== undefined) {
+    if (!Array.isArray(exclude) || exclude.some((entry) => typeof entry !== 'string')) {
+      throw new Error(`${source}.exclude must be an array of strings when provided.`);
+    }
+  }
+
   return value as ZodToFormComponentConfig<Record<string, unknown>>;
 }
 
 export function defineComponentConfig<
   TComponents extends Record<string, unknown>,
-  TFieldPath extends string = string
+  TValues extends Record<string, unknown>
 >(
-  config: ZodToFormComponentConfig<TComponents, TFieldPath>
-): ZodToFormComponentConfig<TComponents, TFieldPath> {
+  config: ZodToFormComponentConfig<TComponents, FieldPath<TValues>>
+): ZodToFormComponentConfig<TComponents, FieldPath<TValues>> {
   return config;
 }

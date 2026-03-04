@@ -22,7 +22,7 @@ pnpm add -D @zod-to-form/cli zod
 ## CLI Usage
 
 ```bash
-zod-to-form generate --config ./component-config.ts --schema ./src/schema.ts --export userSchema
+zod-to-form generate --config ./z2f.config.ts --schema ./src/schema.ts --export userSchema
 ```
 
 ```bash
@@ -61,12 +61,12 @@ Generation selection/overwrite is now config-driven:
 When generating with `--config`, component mapping and generation controls come from the same file.
 Default config discovery order (used by runtime helpers / existing workflows) is still:
 
-1. `component-config.ts`
-2. `component-config.js`
-3. `component-config.json`
-4. `z2f.config.ts`
-5. `z2f.config.js`
-6. `z2f.config.json`
+1. `z2f.config.ts`
+2. `component-config.ts`
+3. `z2f.config.js`
+4. `component-config.js`
+5. `z2f.config.json`
+6. `component-config.json`
 
 ### Command
 
@@ -99,7 +99,7 @@ Generate to specific directory with custom component name:
 
 ```bash
 zod-to-form generate \
-  --config ./component-config.ts \
+  --config ./z2f.config.ts \
   --schema ./src/user.schema.ts \
   --export userSchema \
   --out ./src/forms \
@@ -110,7 +110,7 @@ Generate in auto-save mode with server action:
 
 ```bash
 zod-to-form generate \
-  --config ./component-config.ts \
+  --config ./z2f.config.ts \
   --schema ./src/user.schema.ts \
   --export userSchema \
   --mode auto-save \
@@ -120,7 +120,7 @@ zod-to-form generate \
 Dry run to inspect generated output:
 
 ```bash
-zod-to-form generate --config ./component-config.ts --schema ./src/user.schema.ts --export userSchema --dry-run
+zod-to-form generate --config ./z2f.config.ts --schema ./src/user.schema.ts --export userSchema --dry-run
 ```
 
 Initialize config with verbose diagnostics:

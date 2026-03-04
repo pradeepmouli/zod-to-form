@@ -10,7 +10,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
 import type { Paths as TypeFestPaths } from 'type-fest';
-import { walkSchema } from '@zod-to-form/core';
+import {
+  walkSchema
+} from '@zod-to-form/core';
 import { generateFormComponent } from './codegen.js';
 import { loadComponentConfig, loadSchema, resolveSchemaExportNames } from './loader.js';
 import { runInit, type InitOptions } from './init.js';
@@ -250,9 +252,7 @@ export function createProgram(): Command {
 
   program
     .command('init')
-    .description(
-      'Create z2f.config.ts with sensible defaults and optional shadcn introspection'
-    )
+    .description('Create z2f.config.ts with sensible defaults and optional shadcn introspection')
     .option('--out <path>', 'Output path to write z2f.config.ts', 'z2f.config.ts')
     .option(
       '--components <modulePath>',
