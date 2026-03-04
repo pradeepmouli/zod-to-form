@@ -87,7 +87,7 @@ describe('generateFormComponent', () => {
   });
 
   it('resolves field mapping with fields overriding fieldTypes', () => {
-    const config: ZodToFormComponentConfig<{ Input: unknown; TypeSelector: unknown }> = {
+    const config: ZodToFormComponentConfig = {
       components: '@app/components',
       fieldTypes: {
         string: { component: 'Input' },
@@ -483,7 +483,7 @@ describe('generateFormComponent', () => {
   });
 
   it('resolveFieldMapping normalizes .0. array index to bracket notation for fields lookup', () => {
-    const config: ZodToFormComponentConfig<{ Input: unknown; TypeSelector: unknown }> = {
+    const config: ZodToFormComponentConfig = {
       components: '@app/components',
       fieldTypes: {
         string: { component: 'Input' },
@@ -502,7 +502,7 @@ describe('generateFormComponent', () => {
   });
 
   it('resolveFieldMapping normalizes ${index} template to bracket notation for fields lookup', () => {
-    const config: ZodToFormComponentConfig<{ Input: unknown; TypeSelector: unknown }> = {
+    const config: ZodToFormComponentConfig = {
       components: '@app/components',
       fieldTypes: {
         string: { component: 'Input' },
@@ -520,7 +520,7 @@ describe('generateFormComponent', () => {
   });
 
   it('resolveFieldMapping still matches exact field key before normalizing', () => {
-    const config: ZodToFormComponentConfig<{ Input: unknown; TypeSelector: unknown }> = {
+    const config: ZodToFormComponentConfig = {
       components: '@app/components',
       fieldTypes: {
         string: { component: 'Input' },

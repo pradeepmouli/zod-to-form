@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { defineConfig, defineComponentConfig } from '../src/config.js';
-import type { ZodFormsConfig, FieldOverride } from '../src/config.js';
+import type { ZodFormsConfig, FieldOverride, TypedFieldConfig } from '../src/config.js';
 import type { FieldConfig } from '../src/types.js';
 
 type Values = {
@@ -113,6 +113,6 @@ describe('ZodFormsConfig generics', () => {
       }
     };
 
-    expectTypeOf(config.fields).toEqualTypeOf<Record<string, FieldConfig> | undefined>();
+    expectTypeOf(config.fields).toEqualTypeOf<Record<string, TypedFieldConfig> | undefined>();
   });
 });
