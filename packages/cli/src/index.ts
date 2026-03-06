@@ -124,10 +124,22 @@ export async function runGenerate(options: GenerateOptions): Promise<{
     exportName,
     options.name ?? schemaConfig?.name
   );
-  const effectiveMode = options.mode ?? schemaConfig?.mode ?? componentConfig.defaults?.mode ?? 'submit';
+  const effectiveMode =
+    options.mode && options.mode !== 'submit'
+      ? options.mode
+      : schemaConfig?.mode ??
+        componentConfig.defaults?.mode ??
+        options.mode ??
+        'submit';
   const effectiveOut = options.out ?? schemaConfig?.out ?? componentConfig.defaults?.out;
   const effectiveServerAction = options.serverAction ?? schemaConfig?.serverAction ?? componentConfig.defaults?.serverAction ?? false;
-  const effectiveUi = options.ui ?? componentConfig.defaults?.ui ?? 'shadcn';
+  const effectiveUi =
+    options.ui && options.ui !== 'shadcn'
+      ? options.ui
+      : schemaConfig?.ui ??
+        componentConfig.defaults?.ui ??
+        options.ui ??
+        'shadcn';
   const effectiveOverwrite = componentConfig.defaults?.overwrite ?? false;
 
   const outputPath = resolveOutputPath(cwd, effectiveOut, componentName);
