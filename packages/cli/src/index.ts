@@ -59,6 +59,8 @@ type GenerateOptions = {
   dryRun?: boolean;
   serverAction?: boolean;
   watch?: boolean;
+  /** Pre-loaded config to avoid redundant file loads */
+  _loadedConfig?: ZodFormsConfig<Record<string, unknown>>;
 };
 
 import { applyExportFilters } from './filters.js';
@@ -114,7 +116,7 @@ export async function runGenerate(options: GenerateOptions): Promise<{
     throw new Error('runGenerate requires an explicit export name.');
   }
   const exportName = options.export;
-  const componentConfig = await loadConfig(path.resolve(cwd, options.config));
+  const componentConfig = options._loadedConfig ?? await loadConfig(path.resolve(cwd, options.config));
 
   // Merge config defaults with CLI flags (CLI flag > schemas.X.[prop] > defaults.[prop])
   const schemaConfig = componentConfig.schemas?.[exportName];
@@ -192,10 +194,10 @@ export function createProgram(): Command {
       '--export <name>',
       'Named export containing the schema (optional when config.types/include are used)'
     )
-    .option('--mode <mode>', 'Generation mode (submit|auto-save)', 'submit')
+    .option('--mode <mode>', 'Generation mode (submit|auto-save)')
     .option('--out <path>', 'Output directory or file path')
     .option('--name <componentName>', 'Generated component name')
-    .option('--ui <preset>', 'UI preset (shadcn|unstyled)', 'shadcn')
+    .option('--ui <preset>', 'UI preset (shadcn|unstyled)')
     .option('--dry-run', 'Print generated code without writing files', false)
     .option('--server-action', 'Generate a Next.js server action alongside the form', false)
     .option('--watch', 'Watch schema file for changes and regenerate on change', false)
@@ -223,7 +225,7 @@ export function createProgram(): Command {
 
       const results: Array<{ componentName: string; outputPath: string }> = [];
       for (const exportName of exportNames) {
-        const result = await runGenerate({ ...commandOptions, export: exportName });
+        const result = await runGenerate({ ...commandOptions, export: exportName, _loadedConfig: config });
         const schemaConfig = config.schemas?.[exportName];
         const componentName = resolveComponentName(
           exportName,
@@ -247,7 +249,7 @@ export function createProgram(): Command {
         await startWatch(schemaPath, () =>
           Promise.all(
             exportNames.map((exportName: string) =>
-              runGenerate({ ...commandOptions, export: exportName })
+              runGenerate({ ...commandOptions, export: exportName, _loadedConfig: config })
             )
           ).then(() => {})
         );
