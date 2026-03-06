@@ -24,7 +24,18 @@
       "Bash(pnpm --filter @zod-to-form/core build)",
       "Bash(pnpm -r test)",
       "Skill(speckit.review)",
-      "Bash(git status -u)"
+      "Bash(git status -u)",
+      "Bash(gh pr list --head refactor/001-1-componentconfig-config)",
+      "Bash(gh api:*)",
+      "Bash(gh pr:*)",
+      "Bash(find:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git:*)",
+      "WebSearch",
+      "WebFetch(domain:ui.shadcn.com)",
+      "Skill(speckit.enhance)",
+      "Bash(.specify/scripts/bash/create-enhance.sh:*)"
     ]
   }
 }
