@@ -7,7 +7,7 @@
 
 **Decision**: Use `registry.json` at project root, served via GitHub raw URL.
 
-**Rationale**: GitHub raw URLs require zero infrastructure. The shadcn CLI supports direct URL consumption: `npx shadcn add https://raw.githubusercontent.com/pradeepmouli/zod-to-form/master/r/zod-form.json`. Community registries commonly use this pattern before graduating to custom domains.
+**Rationale**: GitHub raw URLs require zero infrastructure. The shadcn CLI supports direct URL consumption: `npx shadcn add https://raw.githubusercontent.com/pradeepmouli/zod-to-form/master/public/r/zod-form.json`. Community registries commonly use this pattern before graduating to custom domains.
 
 **Alternatives considered**:
 - npm package hosting — more complex, less common for shadcn registries
