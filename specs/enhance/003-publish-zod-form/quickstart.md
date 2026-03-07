@@ -45,7 +45,7 @@ npx zod-to-form generate --config z2f.config.ts --schema src/schemas/user.ts --e
 
 ### Verify `<Field>` migration
 ```bash
-pnpm test                # All 228+ tests pass
+pnpm test                # All tests pass
 pnpm run type-check      # Zero errors
 pnpm run build           # Successful
 ```
