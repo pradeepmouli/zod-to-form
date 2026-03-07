@@ -31,7 +31,7 @@
 
 ## Phase 2: Foundational — `<Field>` Migration (TDD: Tests First, Then Implementation)
 
-**Purpose**: Migrate wrapper component keys from `FormField/FormLabel/FormDescription/FormMessage` to `Field/FieldLabel/FieldDescription/FieldMessage`. The `formPrimitives.control` property is kept as-is (no `<Field>` equivalent in shadcn). This MUST complete before registry items can reference the new names.
+**Purpose**: Migrate wrapper component keys from `FormField/FormLabel/FormDescription/FormMessage` to `Field/FieldLabel/FieldDescription/FieldMessage/FieldControl`, aligning with shadcn’s current `Field` primitives (including `FieldControl`). This MUST complete before registry items can reference the new names.
 
 **CRITICAL**: No registry item work (US2, US3) can begin until this phase is complete.
 
