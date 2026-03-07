@@ -17,3 +17,4 @@ Thumbs.db
 .nyc_output/
 .pnpm-debug.log*
 *.tsbuildinfo
+.claude/settings.local.json

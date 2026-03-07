@@ -56,3 +56,9 @@ pnpm run build           # Successful
 node -e "JSON.parse(require('fs').readFileSync('public/r/zod-form.json', 'utf8'))"
 node -e "JSON.parse(require('fs').readFileSync('public/r/zod-form-cli.json', 'utf8'))"
 ```
+
+### Verify new `<Field>` keys
+```bash
+# Verify new component map keys are used (old keys removed)
+pnpm --filter @zod-to-form/react test -- --grep "Field"
+```

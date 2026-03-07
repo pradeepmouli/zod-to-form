@@ -21,7 +21,7 @@
       "path": "z2f.config.ts",
       "type": "registry:file",
       "target": "~/z2f.config.ts",
-      "content": "import { defineConfig, SHADCN_FIELD_TYPES } from \"@zod-to-form/core\";\n\nexport default defineConfig({\n  components: \"@/components/ui/zod-form-components\",\n  preset: \"shadcn\",\n  formPrimitives: {\n    field: \"Field\",\n    label: \"FieldLabel\",\n    control: \"FormControl\",\n  },\n  defaults: {\n    mode: \"submit\",\n    ui: \"shadcn\",\n    overwrite: false,\n    serverAction: false,\n  },\n  fieldTypes: {\n    ...SHADCN_FIELD_TYPES,\n  },\n});\n"
+      "content": "import { defineConfig, SHADCN_FIELD_TYPES } from '@zod-to-form/core';\n\nexport default defineConfig({\n  components: '@/components/ui/zod-form-components',\n  preset: 'shadcn',\n  formPrimitives: {\n    field: 'Field',\n    label: 'FieldLabel',\n    control: 'FieldControl',\n  },\n  defaults: {\n    mode: 'submit',\n    ui: 'shadcn',\n    overwrite: false,\n    serverAction: false,\n  },\n  fieldTypes: {\n    ...SHADCN_FIELD_TYPES,\n  },\n});\n"
     }
   ]
 }

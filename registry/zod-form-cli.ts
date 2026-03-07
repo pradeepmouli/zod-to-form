@@ -6,7 +6,7 @@ export default defineConfig({
   formPrimitives: {
     field: 'Field',
     label: 'FieldLabel',
-    control: 'FormControl',
+    control: 'FieldControl',
   },
   defaults: {
     mode: 'submit',

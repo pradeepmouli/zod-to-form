@@ -44,8 +44,8 @@ With `dependencies: ["@zod-to-form/react", "@zod-to-form/core", "react-hook-form
 
 **Implementation detail**:
 - `defaultComponentMap` keys: `Field`, `FieldLabel`, `FieldDescription`, `FieldMessage`
-- Old `FormField` / `FormLabel` / `FormDescription` / `FormMessage` keys are removed (no aliases) — this is a breaking change and consumers must migrate to the `Field*` keys
-- `FieldRenderer.tsx` uses the new keys internally: `componentMap.Field`, `componentMap.FieldLabel`, etc.
+- Old keys removed entirely — no deprecated aliases (backward compatibility not needed)
+- `FieldRenderer.tsx` uses new keys internally: `componentMap.Field`, `componentMap.FieldLabel`, etc.
 - `shadcnComponentMap` overrides the same new keys
 
 ## Decision 4: Bootstrapper Item Format

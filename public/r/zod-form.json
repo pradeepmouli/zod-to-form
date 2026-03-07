@@ -24,7 +24,7 @@
     {
       "path": "components/zod-form.tsx",
       "type": "registry:component",
-      "content": "\"use client\";\n\nimport { ZodForm, shadcnComponentMap } from \"@zod-to-form/react\";\nimport type { ComponentProps } from \"react\";\n\ntype ZodFormProps = Omit<ComponentProps<typeof ZodForm>, \"components\">;\n\nexport default function ShadcnZodForm(props: ZodFormProps) {\n  return <ZodForm {...props} components={shadcnComponentMap} />;\n}\n\nexport { ZodForm, shadcnComponentMap };\n"
+      "content": "'use client';\n\nimport { ZodForm, shadcnComponentMap } from '@zod-to-form/react';\nimport type { ComponentProps } from 'react';\n\ntype ZodFormProps = Omit<ComponentProps<typeof ZodForm>, 'components'>;\n\nexport default function ShadcnZodForm(props: ZodFormProps) {\n  return <ZodForm {...props} components={shadcnComponentMap} />;\n}\n\nexport { ZodForm, shadcnComponentMap };\n"
     }
   ]
 }
