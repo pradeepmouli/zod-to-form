@@ -175,7 +175,7 @@ const FieldsetBlock = memo(function FieldsetBlock({
   componentConfig
 }: FieldRendererProps) {
   const componentMap = { ...defaultComponentMap, ...components };
-  const FormFieldComponent = componentMap.FormField;
+  const FieldComponent = componentMap.Field;
 
   const wrapperProps: Record<string, unknown> = {};
   if (field.gridColumn) {
@@ -183,7 +183,7 @@ const FieldsetBlock = memo(function FieldsetBlock({
   }
 
   return (
-    <FormFieldComponent {...wrapperProps}>
+    <FieldComponent {...wrapperProps}>
       <fieldset>
         <legend>{field.label}</legend>
         {field.children?.map((child) => (
@@ -195,7 +195,7 @@ const FieldsetBlock = memo(function FieldsetBlock({
           />
         ))}
       </fieldset>
-    </FormFieldComponent>
+    </FieldComponent>
   );
 });
 
@@ -268,16 +268,16 @@ const DiscriminatedUnionBlock = memo(function DiscriminatedUnionBlock({
   const variants = field.props['_variants'] as Record<string, FormField[]> | undefined;
   const variantFields = currentValue ? (variants?.[currentValue] ?? []) : [];
 
-  const FormFieldComponent = componentMap.FormField;
-  const FormLabelComponent = componentMap.FormLabel;
+  const FieldComponent = componentMap.Field;
+  const FieldLabelComponent = componentMap.FieldLabel;
   const wrapperProps: Record<string, unknown> = {};
   if (field.gridColumn) {
     wrapperProps['style'] = { gridColumn: field.gridColumn };
   }
 
   return (
-    <FormFieldComponent {...wrapperProps}>
-      <FormLabelComponent htmlFor={discKey}>{field.label}</FormLabelComponent>
+    <FieldComponent {...wrapperProps}>
+      <FieldLabelComponent htmlFor={discKey}>{field.label}</FieldLabelComponent>
       <select id={discKey} {...register(discKey)}>
         <option value="">Select…</option>
         {field.options?.map((opt) => (
@@ -294,7 +294,7 @@ const DiscriminatedUnionBlock = memo(function DiscriminatedUnionBlock({
           componentConfig={componentConfig}
         />
       ))}
-    </FormFieldComponent>
+    </FieldComponent>
   );
 });
 
@@ -372,10 +372,10 @@ export const FieldRenderer = memo(function FieldRenderer({
   const Component = (configuredComponent ??
     componentMap[field.component as keyof ComponentMap] ??
     componentMap.Input) as ComponentType<Record<string, unknown>>;
-  const FormFieldComponent = componentMap.FormField;
-  const FormLabelComponent = componentMap.FormLabel;
-  const FormDescriptionComponent = componentMap.FormDescription;
-  const FormMessageComponent = componentMap.FormMessage;
+  const FieldComponent = componentMap.Field;
+  const FieldLabelComponent = componentMap.FieldLabel;
+  const FieldDescriptionComponent = componentMap.FieldDescription;
+  const FieldMessageComponent = componentMap.FieldMessage;
   const errorMessage = getErrorAtPath(formState.errors, field.key);
 
   if (field.hidden) {
@@ -409,13 +409,13 @@ export const FieldRenderer = memo(function FieldRenderer({
   );
 
   return (
-    <FormFieldComponent {...wrapperProps}>
-      <FormLabelComponent htmlFor={field.key}>{field.label}</FormLabelComponent>
+    <FieldComponent {...wrapperProps}>
+      <FieldLabelComponent htmlFor={field.key}>{field.label}</FieldLabelComponent>
       {fieldContent}
       {field.description ? (
-        <FormDescriptionComponent>{field.description}</FormDescriptionComponent>
+        <FieldDescriptionComponent>{field.description}</FieldDescriptionComponent>
       ) : null}
-      {errorMessage ? <FormMessageComponent>{errorMessage}</FormMessageComponent> : null}
-    </FormFieldComponent>
+      {errorMessage ? <FieldMessageComponent>{errorMessage}</FieldMessageComponent> : null}
+    </FieldComponent>
   );
 });
