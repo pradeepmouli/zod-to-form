@@ -16,36 +16,36 @@
         }
       ],
       "summary": "### Changes\\n\\n• \\n",
-      "id": "1772254520"
+      "id": "1772912545"
     }
   ],
   "releases": [
     {
       "name": "@zod-to-form/core",
       "type": "patch",
-      "oldVersion": "0.2.3",
+      "oldVersion": "0.2.4",
       "changesets": [
-        "1772254520"
+        "1772912545"
       ],
-      "newVersion": "0.2.4"
+      "newVersion": "0.2.5"
     },
     {
       "name": "@zod-to-form/react",
       "type": "patch",
-      "oldVersion": "0.2.3",
+      "oldVersion": "0.2.4",
       "changesets": [
-        "1772254520"
+        "1772912545"
       ],
-      "newVersion": "0.2.4"
+      "newVersion": "0.2.5"
     },
     {
       "name": "@zod-to-form/cli",
       "type": "patch",
-      "oldVersion": "0.2.3",
+      "oldVersion": "0.2.4",
       "changesets": [
-        "1772254520"
+        "1772912545"
       ],
-      "newVersion": "0.2.4"
+      "newVersion": "0.2.5"
     }
   ]
 }
