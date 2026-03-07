@@ -104,9 +104,9 @@ describe('runInit', () => {
     await writeFile(
       path.join(dir, 'src', 'components', 'ui', 'field.tsx'),
       [
-        'export const FormField = () => null;',
-        'export const FormLabel = () => null;',
-        'export const FormControl = () => null;'
+        'export const Field = () => null;',
+        'export const FieldLabel = () => null;',
+        'export const FieldControl = () => null;'
       ].join('\n'),
       'utf8'
     );
@@ -114,9 +114,9 @@ describe('runInit', () => {
     const result = await runInit({});
     const content = await readFile(result.outputPath, 'utf8');
 
-    expect(content).toContain(`field: 'FormField'`);
-    expect(content).toContain(`label: 'FormLabel'`);
-    expect(content).toContain(`control: 'FormControl'`);
+    expect(content).toContain(`field: 'Field'`);
+    expect(content).toContain(`label: 'FieldLabel'`);
+    expect(content).toContain(`control: 'FieldControl'`);
 
     process.chdir(originalCwd);
   });

@@ -17,9 +17,9 @@
  *   }                      from '@/components/ui/select';
  *   import { Button }      from '@/components/ui/button';
  *   import {
- *     FormItem, FormLabel, FormControl,
- *     FormDescription, FormMessage
- *   }                      from '@/components/ui/form';
+ *     Field, FieldLabel,
+ *     FieldDescription, FieldMessage
+ *   }                      from '@/components/ui/field';
  *
  * Then pass the map to <ZodForm>:
  *   <ZodForm schema={schema} onSubmit={...} components={shadcnComponentMap} />
@@ -80,18 +80,18 @@ function ShadcnSelect(props: SelectHTMLAttributes<HTMLSelectElement>) {
   });
 }
 
-// ─── Shadcn-style FormField wrapper ──────────────────────────────────────────
+// ─── Shadcn-style Field wrapper ──────────────────────────────────────────────
 
-function ShadcnFormField(props: HTMLAttributes<HTMLDivElement>) {
+function ShadcnField(props: HTMLAttributes<HTMLDivElement>) {
   return createElement('div', {
     ...props,
     className: ['space-y-2', props.className ?? ''].join(' ').trim()
   });
 }
 
-// ─── Shadcn-style FormLabel stub ─────────────────────────────────────────────
+// ─── Shadcn-style FieldLabel stub ────────────────────────────────────────────
 
-function ShadcnFormLabel(props: LabelHTMLAttributes<HTMLLabelElement>) {
+function ShadcnFieldLabel(props: LabelHTMLAttributes<HTMLLabelElement>) {
   return createElement('label', {
     ...props,
     className: [
@@ -103,18 +103,18 @@ function ShadcnFormLabel(props: LabelHTMLAttributes<HTMLLabelElement>) {
   });
 }
 
-// ─── Shadcn-style FormDescription stub ───────────────────────────────────────
+// ─── Shadcn-style FieldDescription stub ──────────────────────────────────────
 
-function ShadcnFormDescription(props: HTMLAttributes<HTMLParagraphElement>) {
+function ShadcnFieldDescription(props: HTMLAttributes<HTMLParagraphElement>) {
   return createElement('p', {
     ...props,
     className: ['text-sm text-muted-foreground', props.className ?? ''].join(' ').trim()
   });
 }
 
-// ─── Shadcn-style FormMessage stub ───────────────────────────────────────────
+// ─── Shadcn-style FieldMessage stub ──────────────────────────────────────────
 
-function ShadcnFormMessage(props: HTMLAttributes<HTMLParagraphElement>) {
+function ShadcnFieldMessage(props: HTMLAttributes<HTMLParagraphElement>) {
   return createElement('p', {
     ...props,
     className: ['text-sm font-medium text-destructive', props.className ?? ''].join(' ').trim()
@@ -124,7 +124,7 @@ function ShadcnFormMessage(props: HTMLAttributes<HTMLParagraphElement>) {
 // ─── Assembled shadcn component map ──────────────────────────────────────────
 //
 // Inherits Checkbox, Switch, DatePicker, FileInput, RadioGroup, Combobox from
-// defaultComponentMap; overrides Input, Textarea, Select and all Form wrapper
+// defaultComponentMap; overrides Input, Textarea, Select and all Field wrapper
 // components with shadcn/ui-styled stubs.
 
 export const shadcnComponentMap = {
@@ -132,8 +132,8 @@ export const shadcnComponentMap = {
   Input: ShadcnInput,
   Textarea: ShadcnTextarea,
   Select: ShadcnSelect,
-  FormField: ShadcnFormField,
-  FormLabel: ShadcnFormLabel,
-  FormDescription: ShadcnFormDescription,
-  FormMessage: ShadcnFormMessage
+  Field: ShadcnField,
+  FieldLabel: ShadcnFieldLabel,
+  FieldDescription: ShadcnFieldDescription,
+  FieldMessage: ShadcnFieldMessage
 };

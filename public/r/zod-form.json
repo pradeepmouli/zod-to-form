@@ -1,0 +1,30 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "zod-form",
+  "type": "registry:component",
+  "title": "ZodForm",
+  "description": "A thin wrapper that wires ZodForm with shadcn/ui components. Renders forms automatically from Zod schemas.",
+  "dependencies": [
+    "@zod-to-form/react",
+    "@zod-to-form/core",
+    "react-hook-form",
+    "@hookform/resolvers",
+    "zod"
+  ],
+  "registryDependencies": [
+    "field",
+    "input",
+    "select",
+    "checkbox",
+    "textarea",
+    "switch",
+    "label"
+  ],
+  "files": [
+    {
+      "path": "components/zod-form.tsx",
+      "type": "registry:component",
+      "content": "\"use client\";\n\nimport { ZodForm, shadcnComponentMap } from \"@zod-to-form/react\";\nimport type { ComponentProps } from \"react\";\n\ntype ZodFormProps = Omit<ComponentProps<typeof ZodForm>, \"components\">;\n\nexport default function ShadcnZodForm(props: ZodFormProps) {\n  return <ZodForm {...props} components={shadcnComponentMap} />;\n}\n\nexport { ZodForm, shadcnComponentMap };\n"
+    }
+  ]
+}

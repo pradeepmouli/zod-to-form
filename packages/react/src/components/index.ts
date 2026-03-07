@@ -10,19 +10,19 @@ import { Select } from './Select.js';
 import { Switch } from './Switch.js';
 import { Textarea } from './Textarea.js';
 
-function FormField(props: HTMLAttributes<HTMLDivElement>) {
+function Field(props: HTMLAttributes<HTMLDivElement>) {
   return createElement('div', props);
 }
 
-function FormLabel(props: LabelHTMLAttributes<HTMLLabelElement>) {
+function FieldLabel(props: LabelHTMLAttributes<HTMLLabelElement>) {
   return createElement('label', props);
 }
 
-function FormDescription(props: HTMLAttributes<HTMLParagraphElement>) {
+function FieldDescription(props: HTMLAttributes<HTMLParagraphElement>) {
   return createElement('p', props);
 }
 
-function FormMessage(props: HTMLAttributes<HTMLParagraphElement>) {
+function FieldMessage(props: HTMLAttributes<HTMLParagraphElement>) {
   return createElement('p', props);
 }
 
@@ -36,8 +36,8 @@ export const defaultComponentMap = {
   DatePicker,
   FileInput,
   RadioGroup,
-  FormField,
-  FormLabel,
-  FormDescription,
-  FormMessage
+  Field,
+  FieldLabel,
+  FieldDescription,
+  FieldMessage
 };

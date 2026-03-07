@@ -40,6 +40,20 @@ function renderWithForm(field: FormField): void {
   render(<TestHarness />);
 }
 
+describe('defaultComponentMap keys', () => {
+  it('uses Field/FieldLabel/FieldDescription/FieldMessage keys (not FormField/FormLabel)', () => {
+    expect(defaultComponentMap).toHaveProperty('Field');
+    expect(defaultComponentMap).toHaveProperty('FieldLabel');
+    expect(defaultComponentMap).toHaveProperty('FieldDescription');
+    expect(defaultComponentMap).toHaveProperty('FieldMessage');
+
+    expect(defaultComponentMap).not.toHaveProperty('FormField');
+    expect(defaultComponentMap).not.toHaveProperty('FormLabel');
+    expect(defaultComponentMap).not.toHaveProperty('FormDescription');
+    expect(defaultComponentMap).not.toHaveProperty('FormMessage');
+  });
+});
+
 describe('FieldRenderer', () => {
   it('renders correct HTML for Input fields', () => {
     const field: FormField = {
