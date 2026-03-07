@@ -50,9 +50,9 @@ With `dependencies: ["@zod-to-form/react", "@zod-to-form/core", "react-hook-form
 
 ## Decision 4: Bootstrapper Item Format
 
-**Decision**: Use `registry:lib` type for the CLI bootstrapper. Drops `z2f.config.ts` into the user's project with `@zod-to-form/cli` as a devDependency.
+**Decision**: Use `registry:file` type for the CLI bootstrapper, dropping `z2f.config.ts` into the user's project root with `@zod-to-form/cli` as a devDependency.
 
-**Rationale**: `registry:lib` places files in the project's `lib/` directory. The config file needs an explicit `target` to land at the project root instead.
+**Rationale**: `registry:file` supports an explicit `target`, allowing us to place the config at the project root (via `target: "~/z2f.config.ts"`). Using `registry:lib` would instead default to placing files under the project's `lib/` directory.
 
 **Implementation detail**: Use `registry:file` type with `target: "~/z2f.config.ts"` (the `~` means project root). Declare `devDependencies: ["@zod-to-form/cli"]`.
 
