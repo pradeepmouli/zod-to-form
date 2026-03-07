@@ -9,73 +9,44 @@ import { existsSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
-import type { Paths as TypeFestPaths } from 'type-fest';
 import {
+  defineConfig,
+  validateConfig,
+  resolveFieldConfig,
+  // Deprecated re-exports
+  defineComponentConfig,
+  validateComponentConfig,
+  type ComponentEntry,
+  type FieldConfig,
+  type FieldOverride,
+  type FormPrimitivesConfig,
+  type ZodFormsConfig,
+  type ZodToFormComponentConfig,
   walkSchema
 } from '@zod-to-form/core';
 import { generateFormComponent } from './codegen.js';
-import { loadComponentConfig, loadSchema, resolveSchemaExportNames } from './loader.js';
+import { loadConfig, loadSchema, resolveSchemaExportNames } from './loader.js';
 import { runInit, type InitOptions } from './init.js';
-import { validateComponentConfig } from './component-config.js';
 import { generateServerAction } from './server-action.js';
 import { startWatch } from './watcher.js';
 
-export type ComponentEntry<T extends Record<string, unknown> = Record<string, unknown>> = {
-  component: keyof T & string;
-  render?: () => Promise<unknown>;
+export {
+  defineConfig,
+  validateConfig,
+  // Deprecated aliases
+  defineComponentConfig,
+  validateComponentConfig
 };
 
-export { validateComponentConfig };
-
-type NormalizeArrayPath<TPath extends string> =
-  TPath extends `${infer Prefix}[${number}]${infer Suffix}`
-    ? NormalizeArrayPath<`${Prefix}[]${Suffix}`>
-    : TPath extends `${infer Prefix}.${number}.${infer Suffix}`
-      ? NormalizeArrayPath<`${Prefix}[].${Suffix}`>
-      : TPath extends `${infer Prefix}.${number}`
-        ? NormalizeArrayPath<`${Prefix}[]`>
-        : TPath;
-
-export type FieldPath<TValues extends Record<string, unknown>> =
-  TypeFestPaths<TValues> extends infer TPath
-    ? TPath extends string
-      ? TPath | NormalizeArrayPath<TPath>
-      : never
-    : never;
-
-export type FieldOverride = {
-  fieldType: string;
-  props?: Record<string, unknown>;
+export type {
+  ComponentEntry,
+  FieldConfig,
+  FormPrimitivesConfig,
+  ZodFormsConfig,
+  // Deprecated aliases
+  FieldOverride,
+  ZodToFormComponentConfig
 };
-
-export type FormPrimitivesConfig<T extends Record<string, unknown> = Record<string, unknown>> = {
-  field?: keyof T & string;
-  label?: keyof T & string;
-  control?: keyof T & string;
-};
-
-export type ZodToFormComponentConfig<
-  T extends Record<string, unknown> = Record<string, unknown>,
-  TFieldPath extends string = string
-> = {
-  components: string;
-  overwrite?: boolean;
-  include?: string[];
-  exclude?: string[];
-  types?: string[];
-  fieldTypes: Record<string, ComponentEntry<T>>;
-  formPrimitives?: FormPrimitivesConfig<T>;
-  fields?: Partial<Record<TFieldPath, FieldOverride>>;
-};
-
-export function defineComponentConfig<
-  TComponents extends Record<string, unknown>,
-  TValues extends Record<string, unknown>
->(
-  config: ZodToFormComponentConfig<TComponents, FieldPath<TValues>>
-): ZodToFormComponentConfig<TComponents, FieldPath<TValues>> {
-  return config;
-}
 
 type GenerateOptions = {
   config: string;
@@ -88,6 +59,8 @@ type GenerateOptions = {
   dryRun?: boolean;
   serverAction?: boolean;
   watch?: boolean;
+  /** Pre-loaded config to avoid redundant file loads */
+  _loadedConfig?: ZodFormsConfig<Record<string, unknown>>;
 };
 
 import { applyExportFilters } from './filters.js';
@@ -143,21 +116,36 @@ export async function runGenerate(options: GenerateOptions): Promise<{
     throw new Error('runGenerate requires an explicit export name.');
   }
   const exportName = options.export;
-  const componentName = resolveComponentName(exportName, options.name);
-  const outputPath = resolveOutputPath(cwd, options.out, componentName);
+  const componentConfig = options._loadedConfig ?? await loadConfig(path.resolve(cwd, options.config));
+
+  // Merge config defaults with CLI flags (CLI flag > schemas.X.[prop] > defaults.[prop])
+  const schemaConfig = componentConfig.schemas?.[exportName];
+  const componentName = resolveComponentName(
+    exportName,
+    options.name ?? schemaConfig?.name
+  );
+  const effectiveMode = options.mode ?? schemaConfig?.mode ?? componentConfig.defaults?.mode ?? 'submit';
+  const effectiveOut = options.out ?? schemaConfig?.out ?? componentConfig.defaults?.out;
+  const effectiveServerAction = options.serverAction ?? schemaConfig?.serverAction ?? componentConfig.defaults?.serverAction ?? false;
+  const effectiveUi = options.ui ?? componentConfig.defaults?.ui ?? 'shadcn';
+  const effectiveOverwrite = componentConfig.defaults?.overwrite ?? false;
+
+  const outputPath = resolveOutputPath(cwd, effectiveOut, componentName);
   const schema = await loadSchema(schemaPath, exportName);
   const fields = walkSchema(schema as never);
-  const componentConfig = await loadComponentConfig(path.resolve(cwd, options.config));
+
+  // Merge field configs: schemas.X.fields over global fields
+  const mergedFields = resolveFieldConfig(componentConfig.fields, schemaConfig?.fields);
 
   const config = {
     schemaPath,
     exportName,
     outputPath,
     componentName,
-    mode: options.mode ?? 'submit',
-    componentConfig,
-    ui: options.ui ?? 'shadcn',
-    serverAction: options.serverAction ?? false
+    mode: effectiveMode,
+    componentConfig: { ...componentConfig, fields: Object.keys(mergedFields).length > 0 ? mergedFields : componentConfig.fields },
+    ui: effectiveUi,
+    serverAction: effectiveServerAction
   };
 
   const generated = await generateFormComponent(fields, config);
@@ -170,7 +158,7 @@ export async function runGenerate(options: GenerateOptions): Promise<{
 
   try {
     await readFile(outputPath, 'utf8');
-    if (!componentConfig.overwrite) {
+    if (!effectiveOverwrite) {
       return { outputPath, code, wroteFile: false };
     }
   } catch {}
@@ -179,7 +167,7 @@ export async function runGenerate(options: GenerateOptions): Promise<{
   await writeFile(outputPath, code, 'utf8');
 
   // Generate server action alongside the form component when requested
-  if (options.serverAction) {
+  if (effectiveServerAction) {
     const actionFileName = `${toKebabCase(componentName)}-action.ts`;
     const actionPath = path.join(path.dirname(outputPath), actionFileName);
     const actionCode = await generateServerAction({ ...config, outputPath: actionPath });
@@ -206,17 +194,17 @@ export function createProgram(): Command {
       '--export <name>',
       'Named export containing the schema (optional when config.types/include are used)'
     )
-    .option('--mode <mode>', 'Generation mode (submit|auto-save)', 'submit')
+    .option('--mode <mode>', 'Generation mode (submit|auto-save)')
     .option('--out <path>', 'Output directory or file path')
     .option('--name <componentName>', 'Generated component name')
-    .option('--ui <preset>', 'UI preset (shadcn|unstyled)', 'shadcn')
+    .option('--ui <preset>', 'UI preset (shadcn|unstyled)')
     .option('--dry-run', 'Print generated code without writing files', false)
     .option('--server-action', 'Generate a Next.js server action alongside the form', false)
     .option('--watch', 'Watch schema file for changes and regenerate on change', false)
     .action(async (commandOptions: GenerateOptions) => {
       const cwd = process.cwd();
       const configPath = path.resolve(cwd, commandOptions.config);
-      const config = await loadComponentConfig(configPath);
+      const config = await loadConfig(configPath);
       const schemaPath = path.resolve(cwd, commandOptions.schema);
 
       const exportNames = commandOptions.export
@@ -235,8 +223,24 @@ export function createProgram(): Command {
         );
       }
 
+      const results: Array<{ componentName: string; outputPath: string }> = [];
       for (const exportName of exportNames) {
-        await runGenerate({ ...commandOptions, export: exportName });
+        const result = await runGenerate({ ...commandOptions, export: exportName, _loadedConfig: config });
+        const schemaConfig = config.schemas?.[exportName];
+        const componentName = resolveComponentName(
+          exportName,
+          commandOptions.name ?? schemaConfig?.name
+        );
+        results.push({ componentName, outputPath: result.outputPath });
+      }
+
+      // T043: Print styled list of generated forms
+      if (!commandOptions.dryRun && results.length > 0) {
+        console.log('\nGenerated forms:');
+        for (const { componentName, outputPath } of results) {
+          const relativePath = path.relative(cwd, outputPath);
+          console.log(`  \u2713 ${componentName} \u2192 ${relativePath}`);
+        }
       }
 
       if (commandOptions.watch) {
@@ -244,7 +248,9 @@ export function createProgram(): Command {
         console.log('Watching for changes...');
         await startWatch(schemaPath, () =>
           Promise.all(
-            exportNames.map((exportName) => runGenerate({ ...commandOptions, export: exportName }))
+            exportNames.map((exportName: string) =>
+              runGenerate({ ...commandOptions, export: exportName, _loadedConfig: config })
+            )
           ).then(() => {})
         );
       }
@@ -257,6 +263,10 @@ export function createProgram(): Command {
     .option(
       '--components <modulePath>',
       'Module path used in generated z2f.config.ts (overrides shadcn inference)'
+    )
+    .option(
+      '--schemas <path>',
+      'Path to schema file or directory for autodiscovery'
     )
     .option('--force', 'Overwrite existing component config file', false)
     .option('--dry-run', 'Print generated config without writing files', false)

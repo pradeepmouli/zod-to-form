@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2026-02-26
 
 ## Active Technologies
+- TypeScript 5.x (strict mode) + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), commander, jiti, prettier, chokidar (CLI direct) (refactor/001-1-componentconfig-config)
+- N/A (library/CLI tool, no persistence) (refactor/001-1-componentconfig-config)
 
 - TypeScript 5.x (strict mode)
 - Zod v4 (v4.0.0+) — `_zod` substrate API
@@ -51,6 +53,7 @@ pnpm run dev           # Dev mode (parallel)
 - Metadata precedence: form registry → global registry → inferred defaults
 
 ## Recent Changes
+- refactor/001-1-componentconfig-config: Added TypeScript 5.x (strict mode) + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), commander, jiti, prettier, chokidar (CLI direct)
 
 - 001-zodform: Feature specification and implementation plan created
 

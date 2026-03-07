@@ -6,10 +6,11 @@ export type {
   FormFieldOption,
   FormFieldConstraints,
   FormMeta,
+  FieldConfig,
   WalkOptions
 } from '@zod-to-form/core';
 
-// Runtime renderer — stubs until Phase 3 implementation
+// Runtime renderer
 export { ZodForm } from './ZodForm.js';
 export { useZodForm } from './useZodForm.js';
 export { defaultComponentMap } from './components/index.js';

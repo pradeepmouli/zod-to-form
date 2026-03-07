@@ -2,8 +2,11 @@ import path from 'node:path';
 import { access } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { createJiti } from 'jiti';
-import { validateComponentConfig } from './component-config.js';
-import type { ZodToFormComponentConfig } from './index.js';
+import {
+  validateConfig,
+  normalizeConfig,
+  type ZodFormsConfig
+} from '@zod-to-form/core';
 
 const requireFromHere = createRequire(import.meta.url);
 
@@ -83,9 +86,9 @@ export async function resolveSchemaExportNames(schemaPath: string): Promise<stri
     .sort();
 }
 
-export async function loadComponentConfig(
+export async function loadConfig(
   configPath: string
-): Promise<ZodToFormComponentConfig<Record<string, unknown>>> {
+): Promise<ZodFormsConfig<Record<string, unknown>>> {
   const absolutePath = path.resolve(configPath);
   const jiti = createJiti(import.meta.url, {
     moduleCache: false,
@@ -101,8 +104,12 @@ export async function loadComponentConfig(
   }
 
   const configValue = getDefaultExport(moduleExports);
-  return validateComponentConfig(configValue, `component-config (${absolutePath})`);
+  const validated = validateConfig(configValue, `component-config (${absolutePath})`);
+  return normalizeConfig(validated);
 }
+
+/** @deprecated Use loadConfig instead */
+export const loadComponentConfig = loadConfig;
 
 async function fileExists(filePath: string): Promise<boolean> {
   try {
@@ -113,7 +120,7 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
-export async function resolveDefaultComponentConfigPath(cwd: string): Promise<string | undefined> {
+export async function resolveDefaultConfigPath(cwd: string): Promise<string | undefined> {
   const candidates = [
     'z2f.config.ts',
     'component-config.ts',
@@ -132,13 +139,19 @@ export async function resolveDefaultComponentConfigPath(cwd: string): Promise<st
   return undefined;
 }
 
-export async function loadDefaultComponentConfig(
+/** @deprecated Use resolveDefaultConfigPath instead */
+export const resolveDefaultComponentConfigPath = resolveDefaultConfigPath;
+
+export async function loadDefaultConfig(
   cwd: string
-): Promise<ZodToFormComponentConfig<Record<string, unknown>> | undefined> {
-  const defaultPath = await resolveDefaultComponentConfigPath(cwd);
+): Promise<ZodFormsConfig<Record<string, unknown>> | undefined> {
+  const defaultPath = await resolveDefaultConfigPath(cwd);
   if (!defaultPath) {
     return undefined;
   }
 
-  return loadComponentConfig(defaultPath);
+  return loadConfig(defaultPath);
 }
+
+/** @deprecated Use loadDefaultConfig instead */
+export const loadDefaultComponentConfig = loadDefaultConfig;

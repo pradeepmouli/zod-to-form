@@ -3,9 +3,13 @@ import path from 'node:path';
 import { tmpdir } from 'node:os';
 import { describe, expect, it } from 'vitest';
 import {
+  loadConfig,
+  loadDefaultConfig,
+  loadSchema,
+  resolveDefaultConfigPath,
+  // Deprecated aliases
   loadComponentConfig,
   loadDefaultComponentConfig,
-  loadSchema,
   resolveDefaultComponentConfigPath
 } from '../src/loader.js';
 
@@ -60,8 +64,8 @@ describe('loadSchema', () => {
   });
 });
 
-describe('loadComponentConfig', () => {
-  it('loads a valid json component config', async () => {
+describe('loadConfig', () => {
+  it('loads a valid json config', async () => {
     const dir = await createTempDir();
     const configPath = path.join(dir, 'component-config.json');
 
@@ -87,9 +91,10 @@ describe('loadComponentConfig', () => {
       'utf8'
     );
 
-    const config = await loadComponentConfig(configPath);
+    const config = await loadConfig(configPath);
     expect(config.components).toBe('@app/components');
-    expect(config.overwrite).toBe(true);
+    // top-level overwrite should be normalized to defaults.overwrite
+    expect(config.defaults?.overwrite).toBe(true);
     expect(config.types).toEqual(['userSchema']);
     expect(config.fieldTypes['string']?.component).toBe('Input');
     expect(config.fields?.['user.name']?.fieldType).toBe('string');
@@ -115,7 +120,7 @@ describe('loadComponentConfig', () => {
       'utf8'
     );
 
-    await expect(loadComponentConfig(configPath)).rejects.toThrow(
+    await expect(loadConfig(configPath)).rejects.toThrow(
       /include must be an array of strings/
     );
   });
@@ -142,12 +147,12 @@ describe('loadComponentConfig', () => {
       'utf8'
     );
 
-    await expect(loadComponentConfig(configPath)).rejects.toThrow(
+    await expect(loadConfig(configPath)).rejects.toThrow(
       /formPrimitives\.control must be a non-empty string/
     );
   });
 
-  it('loads a valid ts component config via jiti', async () => {
+  it('loads a valid ts config via jiti', async () => {
     const dir = await createTempDir();
     const configPath = path.join(dir, 'component-config.ts');
 
@@ -167,12 +172,12 @@ describe('loadComponentConfig', () => {
       'utf8'
     );
 
-    const config = await loadComponentConfig(configPath);
+    const config = await loadConfig(configPath);
     expect(config.components).toBe('@app/components');
     expect(config.fieldTypes['cross-ref']?.component).toBe('TypeSelector');
   });
 
-  it('throws clear error for invalid component config', async () => {
+  it('throws clear error for invalid config', async () => {
     const dir = await createTempDir();
     const configPath = path.join(dir, 'bad-config.json');
 
@@ -189,7 +194,7 @@ describe('loadComponentConfig', () => {
       'utf8'
     );
 
-    await expect(loadComponentConfig(configPath)).rejects.toThrow(
+    await expect(loadConfig(configPath)).rejects.toThrow(
       /components must be a non-empty string/
     );
   });
@@ -210,10 +215,10 @@ describe('loadComponentConfig', () => {
       'utf8'
     );
 
-    const resolved = await resolveDefaultComponentConfigPath(dir);
+    const resolved = await resolveDefaultConfigPath(dir);
     expect(resolved).toBe(preferredPath);
 
-    const config = await loadDefaultComponentConfig(dir);
+    const config = await loadDefaultConfig(dir);
     expect(config?.components).toBe('@preferred/components');
   });
 
@@ -227,10 +232,77 @@ describe('loadComponentConfig', () => {
       'utf8'
     );
 
-    const resolved = await resolveDefaultComponentConfigPath(dir);
+    const resolved = await resolveDefaultConfigPath(dir);
     expect(resolved).toBe(fallbackPath);
 
-    const config = await loadDefaultComponentConfig(dir);
+    const config = await loadDefaultConfig(dir);
     expect(config?.components).toBe('@fallback/components');
+  });
+
+  it('accepts new config shape with defaults and schemas (T049)', async () => {
+    const dir = await createTempDir();
+    const configPath = path.join(dir, 'z2f.config.json');
+
+    await writeFile(
+      configPath,
+      JSON.stringify(
+        {
+          components: '@app/components',
+          fieldTypes: { Input: { component: 'Input' } },
+          defaults: {
+            mode: 'submit',
+            ui: 'shadcn',
+            overwrite: true
+          },
+          schemas: {
+            UserSchema: {
+              name: 'UserForm',
+              mode: 'auto-save',
+              fields: {
+                email: { fieldType: 'Input', order: 1 }
+              }
+            }
+          }
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const config = await loadConfig(configPath);
+    expect(config.defaults?.mode).toBe('submit');
+    expect(config.defaults?.overwrite).toBe(true);
+    expect(config.schemas?.['UserSchema']?.name).toBe('UserForm');
+    expect(config.schemas?.['UserSchema']?.fields?.['email']?.order).toBe(1);
+  });
+
+  it('normalizes old-style overwrite to defaults.overwrite (T049)', async () => {
+    const dir = await createTempDir();
+    const configPath = path.join(dir, 'z2f.config.json');
+
+    await writeFile(
+      configPath,
+      JSON.stringify(
+        {
+          components: '@app/components',
+          overwrite: true,
+          fieldTypes: { Input: { component: 'Input' } }
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const config = await loadConfig(configPath);
+    expect(config.defaults?.overwrite).toBe(true);
+  });
+
+  it('deprecated aliases still work', () => {
+    // Verify deprecated aliases are exported and point to the same functions
+    expect(loadComponentConfig).toBe(loadConfig);
+    expect(loadDefaultComponentConfig).toBe(loadDefaultConfig);
+    expect(resolveDefaultComponentConfigPath).toBe(resolveDefaultConfigPath);
   });
 });
