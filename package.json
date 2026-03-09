@@ -26,7 +26,11 @@
     "test": "pnpm -r run test",
     "test:coverage": "pnpm -r run test:coverage",
     "test:watch": "pnpm -r --parallel run test -- --watch",
-    "type-check": "pnpm -r run type-check"
+    "type-check": "pnpm -r run type-check",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "pnpm run build && changeset publish",
+    "prepare": "simple-git-hooks"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged",
