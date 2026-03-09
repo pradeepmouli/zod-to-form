@@ -5,15 +5,15 @@
 
 ## Decision 1: Registry Format & Hosting
 
-**Decision**: Use `registry.json` at project root, served via GitHub raw URL.
+**Decision**: Use direct per-item registry item JSON files under `public/r/`, served via GitHub raw URLs (no root `registry.json` index for now).
 
-**Rationale**: GitHub raw URLs require zero infrastructure. The shadcn CLI supports direct URL consumption: `npx shadcn add https://raw.githubusercontent.com/pradeepmouli/zod-to-form/master/public/r/zod-form.json`. Community registries commonly use this pattern before graduating to custom domains.
+**Rationale**: GitHub raw URLs require zero infrastructure. The shadcn CLI supports direct URL consumption of individual registry items: `npx shadcn add https://raw.githubusercontent.com/pradeepmouli/zod-to-form/master/public/r/zod-form.json`. Community registries commonly use this pattern before graduating to custom domains.
 
 **Alternatives considered**:
 - npm package hosting — more complex, less common for shadcn registries
 - Custom domain (`registry.zodforms.dev`) — overkill for initial release
 
-**Implementation detail**: The `registry.json` at root is the index. Individual item JSON files go under `public/r/` (or just `r/`) with `content` fields populated. The shadcn `build` command can generate these from source, or we can hand-author them since we have only 2 items.
+**Implementation detail**: Each registry item is its own JSON file under `public/r/` (or just `r/`) with `content` fields populated. We hand-author these since we have only 2 items; if we later add more items or a root `registry.json` index, we can introduce a `shadcn build` step to generate them from source.
 
 ## Decision 2: Registry Item Architecture
 
@@ -50,9 +50,9 @@ With `dependencies: ["@zod-to-form/react", "@zod-to-form/core", "react-hook-form
 
 ## Decision 4: Bootstrapper Item Format
 
-**Decision**: Use `registry:lib` type for the CLI bootstrapper. Drops `z2f.config.ts` into the user's project with `@zod-to-form/cli` as a devDependency.
+**Decision**: Use `registry:file` type for the CLI bootstrapper, dropping `z2f.config.ts` into the user's project root with `@zod-to-form/cli` as a devDependency.
 
-**Rationale**: `registry:lib` places files in the project's `lib/` directory. The config file needs an explicit `target` to land at the project root instead.
+**Rationale**: `registry:file` supports an explicit `target`, allowing us to place the config at the project root (via `target: "~/z2f.config.ts"`). Using `registry:lib` would instead default to placing files under the project's `lib/` directory.
 
 **Implementation detail**: Use `registry:file` type with `target: "~/z2f.config.ts"` (the `~` means project root). Declare `devDependencies: ["@zod-to-form/cli"]`.
 
