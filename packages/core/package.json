@@ -35,8 +35,7 @@
   "scripts": {
     "build": "tsgo -p tsconfig.build.json",
     "clean": "rm -rf dist tsconfig.build.tsbuildinfo tsconfig.tsbuildinfo",
-    "prepublishOnly": "npm run clean && npm run build",
-    "dev": "tsgo -p tsconfig.build.json --watch",
+"dev": "tsgo -p tsconfig.build.json --watch",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "type-check": "tsgo --noEmit"
