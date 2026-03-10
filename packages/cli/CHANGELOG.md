@@ -1,5 +1,14 @@
 # @zod-to-form/cli
 
+## 0.2.7
+
+### Patch Changes
+
+- [`d878cce`](https://github.com/pradeepmouli/zod-to-form/commit/d878ccee9a4cc6012b73ff9da3852b8ab5dcfdaf) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - chore: verify release pipeline
+
+- Updated dependencies [[`d878cce`](https://github.com/pradeepmouli/zod-to-form/commit/d878ccee9a4cc6012b73ff9da3852b8ab5dcfdaf)]:
+  - @zod-to-form/core@0.2.7
+
 ## 0.2.6
 
 ### Patch Changes
