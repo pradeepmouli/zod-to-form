@@ -261,7 +261,7 @@ function cloneFieldWithArrayIndex(field: FormField, arrayKey: string): FormField
 
 function getObjectPropertyName(path: string): string {
   const lastSegment = path.split('.').at(-1) ?? path;
-  return JSON.stringify(lastSegment);
+  return escapeUnsafeChars(JSON.stringify(lastSegment));
 }
 
 function getDefaultArrayItemExpression(field: FormField | undefined): string {
@@ -273,19 +273,38 @@ function getDefaultArrayItemExpression(field: FormField | undefined): string {
   return serializeDefaultValue(value);
 }
 
+const charMap: Record<string, string> = {
+  '<': '\\u003C',
+  '>': '\\u003E',
+  '/': '\\u002F',
+  '\\': '\\\\',
+  '\b': '\\b',
+  '\f': '\\f',
+  '\n': '\\n',
+  '\r': '\\r',
+  '\t': '\\t',
+  '\0': '\\0',
+  '\u2028': '\\u2028',
+  '\u2029': '\\u2029'
+};
+
+function escapeUnsafeChars(str: string): string {
+  return str.replace(/[<>\/\\\b\f\n\r\t\0\u2028\u2029]/g, (x) => charMap[x] ?? x);
+}
+
 function serializeDefaultValue(value: unknown): string {
   if (value === undefined) return 'undefined';
   if (value === '') return `''`;
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
-  if (typeof value === 'string') return JSON.stringify(value);
+  if (typeof value === 'string') return escapeUnsafeChars(JSON.stringify(value));
   if (Array.isArray(value)) return '[]';
   if (value && typeof value === 'object') {
     const entries = Object.entries(value)
-      .map(([k, v]) => `${JSON.stringify(k)}: ${serializeDefaultValue(v)}`)
+      .map(([k, v]) => `${escapeUnsafeChars(JSON.stringify(k))}: ${serializeDefaultValue(v)}`)
       .join(', ');
     return `{ ${entries} }`;
   }
-  return JSON.stringify(value);
+  return escapeUnsafeChars(JSON.stringify(value));
 }
 
 function renderNestedBlock(
