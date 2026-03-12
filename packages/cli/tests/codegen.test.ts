@@ -768,6 +768,7 @@ describe('generateFormComponent', () => {
       ui: 'unstyled',
       serverAction: false,
       componentConfig: {
+        components: '@app/components',
         fieldTypes: {
           Select: { component: 'MySelect', controlled: true }
         }
@@ -805,6 +806,7 @@ describe('generateFormComponent', () => {
       ui: 'unstyled',
       serverAction: false,
       componentConfig: {
+        components: '@app/components',
         fieldTypes: {
           Select: {
             component: 'TypeSelector',
