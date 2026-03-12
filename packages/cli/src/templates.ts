@@ -1,15 +1,28 @@
 import type { FormField } from '@zod-to-form/core';
 
+export type FileHeaderOptions = {
+  schemaImportPath: string;
+  exportName: string;
+  hasArrays?: boolean;
+  hasControlled?: boolean;
+  mode?: 'submit' | 'auto-save';
+  formProvider?: boolean;
+  componentImportLine?: string;
+};
+
 export function getFileHeader(
   schemaImportPath: string,
   exportName: string,
   hasArrays = false,
   mode: 'submit' | 'auto-save' = 'submit',
-  componentImportLine?: string
+  componentImportLine?: string,
+  options?: { hasControlled?: boolean; formProvider?: boolean }
 ): string {
-  const rhfImports = hasArrays
-    ? `import { useForm, useFieldArray } from 'react-hook-form';`
-    : `import { useForm } from 'react-hook-form';`;
+  const rhfParts = ['useForm'];
+  if (hasArrays) rhfParts.push('useFieldArray');
+  if (options?.hasControlled) rhfParts.push('Controller');
+  if (options?.formProvider || mode === 'auto-save') rhfParts.push('FormProvider');
+  const rhfImports = `import { ${rhfParts.join(', ')} } from 'react-hook-form';`;
 
   const reactImports = mode === 'auto-save' ? `import { useEffect } from 'react';` : '';
 
@@ -18,14 +31,9 @@ export function getFileHeader(
     rhfImports,
     `import { zodResolver } from '@hookform/resolvers/zod';`,
     `import { z } from 'zod';`,
+    `import type { StripIndexSignature } from '@zod-to-form/core';`,
     ...(componentImportLine ? [componentImportLine] : []),
     `import { ${exportName} } from '${schemaImportPath}';`,
-    ``,
-    `type StripIndexSignature<T> = T extends readonly (infer U)[]`,
-    `  ? StripIndexSignature<U>[]`,
-    `  : T extends object`,
-    `    ? { [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: StripIndexSignature<T[K]> }`,
-    `    : T;`,
     ``,
     `type FormData = StripIndexSignature<z.output<typeof ${exportName}>>;`
   ].join('\n');

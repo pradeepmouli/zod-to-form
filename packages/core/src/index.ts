@@ -22,6 +22,7 @@ export type {
   ZodFormsConfig,
   ZodTypeConfig,
   ConfigDefaults,
+  StripIndexSignature,
   // Deprecated aliases
   FieldOverride,
   ZodToFormComponentConfig
@@ -39,7 +40,7 @@ export {
   validateComponentConfig
 } from './config.js';
 
-export { inferLabel, joinPath, createBaseField } from './utils.js';
+export { inferLabel, joinPath, createBaseField, getEmptyDefault } from './utils.js';
 
 export { walkSchema } from './walker.js';
 export { builtinProcessors, createProcessors } from './registry.js';

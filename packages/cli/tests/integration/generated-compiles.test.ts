@@ -92,6 +92,9 @@ describe('generated component compilation', () => {
         `  export const jsxs: (...args: unknown[]) => unknown;`,
         `  export const Fragment: unknown;`,
         `}`,
+        `declare module '@zod-to-form/core' {`,
+        `  export type StripIndexSignature<T> = T;`,
+        `}`,
         `declare namespace JSX { interface IntrinsicElements { form: any; div: any; label: any; input: any; select: any; option: any; textarea: any; button: any; } }`
       ].join('\n'),
       'utf8'

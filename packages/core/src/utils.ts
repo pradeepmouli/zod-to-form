@@ -142,6 +142,60 @@ function charClassToMaskChar(cls: string): string | null {
 }
 
 /**
+ * Returns a type-safe empty default value for a FormField based on its zodType
+ * and structure. Used by codegen for useFieldArray append() defaults and
+ * by runtime for initial values.
+ *
+ * - string → ''
+ * - number/bigint → 0
+ * - boolean → false
+ * - date → undefined
+ * - object (Fieldset) → recursively builds from children
+ * - array (ArrayField) → []
+ * - enum → first option value or ''
+ * - union/discriminatedUnion → first variant's empty default
+ */
+export function getEmptyDefault(field: FormField): unknown {
+  // Explicit default takes priority
+  if (field.defaultValue !== undefined) {
+    return field.defaultValue;
+  }
+
+  // Enums: use first option
+  if (field.options && field.options.length > 0) {
+    return field.options[0]!.value;
+  }
+
+  // Nested objects: recursively build
+  if (field.component === 'Fieldset' && field.children) {
+    const obj: Record<string, unknown> = {};
+    for (const child of field.children) {
+      const childKey = child.key.split('.').pop() ?? child.key;
+      obj[childKey] = getEmptyDefault(child);
+    }
+    return obj;
+  }
+
+  // Arrays
+  if (field.component === 'ArrayField') {
+    return [];
+  }
+
+  // Primitives by zodType
+  switch (field.zodType) {
+    case 'number':
+    case 'bigint':
+      return 0;
+    case 'boolean':
+      return false;
+    case 'date':
+      return undefined;
+    default:
+      return '';
+  }
+}
+
+/**
  * Create a base FormField with sensible defaults.
  * Processors fill in the specific component and props.
  */

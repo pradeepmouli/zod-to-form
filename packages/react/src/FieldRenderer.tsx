@@ -1,7 +1,8 @@
 import { useEffect, useMemo, memo, useState } from 'react';
 import type { ComponentType, ReactNode } from 'react';
 import type { FormField, FieldConfig, ComponentEntry } from '@zod-to-form/core';
-import { useFieldArray, useFormContext } from 'react-hook-form';
+import { getEmptyDefault } from '@zod-to-form/core';
+import { useController, useFieldArray, useFormContext } from 'react-hook-form';
 import { defaultComponentMap } from './components/index.js';
 
 type ComponentMap = typeof defaultComponentMap;
@@ -203,9 +204,7 @@ const FieldsetBlock = memo(function FieldsetBlock({
 
 function getDefaultAppendValue(arrayItem: FormField | undefined): unknown {
   if (!arrayItem) return '';
-  if (arrayItem.component === 'Fieldset') return {};
-  if (arrayItem.zodType === 'number' || arrayItem.zodType === 'bigint') return 0;
-  return '';
+  return getEmptyDefault(arrayItem);
 }
 
 const ArrayBlock = memo(function ArrayBlock({
@@ -298,6 +297,102 @@ const DiscriminatedUnionBlock = memo(function DiscriminatedUnionBlock({
   );
 });
 
+/**
+ * Apply propMap to remap RHF controller field props to component-specific prop names.
+ * Default RHF field props: value, onChange, onBlur, ref, name.
+ * propMap entries like { onSelect: 'field.onChange' } replace the default mapping.
+ */
+function applyPropMap(
+  controllerField: Record<string, unknown>,
+  propMap: Record<string, string> | undefined
+): Record<string, unknown> {
+  if (!propMap) return controllerField;
+
+  const result: Record<string, unknown> = {};
+  const rhfFieldProps: Record<string, string> = {
+    'field.value': 'value',
+    'field.onChange': 'onChange',
+    'field.onBlur': 'onBlur',
+    'field.ref': 'ref',
+    'field.name': 'name'
+  };
+
+  // Track which RHF expressions are remapped
+  const remappedExprs = new Set(Object.values(propMap));
+
+  // Copy defaults that aren't being remapped away
+  for (const [expr, defaultProp] of Object.entries(rhfFieldProps)) {
+    if (!remappedExprs.has(expr)) {
+      result[defaultProp] = controllerField[defaultProp];
+    }
+  }
+
+  // Apply remapped props
+  for (const [componentProp, rhfExpr] of Object.entries(propMap)) {
+    const defaultProp = rhfFieldProps[rhfExpr];
+    if (defaultProp) {
+      result[componentProp] = controllerField[defaultProp];
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Merge component-level propMap with per-field propMap override.
+ * Per-field entries win when keys overlap.
+ */
+function resolvePropMap(
+  entry?: RuntimeComponentEntry,
+  override?: RuntimeFieldOverride
+): Record<string, string> | undefined {
+  const entryMap = entry?.propMap;
+  const fieldMap = override?.propMap;
+  if (!entryMap && !fieldMap) return undefined;
+  return { ...entryMap, ...fieldMap };
+}
+
+// ─── Controlled field wrapper ──────────────────────────────────────────
+// Separated into its own component so useController is always called
+// (React rules of hooks) without affecting non-controlled fields.
+
+type ControlledFieldProps = {
+  field: FormField;
+  Component: ComponentType<Record<string, unknown>>;
+  propMap: Record<string, string> | undefined;
+  overrideProps?: Record<string, unknown>;
+  errorMessage?: string;
+};
+
+const ControlledFieldInner = memo(function ControlledFieldInner({
+  field,
+  Component,
+  propMap,
+  overrideProps,
+  errorMessage
+}: ControlledFieldProps) {
+  const { control } = useFormContext();
+  const { field: controllerField } = useController({ name: field.key, control });
+
+  const mappedProps = applyPropMap(controllerField as unknown as Record<string, unknown>, propMap);
+
+  const componentProps: Record<string, unknown> = {
+    id: field.key,
+    'aria-invalid': errorMessage ? 'true' : 'false',
+    required: field.required,
+    readOnly: field.readOnly,
+    ...field.props,
+    ...overrideProps,
+    ...mappedProps
+  };
+
+  if ('options' in field && field['options']) {
+    componentProps['options'] = field['options'];
+  }
+
+  return <Component {...componentProps} />;
+});
+
 export const FieldRenderer = memo(function FieldRenderer({
   field,
   components,
@@ -382,31 +477,54 @@ export const FieldRenderer = memo(function FieldRenderer({
     return null;
   }
 
-  const registration = register(field.key, getRegisterOptions(field));
-  const componentProps: Record<string, unknown> = {
-    id: field.key,
-    'aria-invalid': errorMessage ? 'true' : 'false',
-    required: field.required,
-    readOnly: field.readOnly,
-    ...field.props,
-    ...mapping.override?.props,
-    ...registration
-  };
-
-  if ('options' in field && field['options']) {
-    componentProps['options'] = field['options'];
-  }
+  const isControlled = mapping.entry?.controlled === true;
 
   const wrapperProps: Record<string, unknown> = {};
   if (field.gridColumn) {
     wrapperProps['style'] = { gridColumn: field.gridColumn };
   }
 
-  const fieldContent: ReactNode = field.render ? (
-    (field.render(field, componentProps) as ReactNode)
-  ) : (
-    <Component {...componentProps} />
-  );
+  let fieldContent: ReactNode;
+
+  if (field.render) {
+    const registration = register(field.key, getRegisterOptions(field));
+    const componentProps: Record<string, unknown> = {
+      id: field.key,
+      'aria-invalid': errorMessage ? 'true' : 'false',
+      required: field.required,
+      readOnly: field.readOnly,
+      ...field.props,
+      ...mapping.override?.props,
+      ...registration
+    };
+    fieldContent = field.render(field, componentProps) as ReactNode;
+  } else if (isControlled) {
+    const propMap = resolvePropMap(mapping.entry, mapping.override);
+    fieldContent = (
+      <ControlledFieldInner
+        field={field}
+        Component={Component}
+        propMap={propMap}
+        overrideProps={mapping.override?.props}
+        errorMessage={errorMessage}
+      />
+    );
+  } else {
+    const registration = register(field.key, getRegisterOptions(field));
+    const componentProps: Record<string, unknown> = {
+      id: field.key,
+      'aria-invalid': errorMessage ? 'true' : 'false',
+      required: field.required,
+      readOnly: field.readOnly,
+      ...field.props,
+      ...mapping.override?.props,
+      ...registration
+    };
+    if ('options' in field && field['options']) {
+      componentProps['options'] = field['options'];
+    }
+    fieldContent = <Component {...componentProps} />;
+  }
 
   return (
     <FieldComponent {...wrapperProps}>
