@@ -250,10 +250,60 @@ async function discoverFormPrimitives(
   };
 }
 
+type DiscoveredComponent = {
+  name: string;
+  controlled: boolean;
+};
+
 type DiscoveredComponents = {
-  names: string[];
+  components: DiscoveredComponent[];
   source?: string;
 };
+
+/**
+ * Well-known shadcn/Radix components that are inherently controlled
+ * (they don't accept register() spread — they need value + onChange via Controller).
+ */
+const KNOWN_CONTROLLED_COMPONENTS = new Set([
+  'Select',
+  'Combobox',
+  'Slider',
+  'Switch',
+  'RadioGroup',
+  'ToggleGroup',
+  'DatePicker',
+  'Calendar',
+  'ColorPicker'
+]);
+
+/**
+ * Heuristic: a component is likely controlled if its source exports accept
+ * `value` and `onChange` props but does NOT use `forwardRef` (which would
+ * indicate it can accept a ref from register()).
+ */
+function detectControlledFromSource(code: string, name: string): boolean {
+  // Check if this specific component's definition mentions value/onChange props
+  // Look for the component definition region
+  const patterns = [
+    // Props type/interface with value + onChange
+    new RegExp(`(?:type|interface)\\s+${name}Props[^{]*\\{[^}]*value[^}]*onChange`, 's'),
+    // Destructured props: { value, onChange, ... }
+    new RegExp(`function\\s+${name}\\s*\\(\\s*\\{[^}]*\\bvalue\\b[^}]*\\bonChange\\b`, 's'),
+    new RegExp(`function\\s+${name}\\s*\\(\\s*\\{[^}]*\\bonChange\\b[^}]*\\bvalue\\b`, 's'),
+    new RegExp(`const\\s+${name}\\s*=\\s*(?:React\\.)?(?:forwardRef|memo)?\\s*\\(?\\s*(?:function)?\\s*\\(?\\s*\\{[^}]*\\bvalue\\b[^}]*\\bonChange\\b`, 's'),
+  ];
+
+  const hasValueOnChange = patterns.some((p) => p.test(code));
+  if (!hasValueOnChange) return false;
+
+  // If it uses forwardRef, it can accept a ref from register() — not necessarily controlled.
+  // Check per-line to avoid cross-matching with other components in the same file.
+  const lines = code.split('\n');
+  const usesForwardRef = lines.some(
+    (line) => line.includes(name) && /(?:React\.)?forwardRef/.test(line)
+  );
+  return !usesForwardRef;
+}
 
 type DiscoveredSchemas = {
   exports: string[];
@@ -276,7 +326,7 @@ async function discoverComponents(
   const basePath = resolveModuleBasePath(cwd, modulePath, snapshot);
   if (!basePath) {
     logVerbose(verbose, `could not resolve components path: ${modulePath}`);
-    return { names: [] };
+    return { components: [] };
   }
 
   const primitiveNames = new Set([
@@ -285,7 +335,7 @@ async function discoverComponents(
     formPrimitives.control
   ]);
 
-  const allNames = new Set<string>();
+  const componentMap = new Map<string, boolean>();
   let source: string | undefined;
 
   for (const filePath of getCandidateFiles(basePath)) {
@@ -302,7 +352,12 @@ async function discoverComponents(
           !primitiveNames.has(name) &&
           !EXCLUDED_EXPORT_PREFIXES.some((prefix) => name.startsWith(prefix))
         ) {
-          allNames.add(name);
+          const isControlled =
+            KNOWN_CONTROLLED_COMPONENTS.has(name) || detectControlledFromSource(code, name);
+          componentMap.set(name, isControlled);
+          if (isControlled) {
+            logVerbose(verbose, `detected ${name} as controlled component`);
+          }
         }
       }
       if (!source && fileExports.size > 0) {
@@ -314,10 +369,11 @@ async function discoverComponents(
     }
   }
 
-  return {
-    names: Array.from(allNames).sort(),
-    source
-  };
+  const components = Array.from(componentMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, controlled]) => ({ name, controlled }));
+
+  return { components, source };
 }
 
 const SCHEMA_CANDIDATE_PATHS = [
@@ -373,30 +429,35 @@ const PRESET_IMPORT_NAME: Record<string, string> = {
   unstyled: 'DEFAULT_FIELD_TYPES'
 };
 
-function resolveFieldTypeNames(
+function resolveFieldTypeEntries(
   discoveredComponents: DiscoveredComponents,
   preset: 'shadcn' | 'unstyled' | undefined
-): string[] {
+): DiscoveredComponent[] {
   if (preset) {
     // When a preset is active, only return discovered (non-preset) components.
     // The preset entries come via the spread in the template.
-    return discoveredComponents.names;
+    return discoveredComponents.components;
   }
 
   // No preset: merge default entries with any discovered components as fallback
   const presetNames = Object.keys(DEFAULT_FIELD_TYPES);
-  if (discoveredComponents.names.length > 0) {
-    const merged = new Set([...presetNames, ...discoveredComponents.names]);
-    return Array.from(merged).sort();
+  if (discoveredComponents.components.length > 0) {
+    const discoveredNames = new Set(discoveredComponents.components.map((c) => c.name));
+    const defaults: DiscoveredComponent[] = presetNames
+      .filter((name) => !discoveredNames.has(name))
+      .map((name) => ({ name, controlled: false }));
+    return [...defaults, ...discoveredComponents.components].sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
   }
 
-  return presetNames;
+  return presetNames.map((name) => ({ name, controlled: false }));
 }
 
 function buildConfigTemplate(
   modulePath: string,
   formPrimitives: FormPrimitivesConfig,
-  fieldTypeNames: string[],
+  fieldTypeEntries: DiscoveredComponent[],
   discoveredSchemas: DiscoveredSchemas,
   preset: 'shadcn' | 'unstyled' | undefined
 ): string {
@@ -411,12 +472,16 @@ function buildConfigTemplate(
   // Build fieldTypes entries
   const fieldTypeLines: string[] = [];
   if (presetImportName) {
-    const comma = fieldTypeNames.length > 0 ? ',' : '';
+    const comma = fieldTypeEntries.length > 0 ? ',' : '';
     fieldTypeLines.push(`    ...${presetImportName}${comma}`);
   }
-  fieldTypeNames.forEach((name, i) => {
-    const comma = i < fieldTypeNames.length - 1 ? ',' : '';
-    fieldTypeLines.push(`    ${name}: { component: '${name}' }${comma}`);
+  fieldTypeEntries.forEach((entry, i) => {
+    const comma = i < fieldTypeEntries.length - 1 ? ',' : '';
+    if (entry.controlled) {
+      fieldTypeLines.push(`    ${entry.name}: { component: '${entry.name}', controlled: true }${comma}`);
+    } else {
+      fieldTypeLines.push(`    ${entry.name}: { component: '${entry.name}' }${comma}`);
+    }
   });
 
   const lines = [
@@ -440,7 +505,8 @@ function buildConfigTemplate(
     `    mode: 'submit',`,
     `    ui: 'shadcn',`,
     `    overwrite: false,`,
-    `    serverAction: false`,
+    `    serverAction: false,`,
+    `    formProvider: false`,
     `  },`,
     `  include: [],`,
     `  exclude: [],`,
@@ -552,10 +618,11 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   console.log(`  \u2713 Label \u2192 ${p.label}`);
   console.log(`  \u2713 Control \u2192 ${p.control}`);
 
-  if (discoveredComponents.names.length > 0) {
+  if (discoveredComponents.components.length > 0) {
     console.log('\nDiscovered field types:');
-    for (const name of discoveredComponents.names) {
-      console.log(`  \u2713 ${name}`);
+    for (const comp of discoveredComponents.components) {
+      const tag = comp.controlled ? ' (controlled)' : '';
+      console.log(`  \u2713 ${comp.name}${tag}`);
     }
   } else {
     console.log('\nUsing default field types (no components discovered)');
@@ -580,8 +647,8 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
 
   logStep('[4/5] Building config template');
   const preset = shadcn.exists ? 'shadcn' as const : undefined;
-  const fieldTypeNames = resolveFieldTypeNames(discoveredComponents, preset);
-  const code = buildConfigTemplate(modulePath, discoveredPrimitives.primitives, fieldTypeNames, discoveredSchemas, preset);
+  const fieldTypeEntries = resolveFieldTypeEntries(discoveredComponents, preset);
+  const code = buildConfigTemplate(modulePath, discoveredPrimitives.primitives, fieldTypeEntries, discoveredSchemas, preset);
 
   logStep('[5/5] Validating output target');
   const outputExists = await exists(outputPath);
