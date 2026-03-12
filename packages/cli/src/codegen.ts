@@ -3,7 +3,6 @@ import type { FormField } from '@zod-to-form/core';
 import { getEmptyDefault } from '@zod-to-form/core';
 import type {
   ComponentEntry,
-  FieldConfig,
   FieldOverride,
   FormPrimitivesConfig,
   ZodToFormComponentConfig
@@ -331,11 +330,18 @@ function renderArrayBlock(
   const mappedItem = indexedItemField
     ? getMappedFieldComponent(indexedItemField, componentConfig)
     : { source: 'none' as const };
-  const itemJsx = indexedItemField
-    ? mappedItem.componentName
-      ? `<${mappedItem.componentName} {...register(\`${indexedItemField.key}\`)}${renderOverrideProps(mappedItem.override?.props)} />`
-      : renderFieldBlockWithConfig(indexedItemField, componentConfig, primitives, `${indent}      `)
-    : `${indent}      <input {...register(\`${field.key}.\${index}\`)} />`;
+  let itemJsx: string;
+  if (!indexedItemField) {
+    itemJsx = `${indent}      <input {...register(\`${field.key}.\${index}\`)} />`;
+  } else if (mappedItem.componentName && mappedItem.entry?.controlled) {
+    const overrideProps = renderOverrideProps(mappedItem.override?.props);
+    const propMap = resolvePropMap(mappedItem.entry, mappedItem.override);
+    itemJsx = renderControlledComponent(indexedItemField.key, mappedItem.componentName, propMap, overrideProps);
+  } else if (mappedItem.componentName) {
+    itemJsx = `<${mappedItem.componentName} {...register(\`${indexedItemField.key}\`)}${renderOverrideProps(mappedItem.override?.props)} />`;
+  } else {
+    itemJsx = renderFieldBlockWithConfig(indexedItemField, componentConfig, primitives, `${indent}      `);
+  }
 
   return [
     `${indent}<div>`,
@@ -418,10 +424,11 @@ function renderControlledComponent(
     .join(' ');
 
   const nameExpr = fieldKey.includes('${') ? `\`${fieldKey}\`` : `"${fieldKey}"`;
+  const idExpr = fieldKey.includes('${') ? `{${'`'}${fieldKey}${'`'}}` : `"${fieldKey}"`;
 
   return [
     `<Controller name={${nameExpr}} control={control} render={({ field }) => (`,
-    `  <${componentName} id="${fieldKey}" ${propsStr}${overrideProps} />`,
+    `  <${componentName} id=${idExpr} ${propsStr}${overrideProps} />`,
     `)} />`
   ].join('\n');
 }

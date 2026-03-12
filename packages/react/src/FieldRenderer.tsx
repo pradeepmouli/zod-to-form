@@ -372,6 +372,9 @@ const ControlledFieldInner = memo(function ControlledFieldInner({
   errorMessage
 }: ControlledFieldProps) {
   const { control } = useFormContext();
+  // Note: useController does not use register() options like valueAsNumber/valueAsDate.
+  // Controlled components manage their own value types via onChange — the component
+  // is responsible for passing the correct value type back to RHF.
   const { field: controllerField } = useController({ name: field.key, control });
 
   const mappedProps = applyPropMap(controllerField as unknown as Record<string, unknown>, propMap);

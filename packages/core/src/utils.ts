@@ -176,6 +176,32 @@ export function getEmptyDefault(field: FormField): unknown {
     return obj;
   }
 
+  // Discriminated unions: first variant's empty default with discriminator value
+  if (field.props['_discriminator'] && field.props['_variants']) {
+    const discriminator = field.props['_discriminator'] as string;
+    const variants = field.props['_variants'] as Record<string, FormField[]>;
+    const firstOption = field.options?.[0];
+    const firstVariantKey = firstOption ? String(firstOption.value) : Object.keys(variants)[0];
+    const variantFields = firstVariantKey ? variants[firstVariantKey] : undefined;
+
+    const obj: Record<string, unknown> = {};
+    if (firstOption) {
+      obj[discriminator] = firstOption.value;
+    }
+    if (variantFields) {
+      for (const child of variantFields) {
+        const childKey = child.key.split('.').pop() ?? child.key;
+        obj[childKey] = getEmptyDefault(child);
+      }
+    }
+    return obj;
+  }
+
+  // Regular unions: use first child's default if children exist
+  if (field.children && field.children.length > 0 && (field.zodType === 'union' || field.zodType === 'discriminatedUnion')) {
+    return getEmptyDefault(field.children[0]!);
+  }
+
   // Arrays
   if (field.component === 'ArrayField') {
     return [];
