@@ -52,7 +52,7 @@ describe('generateFormComponent', () => {
     expect(output).toContain(`register('role')`);
     expect(output).toContain('Name');
     expect(output).toContain('Role');
-    expect(output).not.toContain('@zod-to-form/core');
+    expect(output).toContain("import type { StripIndexSignature } from '@zod-to-form/core';");
     expect(output).not.toContain('@zod-to-form/react');
   });
 
@@ -147,7 +147,8 @@ describe('generateFormComponent', () => {
     });
 
     expect(output).toContain(`import { useEffect } from 'react';`);
-    expect(output).toContain(`const { register, watch } = useForm<FormData>({`);
+    expect(output).toContain(`const form = useForm<FormData>({`);
+    expect(output).toContain(`const { register, watch } = form;`);
     expect(output).toContain(`mode: 'onChange'`);
     expect(output).toContain(`const subscription = watch((values) => {`);
     expect(output).toContain(`props.onValueChange?.(values as FormData);`);
@@ -293,7 +294,7 @@ describe('generateFormComponent', () => {
       serverAction: false
     });
 
-    expect(output).toContain('type StripIndexSignature<T> = T extends readonly (infer U)[]');
+    expect(output).toContain("import type { StripIndexSignature } from '@zod-to-form/core';");
     expect(output).toContain('type FormData = StripIndexSignature<z.output<typeof userSchema>>;');
   });
 
@@ -737,5 +738,149 @@ describe('generateFormComponent', () => {
 
     // name should still be a normal input
     expect(output).toContain(`register(\`attributes.\${index}.name\`)`);
+  });
+
+  it('generates Controller pattern for controlled components', async () => {
+    const fields: FormField[] = [
+      {
+        key: 'kind',
+        component: 'Select',
+        props: {},
+        label: 'Kind',
+        required: true,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'string',
+        options: [
+          { value: 'a', label: 'A' },
+          { value: 'b', label: 'B' }
+        ]
+      }
+    ];
+
+    const output = await generateFormComponent(fields, {
+      schemaPath: '/tmp/schema.ts',
+      exportName: 'testSchema',
+      outputPath: '/tmp/TestForm.tsx',
+      componentName: 'TestForm',
+      mode: 'submit',
+      ui: 'unstyled',
+      serverAction: false,
+      componentConfig: {
+        components: '@app/components',
+        fieldTypes: {
+          Select: { component: 'MySelect', controlled: true }
+        }
+      }
+    });
+
+    expect(output).toContain('Controller');
+    expect(output).toContain(`control={control}`);
+    expect(output).toContain('field.value');
+    expect(output).toContain('field.onChange');
+    expect(output).not.toContain(`register('kind')`);
+  });
+
+  it('generates Controller with propMap remapping', async () => {
+    const fields: FormField[] = [
+      {
+        key: 'type',
+        component: 'Select',
+        props: {},
+        label: 'Type',
+        required: true,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'string'
+      }
+    ];
+
+    const output = await generateFormComponent(fields, {
+      schemaPath: '/tmp/schema.ts',
+      exportName: 'testSchema',
+      outputPath: '/tmp/TestForm.tsx',
+      componentName: 'TestForm',
+      mode: 'submit',
+      ui: 'unstyled',
+      serverAction: false,
+      componentConfig: {
+        components: '@app/components',
+        fieldTypes: {
+          Select: {
+            component: 'TypeSelector',
+            controlled: true,
+            propMap: { onSelect: 'field.onChange', value: 'field.value' }
+          }
+        }
+      }
+    });
+
+    expect(output).toContain('onSelect={field.onChange}');
+    expect(output).toContain('value={field.value}');
+    expect(output).not.toContain('onChange={field.onChange}');
+  });
+
+  it('generates FormProvider wrapping when formProvider option is set', async () => {
+    const fields: FormField[] = [
+      {
+        key: 'name',
+        component: 'Input',
+        props: { type: 'text' },
+        label: 'Name',
+        required: true,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'string'
+      }
+    ];
+
+    const output = await generateFormComponent(fields, {
+      schemaPath: '/tmp/schema.ts',
+      exportName: 'testSchema',
+      outputPath: '/tmp/TestForm.tsx',
+      componentName: 'TestForm',
+      mode: 'submit',
+      ui: 'unstyled',
+      serverAction: false,
+      formProvider: true
+    });
+
+    expect(output).toContain('FormProvider');
+    expect(output).toContain('<FormProvider {...form}>');
+    expect(output).toContain('const form = useForm<FormData>');
+  });
+
+  it('generates defaultValues and values props on form component', async () => {
+    const fields: FormField[] = [
+      {
+        key: 'name',
+        component: 'Input',
+        props: { type: 'text' },
+        label: 'Name',
+        required: true,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'string'
+      }
+    ];
+
+    const output = await generateFormComponent(fields, {
+      schemaPath: '/tmp/schema.ts',
+      exportName: 'testSchema',
+      outputPath: '/tmp/TestForm.tsx',
+      componentName: 'TestForm',
+      mode: 'submit',
+      ui: 'unstyled',
+      serverAction: false
+    });
+
+    expect(output).toContain('defaultValues?: Partial<FormData>');
+    expect(output).toContain('values?: FormData');
+    expect(output).toContain('defaultValues: props.defaultValues');
+    expect(output).toContain('values: props.values');
   });
 });

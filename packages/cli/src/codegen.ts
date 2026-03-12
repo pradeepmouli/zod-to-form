@@ -1,5 +1,6 @@
 import path from 'node:path';
 import type { FormField } from '@zod-to-form/core';
+import { getEmptyDefault } from '@zod-to-form/core';
 import type {
   ComponentEntry,
   FieldOverride,
@@ -17,6 +18,8 @@ export type CodegenConfig = {
   componentConfig?: ZodToFormComponentConfig<Record<string, unknown>>;
   ui: 'shadcn' | 'unstyled';
   serverAction: boolean;
+  /** Wrap generated form in <FormProvider {...form}> */
+  formProvider?: boolean;
 };
 
 function renderLiteralProp(value: unknown): string | undefined {
@@ -50,6 +53,7 @@ function getMappedFieldComponent(
 ): {
   componentName?: string;
   override?: FieldOverride;
+  entry?: ComponentEntry<Record<string, unknown>>;
   source: 'fields' | 'fieldTypes' | 'none';
 } {
   const mapping = resolveFieldMapping(field.key, field.component, componentConfig);
@@ -61,6 +65,7 @@ function getMappedFieldComponent(
   return {
     componentName: mapping.entry.component,
     override: mapping.override,
+    entry: mapping.entry,
     source: mapping.source
   };
 }
@@ -256,7 +261,7 @@ function cloneFieldWithArrayIndex(field: FormField, arrayKey: string): FormField
 
 function getObjectPropertyName(path: string): string {
   const lastSegment = path.split('.').at(-1) ?? path;
-  return JSON.stringify(lastSegment);
+  return escapeUnsafeChars(JSON.stringify(lastSegment));
 }
 
 function getDefaultArrayItemExpression(field: FormField | undefined): string {
@@ -264,56 +269,42 @@ function getDefaultArrayItemExpression(field: FormField | undefined): string {
     return `''`;
   }
 
-  if (field.defaultValue !== undefined) {
-    return JSON.stringify(field.defaultValue);
-  }
+  const value = getEmptyDefault(field);
+  return serializeDefaultValue(value);
+}
 
-  if (field.options && field.options.length > 0) {
-    return JSON.stringify(field.options[0]!.value);
-  }
+const charMap: Record<string, string> = {
+  '<': '\\u003C',
+  '>': '\\u003E',
+  '/': '\\u002F',
+  '\\': '\\\\',
+  '\b': '\\b',
+  '\f': '\\f',
+  '\n': '\\n',
+  '\r': '\\r',
+  '\t': '\\t',
+  '\0': '\\0',
+  '\u2028': '\\u2028',
+  '\u2029': '\\u2029'
+};
 
-  if (field.component === 'Checkbox' || field.component === 'Switch') {
-    return 'false';
-  }
+function escapeUnsafeChars(str: string): string {
+  return str.replace(/[<>\/\\\b\f\n\r\t\0\u2028\u2029]/g, (x) => charMap[x] ?? x);
+}
 
-  if (field.component === 'Input') {
-    const inputType = typeof field.props['type'] === 'string' ? field.props['type'] : 'text';
-    if (inputType === 'number') {
-      return '0';
-    }
-    if (inputType === 'checkbox') {
-      return 'false';
-    }
-  }
-
-  if (field.component === 'Fieldset') {
-    const children = field.children ?? [];
-    if (children.length === 0) {
-      return '{}';
-    }
-
-    const entries = children
-      .map(
-        (child) => `${getObjectPropertyName(child.key)}: ${getDefaultArrayItemExpression(child)}`
-      )
+function serializeDefaultValue(value: unknown): string {
+  if (value === undefined) return 'undefined';
+  if (value === '') return `''`;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (typeof value === 'string') return escapeUnsafeChars(JSON.stringify(value));
+  if (Array.isArray(value)) return '[]';
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value)
+      .map(([k, v]) => `${escapeUnsafeChars(JSON.stringify(k))}: ${serializeDefaultValue(v)}`)
       .join(', ');
-
     return `{ ${entries} }`;
   }
-
-  if (field.component === 'ArrayField') {
-    return '[]';
-  }
-
-  if (field.zodType === 'number' || field.zodType === 'bigint') {
-    return '0';
-  }
-
-  if (field.zodType === 'boolean') {
-    return 'false';
-  }
-
-  return `''`;
+  return escapeUnsafeChars(JSON.stringify(value));
 }
 
 function renderNestedBlock(
@@ -358,11 +349,18 @@ function renderArrayBlock(
   const mappedItem = indexedItemField
     ? getMappedFieldComponent(indexedItemField, componentConfig)
     : { source: 'none' as const };
-  const itemJsx = indexedItemField
-    ? mappedItem.componentName
-      ? `<${mappedItem.componentName} {...register(\`${indexedItemField.key}\`)}${renderOverrideProps(mappedItem.override?.props)} />`
-      : renderFieldBlockWithConfig(indexedItemField, componentConfig, primitives, `${indent}      `)
-    : `${indent}      <input {...register(\`${field.key}.\${index}\`)} />`;
+  let itemJsx: string;
+  if (!indexedItemField) {
+    itemJsx = `${indent}      <input {...register(\`${field.key}.\${index}\`)} />`;
+  } else if (mappedItem.componentName && mappedItem.entry?.controlled) {
+    const overrideProps = renderOverrideProps(mappedItem.override?.props);
+    const propMap = resolvePropMap(mappedItem.entry, mappedItem.override);
+    itemJsx = renderControlledComponent(indexedItemField.key, mappedItem.componentName, propMap, overrideProps);
+  } else if (mappedItem.componentName) {
+    itemJsx = `<${mappedItem.componentName} {...register(\`${indexedItemField.key}\`)}${renderOverrideProps(mappedItem.override?.props)} />`;
+  } else {
+    itemJsx = renderFieldBlockWithConfig(indexedItemField, componentConfig, primitives, `${indent}      `);
+  }
 
   return [
     `${indent}<div>`,
@@ -380,6 +378,78 @@ function renderArrayBlock(
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/**
+ * Merge component-level propMap with per-field propMap override.
+ * Per-field entries win when keys overlap.
+ */
+function resolvePropMap(
+  entry?: ComponentEntry<Record<string, unknown>>,
+  override?: FieldOverride
+): Record<string, string> | undefined {
+  const entryMap = entry?.propMap;
+  const fieldMap = override?.propMap;
+  if (!entryMap && !fieldMap) return undefined;
+  return { ...entryMap, ...fieldMap };
+}
+
+/**
+ * Render a controlled component using <Controller> with propMap applied.
+ *
+ * Default RHF field props: value, onChange, onBlur, ref, name
+ * propMap remaps these: e.g. { onSelect: 'field.onChange' } means
+ * the component receives `onSelect={field.onChange}` instead of `onChange={field.onChange}`.
+ */
+function renderControlledComponent(
+  fieldKey: string,
+  componentName: string,
+  propMap: Record<string, string> | undefined,
+  overrideProps: string
+): string {
+  // Default RHF field prop mappings
+  const defaultFieldProps: Record<string, string> = {
+    value: 'field.value',
+    onChange: 'field.onChange',
+    onBlur: 'field.onBlur',
+    ref: 'field.ref',
+    name: 'field.name'
+  };
+
+  // Build the final prop wiring: start with defaults, apply propMap remapping
+  const finalProps: Record<string, string> = { ...defaultFieldProps };
+  if (propMap) {
+    // propMap maps componentPropName → RHF field expression
+    // e.g. { onSelect: 'field.onChange', value: 'field.value' }
+    // First, remove default props that are being remapped away
+    const rhfTargets = new Set(Object.values(propMap));
+    for (const [defaultProp, defaultExpr] of Object.entries(defaultFieldProps)) {
+      if (rhfTargets.has(defaultExpr) && !(defaultProp in propMap)) {
+        delete finalProps[defaultProp];
+      }
+    }
+    // Then add the remapped props
+    for (const [componentProp, rhfExpr] of Object.entries(propMap)) {
+      // Remove any default that would conflict with this component prop name
+      if (componentProp in finalProps && !(componentProp in propMap)) {
+        // Already handled
+      }
+      finalProps[componentProp] = rhfExpr;
+    }
+  }
+
+  const propsStr = Object.entries(finalProps)
+    .map(([prop, expr]) => `${prop}={${expr}}`)
+    .join(' ');
+
+  const nameExpr = fieldKey.includes('${') ? `\`${fieldKey}\`` : `"${fieldKey}"`;
+  const idExpr = fieldKey.includes('${') ? `{${'`'}${fieldKey}${'`'}}` : `"${fieldKey}"`;
+
+  return [
+    `<Controller name={${nameExpr}} control={control} render={({ field }) => (`,
+    `  <${componentName} id=${idExpr} ${propsStr}${overrideProps} />`,
+    `)} />`
+  ].join('\n');
 }
 
 function renderFieldBlockWithConfig(
@@ -404,8 +474,14 @@ function renderFieldBlockWithConfig(
   // render that component instead of expanding children.
   if (mapping.source === 'fields' && mapping.componentName) {
     const overrideProps = renderOverrideProps(mapping.override?.props);
-    const regExpr = field.key.includes('${') ? `register(\`${field.key}\`)` : `register('${field.key}')`;
-    const content = `<${mapping.componentName} id="${field.key}" {...${regExpr}}${overrideProps} />`;
+    let content: string;
+    if (mapping.entry?.controlled) {
+      const propMap = resolvePropMap(mapping.entry, mapping.override);
+      content = renderControlledComponent(field.key, mapping.componentName, propMap, overrideProps);
+    } else {
+      const regExpr = field.key.includes('${') ? `register(\`${field.key}\`)` : `register('${field.key}')`;
+      content = `<${mapping.componentName} id="${field.key}" {...${regExpr}}${overrideProps} />`;
+    }
     return renderFieldContainer(field, content, indent, primitives);
   }
 
@@ -419,12 +495,32 @@ function renderFieldBlockWithConfig(
 
   if (mapping.componentName) {
     const overrideProps = renderOverrideProps(mapping.override?.props);
-    const content = `<${mapping.componentName} id="${field.key}" {...${field.key.includes('${') ? `register(\`${field.key}\`)` : `register('${field.key}')`}}${overrideProps} />`;
-
+    let content: string;
+    if (mapping.entry?.controlled) {
+      const propMap = resolvePropMap(mapping.entry, mapping.override);
+      content = renderControlledComponent(field.key, mapping.componentName, propMap, overrideProps);
+    } else {
+      content = `<${mapping.componentName} id="${field.key}" {...${field.key.includes('${') ? `register(\`${field.key}\`)` : `register('${field.key}')`}}${overrideProps} />`;
+    }
     return renderFieldContainer(field, content, indent, primitives);
   }
 
   return renderFieldContainer(field, renderField(field), indent, primitives);
+}
+
+/** Check if any field in the tree uses a controlled component entry */
+function hasControlledFields(
+  fields: FormField[],
+  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined
+): boolean {
+  if (!componentConfig) return false;
+  for (const field of fields) {
+    const mapping = resolveFieldMapping(field.key, field.component, componentConfig);
+    if (mapping.entry?.controlled) return true;
+    if (field.children?.length && hasControlledFields(field.children, componentConfig)) return true;
+    if (field.arrayItem && hasControlledFields([field.arrayItem], componentConfig)) return true;
+  }
+  return false;
 }
 
 export async function generateFormComponent(
@@ -435,6 +531,8 @@ export async function generateFormComponent(
   const arrayFields = collectArrayFields(fields);
   const hasArrays = arrayFields.length > 0;
   const formPrimitives = config.componentConfig?.formPrimitives;
+  const useFormProvider = config.formProvider || config.mode === 'auto-save';
+  const hasControlled = hasControlledFields(fields, config.componentConfig);
 
   const mappedComponents = collectMappedComponentNames(fields, config.componentConfig);
   const primitiveComponents = collectFormPrimitiveNames(formPrimitives);
@@ -450,7 +548,8 @@ export async function generateFormComponent(
     config.exportName,
     hasArrays,
     config.mode,
-    componentImportLine
+    componentImportLine,
+    { hasControlled, formProvider: useFormProvider }
   );
   const body = fields
     .map((field) =>
@@ -466,19 +565,28 @@ export async function generateFormComponent(
     })
     .join('\n');
 
-  const useFormDestructure =
-    config.mode === 'auto-save'
-      ? hasArrays
-        ? `{ register, watch, control }`
-        : `{ register, watch }`
-      : hasArrays
-        ? `{ register, handleSubmit, control }`
-        : `{ register, handleSubmit }`;
+  // Build useForm destructure parts
+  const destructureParts: string[] = ['register'];
+  if (config.mode === 'auto-save') {
+    destructureParts.push('watch');
+  } else {
+    destructureParts.push('handleSubmit');
+  }
+  if (hasArrays || hasControlled) {
+    destructureParts.push('control');
+  }
+  const useFormDestructure = `{ ${destructureParts.join(', ')} }`;
 
-  const propsLines =
-    config.mode === 'auto-save'
-      ? [`  onValueChange?: (data: FormData) => void;`, `  onSubmit?: (data: FormData) => void;`]
-      : [`  onSubmit: (data: FormData) => void;`];
+  // Props interface
+  const propsLines: string[] = [];
+  if (config.mode === 'auto-save') {
+    propsLines.push(`  onValueChange?: (data: FormData) => void;`);
+    propsLines.push(`  onSubmit?: (data: FormData) => void;`);
+  } else {
+    propsLines.push(`  onSubmit: (data: FormData) => void;`);
+  }
+  propsLines.push(`  defaultValues?: Partial<FormData>;`);
+  propsLines.push(`  values?: FormData;`);
 
   const autoSaveEffect =
     config.mode === 'auto-save'
@@ -502,24 +610,40 @@ export async function generateFormComponent(
   const formTail =
     config.mode === 'auto-save' ? [] : [`      <button type="submit">Submit</button>`];
 
+  // Form body with optional FormProvider wrapping
+  const formContent = [
+    formOpen,
+    body,
+    ...formTail,
+    `    </form>`
+  ];
+
+  const wrappedContent = useFormProvider
+    ? [
+        `    <FormProvider {...form}>`,
+        ...formContent.map((line) => line ? `  ${line}` : line),
+        `    </FormProvider>`
+      ]
+    : formContent;
+
   return [
     header,
     '',
     `export function ${config.componentName}(props: {`,
     ...propsLines,
     `}) {`,
-    `  const ${useFormDestructure} = useForm<FormData>({`,
+    `  const form = useForm<FormData>({`,
     `    resolver: zodResolver(${config.exportName}),`,
-    ...(config.mode === 'auto-save' ? [`    mode: 'onChange'`] : []),
+    ...(config.mode === 'auto-save' ? [`    mode: 'onChange',`] : []),
+    `    defaultValues: props.defaultValues,`,
+    `    values: props.values,`,
     `  });`,
+    `  const ${useFormDestructure} = form;`,
     ...(hasArrays ? [arrayHooks] : []),
     ...autoSaveEffect,
     '',
     `  return (`,
-    formOpen,
-    body,
-    ...formTail,
-    `    </form>`,
+    ...wrappedContent,
     `  );`,
     `}`
   ].join('\n');

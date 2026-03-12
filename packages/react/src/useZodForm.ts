@@ -7,6 +7,8 @@ import type { FormProcessor, ZodFormRegistry } from '@zod-to-form/core';
 
 type UseZodFormOptions<TSchema extends ZodObject> = {
   defaultValues?: Partial<output<TSchema>>;
+  /** Controlled external data — RHF re-renders on change. See react-hook-form `values` option. */
+  values?: output<TSchema>;
   formRegistry?: ZodFormRegistry;
   processors?: Record<string, FormProcessor>;
   mode?: 'onSubmit' | 'onChange' | 'onBlur';
@@ -78,6 +80,7 @@ export function useZodForm<TSchema extends ZodObject>(
         resolverOptions as Parameters<typeof baseResolver>[2]
       )) as any,
     defaultValues: options?.defaultValues as any,
+    values: options?.values as any,
     mode: options?.mode
   });
 

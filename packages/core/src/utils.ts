@@ -142,6 +142,86 @@ function charClassToMaskChar(cls: string): string | null {
 }
 
 /**
+ * Returns a type-safe empty default value for a FormField based on its zodType
+ * and structure. Used by codegen for useFieldArray append() defaults and
+ * by runtime for initial values.
+ *
+ * - string → ''
+ * - number/bigint → 0
+ * - boolean → false
+ * - date → undefined
+ * - object (Fieldset) → recursively builds from children
+ * - array (ArrayField) → []
+ * - enum → first option value or ''
+ * - union/discriminatedUnion → first variant's empty default
+ */
+export function getEmptyDefault(field: FormField): unknown {
+  // Explicit default takes priority
+  if (field.defaultValue !== undefined) {
+    return field.defaultValue;
+  }
+
+  // Enums: use first option
+  if (field.options && field.options.length > 0) {
+    return field.options[0]!.value;
+  }
+
+  // Nested objects: recursively build
+  if (field.component === 'Fieldset' && field.children) {
+    const obj: Record<string, unknown> = {};
+    for (const child of field.children) {
+      const childKey = child.key.split('.').pop() ?? child.key;
+      obj[childKey] = getEmptyDefault(child);
+    }
+    return obj;
+  }
+
+  // Discriminated unions: first variant's empty default with discriminator value
+  if (field.props['_discriminator'] && field.props['_variants']) {
+    const discriminator = field.props['_discriminator'] as string;
+    const variants = field.props['_variants'] as Record<string, FormField[]>;
+    const firstOption = field.options?.[0];
+    const firstVariantKey = firstOption ? String(firstOption.value) : Object.keys(variants)[0];
+    const variantFields = firstVariantKey ? variants[firstVariantKey] : undefined;
+
+    const obj: Record<string, unknown> = {};
+    if (firstOption) {
+      obj[discriminator] = firstOption.value;
+    }
+    if (variantFields) {
+      for (const child of variantFields) {
+        const childKey = child.key.split('.').pop() ?? child.key;
+        obj[childKey] = getEmptyDefault(child);
+      }
+    }
+    return obj;
+  }
+
+  // Regular unions: use first child's default if children exist
+  if (field.children && field.children.length > 0 && (field.zodType === 'union' || field.zodType === 'discriminatedUnion')) {
+    return getEmptyDefault(field.children[0]!);
+  }
+
+  // Arrays
+  if (field.component === 'ArrayField') {
+    return [];
+  }
+
+  // Primitives by zodType
+  switch (field.zodType) {
+    case 'number':
+    case 'bigint':
+      return 0;
+    case 'boolean':
+      return false;
+    case 'date':
+      return undefined;
+    default:
+      return '';
+  }
+}
+
+/**
  * Create a base FormField with sensible defaults.
  * Processors fill in the specific component and props.
  */

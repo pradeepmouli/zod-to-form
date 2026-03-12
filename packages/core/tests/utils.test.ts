@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { inferLabel, joinPath, regexToMask } from '../src/utils.js';
+import { inferLabel, joinPath, regexToMask, getEmptyDefault, createBaseField } from '../src/utils.js';
+import type { FormField } from '../src/types.js';
 
 describe('inferLabel', () => {
   it('converts camelCase to Title Case', () => {
@@ -119,5 +120,58 @@ describe('regexToMask', () => {
 
   it('returns null for empty result', () => {
     expect(regexToMask('^$')).toBeNull();
+  });
+});
+
+describe('getEmptyDefault', () => {
+  function field(overrides: Partial<FormField>): FormField {
+    return { ...createBaseField('test', 'string'), ...overrides };
+  }
+
+  it('returns empty string for string fields', () => {
+    expect(getEmptyDefault(field({ zodType: 'string' }))).toBe('');
+  });
+
+  it('returns 0 for number fields', () => {
+    expect(getEmptyDefault(field({ zodType: 'number' }))).toBe(0);
+  });
+
+  it('returns 0 for bigint fields', () => {
+    expect(getEmptyDefault(field({ zodType: 'bigint' }))).toBe(0);
+  });
+
+  it('returns false for boolean fields', () => {
+    expect(getEmptyDefault(field({ zodType: 'boolean' }))).toBe(false);
+  });
+
+  it('returns undefined for date fields', () => {
+    expect(getEmptyDefault(field({ zodType: 'date' }))).toBeUndefined();
+  });
+
+  it('returns first option value for enum fields', () => {
+    expect(
+      getEmptyDefault(field({ options: [{ value: 'admin', label: 'Admin' }, { value: 'user', label: 'User' }] }))
+    ).toBe('admin');
+  });
+
+  it('returns explicit defaultValue when present', () => {
+    expect(getEmptyDefault(field({ defaultValue: 'hello' }))).toBe('hello');
+  });
+
+  it('returns empty array for ArrayField', () => {
+    expect(getEmptyDefault(field({ component: 'ArrayField' }))).toEqual([]);
+  });
+
+  it('recursively builds object for Fieldset', () => {
+    const result = getEmptyDefault(
+      field({
+        component: 'Fieldset',
+        children: [
+          { ...createBaseField('obj.name', 'string'), zodType: 'string' },
+          { ...createBaseField('obj.age', 'number'), zodType: 'number' }
+        ]
+      })
+    );
+    expect(result).toEqual({ name: '', age: 0 });
   });
 });

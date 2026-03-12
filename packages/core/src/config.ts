@@ -6,6 +6,10 @@ import type { FieldConfig } from './types.js';
 export type ComponentEntry<T extends Record<string, unknown> = Record<string, unknown>> = {
   component: keyof T & string;
   render?: () => Promise<unknown>;
+  /** When true, use Controller/useController instead of register() spread */
+  controlled?: boolean;
+  /** Map RHF field props to component-specific prop names (e.g. { onSelect: 'field.onChange' }) */
+  propMap?: Record<string, string>;
 };
 
 export type FormPrimitivesConfig<T extends Record<string, unknown> = Record<string, unknown>> = {
@@ -23,6 +27,8 @@ type TypedFieldConfigForComponent<TComponents extends Record<string, unknown>, K
   hidden?: boolean;
   gridColumn?: string;
   props?: TComponents[K] extends Record<string, unknown> ? Partial<TComponents[K]> : Record<string, unknown>;
+  /** Per-field prop mapping override (merges over ComponentEntry.propMap) */
+  propMap?: Record<string, string>;
 };
 
 /** Field config with no fieldType specified (untyped props) */
@@ -32,6 +38,8 @@ type UntypedFieldConfig = {
   hidden?: boolean;
   gridColumn?: string;
   props?: Record<string, unknown>;
+  /** Per-field prop mapping override (merges over ComponentEntry.propMap) */
+  propMap?: Record<string, string>;
 };
 
 /**
@@ -52,6 +60,8 @@ export type ConfigDefaults = {
   out?: string;
   overwrite?: boolean;
   serverAction?: boolean;
+  /** Wrap generated form in <FormProvider {...form}> */
+  formProvider?: boolean;
 };
 
 export type ZodTypeConfig<
@@ -87,6 +97,18 @@ export type ZodFormsConfig<
     >;
   };
 };
+
+// ─── Utility Types ───────────────────────────────────────────────────
+
+/**
+ * Strips index signatures from a type, keeping only explicitly declared keys.
+ * Useful for Zod's `z.output<>` which adds `[x: string]: unknown` index signatures.
+ */
+export type StripIndexSignature<T> = T extends readonly (infer U)[]
+  ? StripIndexSignature<U>[]
+  : T extends object
+    ? { [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: StripIndexSignature<T[K]> }
+    : T;
 
 // ─── Deprecated Aliases ───────────────────────────────────────────────
 
@@ -143,7 +165,9 @@ const componentEntrySchema = z
     render: z
       .unknown()
       .optional()
-      .refine((value) => value === undefined || typeof value === 'function')
+      .refine((value) => value === undefined || typeof value === 'function'),
+    controlled: z.boolean().optional(),
+    propMap: z.record(z.string(), z.string()).optional()
   })
   .passthrough();
 
@@ -153,7 +177,8 @@ const fieldConfigSchema = z
     order: z.number().optional(),
     hidden: z.boolean().optional(),
     gridColumn: z.string().optional(),
-    props: z.record(z.string(), z.unknown()).optional()
+    props: z.record(z.string(), z.unknown()).optional(),
+    propMap: z.record(z.string(), z.string()).optional()
   })
   .passthrough();
 
@@ -170,7 +195,8 @@ const defaultsSchema = z
     ui: z.string().optional(),
     out: z.string().optional(),
     overwrite: z.boolean().optional(),
-    serverAction: z.boolean().optional()
+    serverAction: z.boolean().optional(),
+    formProvider: z.boolean().optional()
   })
   .passthrough()
   .optional();

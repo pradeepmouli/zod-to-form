@@ -72,6 +72,8 @@ export interface FieldConfig {
   gridColumn?: string;
   /** Arbitrary field metadata props forwarded by processors */
   props?: Record<string, unknown>;
+  /** Per-field prop mapping override (merges over ComponentEntry.propMap) */
+  propMap?: Record<string, string>;
 }
 
 // ─── FormMeta: Registry Annotation ────────────────────────────────────
