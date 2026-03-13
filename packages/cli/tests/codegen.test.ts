@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { FormField } from '@zod-to-form/core';
 import { generateFormComponent, resolveFieldMapping } from '../src/codegen.js';
+import type { CodegenConfig } from '../src/codegen.js';
 import type { ZodToFormComponentConfig } from '../src/index.js';
 
 describe('generateFormComponent', () => {
@@ -980,7 +981,7 @@ describe('generateFormComponent', () => {
       }
     ];
 
-    const config: ZodToFormComponentConfig = {
+    const config: CodegenConfig = {
       schemaPath: '/tmp/schema.ts',
       exportName: 'testSchema',
       outputPath: '/tmp/TestFormWithNestedSection.tsx',

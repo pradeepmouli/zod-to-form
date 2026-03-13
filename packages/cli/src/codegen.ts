@@ -10,6 +10,12 @@ import type {
 } from './index.js';
 import { getFileHeader, renderField } from './templates.js';
 
+export type SectionConfig = {
+  title: string;
+  description?: string;
+  fields: string[];
+};
+
 export type CodegenConfig = {
   schemaPath: string;
   exportName: string;
@@ -21,6 +27,8 @@ export type CodegenConfig = {
   serverAction: boolean;
   /** Wrap generated form in <FormProvider {...form}> */
   formProvider?: boolean;
+  /** Top-level section groupings keyed by section name */
+  sections?: Record<string, SectionConfig>;
 };
 
 function renderLiteralProp(value: unknown): string | undefined {
@@ -192,7 +200,8 @@ export function resolveFieldMapping<TComponents extends Record<string, unknown>>
   }
 
   // Try exact match first, then normalised bracket-notation match
-  const override = componentConfig.fields?.[fieldKey] ?? componentConfig.fields?.[normalizeFieldKey(fieldKey)];
+  const override =
+    componentConfig.fields?.[fieldKey] ?? componentConfig.fields?.[normalizeFieldKey(fieldKey)];
   if (override) {
     return {
       entry: override.fieldType ? componentConfig.fieldTypes[override.fieldType] : undefined,
@@ -296,7 +305,7 @@ const charMap: Record<string, string> = {
 };
 
 function escapeUnsafeChars(str: string): string {
-  return str.replace(/[<>\/\\\b\f\n\r\t\0\u2028\u2029]/g, (x) => charMap[x] ?? x);
+  return str.replace(/[<>/\\\b\f\n\r\t\0\u2028\u2029]/g, (x) => charMap[x] ?? x);
 }
 
 function serializeDefaultValue(value: unknown): string {
@@ -365,11 +374,21 @@ function renderArrayBlock(
   } else if (mappedItem.componentName && mappedItem.entry?.controlled) {
     const overrideProps = renderOverrideProps(mappedItem.override?.props);
     const propMap = resolvePropMap(mappedItem.entry, mappedItem.override);
-    itemJsx = renderControlledComponent(indexedItemField.key, mappedItem.componentName, propMap, overrideProps);
+    itemJsx = renderControlledComponent(
+      indexedItemField.key,
+      mappedItem.componentName,
+      propMap,
+      overrideProps
+    );
   } else if (mappedItem.componentName) {
     itemJsx = `<${mappedItem.componentName} {...register(\`${indexedItemField.key}\`)}${renderOverrideProps(mappedItem.override?.props)} />`;
   } else {
-    itemJsx = renderFieldBlockWithConfig(indexedItemField, componentConfig, primitives, `${indent}      `);
+    itemJsx = renderFieldBlockWithConfig(
+      indexedItemField,
+      componentConfig,
+      primitives,
+      `${indent}      `
+    );
   }
 
   return [
@@ -470,7 +489,8 @@ function isFieldHidden(
   if (field.hidden) return true;
   // Check config fields[path].hidden
   if (!componentConfig?.fields) return false;
-  const override = componentConfig.fields[field.key] ?? componentConfig.fields[normalizeFieldKey(field.key)];
+  const override =
+    componentConfig.fields[field.key] ?? componentConfig.fields[normalizeFieldKey(field.key)];
   if (override?.hidden === true) return true;
   // Fields with a section are rendered by the section component, not individually
   if (override?.section) return true;
@@ -490,8 +510,7 @@ function collectSections(
 
   const visitField = (field: FormField): void => {
     const override =
-      componentConfig!.fields![field.key] ??
-      componentConfig!.fields![normalizeFieldKey(field.key)];
+      componentConfig!.fields![field.key] ?? componentConfig!.fields![normalizeFieldKey(field.key)];
 
     const hasSection = override?.section !== undefined;
 
@@ -532,15 +551,12 @@ function collectSections(
  * Render section components that group multiple fields.
  * Each section component receives a `fields` prop with the field names it should bind to.
  */
-function renderSections(
-  sections: Map<string, string[]>,
-  indent: string
-): string {
+function renderSections(sections: Map<string, string[]>, indent: string): string {
   if (sections.size === 0) return '';
 
   const blocks: string[] = [];
   for (const [componentName, fieldKeys] of sections) {
-    const fieldsArrayStr = fieldKeys.map(k => `'${k}'`).join(', ');
+    const fieldsArrayStr = fieldKeys.map((k) => `'${k}'`).join(', ');
     blocks.push(`${indent}<${componentName} fields={[${fieldsArrayStr}]} />`);
   }
   return blocks.join('\n');
@@ -577,7 +593,9 @@ function renderFieldBlockWithConfig(
       const propMap = resolvePropMap(mapping.entry, mapping.override);
       content = renderControlledComponent(field.key, mapping.componentName, propMap, overrideProps);
     } else {
-      const regExpr = field.key.includes('${') ? `register(\`${field.key}\`)` : `register('${field.key}')`;
+      const regExpr = field.key.includes('${')
+        ? `register(\`${field.key}\`)`
+        : `register('${field.key}')`;
       content = `<${mapping.componentName} id="${field.key}" {...${regExpr}}${overrideProps} />`;
     }
     return renderFieldContainer(field, content, indent, primitives);
@@ -733,7 +751,7 @@ export async function generateFormComponent(
   const wrappedContent = useFormProvider
     ? [
         `    <FormProvider {...form}>`,
-        ...formContent.map((line) => line ? `  ${line}` : line),
+        ...formContent.map((line) => (line ? `  ${line}` : line)),
         `    </FormProvider>`
       ]
     : formContent;
