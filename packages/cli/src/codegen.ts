@@ -33,7 +33,8 @@ export type CodegenConfig = {
 
 function renderLiteralProp(value: unknown): string | undefined {
   if (typeof value === 'string') {
-    return `"${value.replace(/"/g, '\\"')}"`;
+    // Escape backslashes first, then double quotes to produce a valid JS string literal
+    return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
   }
   if (typeof value === 'number' || typeof value === 'boolean') {
     return `{${String(value)}}`;
@@ -273,11 +274,6 @@ function cloneFieldWithArrayIndex(field: FormField, arrayKey: string): FormField
     children: field.children?.map((child) => cloneFieldWithArrayIndex(child, arrayKey)),
     arrayItem: field.arrayItem ? cloneFieldWithArrayIndex(field.arrayItem, arrayKey) : undefined
   };
-}
-
-function getObjectPropertyName(path: string): string {
-  const lastSegment = path.split('.').at(-1) ?? path;
-  return escapeUnsafeChars(JSON.stringify(lastSegment));
 }
 
 function getDefaultArrayItemExpression(field: FormField | undefined): string {
