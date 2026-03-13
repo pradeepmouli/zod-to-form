@@ -13,30 +13,30 @@ export type RuntimeComponentEntry = ComponentEntry;
 export type RuntimeFieldOverride = FieldConfig;
 
 export type RuntimeComponentConfig = {
+  /**
+   * Module specifier used by the CLI codegen to emit a static import statement.
+   * This field is NOT used at runtime — pass the pre-imported module via `componentModule`.
+   */
   components: string;
+  /**
+   * The pre-imported components module object, e.g. `import * as myComponents from './components'`.
+   * Required when `fieldTypes` entries do not supply a `render` override.
+   */
+  componentModule?: Record<string, unknown>;
   fieldTypes: Record<string, RuntimeComponentEntry>;
   fields?: Record<string, FieldConfig>;
   /**
    * Pre-imported section components, keyed by the section name used in `fields[key].section`.
-   * Required when using section field grouping at runtime — avoids a dynamic import.
+   * Required when using section field grouping at runtime.
    */
   sectionComponents?: Record<string, ComponentType<{ fields: string[] }>>;
 };
 
-const moduleCache = new Map<string, Promise<Record<string, unknown>>>();
-const resolvedComponentCache = new Map<string, ComponentType<Record<string, unknown>>>();
-const resolvingComponentCache = new Map<string, Promise<ComponentType<Record<string, unknown>>>>();
-
-function getModule(path: string): Promise<Record<string, unknown>> {
-  const cached = moduleCache.get(path);
-  if (cached) {
-    return cached;
-  }
-
-  const loader = import(/* @vite-ignore */ path).then((mod) => mod as Record<string, unknown>);
-  moduleCache.set(path, loader);
-  return loader;
-}
+const renderResultCache = new Map<() => Promise<unknown>, ComponentType<Record<string, unknown>>>();
+const pendingRenderCache = new Map<
+  () => Promise<unknown>,
+  Promise<ComponentType<Record<string, unknown>>>
+>();
 
 function resolveFieldOverride(
   field: FormField,
@@ -75,54 +75,41 @@ async function resolveConfiguredComponent(
   componentConfig: RuntimeComponentConfig,
   entry: RuntimeComponentEntry
 ): Promise<ComponentType<Record<string, unknown>>> {
-  const cacheKey = `${componentConfig.components}::${entry.component}`;
-  const cached = resolvedComponentCache.get(cacheKey);
-  if (cached) {
-    return cached;
-  }
+  if (entry.render) {
+    const cached = renderResultCache.get(entry.render);
+    if (cached) return cached;
 
-  const resolving = resolvingComponentCache.get(cacheKey);
-  if (resolving) {
-    return resolving;
-  }
+    const pending = pendingRenderCache.get(entry.render);
+    if (pending) return pending;
 
-  const resolvePromise = (async () => {
-    let resolved: ComponentType<Record<string, unknown>>;
-
-    if (entry.render) {
-      resolved = asComponentType(
-        await entry.render(),
+    const resolvePromise = entry.render().then((component) => {
+      const resolved = asComponentType(
+        component,
         `INVALID_COMPONENT_ENTRY: field "${field.key}" render override must resolve to a function.`
       );
-    } else {
-      let mod: Record<string, unknown>;
-      try {
-        mod = await getModule(componentConfig.components);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        throw new Error(
-          `INVALID_RUNTIME_COMPONENT: failed to import "${componentConfig.components}" for field "${field.key}" (${message}).`
-        );
-      }
-
-      const candidate = mod[entry.component];
-      resolved = asComponentType(
-        candidate,
-        `INVALID_RUNTIME_COMPONENT: component "${entry.component}" in "${componentConfig.components}" is not a function.`
-      );
+      renderResultCache.set(entry.render!, resolved);
+      return resolved;
+    });
+    pendingRenderCache.set(entry.render, resolvePromise);
+    try {
+      return await resolvePromise;
+    } finally {
+      pendingRenderCache.delete(entry.render);
     }
-
-    resolvedComponentCache.set(cacheKey, resolved);
-    return resolved;
-  })();
-
-  resolvingComponentCache.set(cacheKey, resolvePromise);
-
-  try {
-    return await resolvePromise;
-  } finally {
-    resolvingComponentCache.delete(cacheKey);
   }
+
+  const mod = componentConfig.componentModule;
+  if (!mod) {
+    throw new Error(
+      `INVALID_RUNTIME_COMPONENT: componentModule is not provided and no render override exists for field "${field.key}". ` +
+        `Pass the pre-imported module as componentConfig.componentModule.`
+    );
+  }
+  const candidate = mod[entry.component];
+  return asComponentType(
+    candidate,
+    `INVALID_RUNTIME_COMPONENT: component "${entry.component}" in componentModule is not a function.`
+  );
 }
 
 function getErrorAtPath(errors: unknown, path: string): string | undefined {
