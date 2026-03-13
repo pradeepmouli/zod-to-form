@@ -1,0 +1,200 @@
+{
+  "version": 1,
+  "skills": {
+    "changelog-automation": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "802b14ccd3a9305555bd52554414c31c87c07f09fb7566be6e1ece3316c91e98"
+    },
+    "crafting-effective-readmes": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "5bdd1ec5b79e2c2c0ebe6d61e7b816b3c25f301155bd37d07939921257f96738"
+    },
+    "dependency-updater": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "b1734c8cb5dd21ca7bfa3cf546c958b7c3ecdc0756a424bd471902651b5a36b6"
+    },
+    "dependency-upgrade": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "e42ddd8fe37e5b9e1d803cd72d4b51c63ae58e5cdef0b1108795574db40dbce9"
+    },
+    "design-system-patterns": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "1da4c9b595db349b7ddee3622eea0acdf0318048384137f0ef41bcfc76b27679"
+    },
+    "find-skills": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "6412eb4eb3b91595ebab937f0c69501240e7ba761b3d82510b5cf506ec5c7adc"
+    },
+    "frontend-design": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "063a0e6448123cd359ad0044cc46b0e490cc7964d45ef4bb9fd842bd2ffbca67"
+    },
+    "game-changing-features": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "4e090c4553c685feb47f1b5c2de34631b23b851711bbf550175df9ec43352ff1"
+    },
+    "github-actions-templates": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "7a28cb13b9fa427ae39c943ceb25d81f8135f848e1a1d434dc86a75926f51035"
+    },
+    "modern-javascript-patterns": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "70bc273dcb90ed035be512862b658d1bd80daa135e24d346c7111f1830f934c5"
+    },
+    "monorepo-management": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "65f2d6c0e097066fe06c812231e9bd3d2659af1e460af0217990b59ac34be42e"
+    },
+    "protocol-reverse-engineering": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "9937cd621efd79a150ee15df6b6532fd08688b09484989466845b692271dd7ac"
+    },
+    "responsive-design": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "9df1908623814c4c93cc1fde25caa211b2d28c8ffcdc2b5a12c6b7ae456f0f89"
+    },
+    "skill-creator": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "272d984e884ac4eddca9c78730d2bdd60c0c14864ca35e166fed89553d7f9c97"
+    },
+    "speckit-analyze": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "dafe1779588cc89df1a5ddd78ea1ab4377ae835bae9c838cfedb6316bf73248f"
+    },
+    "speckit-baseline": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "750a3bb46f19e0d731d197ad2269e79a7920465f11cbba9e8040f87b22b63f86"
+    },
+    "speckit-bugfix": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "ebe5a9b773b1a38f597642cfd3643fe41dc0249d2f26f76effd9d4ae3c59f0cb"
+    },
+    "speckit-checklist": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "3feebf98b84f195e23f5dac23a45aaa4ed4e287871d1e829d5ee8aaa5ae6ce03"
+    },
+    "speckit-clarify": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "db5f1e343cf0d5ed7e5ffd702e06baba154c1f98ae38f07d7196e5408bfc818c"
+    },
+    "speckit-cleanup": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "fb6ee14cb4333f0a2ee4d2ca50926945541f603bb2f630f5691c72a54f7a4c3e"
+    },
+    "speckit-constitution": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "ebeb233ebb68dc0b323278889dcf8ef0135ac8c23cf521754c0629172d21ced0"
+    },
+    "speckit-deprecate": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "8b11ab3ff14c68d31406051fd3a3f2e12a7b00a4f032678bde5c766ace71c1da"
+    },
+    "speckit-enhance": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "c80bcc62697369c5cf55bac6a3790f71eabbaacf3025d95fa827c69096777ca4"
+    },
+    "speckit-hotfix": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "59f8cfab5d26aa0cb8a5ddfc3cd7ea061d98efcde0c69493e343d50b67e7440c"
+    },
+    "speckit-implement": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "b9a9df736c61102c12ab3ee9ec9a81aaaa2082bc5136a8a7f5491546a2172c4a"
+    },
+    "speckit-incorporate": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "52211d186fdf42481d40caa71b5e8efa4bc210f44c2968ea5a7e9679b6c5a505"
+    },
+    "speckit-modify": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "efb69a4cb0052c8dc7615042ac8c5339f2ac6a99b880a55a9e90feb9849707af"
+    },
+    "speckit-phasestoissues": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "70453dce709d1e0ee1bcb33cc79eab910adf854a4c96ac7a333d1670fcc43e3a"
+    },
+    "speckit-plan": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "d25856c5f04a2220826346cd49d29aa7803f30c7e5a6c7c6b3b5b7b99e9ab71e"
+    },
+    "speckit-refactor": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "d57289d0a0c6581ab77c2e1908c5bf432b49b37996404b7f5510177b88c7681f"
+    },
+    "speckit-review": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "c3f27551e3516fa7b4fcba1517a81cb75663dfe510933cc5fbfc5ebd17e4ba89"
+    },
+    "speckit-specify": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "90020f8811e4b381221706081295df931bb1bf84b74e65f9abd420d88a21e76e"
+    },
+    "speckit-tasks": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "b6b97dbac054dcd9ad594cf0888eb01c8a83eee70772a73a9f28ef108c2b8ca5"
+    },
+    "speckit-taskstoissues": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "e0e2f08a09c811086cc555c40c6ef019317bd308760e9b34f87a12b68e0e65fe"
+    },
+    "template-initialization": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "d0e2bee4d5c68cc7464a32095596b78ef92b9414fb0e782ff9b8eb05e7b9c96b"
+    },
+    "typescript-advanced-types": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "a03a83996ae9d2f4dd6d4db08899d61761c7d5351bce4c695d20a21197742a36"
+    },
+    "visual-design-foundations": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "5c5e091d61e2f6e465b77650b99d36acfe779cb70f29e9a103b5ba443065a3a9"
+    },
+    "zod-to-form-cli": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "7d9d65ef65f60d374a679d09403d2291f682233d47c71b1dfa21feadd9d779f5"
+    },
+    "zod-to-form-runtime": {
+      "source": "pradeepmouli/zod-to-form",
+      "sourceType": "github",
+      "computedHash": "b667f67548f0f7aa4b858b6b9335c25c5caeefdb0fcba3e89604a763fbba3bb2"
+    }
+  }
+}

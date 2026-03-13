@@ -21,7 +21,7 @@ import { ZodForm } from '@zod-to-form/react';
 |---|---|
 | [`@zod-to-form/core`](packages/core) | Schema walker & processor registry — zero runtime deps |
 | [`@zod-to-form/react`](packages/react) | `<ZodForm>` runtime renderer + shadcn/ui component map |
-| [`@zod-to-form/cli`](packages/cli) | `zodform generate` CLI for static codegen |
+| [`@zod-to-form/cli`](packages/cli) | `z2f generate` CLI for static codegen |
 
 ## Get Started
 
@@ -65,14 +65,14 @@ pnpm add -D @zod-to-form/cli zod
 ```
 
 ```bash
-npx zodform generate --schema src/schemas/signup.ts --export signupSchema --out src/components/
+npx z2f generate --schema src/schemas/signup.ts --export signupSchema --config z2f.config.ts --out src/components/
 ```
 
 This produces `src/components/SignupForm.tsx` — inspect it, customize it, commit it. Regenerate with `--watch` during development.
 
 ### When to use which?
 
-| | Runtime `<ZodForm>` | CLI `zodform generate` |
+| | Runtime `<ZodForm>` | CLI `z2f generate` |
 |---|---|---|
 | **Best for** | Rapid prototyping, admin panels, CRUD forms | Production forms, design system integration |
 | **Output** | React component at runtime | Static `.tsx` file you own |
@@ -157,13 +157,14 @@ import { shadcnComponentMap } from '@zod-to-form/react/shadcn';
 Use a shared component config to keep shadcn as the base while overriding specific field types with your own components. The same config file drives both the runtime and CLI — see [Shared Component Configuration](#shared-component-configuration).
 
 ```typescript
-// src/config/form-components.ts
-import { defineComponentConfig } from '@zod-to-form/cli';
+// z2f.config.ts
+import { defineConfig } from '@zod-to-form/core';
 
-export default defineComponentConfig({
+export default defineConfig({
   components: '@/components/ui',
+  preset: 'shadcn',
   fieldTypes: {
-    DatePicker: { component: 'MyDatePicker' },
+    DatePicker: { component: 'MyDatePicker', controlled: true },
     Textarea: { component: 'MyRichTextEditor' },
     // All other field types fall through to shadcn defaults
   },
@@ -177,7 +178,7 @@ export default defineComponentConfig({
 
 ```tsx
 import { shadcnComponentMap } from '@zod-to-form/react/shadcn';
-import componentConfig from '@/config/form-components';
+import componentConfig from './z2f.config';
 
 <ZodForm
   schema={schema}
@@ -189,14 +190,13 @@ import componentConfig from '@/config/form-components';
 </ZodForm>
 ```
 
-**CLI** — `--ui shadcn` provides the base, `--component-config` applies overrides:
+**CLI** — `preset: 'shadcn'` provides the base, config applies overrides:
 
 ```bash
-npx zodform generate \
+npx z2f generate \
   --schema src/schemas/user.ts \
   --export userSchema \
-  --ui shadcn \
-  --component-config src/config/form-components.ts \
+  --config z2f.config.ts \
   --out src/components/
 ```
 
@@ -207,51 +207,59 @@ Fields matched by the config get your custom components; everything else renders
 Generate a static `.tsx` form component that has **zero runtime dependency** on zod-to-form:
 
 ```bash
-npx zodform generate \
+npx z2f generate \
   --schema src/schemas/user.ts \
   --export userSchema \
+  --config z2f.config.ts \
   --out src/components/ \
   --name UserForm
 ```
 
-This produces a file like the following — notice it imports only `react-hook-form`, `@hookform/resolvers`, and your schema. No `@zod-to-form/*` imports appear in the output:
+This produces a file like the following — notice it imports only `react-hook-form`, `@hookform/resolvers`, and your schema. No `@zod-to-form/*` runtime imports appear in the output:
 
 ```tsx
 // src/components/UserForm.tsx (generated)
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import type { StripIndexSignature } from '@zod-to-form/core';
 import { userSchema } from '../schemas/user';
+import { Input, Select } from '@/components/ui';
 
-type FormData = z.output<typeof userSchema>;
+type FormData = StripIndexSignature<z.output<typeof userSchema>>;
 
 export function UserForm(props: {
   onSubmit: (data: FormData) => void;
+  values?: Partial<FormData>;
 }) {
-  const { register, handleSubmit } = useForm<FormData>({
+  const form = useForm<FormData>({
     resolver: zodResolver(userSchema),
+    ...(props.values && { values: props.values }),
   });
+  const { register, handleSubmit } = form;
 
   return (
-    <form onSubmit={handleSubmit(props.onSubmit)}>
-      <div>
-        <label htmlFor="name">Name</label>
-        <input id="name" type="text" {...register('name')} />
-      </div>
-      <div>
-        <label htmlFor="email">Email</label>
-        <input id="email" type="email" {...register('email')} />
-      </div>
-      <div>
-        <label htmlFor="role">Role</label>
-        <select id="role" {...register('role')}>
-          <option value="admin">Admin</option>
-          <option value="editor">Editor</option>
-          <option value="viewer">Viewer</option>
-        </select>
-      </div>
-      <button type="submit">Submit</button>
-    </form>
+    <FormProvider {...form}>
+      <form onSubmit={handleSubmit(props.onSubmit)}>
+        <div>
+          <label htmlFor="name">Name</label>
+          <Input id="name" type="text" {...register('name')} />
+        </div>
+        <div>
+          <label htmlFor="email">Email</label>
+          <Input id="email" type="email" {...register('email')} />
+        </div>
+        <div>
+          <label htmlFor="role">Role</label>
+          <Select id="role" {...register('role')}>
+            <option value="admin">Admin</option>
+            <option value="editor">Editor</option>
+            <option value="viewer">Viewer</option>
+          </Select>
+        </div>
+        <button type="submit">Submit</button>
+      </form>
+    </FormProvider>
   );
 }
 ```
@@ -261,26 +269,30 @@ The generated code reads like something you'd write by hand. Inspect it, customi
 **Auto-save mode** generates a `watch` + `useEffect` pattern instead of `handleSubmit`:
 
 ```bash
-npx zodform generate --schema src/schemas/user.ts --export userSchema --mode auto-save
+npx z2f generate --schema src/schemas/user.ts --export userSchema --config z2f.config.ts --mode auto-save
 ```
 
 ```tsx
 // Generated in auto-save mode
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import type { StripIndexSignature } from '@zod-to-form/core';
 import { userSchema } from '../schemas/user';
 
-type FormData = z.output<typeof userSchema>;
+type FormData = StripIndexSignature<z.output<typeof userSchema>>;
 
 export function UserForm(props: {
   onValueChange?: (data: FormData) => void;
+  values?: Partial<FormData>;
 }) {
-  const { register, watch } = useForm<FormData>({
+  const form = useForm<FormData>({
     resolver: zodResolver(userSchema),
-    mode: 'onChange'
+    mode: 'onChange',
+    ...(props.values && { values: props.values }),
   });
+  const { register, watch } = form;
 
   useEffect(() => {
     const subscription = watch((values) => {
@@ -290,9 +302,11 @@ export function UserForm(props: {
   }, [watch, props.onValueChange]);
 
   return (
-    <form>
-      {/* fields — no submit button */}
-    </form>
+    <FormProvider {...form}>
+      <form>
+        {/* fields — no submit button */}
+      </form>
+    </FormProvider>
   );
 }
 ```
@@ -300,13 +314,92 @@ export function UserForm(props: {
 **With Next.js server action:**
 
 ```bash
-npx zodform generate --schema src/schemas/user.ts --export userSchema --server-action
+npx z2f generate --schema src/schemas/user.ts --export userSchema --config z2f.config.ts --server-action
 ```
 
 **Watch mode** (re-generates on schema changes):
 
 ```bash
-npx zodform generate --schema src/schemas/user.ts --export userSchema --watch
+npx z2f generate --schema src/schemas/user.ts --export userSchema --config z2f.config.ts --watch
+```
+
+### Controlled Components
+
+When a component doesn't support `ref` forwarding (custom selects, date pickers, etc.), mark it as `controlled: true` in the config. Both the CLI and runtime handle this automatically:
+
+```typescript
+// z2f.config.ts
+import { defineConfig } from '@zod-to-form/core';
+
+export default defineConfig({
+  components: '@/components/ui',
+  fieldTypes: {
+    Select: { component: 'MySelect', controlled: true },
+    DatePicker: {
+      component: 'MyDatePicker',
+      controlled: true,
+      propMap: { onSelect: 'field.onChange' } // remap RHF props
+    }
+  }
+});
+```
+
+**CLI** generates `<Controller>` wrapper:
+
+```tsx
+<Controller name="role" control={control}
+  render={({ field }) => <MySelect value={field.value} onChange={field.onChange} />} />
+```
+
+**Runtime** uses `useController` internally — no adapter wrappers needed.
+
+With `propMap`, RHF field props are remapped to your component's API (e.g., `field.onChange` → `onSelect`).
+
+### Hidden Fields
+
+Hide a field from rendering while keeping it in the schema and form state:
+
+```typescript
+fields: {
+  internalId: { hidden: true }
+}
+```
+
+### Section Grouping
+
+Group multiple fields into a single custom section component:
+
+```typescript
+fields: {
+  source: { section: 'MetadataSection' },
+  version: { section: 'MetadataSection' },
+  lastUpdated: { section: 'MetadataSection' }
+}
+```
+
+Fields with a `section` value are suppressed individually. A single `<MetadataSection fields={['source', 'version', 'lastUpdated']} />` is rendered. The section component receives field names and reads/writes values via `useFormContext()`.
+
+### Per-Schema Overrides
+
+Override field config for specific schemas:
+
+```typescript
+export default defineConfig({
+  components: '@/components/ui',
+  fieldTypes: { /* ... */ },
+  fields: {
+    description: { fieldType: 'Textarea' } // global default
+  },
+  schemas: {
+    userSchema: {
+      name: 'UserForm',
+      mode: 'auto-save',
+      fields: {
+        description: { fieldType: 'Input' } // override for this schema only
+      }
+    }
+  }
+});
 ```
 
 ### Shared Component Configuration
@@ -316,18 +409,19 @@ Both the runtime renderer and the CLI codegen accept the **same component config
 **1. Define the config:**
 
 ```typescript
-// src/config/form-components.ts
-import { defineComponentConfig } from '@zod-to-form/cli';
+// z2f.config.ts
+import { defineConfig } from '@zod-to-form/core';
 
-export default defineComponentConfig({
+export default defineConfig({
   components: '@/components/ui',
+  preset: 'shadcn',
   fieldTypes: {
     Input: { component: 'TextInput' },
     Textarea: { component: 'TextareaInput' },
-    Select: { component: 'SelectInput' },
+    Select: { component: 'SelectInput', controlled: true },
     Checkbox: { component: 'CheckboxInput' },
-    DatePicker: { component: 'DateInput' },
-    'cross-ref': { component: 'TypeSelector' },
+    DatePicker: { component: 'DateInput', controlled: true },
+    'cross-ref': { component: 'TypeSelector', controlled: true },
   },
   fields: {
     bio: { fieldType: 'Textarea', props: { rows: 6 } },
@@ -339,10 +433,10 @@ export default defineComponentConfig({
 **2a. Use with the CLI** — generates static imports and JSX:
 
 ```bash
-npx zodform generate \
+npx z2f generate \
   --schema src/schemas/user.ts \
   --export userSchema \
-  --component-config src/config/form-components.ts \
+  --config z2f.config.ts \
   --out src/components/
 ```
 
@@ -354,14 +448,17 @@ import { TextInput, TextareaInput, TypeSelector } from '@/components/ui';
 
 // ...
 <TextareaInput id="bio" {...register('bio')} rows={6} />
-<TypeSelector id="address.country" {...register('address.country')} refType="Country" />
+
+// Controlled component generates Controller:
+<Controller name="address.country" control={control}
+  render={({ field }) => <TypeSelector {...field} refType="Country" />} />
 ```
 
 **2b. Use with the runtime** — loads the same components dynamically:
 
 ```tsx
 import { ZodForm } from '@zod-to-form/react';
-import componentConfig from '@/config/form-components';
+import componentConfig from './z2f.config';
 
 <ZodForm
   schema={userSchema}
@@ -490,6 +587,8 @@ The Zod-to-form generation space has one dominant player ([AutoForm](https://git
 | Multi-UI-library pluggable | Yes | Yes | Yes | Yes | **Yes** |
 | Nested objects | Yes | Yes | | Yes | **Yes** |
 | Array fields (add/remove) | Partial | Yes | | Yes | **Yes** |
+| Controlled component support | | | | | **Yes** |
+| Section field grouping | | | | | **Yes** |
 | Zero-dependency core | | | | | **Yes** |
 | Server action generation | | | | | **Yes** |
 
@@ -557,9 +656,15 @@ No. zod-to-form targets **Zod v4 only** (`zod@^4.0.0`). It relies on Zod v4's `_
 Yes. There are two approaches:
 
 - **Runtime:** Pass a `components` map to `<ZodForm>` that maps field types to your React components. A `shadcnComponentMap` is included out of the box. Extend it with a shared config file that overrides specific field types — see [Extending shadcn with custom components](#extending-shadcn-with-custom-components).
-- **CLI:** Use `--ui shadcn` (default) or `--ui unstyled`, and optionally provide a `--component-config` file to map field types to your own component imports.
+- **CLI:** Use `preset: 'shadcn'` (default) or `preset: 'unstyled'`, and provide a `--config` file to map field types to your own component imports.
 
 Both paths accept the same config shape — you can define your component mapping once and share it across runtime and CLI. See [Shared Component Configuration](#shared-component-configuration) for a full example.
+</details>
+
+<details>
+<summary><strong>What about components that don't support ref forwarding?</strong></summary>
+
+Mark them as `controlled: true` in the config's `fieldTypes`. The CLI generates a `<Controller>` wrapper, and the runtime uses `useController` — no manual `forwardRef` adapters needed. Use `propMap` to remap RHF field props to your component's API. See [Controlled Components](#controlled-components).
 </details>
 
 <details>
@@ -573,7 +678,7 @@ Yes. The `useZodForm()` hook returns the underlying React Hook Form `form` insta
 
 **Runtime (`<ZodForm>`)** reads your schema at render time and generates the form dynamically. Great for rapid iteration — change the schema and the form updates instantly.
 
-**CLI (`zodform generate`)** reads your schema at build time and outputs a static `.tsx` file. The generated file has zero dependency on zod-to-form at runtime — it imports only `react-hook-form` and your UI components. You own the output and can hand-edit it.
+**CLI (`z2f generate`)** reads your schema at build time and outputs a static `.tsx` file. The generated file has zero dependency on zod-to-form at runtime — it imports only `react-hook-form` and your UI components. You own the output and can hand-edit it.
 
 Both use the same `@zod-to-form/core` walker, so they produce identical field structures. Use runtime for speed, CLI for control. See the [Shared Component Configuration](#shared-component-configuration) section for how to use a single config file to make both paths produce functionally identical forms.
 </details>
@@ -581,7 +686,7 @@ Both use the same `@zod-to-form/core` walker, so they produce identical field st
 <details>
 <summary><strong>Does the CLI-generated code stay in sync with schema changes?</strong></summary>
 
-Use `--watch` mode during development — it re-generates the `.tsx` file whenever the schema module changes. In CI, add a `zodform generate` step to your build pipeline. The generated file is meant to be committed, so you can review diffs when the schema evolves.
+Use `--watch` mode during development — it re-generates the `.tsx` file whenever the schema module changes. In CI, add a `z2f generate` step to your build pipeline. The generated file is meant to be committed, so you can review diffs when the schema evolves.
 </details>
 
 <details>
@@ -594,7 +699,7 @@ Both runtime and CLI support nested `z.object()` (rendered as fieldset groups) a
 
 ```bash
 pnpm install        # Install dependencies
-pnpm test           # Run all tests (110 tests across 3 packages)
+pnpm test           # Run all tests (260 tests across 3 packages)
 pnpm run type-check # TypeScript strict mode check
 pnpm run lint       # oxlint
 pnpm run build      # Build all packages
@@ -607,7 +712,11 @@ pnpm run format     # oxfmt
 packages/
 ├── core/    # @zod-to-form/core  — schema walker & processors
 ├── react/   # @zod-to-form/react — <ZodForm> runtime renderer
-└── cli/     # @zod-to-form/cli   — zodform generate CLI
+└── cli/     # @zod-to-form/cli   — z2f generate CLI
+skills/
+├── zod-to-form/         # Unified skill (for npx skills add)
+├── zod-to-form-cli/     # CLI-specific skill
+└── zod-to-form-runtime/ # Runtime-specific skill
 specs/
 └── 001-zodform/  # Feature spec, plan, tasks, contracts
 docs/
@@ -632,5 +741,4 @@ MIT — see [LICENSE](LICENSE) for details.
 
 ---
 
-**Author**: Pradeep Mouli · **Version**: 0.2.0 · **Zod**: v4.x only
-
+**Author**: Pradeep Mouli · **Version**: 0.3.0 · **Zod**: v4.x only

@@ -37,6 +37,7 @@ describe('runInit', () => {
     expect(content).toContain(`ui: 'shadcn'`);
     expect(content).toContain(`overwrite: false`);
     expect(content).toContain(`serverAction: false`);
+    expect(content).toContain(`formProvider: false`);
 
     process.chdir(originalCwd);
   });
@@ -283,7 +284,8 @@ describe('runInit', () => {
     expect(content).toContain(`...SHADCN_FIELD_TYPES`);
     // Discovered entries listed after the spread
     expect(content).toContain(`RichTextEditor: { component: 'RichTextEditor' }`);
-    expect(content).toContain(`ColorPicker: { component: 'ColorPicker' }`);
+    // ColorPicker is a known controlled component
+    expect(content).toContain(`ColorPicker: { component: 'ColorPicker', controlled: true }`);
 
     process.chdir(originalCwd);
   });
@@ -372,6 +374,98 @@ describe('runInit', () => {
     expect(output).toContain('shadcn components.json found');
     expect(output).toContain('formPrimitives source:');
     expect(output).toContain('[summary]');
+
+    logSpy.mockRestore();
+    process.chdir(originalCwd);
+  });
+
+  it('marks known controlled components (Select, Switch) with controlled: true', async () => {
+    const dir = await createTempDir();
+    process.chdir(dir);
+
+    await mkdir(path.join(dir, 'src', 'components', 'zod-form-components'), { recursive: true });
+    await writeFile(
+      path.join(dir, 'src', 'components', 'zod-form-components', 'index.ts'),
+      [
+        'export const Field = () => null;',
+        'export const FieldLabel = () => null;',
+        'export const FieldControl = () => null;',
+        'export const TextInput = () => null;',
+        'export const Select = () => null;',
+        'export const Switch = () => null;'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const result = await runInit({});
+    const content = await readFile(result.outputPath, 'utf8');
+
+    // Known controlled components get controlled: true
+    expect(content).toContain(`Select: { component: 'Select', controlled: true }`);
+    expect(content).toContain(`Switch: { component: 'Switch', controlled: true }`);
+    // Regular components do not
+    expect(content).toContain(`TextInput: { component: 'TextInput' }`);
+    expect(content).not.toContain(`TextInput: { component: 'TextInput', controlled: true }`);
+
+    process.chdir(originalCwd);
+  });
+
+  it('detects controlled components from source heuristic (value + onChange, no forwardRef)', async () => {
+    const dir = await createTempDir();
+    process.chdir(dir);
+
+    await mkdir(path.join(dir, 'src', 'components', 'zod-form-components'), { recursive: true });
+    await writeFile(
+      path.join(dir, 'src', 'components', 'zod-form-components', 'index.ts'),
+      [
+        'export const Field = () => null;',
+        'export const FieldLabel = () => null;',
+        'export const FieldControl = () => null;',
+        '',
+        '// Controlled: has value + onChange in props, no forwardRef',
+        'type TypeSelectorProps = { value: string; onChange: (v: string) => void; };',
+        'export function TypeSelector({ value, onChange }: TypeSelectorProps) { return null; }',
+        '',
+        '// NOT controlled: uses forwardRef',
+        'export const CustomInput = React.forwardRef(function CustomInput({ value, onChange }, ref) { return null; });'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const result = await runInit({});
+    const content = await readFile(result.outputPath, 'utf8');
+
+    // Heuristic detects TypeSelector as controlled
+    expect(content).toContain(`TypeSelector: { component: 'TypeSelector', controlled: true }`);
+    // forwardRef component is NOT marked controlled
+    expect(content).not.toContain(`CustomInput: { component: 'CustomInput', controlled: true }`);
+
+    process.chdir(originalCwd);
+  });
+
+  it('shows (controlled) tag in discovery output for controlled components', async () => {
+    const dir = await createTempDir();
+    process.chdir(dir);
+
+    await mkdir(path.join(dir, 'src', 'components', 'zod-form-components'), { recursive: true });
+    await writeFile(
+      path.join(dir, 'src', 'components', 'zod-form-components', 'index.ts'),
+      [
+        'export const Field = () => null;',
+        'export const FieldLabel = () => null;',
+        'export const FieldControl = () => null;',
+        'export const Select = () => null;',
+        'export const TextInput = () => null;'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await runInit({});
+
+    const output = logSpy.mock.calls.flat().join('\n');
+    expect(output).toContain('Select (controlled)');
+    expect(output).not.toContain('TextInput (controlled)');
 
     logSpy.mockRestore();
     process.chdir(originalCwd);

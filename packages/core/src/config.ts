@@ -29,6 +29,8 @@ type TypedFieldConfigForComponent<TComponents extends Record<string, unknown>, K
   props?: TComponents[K] extends Record<string, unknown> ? Partial<TComponents[K]> : Record<string, unknown>;
   /** Per-field prop mapping override (merges over ComponentEntry.propMap) */
   propMap?: Record<string, string>;
+  /** Group into a named section component */
+  section?: string;
 };
 
 /** Field config with no fieldType specified (untyped props) */
@@ -40,6 +42,8 @@ type UntypedFieldConfig = {
   props?: Record<string, unknown>;
   /** Per-field prop mapping override (merges over ComponentEntry.propMap) */
   propMap?: Record<string, string>;
+  /** Group into a named section component */
+  section?: string;
 };
 
 /**
@@ -178,7 +182,8 @@ const fieldConfigSchema = z
     hidden: z.boolean().optional(),
     gridColumn: z.string().optional(),
     props: z.record(z.string(), z.unknown()).optional(),
-    propMap: z.record(z.string(), z.string()).optional()
+    propMap: z.record(z.string(), z.string()).optional(),
+    section: z.string().optional()
   })
   .passthrough();
 

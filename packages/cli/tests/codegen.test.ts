@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { FormField } from '@zod-to-form/core';
 import { generateFormComponent, resolveFieldMapping } from '../src/codegen.js';
+import type { CodegenConfig } from '../src/codegen.js';
 import type { ZodToFormComponentConfig } from '../src/index.js';
 
 describe('generateFormComponent', () => {
@@ -882,5 +883,128 @@ describe('generateFormComponent', () => {
     expect(output).toContain('values?: FormData');
     expect(output).toContain('defaultValues: props.defaultValues');
     expect(output).toContain('values: props.values');
+  });
+
+  it('groups fields with section config into a section component', async () => {
+    const fields: FormField[] = [
+      {
+        key: 'name',
+        component: 'Input',
+        props: { type: 'text' },
+        label: 'Name',
+        required: true,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'string'
+      },
+      {
+        key: 'definition',
+        component: 'Textarea',
+        props: {},
+        label: 'Definition',
+        required: false,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'string'
+      },
+      {
+        key: 'comments',
+        component: 'Textarea',
+        props: {},
+        label: 'Comments',
+        required: false,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'string'
+      },
+      {
+        key: 'synonyms',
+        component: 'ArrayField',
+        props: {},
+        label: 'Synonyms',
+        required: false,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'array'
+      }
+    ];
+
+    const output = await generateFormComponent(fields, {
+      schemaPath: '/tmp/schema.ts',
+      exportName: 'testSchema',
+      outputPath: '/tmp/TestForm.tsx',
+      componentName: 'TestForm',
+      mode: 'auto-save',
+      ui: 'shadcn',
+      serverAction: false,
+      componentConfig: {
+        components: '@/components/form-components',
+        fieldTypes: {
+          Input: { component: 'Input' },
+          Textarea: { component: 'Textarea' }
+        },
+        fields: {
+          definition: { section: 'MetadataSection' },
+          comments: { section: 'MetadataSection' },
+          synonyms: { section: 'MetadataSection' }
+        }
+      }
+    });
+
+    // Section component rendered with fields prop
+    expect(output).toContain(`<MetadataSection fields={['definition', 'comments', 'synonyms']} />`);
+    // Section component imported
+    expect(output).toContain('MetadataSection');
+    // Section fields are suppressed from individual rendering
+    expect(output).not.toContain(`register('definition')`);
+    expect(output).not.toContain(`register('comments')`);
+    // Non-section field still renders normally
+    expect(output).toContain(`register('name')`);
+  });
+
+  it('groups nested fields with section config into a section component', async () => {
+    const fields: FormField[] = [
+      {
+        key: 'address.city',
+        component: 'Input',
+        props: { type: 'text' },
+        label: 'City',
+        required: true,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'string'
+      }
+    ];
+
+    const config: CodegenConfig = {
+      schemaPath: '/tmp/schema.ts',
+      exportName: 'testSchema',
+      outputPath: '/tmp/TestFormWithNestedSection.tsx',
+      componentName: 'TestFormWithNestedSection',
+      mode: 'submit',
+      ui: 'unstyled',
+      serverAction: false,
+      // Ensure the nested field key participates in a section so that the
+      // section component must still be emitted even for nested paths.
+      sections: {
+        main: {
+          title: 'Main section',
+          description: 'Section for nested address fields',
+          fields: ['address.city']
+        }
+      }
+    };
+
+    const output = await generateFormComponent(fields, config);
+
+    // The generated TSX should include the section component markup as well
+    // as the nested field key (or its normalized equivalent).
+    expect(output).toContain('Main section');
+    expect(output).toContain('address.city');
   });
 });

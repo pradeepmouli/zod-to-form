@@ -248,6 +248,8 @@ describe('FieldRenderer', () => {
               components={defaultComponentMap}
               componentConfig={{
                 components: './components/index.js',
+                // componentModule provided but does not export 'MissingComponent'
+                componentModule: {},
                 fieldTypes: {
                   Input: { component: 'MissingComponent' }
                 }

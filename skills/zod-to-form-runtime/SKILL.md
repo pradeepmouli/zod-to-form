@@ -1,11 +1,11 @@
 ---
 name: zod-to-form-runtime
-description: 'This skill should be used when the user asks to "set up zod-to-form", "create a form from a Zod schema", "add ZodForm to my project", "render a form from schema", "schema to form", "auto-generate form fields", "use zod-to-form runtime", "install zod-to-form", "dynamic form generation", "useZodForm hook", "ZodForm component", "form builder from zod", or wants to generate React forms from Zod v4 schemas at runtime using the ZodForm component. Covers installation, ZodForm props, metadata annotations via z.registry(), component customization, and the useZodForm hook.'
+description: 'This skill should be used when the user asks to "set up zod-to-form", "create a form from a Zod schema", "add ZodForm to my project", "render a form from schema", "schema to form", "auto-generate form fields", "use zod-to-form runtime", "install zod-to-form", "dynamic form generation", "useZodForm hook", "ZodForm component", "form builder from zod", "controlled component", "section grouping", or wants to generate React forms from Zod v4 schemas at runtime using the ZodForm component. Covers installation, ZodForm props, metadata annotations via z.registry(), component customization, controlled components, section grouping, hidden fields, and the useZodForm hook.'
 ---
 
 # zod-to-form Runtime Setup
 
-Set up schema-driven React form generation using `@zod-to-form/react`. This skill covers installation, basic and advanced usage of the `<ZodForm>` component, metadata annotations, component customization, and the `useZodForm` hook.
+Set up schema-driven React form generation using `@zod-to-form/react`. This skill covers installation, basic and advanced usage of the `<ZodForm>` component, metadata annotations, component customization, controlled components, section grouping, hidden fields, and the `useZodForm` hook.
 
 ## When to Use
 
@@ -109,13 +109,13 @@ import { shadcnComponentMap } from '@zod-to-form/react/shadcn';
 Use a shared component config to keep shadcn as the base while overriding specific field types. The same config file works with the CLI — see `references/shared-config.md`.
 
 ```typescript
-// src/config/form-components.ts
-import { defineComponentConfig } from '@zod-to-form/cli';
+// z2f.config.ts
+import { defineConfig } from '@zod-to-form/core';
 
-export default defineComponentConfig({
+export default defineConfig({
   components: '@/components/ui',
   fieldTypes: {
-    DatePicker: { component: 'MyDatePicker' },
+    DatePicker: { component: 'MyDatePicker', controlled: true },
     Textarea: { component: 'MyRichTextEditor' },
   },
   fields: {
@@ -128,7 +128,7 @@ Pass shadcn as the base and the config for overrides:
 
 ```tsx
 import { shadcnComponentMap } from '@zod-to-form/react/shadcn';
-import componentConfig from '@/config/form-components';
+import componentConfig from './z2f.config';
 
 <ZodForm
   schema={schema}
@@ -147,12 +147,58 @@ Fields matched by the config get custom components; everything else renders with
 Pass a `componentConfig` prop to map field types to custom components. This same config format works with the CLI codegen path — define the config once and use it in both paths. See `references/shared-config.md` for the full config shape, type-safe patterns, and resolution priority.
 
 ```tsx
-import componentConfig from '@/config/form-components';
+import componentConfig from './z2f.config';
 
 <ZodForm schema={schema} componentConfig={componentConfig} onSubmit={handleSubmit}>
   <button type="submit">Save</button>
 </ZodForm>
 ```
+
+## Controlled Components
+
+When a component doesn't support `ref` forwarding, mark it as `controlled: true` in the config's `fieldTypes`. The runtime renderer uses `useController` instead of `register()`:
+
+```typescript
+import { defineConfig } from '@zod-to-form/core';
+
+export default defineConfig({
+  components: '@/components/ui',
+  fieldTypes: {
+    Select: { component: 'MySelect', controlled: true },
+    DatePicker: {
+      component: 'MyDatePicker',
+      controlled: true,
+      propMap: { onSelect: 'field.onChange' }
+    }
+  }
+});
+```
+
+With `propMap`, the `FieldRenderer` remaps RHF controller field props to your component's API. Available expressions: `field.value`, `field.onChange`, `field.onBlur`, `field.ref`, `field.name`.
+
+## Hidden Fields
+
+Hide a field from rendering while keeping it in the form state:
+
+```typescript
+fields: {
+  internalId: { hidden: true }
+}
+```
+
+## Section Grouping
+
+Group multiple fields into a single section component:
+
+```typescript
+fields: {
+  source: { section: 'MetadataSection' },
+  version: { section: 'MetadataSection' },
+  lastUpdated: { section: 'MetadataSection' }
+}
+```
+
+Fields with a `section` value are suppressed from individual rendering. A `<MetadataSection fields={['source', 'version', 'lastUpdated']} />` is rendered by the `SectionRenderer` inside `<ZodForm>`. The section component receives the field names and reads/writes values via `useFormContext()`.
 
 ## useZodForm Hook
 
@@ -178,7 +224,7 @@ All major Zod types are supported — including nested objects (fieldset groups)
 
 ## Relationship to CLI Codegen
 
-The runtime renderer and CLI codegen share `@zod-to-form/core` — the same walker produces the same `FormField[]` tree. A component config file can drive both paths to produce functionally identical forms. See `references/shared-config.md` for details.
+The runtime renderer and CLI codegen share `@zod-to-form/core` — the same walker produces the same `FormField[]` tree. A config file can drive both paths to produce functionally identical forms. See `references/shared-config.md` for details.
 
 ## References
 
