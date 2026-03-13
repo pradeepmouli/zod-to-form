@@ -1,6 +1,6 @@
 {
   "name": "@zod-to-form/cli",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Build-time code generator for Zod v4 form components",
   "license": "MIT",
   "homepage": "https://github.com/pradeepmouli/zod-to-form#readme",

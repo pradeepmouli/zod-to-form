@@ -1,5 +1,14 @@
 # @zod-to-form/core
 
+## 0.4.0
+
+### Minor Changes
+
+- [#32](https://github.com/pradeepmouli/zod-to-form/pull/32) [`b55cd57`](https://github.com/pradeepmouli/zod-to-form/commit/b55cd57da1ffd8082d9a32bccfb91e1e0781b6e2) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - docs: update skills and README for v0.3.0 features
+  - feat: add zod-to-form skill to skills/ for npx skills add
+  - feat: add section field grouping and zod-to-form skill
+  - feat(cli): auto-detect controlled components in init command
+
 ## 0.3.0
 
 ### Minor Changes
