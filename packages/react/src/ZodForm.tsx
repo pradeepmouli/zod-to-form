@@ -51,9 +51,33 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
   // Collect section groupings from config
   const sections = useMemo(() => {
     if (!componentConfig?.fields) return new Map<string, string[]>();
+
     const result = new Map<string, string[]>();
-    for (const field of fields) {
-      const override = componentConfig.fields[field.key];
+
+    // Normalize field keys so that concrete indices like "items.0.x"
+    // can match config keys like "items[].x".
+    const normalizeFieldKey = (key: string): string => {
+      // Replace any ".<number>(.|$)" with ".[]$1"
+      return key.replace(/\.(\d+)(\.|$)/g, '.[]$2');
+    };
+
+    const getOverrideForKey = (key: string) => {
+      const fieldsConfig = componentConfig.fields;
+      if (!fieldsConfig) return undefined;
+
+      const direct = fieldsConfig[key];
+      if (direct) return direct;
+
+      const normalizedKey = normalizeFieldKey(key);
+      if (normalizedKey !== key) {
+        return fieldsConfig[normalizedKey];
+      }
+
+      return undefined;
+    };
+
+    const traverseField = (field: FormField) => {
+      const override = getOverrideForKey(field.key);
       if (override?.section) {
         const existing = result.get(override.section);
         if (existing) {
@@ -62,7 +86,22 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
           result.set(override.section, [field.key]);
         }
       }
+
+      if (Array.isArray((field as any).children)) {
+        for (const child of (field as any).children as FormField[]) {
+          traverseField(child);
+        }
+      }
+
+      if ((field as any).arrayItem) {
+        traverseField((field as any).arrayItem as FormField);
+      }
+    };
+
+    for (const field of fields) {
+      traverseField(field);
     }
+
     return result;
   }, [fields, componentConfig]);
 
