@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { FormProvider } from 'react-hook-form';
 import type { output, ZodObject } from 'zod';
 import type { FormField, FormProcessor, ZodFormRegistry } from '@zod-to-form/core';
@@ -129,6 +129,7 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
  * Renders section components that group multiple form fields.
  * Each section component receives a `fields` prop with the field names it manages,
  * and reads/writes its fields via useFormContext (FormProvider).
+ * Components must be pre-imported and provided via `componentConfig.sectionComponents`.
  */
 function SectionRenderer({
   sections,
@@ -137,74 +138,12 @@ function SectionRenderer({
   sections: Map<string, string[]>;
   componentConfig: RuntimeComponentConfig | undefined;
 }) {
-  const [resolvedComponents, setResolvedComponents] = useState<
-    Map<string, ComponentType<{ fields: string[] }>>
-  >(new Map());
-  const [loadError, setLoadError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    if (!componentConfig || sections.size === 0) return;
-
-    let cancelled = false;
-    // Reset any previous error when re-running the effect
-    setLoadError(null);
-
-    (async () => {
-      try {
-        // Validate the module specifier to prevent loading from arbitrary paths
-        const specifier = componentConfig.components;
-        if (
-          !specifier ||
-          specifier.startsWith('/') ||
-          specifier.split('/').some((part) => part === '..')
-        ) {
-          throw new Error(`Invalid module specifier for section components: "${specifier}"`);
-        }
-
-        const mod = (await import(/* @vite-ignore */ specifier)) as Record<string, unknown>;
-        if (cancelled) return;
-
-        const resolved = new Map<string, ComponentType<{ fields: string[] }>>();
-        for (const sectionName of sections.keys()) {
-          const component = mod[sectionName];
-          // Accept plain functions AND React.memo / React.forwardRef wrapped components
-          // (which are objects with a $$typeof symbol, not plain functions)
-          const isValidComponent =
-            typeof component === 'function' ||
-            (typeof component === 'object' &&
-              component !== null &&
-              '$$typeof' in (component as object));
-          if (isValidComponent) {
-            resolved.set(sectionName, component as ComponentType<{ fields: string[] }>);
-          }
-        }
-        setResolvedComponents(resolved);
-      } catch (error) {
-        if (cancelled) return;
-        const normalizedError = error instanceof Error ? error : new Error(String(error));
-        setLoadError(normalizedError);
-        // Clear any previously resolved components on error
-        setResolvedComponents(new Map());
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [sections, componentConfig]);
-
-  if (loadError) {
-    // Surface dynamic import errors deterministically (e.g. to an Error Boundary)
-    throw loadError;
-  }
-
   const elements: ReactNode[] = [];
   for (const [sectionName, fieldKeys] of sections) {
-    const SectionComponent = resolvedComponents.get(sectionName);
+    const SectionComponent = componentConfig?.sectionComponents?.[sectionName];
     if (SectionComponent) {
       elements.push(<SectionComponent key={sectionName} fields={fieldKeys} />);
     }
   }
-
   return <>{elements}</>;
 }

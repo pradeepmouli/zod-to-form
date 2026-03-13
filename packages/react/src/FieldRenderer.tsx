@@ -16,6 +16,11 @@ export type RuntimeComponentConfig = {
   components: string;
   fieldTypes: Record<string, RuntimeComponentEntry>;
   fields?: Record<string, FieldConfig>;
+  /**
+   * Pre-imported section components, keyed by the section name used in `fields[key].section`.
+   * Required when using section field grouping at runtime — avoids a dynamic import.
+   */
+  sectionComponents?: Record<string, ComponentType<{ fields: string[] }>>;
 };
 
 const moduleCache = new Map<string, Promise<Record<string, unknown>>>();
