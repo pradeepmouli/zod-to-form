@@ -488,16 +488,41 @@ function collectSections(
   const sections = new Map<string, string[]>();
   if (!componentConfig?.fields) return sections;
 
-  for (const field of fields) {
-    const override = componentConfig.fields[field.key] ?? componentConfig.fields[normalizeFieldKey(field.key)];
-    if (override?.section) {
-      const existing = sections.get(override.section);
+  const visitField = (field: FormField): void => {
+    const override =
+      componentConfig!.fields![field.key] ??
+      componentConfig!.fields![normalizeFieldKey(field.key)];
+
+    const hasSection = override?.section !== undefined;
+
+    // Always allow fields that define a section to be collected into that section,
+    // even if they are schema-hidden or config-hidden. For non-section fields,
+    // skip adding them to any section if they are hidden.
+    if (hasSection) {
+      const sectionName = override!.section as string;
+      const existing = sections.get(sectionName);
       if (existing) {
         existing.push(field.key);
       } else {
-        sections.set(override.section, [field.key]);
+        sections.set(sectionName, [field.key]);
       }
     }
+
+    // Recurse into nested fields (fieldset children and array items) so that
+    // sections configured on nested fields are also collected.
+    if (Array.isArray((field as any).children) && (field as any).children.length > 0) {
+      for (const child of (field as any).children as FormField[]) {
+        visitField(child);
+      }
+    }
+
+    if ((field as any).arrayItem) {
+      visitField((field as any).arrayItem as FormField);
+    }
+  };
+
+  for (const field of fields) {
+    visitField(field);
   }
 
   return sections;
