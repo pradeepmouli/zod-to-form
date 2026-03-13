@@ -964,4 +964,46 @@ describe('generateFormComponent', () => {
     // Non-section field still renders normally
     expect(output).toContain(`register('name')`);
   });
+
+  it('groups nested fields with section config into a section component', async () => {
+    const fields: FormField[] = [
+      {
+        key: 'address.city',
+        component: 'Input',
+        props: { type: 'text' },
+        label: 'City',
+        required: true,
+        readOnly: false,
+        hidden: false,
+        constraints: {},
+        zodType: 'string'
+      }
+    ];
+
+    const config: ZodToFormComponentConfig = {
+      schemaPath: '/tmp/schema.ts',
+      exportName: 'testSchema',
+      outputPath: '/tmp/TestFormWithNestedSection.tsx',
+      componentName: 'TestFormWithNestedSection',
+      mode: 'submit',
+      ui: 'unstyled',
+      serverAction: false,
+      // Ensure the nested field key participates in a section so that the
+      // section component must still be emitted even for nested paths.
+      sections: {
+        main: {
+          title: 'Main section',
+          description: 'Section for nested address fields',
+          fields: ['address.city']
+        }
+      }
+    };
+
+    const output = await generateFormComponent(fields, config);
+
+    // The generated TSX should include the section component markup as well
+    // as the nested field key (or its normalized equivalent).
+    expect(output).toContain('Main section');
+    expect(output).toContain('address.city');
+  });
 });
