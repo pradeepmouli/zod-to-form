@@ -1,6 +1,6 @@
 {
   "name": "@zod-to-form/react",
-  "version": "0.2.7",
+  "version": "0.3.0",
   "description": "Runtime <ZodForm> renderer for Zod v4 schemas",
   "license": "MIT",
   "homepage": "https://github.com/pradeepmouli/zod-to-form#readme",
