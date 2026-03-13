@@ -75,18 +75,29 @@ const { form, fields } = useZodForm(userSchema, {
 type RuntimeComponentConfig = {
   components: string;
   fieldTypes: Record<string, RuntimeComponentEntry>;
-  fields?: Partial<Record<string, RuntimeFieldOverride>>;
+  fields?: Record<string, FieldConfig>;
 };
 
 type RuntimeComponentEntry = {
   component: string;
   render?: () => Promise<unknown>;
+  controlled?: boolean;
+  propMap?: Record<string, string>;
 };
+```
 
-type RuntimeFieldOverride = {
-  fieldType: string;
+### `FieldConfig` (from `@zod-to-form/core`)
+
+```typescript
+interface FieldConfig {
+  fieldType?: string;
+  order?: number;
+  hidden?: boolean;
+  gridColumn?: string;
   props?: Record<string, unknown>;
-};
+  propMap?: Record<string, string>;
+  section?: string;
+}
 ```
 
 ### `FormMeta` (from `@zod-to-form/core`)
@@ -101,6 +112,16 @@ type FormMeta = {
   gridColumn?: string;
   props?: Record<string, unknown>;
 };
+```
+
+### `StripIndexSignature` (from `@zod-to-form/core`)
+
+Utility type that strips index signatures from a type, useful for Zod's `z.output<>` which adds `[x: string]: unknown`:
+
+```typescript
+import type { StripIndexSignature } from '@zod-to-form/core';
+
+type CleanFormData = StripIndexSignature<z.output<typeof schema>>;
 ```
 
 ## Supported Component Types
