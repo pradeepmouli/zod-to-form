@@ -1,8 +1,8 @@
-import type { ReactNode } from 'react';
-import { useMemo } from 'react';
+import type { ComponentType, ReactNode } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FormProvider } from 'react-hook-form';
 import type { output, ZodObject } from 'zod';
-import type { FormProcessor, ZodFormRegistry } from '@zod-to-form/core';
+import type { FormField, FormProcessor, ZodFormRegistry } from '@zod-to-form/core';
 import { FieldRenderer } from './FieldRenderer.js';
 import { defaultComponentMap } from './components/index.js';
 import type { RuntimeComponentConfig } from './FieldRenderer.js';
@@ -48,6 +48,24 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
 
   const submitHandler = onSubmit ?? (() => undefined);
 
+  // Collect section groupings from config
+  const sections = useMemo(() => {
+    if (!componentConfig?.fields) return new Map<string, string[]>();
+    const result = new Map<string, string[]>();
+    for (const field of fields) {
+      const override = componentConfig.fields[field.key];
+      if (override?.section) {
+        const existing = result.get(override.section);
+        if (existing) {
+          existing.push(field.key);
+        } else {
+          result.set(override.section, [field.key]);
+        }
+      }
+    }
+    return result;
+  }, [fields, componentConfig]);
+
   return (
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(submitHandler)} className={className} noValidate>
@@ -59,8 +77,60 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
             componentConfig={componentConfig}
           />
         ))}
+        {sections.size > 0 && (
+          <SectionRenderer sections={sections} componentConfig={componentConfig} />
+        )}
         {children}
       </form>
     </FormProvider>
   );
+}
+
+/**
+ * Renders section components that group multiple form fields.
+ * Each section component receives a `fields` prop with the field names it manages,
+ * and reads/writes its fields via useFormContext (FormProvider).
+ */
+function SectionRenderer({
+  sections,
+  componentConfig
+}: {
+  sections: Map<string, string[]>;
+  componentConfig: RuntimeComponentConfig | undefined;
+}) {
+  const [resolvedComponents, setResolvedComponents] = useState<
+    Map<string, ComponentType<{ fields: string[] }>>
+  >(new Map());
+
+  useEffect(() => {
+    if (!componentConfig || sections.size === 0) return;
+
+    let cancelled = false;
+
+    (async () => {
+      const mod = await import(/* @vite-ignore */ componentConfig.components) as Record<string, unknown>;
+      if (cancelled) return;
+
+      const resolved = new Map<string, ComponentType<{ fields: string[] }>>();
+      for (const sectionName of sections.keys()) {
+        const component = mod[sectionName];
+        if (typeof component === 'function') {
+          resolved.set(sectionName, component as ComponentType<{ fields: string[] }>);
+        }
+      }
+      setResolvedComponents(resolved);
+    })();
+
+    return () => { cancelled = true; };
+  }, [sections, componentConfig]);
+
+  const elements: ReactNode[] = [];
+  for (const [sectionName, fieldKeys] of sections) {
+    const SectionComponent = resolvedComponents.get(sectionName);
+    if (SectionComponent) {
+      elements.push(<SectionComponent key={sectionName} fields={fieldKeys} />);
+    }
+  }
+
+  return <>{elements}</>;
 }

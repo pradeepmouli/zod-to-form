@@ -74,6 +74,13 @@ export interface FieldConfig {
   props?: Record<string, unknown>;
   /** Per-field prop mapping override (merges over ComponentEntry.propMap) */
   propMap?: Record<string, string>;
+  /**
+   * Group this field into a named section component.
+   * Fields sharing the same section value are suppressed individually
+   * and rendered once via `<SectionComponent fields={[...fieldNames]} />`.
+   * The section component reads its fields from FormProvider context.
+   */
+  section?: string;
 }
 
 // ─── FormMeta: Registry Annotation ────────────────────────────────────

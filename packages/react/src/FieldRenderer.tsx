@@ -480,6 +480,11 @@ export const FieldRenderer = memo(function FieldRenderer({
     return null;
   }
 
+  // Fields with a section config are rendered by the section component, not individually
+  if (mapping.override?.section) {
+    return null;
+  }
+
   const isControlled = mapping.entry?.controlled === true;
 
   const wrapperProps: Record<string, unknown> = {};
