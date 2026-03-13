@@ -101,28 +101,49 @@ function SectionRenderer({
   const [resolvedComponents, setResolvedComponents] = useState<
     Map<string, ComponentType<{ fields: string[] }>>
   >(new Map());
+  const [loadError, setLoadError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (!componentConfig || sections.size === 0) return;
 
     let cancelled = false;
+    // Reset any previous error when re-running the effect
+    setLoadError(null);
 
     (async () => {
-      const mod = await import(/* @vite-ignore */ componentConfig.components) as Record<string, unknown>;
-      if (cancelled) return;
+      try {
+        const mod = await import(
+          /* @vite-ignore */ componentConfig.components
+        ) as Record<string, unknown>;
+        if (cancelled) return;
 
-      const resolved = new Map<string, ComponentType<{ fields: string[] }>>();
-      for (const sectionName of sections.keys()) {
-        const component = mod[sectionName];
-        if (typeof component === 'function') {
-          resolved.set(sectionName, component as ComponentType<{ fields: string[] }>);
+        const resolved = new Map<string, ComponentType<{ fields: string[] }>>();
+        for (const sectionName of sections.keys()) {
+          const component = mod[sectionName];
+          if (typeof component === 'function') {
+            resolved.set(sectionName, component as ComponentType<{ fields: string[] }>);
+          }
         }
+        setResolvedComponents(resolved);
+      } catch (error) {
+        if (cancelled) return;
+        const normalizedError =
+          error instanceof Error ? error : new Error(String(error));
+        setLoadError(normalizedError);
+        // Clear any previously resolved components on error
+        setResolvedComponents(new Map());
       }
-      setResolvedComponents(resolved);
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [sections, componentConfig]);
+
+  if (loadError) {
+    // Surface dynamic import errors deterministically (e.g. to an Error Boundary)
+    throw loadError;
+  }
 
   const elements: ReactNode[] = [];
   for (const [sectionName, fieldKeys] of sections) {
