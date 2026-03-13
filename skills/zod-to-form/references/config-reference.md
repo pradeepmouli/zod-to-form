@@ -18,14 +18,42 @@
 import { defineConfig } from '@zod-to-form/core';
 
 export default defineConfig({
+  preset: string,
   components: string,
   formPrimitives: { field: string, label: string, control: string },
-  defaults: { mode: string, ui: string, overwrite: boolean, serverAction: boolean },
+  defaults: {
+    mode: string,
+    ui: string,
+    overwrite: boolean,
+    serverAction: boolean,
+    formProvider: string
+  },
   include: string[],
   exclude: string[],
   fieldTypes: Record<string, { component: string }>,
-  fields: Record<string, FieldConfig>,
-  schemas: Record<string, { fields: Record<string, FieldConfig> }>
+  fields: Record<
+    string,
+    {
+      // other field config options...
+      propMap?: Record<string, string>;
+      gridColumn?: string;
+      section?: string;
+    }
+  >,
+  schemas: Record<
+    string,
+    {
+      fields: Record<
+        string,
+        {
+          // other field config options...
+          propMap?: Record<string, string>;
+          gridColumn?: string;
+          section?: string;
+        }
+      >;
+    }
+  >
 });
 ```
 
