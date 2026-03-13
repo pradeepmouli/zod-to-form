@@ -675,12 +675,78 @@ export async function generateFormComponent(
     componentImportLine,
     { hasControlled, formProvider: useFormProvider }
   );
-  const body = fields
-    .map((field) =>
-      renderFieldBlockWithConfig(field, config.componentConfig, formPrimitives, '      ')
-    )
-    .filter(Boolean)
-    .join('\n');
+  // When top-level sections are configured, group fields inside <section> HTML elements.
+  let body: string;
+  if (config.sections && Object.keys(config.sections).length > 0) {
+    const topLevelSections = config.sections;
+    // Build field-key → section-key mapping (normalize array indices for matching)
+    const fieldToSectionKey = new Map<string, string>();
+    for (const sectionKey of Object.keys(topLevelSections)) {
+      for (const fk of topLevelSections[sectionKey]!.fields) {
+        fieldToSectionKey.set(fk, sectionKey);
+      }
+    }
+
+    const renderedParts: string[] = [];
+    const emittedSections = new Set<string>();
+    const fieldIndent = '      ';
+    const innerIndent = fieldIndent + '  ';
+
+    for (const field of fields) {
+      const sectionKey =
+        fieldToSectionKey.get(field.key) ?? fieldToSectionKey.get(normalizeFieldKey(field.key));
+
+      if (sectionKey && !emittedSections.has(sectionKey)) {
+        emittedSections.add(sectionKey);
+        const sectionDef = topLevelSections[sectionKey]!;
+
+        // Collect all fields belonging to this section (preserving order from sectionDef.fields)
+        const sectionFieldKeys = new Set(sectionDef.fields.map((k) => normalizeFieldKey(k)));
+        sectionFieldKeys.add(sectionKey); // keep original keys too
+        for (const fk of sectionDef.fields) sectionFieldKeys.add(fk);
+
+        const sectionFields = fields.filter(
+          (f) => sectionFieldKeys.has(f.key) || sectionFieldKeys.has(normalizeFieldKey(f.key))
+        );
+
+        const sectionBody = sectionFields
+          .map((f) =>
+            renderFieldBlockWithConfig(f, config.componentConfig, formPrimitives, innerIndent)
+          )
+          .filter(Boolean)
+          .join('\n');
+
+        const descLine = sectionDef.description
+          ? `\n${innerIndent}<p>${sectionDef.description}</p>`
+          : '';
+
+        renderedParts.push(
+          `${fieldIndent}<section>`,
+          `${innerIndent}<h2>${sectionDef.title}</h2>${descLine}`,
+          sectionBody,
+          `${fieldIndent}</section>`
+        );
+      } else if (!sectionKey) {
+        const rendered = renderFieldBlockWithConfig(
+          field,
+          config.componentConfig,
+          formPrimitives,
+          fieldIndent
+        );
+        if (rendered) renderedParts.push(rendered);
+      }
+      // Fields whose section is already emitted are skipped (rendered inside the section block)
+    }
+
+    body = renderedParts.filter(Boolean).join('\n');
+  } else {
+    body = fields
+      .map((field) =>
+        renderFieldBlockWithConfig(field, config.componentConfig, formPrimitives, '      ')
+      )
+      .filter(Boolean)
+      .join('\n');
+  }
 
   // useFieldArray hook declarations
   const arrayHooks = arrayFields

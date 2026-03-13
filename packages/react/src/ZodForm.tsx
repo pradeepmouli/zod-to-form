@@ -151,23 +151,37 @@ function SectionRenderer({
 
     (async () => {
       try {
-        const mod = await import(
-          /* @vite-ignore */ componentConfig.components
-        ) as Record<string, unknown>;
+        // Validate the module specifier to prevent loading from arbitrary paths
+        const specifier = componentConfig.components;
+        if (
+          !specifier ||
+          specifier.startsWith('/') ||
+          specifier.split('/').some((part) => part === '..')
+        ) {
+          throw new Error(`Invalid module specifier for section components: "${specifier}"`);
+        }
+
+        const mod = (await import(/* @vite-ignore */ specifier)) as Record<string, unknown>;
         if (cancelled) return;
 
         const resolved = new Map<string, ComponentType<{ fields: string[] }>>();
         for (const sectionName of sections.keys()) {
           const component = mod[sectionName];
-          if (typeof component === 'function') {
+          // Accept plain functions AND React.memo / React.forwardRef wrapped components
+          // (which are objects with a $$typeof symbol, not plain functions)
+          const isValidComponent =
+            typeof component === 'function' ||
+            (typeof component === 'object' &&
+              component !== null &&
+              '$$typeof' in (component as object));
+          if (isValidComponent) {
             resolved.set(sectionName, component as ComponentType<{ fields: string[] }>);
           }
         }
         setResolvedComponents(resolved);
       } catch (error) {
         if (cancelled) return;
-        const normalizedError =
-          error instanceof Error ? error : new Error(String(error));
+        const normalizedError = error instanceof Error ? error : new Error(String(error));
         setLoadError(normalizedError);
         // Clear any previously resolved components on error
         setResolvedComponents(new Map());
