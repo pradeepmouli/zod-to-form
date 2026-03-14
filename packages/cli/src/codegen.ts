@@ -1,6 +1,6 @@
 import path from 'node:path';
 import type { FormField } from '@zod-to-form/core';
-import { getEmptyDefault } from '@zod-to-form/core';
+import { getEmptyDefault, normalizeFieldKey, collectFieldSections } from '@zod-to-form/core';
 import type {
   ComponentEntry,
   FieldConfig,
@@ -172,19 +172,6 @@ function renderFieldContainer(
     `${indent}  </${controlTag}>`,
     `${indent}${closeField}`
   ].join('\n');
-}
-
-/**
- * Normalise a concrete field key (e.g. `attributes.0.typeCall.type` or
- * `attributes.${index}.typeCall.type`) to the bracket notation used in
- * the user-facing `fields` config (e.g. `attributes[].typeCall.type`).
- */
-function normalizeFieldKey(key: string): string {
-  // Replace `.0.` or `.${index}.` segments with `[].`
-  let result = key.replace(/\.(?:0|\$\{index\})\./g, '[].');
-  // Replace trailing `.0` or `.${index}`
-  result = result.replace(/\.(?:0|\$\{index\})$/, '[]');
-  return result;
 }
 
 export function resolveFieldMapping<TComponents extends Record<string, unknown>>(
@@ -494,53 +481,18 @@ function isFieldHidden(
 }
 
 /**
- * Collect section groupings from the config.
- * Returns a Map of section component name → array of field keys that belong to it.
+ * Collect section groupings from the config using the shared core utility.
  */
 function collectSections(
   fields: FormField[],
   componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined
 ): Map<string, string[]> {
-  const sections = new Map<string, string[]>();
-  if (!componentConfig?.fields) return sections;
-
-  const visitField = (field: FormField): void => {
-    const override =
-      componentConfig!.fields![field.key] ?? componentConfig!.fields![normalizeFieldKey(field.key)];
-
-    const hasSection = override?.section !== undefined;
-
-    // Always allow fields that define a section to be collected into that section,
-    // even if they are schema-hidden or config-hidden. For non-section fields,
-    // skip adding them to any section if they are hidden.
-    if (hasSection) {
-      const sectionName = override!.section as string;
-      const existing = sections.get(sectionName);
-      if (existing) {
-        existing.push(field.key);
-      } else {
-        sections.set(sectionName, [field.key]);
-      }
-    }
-
-    // Recurse into nested fields (fieldset children and array items) so that
-    // sections configured on nested fields are also collected.
-    if (Array.isArray((field as any).children) && (field as any).children.length > 0) {
-      for (const child of (field as any).children as FormField[]) {
-        visitField(child);
-      }
-    }
-
-    if ((field as any).arrayItem) {
-      visitField((field as any).arrayItem as FormField);
-    }
-  };
-
-  for (const field of fields) {
-    visitField(field);
-  }
-
-  return sections;
+  if (!componentConfig?.fields) return new Map<string, string[]>();
+  const configFields = componentConfig.fields;
+  return collectFieldSections(
+    fields,
+    (key: string) => configFields[key] ?? configFields[normalizeFieldKey(key)]
+  );
 }
 
 /**
@@ -680,6 +632,35 @@ export async function generateFormComponent(
     for (const sectionKey of Object.keys(topLevelSections)) {
       for (const fk of topLevelSections[sectionKey]!.fields) {
         fieldToSectionKey.set(fk, sectionKey);
+        // Also store the normalized form so concrete-index keys (e.g. items.0.name)
+        // match fields in bracket notation (items[].name) and vice-versa
+        const normalizedFk = normalizeFieldKey(fk);
+        if (normalizedFk !== fk) {
+          fieldToSectionKey.set(normalizedFk, sectionKey);
+        }
+      }
+    }
+
+    // Also add normalized field keys to the lookup so we match fields by either form
+    for (const field of fields) {
+      const normalized = normalizeFieldKey(field.key);
+      if (
+        normalized !== field.key &&
+        fieldToSectionKey.has(normalized) &&
+        !fieldToSectionKey.has(field.key)
+      ) {
+        fieldToSectionKey.set(field.key, fieldToSectionKey.get(normalized)!);
+      }
+    }
+
+    // Pre-group fields by section key (single pass instead of O(n) filter per section)
+    const sectionFieldGroups = new Map<string, FormField[]>();
+    for (const field of fields) {
+      const sk = fieldToSectionKey.get(field.key);
+      if (sk) {
+        const group = sectionFieldGroups.get(sk);
+        if (group) group.push(field);
+        else sectionFieldGroups.set(sk, [field]);
       }
     }
 
@@ -689,21 +670,12 @@ export async function generateFormComponent(
     const innerIndent = fieldIndent + '  ';
 
     for (const field of fields) {
-      const sectionKey =
-        fieldToSectionKey.get(field.key) ?? fieldToSectionKey.get(normalizeFieldKey(field.key));
+      const sectionKey = fieldToSectionKey.get(field.key);
 
       if (sectionKey && !emittedSections.has(sectionKey)) {
         emittedSections.add(sectionKey);
         const sectionDef = topLevelSections[sectionKey]!;
-
-        // Collect all fields belonging to this section (preserving order from sectionDef.fields)
-        const sectionFieldKeys = new Set(sectionDef.fields.map((k) => normalizeFieldKey(k)));
-        sectionFieldKeys.add(sectionKey); // keep original keys too
-        for (const fk of sectionDef.fields) sectionFieldKeys.add(fk);
-
-        const sectionFields = fields.filter(
-          (f) => sectionFieldKeys.has(f.key) || sectionFieldKeys.has(normalizeFieldKey(f.key))
-        );
+        const sectionFields = sectionFieldGroups.get(sectionKey) ?? [];
 
         const sectionBody = sectionFields
           .map((f) =>

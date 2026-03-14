@@ -281,24 +281,39 @@ const KNOWN_CONTROLLED_COMPONENTS = new Set([
  * `value` and `onChange` props but does NOT use `forwardRef` (which would
  * indicate it can accept a ref from register()).
  */
-function detectControlledFromSource(code: string, name: string): boolean {
+/**
+ * @param code Full file source
+ * @param name Component name to check
+ * @param lines Pre-split lines of `code` (avoids re-splitting per component)
+ */
+function detectControlledFromSource(code: string, name: string, lines: string[]): boolean {
   // Check if this specific component's definition mentions value/onChange props
-  // Look for the component definition region
-  const patterns = [
-    // Props type/interface with value + onChange
-    new RegExp(`(?:type|interface)\\s+${name}Props[^{]*\\{[^}]*value[^}]*onChange`, 's'),
-    // Destructured props: { value, onChange, ... }
-    new RegExp(`function\\s+${name}\\s*\\(\\s*\\{[^}]*\\bvalue\\b[^}]*\\bonChange\\b`, 's'),
-    new RegExp(`function\\s+${name}\\s*\\(\\s*\\{[^}]*\\bonChange\\b[^}]*\\bvalue\\b`, 's'),
-    new RegExp(`const\\s+${name}\\s*=\\s*(?:React\\.)?(?:forwardRef|memo)?\\s*\\(?\\s*(?:function)?\\s*\\(?\\s*\\{[^}]*\\bvalue\\b[^}]*\\bonChange\\b`, 's'),
-  ];
+  const propsPattern = new RegExp(
+    `(?:type|interface)\\s+${name}Props[^{]*\\{[^}]*value[^}]*onChange`,
+    's'
+  );
+  const funcPattern1 = new RegExp(
+    `function\\s+${name}\\s*\\(\\s*\\{[^}]*\\bvalue\\b[^}]*\\bonChange\\b`,
+    's'
+  );
+  const funcPattern2 = new RegExp(
+    `function\\s+${name}\\s*\\(\\s*\\{[^}]*\\bonChange\\b[^}]*\\bvalue\\b`,
+    's'
+  );
+  const constPattern = new RegExp(
+    `const\\s+${name}\\s*=\\s*(?:React\\.)?(?:forwardRef|memo)?\\s*\\(?` +
+      `\\s*(?:function)?\\s*\\(?\\s*\\{[^}]*\\bvalue\\b[^}]*\\bonChange\\b`,
+    's'
+  );
 
-  const hasValueOnChange = patterns.some((p) => p.test(code));
+  const hasValueOnChange =
+    propsPattern.test(code) ||
+    funcPattern1.test(code) ||
+    funcPattern2.test(code) ||
+    constPattern.test(code);
   if (!hasValueOnChange) return false;
 
   // If it uses forwardRef, it can accept a ref from register() — not necessarily controlled.
-  // Check per-line to avoid cross-matching with other components in the same file.
-  const lines = code.split('\n');
   const usesForwardRef = lines.some(
     (line) => line.includes(name) && /(?:React\.)?forwardRef/.test(line)
   );
@@ -346,14 +361,17 @@ async function discoverComponents(
     try {
       const code = await readFile(filePath, 'utf8');
       const fileExports = extractExportedNames(code);
+      // Pre-split lines once per file for forwardRef detection
+      let lines: string[] | undefined;
       for (const name of fileExports) {
         if (
           isPascalCase(name) &&
           !primitiveNames.has(name) &&
           !EXCLUDED_EXPORT_PREFIXES.some((prefix) => name.startsWith(prefix))
         ) {
+          if (!lines) lines = code.split('\n');
           const isControlled =
-            KNOWN_CONTROLLED_COMPONENTS.has(name) || detectControlledFromSource(code, name);
+            KNOWN_CONTROLLED_COMPONENTS.has(name) || detectControlledFromSource(code, name, lines);
           componentMap.set(name, isControlled);
           if (isControlled) {
             logVerbose(verbose, `detected ${name} as controlled component`);
@@ -363,7 +381,10 @@ async function discoverComponents(
       if (!source && fileExports.size > 0) {
         source = toPosixPath(path.relative(cwd, filePath));
       }
-      logVerbose(verbose, `scanned component exports from ${toPosixPath(path.relative(cwd, filePath))}`);
+      logVerbose(
+        verbose,
+        `scanned component exports from ${toPosixPath(path.relative(cwd, filePath))}`
+      );
     } catch {
       // ignore unreadable files
     }
@@ -478,7 +499,9 @@ function buildConfigTemplate(
   fieldTypeEntries.forEach((entry, i) => {
     const comma = i < fieldTypeEntries.length - 1 ? ',' : '';
     if (entry.controlled) {
-      fieldTypeLines.push(`    ${entry.name}: { component: '${entry.name}', controlled: true }${comma}`);
+      fieldTypeLines.push(
+        `    ${entry.name}: { component: '${entry.name}', controlled: true }${comma}`
+      );
     } else {
       fieldTypeLines.push(`    ${entry.name}: { component: '${entry.name}' }${comma}`);
     }
@@ -602,7 +625,13 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   logStep('[2/5] Discovering components');
   const modulePath = resolveComponentModulePath(options, shadcn);
   const discoveredPrimitives = await discoverFormPrimitives(cwd, modulePath, shadcn, verbose);
-  const discoveredComponents = await discoverComponents(cwd, modulePath, shadcn, discoveredPrimitives.primitives, verbose);
+  const discoveredComponents = await discoverComponents(
+    cwd,
+    modulePath,
+    shadcn,
+    discoveredPrimitives.primitives,
+    verbose
+  );
   logVerbose(verbose, `components import path: ${modulePath}`);
   logVerbose(verbose, `formPrimitives: ${JSON.stringify(discoveredPrimitives.primitives)}`);
   if (discoveredPrimitives.sources.length > 0) {
@@ -646,9 +675,15 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   }
 
   logStep('[4/5] Building config template');
-  const preset = shadcn.exists ? 'shadcn' as const : undefined;
+  const preset = shadcn.exists ? ('shadcn' as const) : undefined;
   const fieldTypeEntries = resolveFieldTypeEntries(discoveredComponents, preset);
-  const code = buildConfigTemplate(modulePath, discoveredPrimitives.primitives, fieldTypeEntries, discoveredSchemas, preset);
+  const code = buildConfigTemplate(
+    modulePath,
+    discoveredPrimitives.primitives,
+    fieldTypeEntries,
+    discoveredSchemas,
+    preset
+  );
 
   logStep('[5/5] Validating output target');
   const outputExists = await exists(outputPath);

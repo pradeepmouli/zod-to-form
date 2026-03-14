@@ -198,7 +198,11 @@ export function getEmptyDefault(field: FormField): unknown {
   }
 
   // Regular unions: use first child's default if children exist
-  if (field.children && field.children.length > 0 && (field.zodType === 'union' || field.zodType === 'discriminatedUnion')) {
+  if (
+    field.children &&
+    field.children.length > 0 &&
+    (field.zodType === 'union' || field.zodType === 'discriminatedUnion')
+  ) {
     return getEmptyDefault(field.children[0]!);
   }
 
@@ -219,6 +223,61 @@ export function getEmptyDefault(field: FormField): unknown {
     default:
       return '';
   }
+}
+
+/**
+ * Normalise a concrete field key to the bracket notation used in config.
+ * Replaces `.0.`, `.${index}.`, and any `.<digits>.` segments with `[].`.
+ *
+ * @example normalizeFieldKey('items.0.name') → 'items[].name'
+ * @example normalizeFieldKey('items.${index}.name') → 'items[].name'
+ * @example normalizeFieldKey('tags.2') → 'tags[]'
+ */
+export function normalizeFieldKey(key: string): string {
+  // Replace `.<digits>.` or `.${index}.` segments with `[].`
+  let result = key.replace(/\.(?:\d+|\$\{index\})\./g, '[].');
+  // Replace trailing `.<digits>` or `.${index}`
+  result = result.replace(/\.(?:\d+|\$\{index\})$/, '[]');
+  return result;
+}
+
+/**
+ * Collect section groupings from fields and a config override lookup.
+ * Returns a Map of section name → array of field keys that belong to it.
+ */
+export function collectFieldSections(
+  fields: FormField[],
+  getOverride: (key: string) => { section?: string } | undefined
+): Map<string, string[]> {
+  const sections = new Map<string, string[]>();
+
+  const visitField = (field: FormField): void => {
+    const override = getOverride(field.key);
+    if (override?.section) {
+      const existing = sections.get(override.section);
+      if (existing) {
+        existing.push(field.key);
+      } else {
+        sections.set(override.section, [field.key]);
+      }
+    }
+
+    if (field.children && field.children.length > 0) {
+      for (const child of field.children) {
+        visitField(child);
+      }
+    }
+
+    if (field.arrayItem) {
+      visitField(field.arrayItem);
+    }
+  };
+
+  for (const field of fields) {
+    visitField(field);
+  }
+
+  return sections;
 }
 
 /**
