@@ -487,7 +487,7 @@ function collectSections(
   fields: FormField[],
   componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined
 ): Map<string, string[]> {
-  if (!componentConfig?.fields) return new Map();
+  if (!componentConfig?.fields) return new Map<string, string[]>();
   const configFields = componentConfig.fields;
   return collectFieldSections(
     fields,
@@ -632,6 +632,12 @@ export async function generateFormComponent(
     for (const sectionKey of Object.keys(topLevelSections)) {
       for (const fk of topLevelSections[sectionKey]!.fields) {
         fieldToSectionKey.set(fk, sectionKey);
+        // Also store the normalized form so concrete-index keys (e.g. items.0.name)
+        // match fields in bracket notation (items[].name) and vice-versa
+        const normalizedFk = normalizeFieldKey(fk);
+        if (normalizedFk !== fk) {
+          fieldToSectionKey.set(normalizedFk, sectionKey);
+        }
       }
     }
 
