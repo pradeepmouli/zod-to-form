@@ -40,7 +40,14 @@ export {
   validateComponentConfig
 } from './config.js';
 
-export { inferLabel, joinPath, createBaseField, getEmptyDefault } from './utils.js';
+export {
+  inferLabel,
+  joinPath,
+  createBaseField,
+  getEmptyDefault,
+  normalizeFieldKey,
+  collectFieldSections
+} from './utils.js';
 
 export { walkSchema } from './walker.js';
 export { builtinProcessors, createProcessors } from './registry.js';
