@@ -1,5 +1,11 @@
 # @zod-to-form/core
 
+## 0.4.1
+
+### Patch Changes
+
+- [#34](https://github.com/pradeepmouli/zod-to-form/pull/34) [`de2005b`](https://github.com/pradeepmouli/zod-to-form/commit/de2005ba3d9c2714beb3251eada260b7e0a3fffb) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - refactor: deduplicate normalizeFieldKey and section collection, remove unsafe casts
+
 ## 0.4.0
 
 ### Minor Changes
