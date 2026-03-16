@@ -5,7 +5,7 @@ on:
   push:
     branches: [master, "changeset-release/**", "claude/**"]
   pull_request:
-    branches: [master]
+    branches-ignore: ["sub**"]
 
 jobs:
   CI:
