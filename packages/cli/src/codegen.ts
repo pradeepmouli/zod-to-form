@@ -165,10 +165,10 @@ function renderFieldContainer(
  * the user-facing `fields` config (e.g. `attributes[].typeCall.type`).
  */
 function normalizeFieldKey(key: string): string {
-  // Replace `.0.` or `.${index}.` segments with `[].`
-  let result = key.replace(/\.(?:0|\$\{index\})\./g, '[].');
-  // Replace trailing `.0` or `.${index}`
-  result = result.replace(/\.(?:0|\$\{index\})$/, '[]');
+  // Replace `.number.` or `.${index}.` segments with `[].`
+  let result = key.replace(/\.(?:\d+|\$\{index\})\./g, '[].');
+  // Replace trailing `.number` or `.${index}`
+  result = result.replace(/\.(?:\d+|\$\{index\})$/, '[]');
   return result;
 }
 
