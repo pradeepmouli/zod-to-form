@@ -479,11 +479,11 @@ function toImportSpecifierFromAbsolute(outputPath: string, absoluteTargetPath: s
   const relativePath = toPosixPath(path.relative(path.dirname(outputPath), absoluteTargetPath));
   const specifier = relativePath.startsWith('.') ? relativePath : `./${relativePath}`;
 
-  if (specifier.endsWith('.tsx')) {
+  if (specifier.endsWith('.tsx') || specifier.endsWith('.jsx')) {
     return `${specifier.slice(0, -4)}.js`;
   }
 
-  if (specifier.endsWith('.ts') || specifier.endsWith('.jsx')) {
+  if (specifier.endsWith('.ts')) {
     return `${specifier.slice(0, -3)}.js`;
   }
 

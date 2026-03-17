@@ -12,8 +12,8 @@ type Values = {
 };
 
 type Components = {
-  TextInput: unknown;
-  TextareaInput: unknown;
+  Input: unknown;
+  Textarea: unknown;
 };
 
 // ─── Existing type tests (backward compat) ───────────────────────────
@@ -26,27 +26,27 @@ describe('defineConfig typing', () => {
       exclude: ['Internal*'],
       types: ['userSchema'],
       fieldTypes: {
-        Input: { component: 'TextInput' },
-        Textarea: { component: 'TextareaInput' }
+        Input: { component: 'Input' },
+        Textarea: { component: 'Textarea' }
       },
       fields: {
-        'user.name': { fieldType: 'TextInput' },
-        'tags[].label': { fieldType: 'TextareaInput' }
+        'user.name': { fieldType: 'Input' },
+        'tags[].label': { fieldType: 'Textarea' }
       }
     });
 
-    expect(config.fields?.['user.name']?.fieldType).toBe('TextInput');
-    expect(config.fields?.['tags[].label']?.fieldType).toBe('TextareaInput');
+    expect(config.fields?.['user.name']?.fieldType).toBe('Input');
+    expect(config.fields?.['tags[].label']?.fieldType).toBe('Textarea');
   });
 
   it('accepts string field keys (no path constraint enforcement)', () => {
     const config = defineConfig<Components>({
       components: '@app/components',
       fieldTypes: {
-        Input: { component: 'TextInput' }
+        Input: { component: 'Input' }
       },
       fields: {
-        'user.unknown': { fieldType: 'TextInput' }
+        'user.unknown': { fieldType: 'Input' }
       }
     });
 
@@ -67,7 +67,7 @@ describe('ZodFormsConfig generics', () => {
     const config = defineConfig<Components, Schemas>({
       components: '@app/components',
       fieldTypes: {
-        Input: { component: 'TextInput' }
+        Input: { component: 'Input' }
       },
       schemas: {
         UserSchema: { name: 'UserForm' },

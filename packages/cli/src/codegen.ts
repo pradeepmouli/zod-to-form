@@ -257,11 +257,6 @@ function cloneFieldWithArrayIndex(field: FormField, arrayKey: string): FormField
   };
 }
 
-function getObjectPropertyName(path: string): string {
-  const lastSegment = path.split('.').at(-1) ?? path;
-  return JSON.stringify(lastSegment);
-}
-
 function getDefaultArrayItemExpression(field: FormField | undefined): string {
   if (!field) {
     return `''`;
