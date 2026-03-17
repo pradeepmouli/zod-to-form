@@ -1,5 +1,14 @@
 # @zod-to-form/cli
 
+## 0.4.2
+
+### Patch Changes
+
+- [#41](https://github.com/pradeepmouli/zod-to-form/pull/41) [`0768cb3`](https://github.com/pradeepmouli/zod-to-form/commit/0768cb3efa189dcd18ac143a3e4a7328d6e4aa2a) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - Refactor code structure for improved readability and maintainability
+  - ci: broaden pull_request trigger, exclude sub\*\* branches
+- Updated dependencies [[`0768cb3`](https://github.com/pradeepmouli/zod-to-form/commit/0768cb3efa189dcd18ac143a3e4a7328d6e4aa2a)]:
+  - @zod-to-form/core@0.4.2
+
 ## 0.4.1
 
 ### Patch Changes
