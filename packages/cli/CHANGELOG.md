@@ -1,5 +1,20 @@
 # @zod-to-form/cli
 
+## 0.5.0
+
+### Minor Changes
+
+- [#43](https://github.com/pradeepmouli/zod-to-form/pull/43) [`ea53400`](https://github.com/pradeepmouli/zod-to-form/commit/ea534009411de3ccb2d87233fe577280affcca29) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - feat: enhance runInit to support explicit component and schema paths for typed imports
+  - refactor!: remove all deprecated type aliases and functions
+  - refactor: simplify CLI codegen and remove unused section handling
+  - test: update CLI codegen tests to reflect current rendering behavior
+  - ci: remove redundant pull_request trigger
+
+### Patch Changes
+
+- Updated dependencies [[`ea53400`](https://github.com/pradeepmouli/zod-to-form/commit/ea534009411de3ccb2d87233fe577280affcca29)]:
+  - @zod-to-form/core@0.5.0
+
 ## 0.4.2
 
 ### Patch Changes
