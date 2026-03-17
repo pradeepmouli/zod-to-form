@@ -21,12 +21,17 @@ export type FormPrimitivesConfig<T extends Record<string, unknown> = Record<stri
 // ─── Typed Field Config ──────────────────────────────────────────────
 
 /** Field config with props constrained to a specific component's prop type */
-type TypedFieldConfigForComponent<TComponents extends Record<string, unknown>, K extends keyof TComponents & string> = {
+type TypedFieldConfigForComponent<
+  TComponents extends Record<string, unknown>,
+  K extends keyof TComponents & string
+> = {
   fieldType: K;
   order?: number;
   hidden?: boolean;
   gridColumn?: string;
-  props?: TComponents[K] extends Record<string, unknown> ? Partial<TComponents[K]> : Record<string, unknown>;
+  props?: TComponents[K] extends Record<string, unknown>
+    ? Partial<TComponents[K]>
+    : Record<string, unknown>;
   /** Per-field prop mapping override (merges over ComponentEntry.propMap) */
   propMap?: Record<string, string>;
   /** Group into a named section component */
@@ -52,8 +57,12 @@ type UntypedFieldConfig = {
  * to that component's prop type. When `fieldType` is omitted, `props` is
  * an open `Record<string, unknown>`.
  */
-export type TypedFieldConfig<TComponents extends Record<string, unknown> = Record<string, unknown>> =
-  | { [K in keyof TComponents & string]: TypedFieldConfigForComponent<TComponents, K> }[keyof TComponents & string]
+export type TypedFieldConfig<
+  TComponents extends Record<string, unknown> = Record<string, unknown>
+> =
+  | {
+      [K in keyof TComponents & string]: TypedFieldConfigForComponent<TComponents, K>;
+    }[keyof TComponents & string]
   | UntypedFieldConfig;
 
 // ─── New Config Types ─────────────────────────────────────────────────
@@ -111,19 +120,16 @@ export type ZodFormsConfig<
 export type StripIndexSignature<T> = T extends readonly (infer U)[]
   ? StripIndexSignature<U>[]
   : T extends object
-    ? { [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: StripIndexSignature<T[K]> }
+    ? {
+        [K in keyof T as string extends K
+          ? never
+          : number extends K
+            ? never
+            : symbol extends K
+              ? never
+              : K]: StripIndexSignature<T[K]>;
+      }
     : T;
-
-// ─── Deprecated Aliases ───────────────────────────────────────────────
-
-/** @deprecated Use FieldConfig instead */
-export type FieldOverride = FieldConfig;
-
-/** @deprecated Use ZodFormsConfig instead */
-export type ZodToFormComponentConfig<
-  T extends Record<string, unknown> = Record<string, unknown>,
-  _TFieldPath extends string = string
-> = ZodFormsConfig<T>;
 
 // ─── Path Utilities ──────────────────────────────────────────────────
 
@@ -146,18 +152,16 @@ type NormalizeArrayPath<TPath extends string> =
       ? NormalizeArrayPath<`${Prefix}[]`>
       : TPath;
 
-type FieldPath<TValues extends Record<string, unknown>> = DotPath<TValues> extends infer TPath
-  ? TPath extends string
-    ? TPath | NormalizeArrayPath<TPath>
-    : never
-  : never;
+type FieldPath<TValues extends Record<string, unknown>> =
+  DotPath<TValues> extends infer TPath
+    ? TPath extends string
+      ? TPath | NormalizeArrayPath<TPath>
+      : never
+    : never;
 
 /** Extracts dot-notation field paths from a Zod schema's inferred type */
-type SchemaFieldPath<T extends z.ZodType> = z.infer<T> extends infer O
-  ? O extends Record<string, unknown>
-    ? FieldPath<O>
-    : string
-  : string;
+type SchemaFieldPath<T extends z.ZodType> =
+  z.infer<T> extends infer O ? (O extends Record<string, unknown> ? FieldPath<O> : string) : string;
 
 // ─── Validation Schemas ───────────────────────────────────────────────
 
@@ -276,9 +280,7 @@ function formatValidationError(error: z.ZodError, source: string): Error {
       return new Error(`${source}.formPrimitives must be an object when provided.`);
     }
 
-    return new Error(
-      `${source}.formPrimitives.${entry} must be a non-empty string when provided.`
-    );
+    return new Error(`${source}.formPrimitives.${entry} must be a non-empty string when provided.`);
   }
 
   if (root === 'fields') {
@@ -440,8 +442,7 @@ export function resolveFieldConfig(
 export function normalizeConfig(
   config: ZodFormsConfig<Record<string, unknown>>
 ): ZodFormsConfig<Record<string, unknown>> {
-  const hasTopLevelOverwrite =
-    'overwrite' in config && config.overwrite !== undefined;
+  const hasTopLevelOverwrite = 'overwrite' in config && config.overwrite !== undefined;
 
   if (!hasTopLevelOverwrite) {
     return config;
@@ -457,30 +458,4 @@ export function normalizeConfig(
       overwrite: rest.defaults?.overwrite ?? overwrite
     }
   };
-}
-
-// ─── Deprecated Functions ─────────────────────────────────────────────
-
-/** @deprecated Use defineConfig instead */
-export function defineComponentConfig<
-  TComponents extends Record<string, unknown>,
-  TValues extends Record<string, unknown>
->(
-  config: Omit<ZodFormsConfig<TComponents>, 'fields'> & {
-    overwrite?: boolean;
-    fields?: Partial<Record<FieldPath<TValues>, FieldConfig>>;
-  }
-): Omit<ZodFormsConfig<TComponents>, 'fields'> & {
-  overwrite?: boolean;
-  fields?: Partial<Record<FieldPath<TValues>, FieldConfig>>;
-} {
-  return config;
-}
-
-/** @deprecated Use validateConfig instead */
-export function validateComponentConfig(
-  value: unknown,
-  source = 'component-config'
-): ZodFormsConfig<Record<string, unknown>> {
-  return validateConfig(value, source);
 }

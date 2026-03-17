@@ -22,10 +22,7 @@ export type {
   ZodFormsConfig,
   ZodTypeConfig,
   ConfigDefaults,
-  StripIndexSignature,
-  // Deprecated aliases
-  FieldOverride,
-  ZodToFormComponentConfig
+  StripIndexSignature
 } from './config.js';
 
 export {
@@ -34,10 +31,7 @@ export {
   resolveFieldConfig,
   normalizeConfig,
   SHADCN_FIELD_TYPES,
-  DEFAULT_FIELD_TYPES,
-  // Deprecated aliases
-  defineComponentConfig,
-  validateComponentConfig
+  DEFAULT_FIELD_TYPES
 } from './config.js';
 
 export {

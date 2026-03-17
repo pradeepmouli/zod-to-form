@@ -13,15 +13,10 @@ import {
   defineConfig,
   validateConfig,
   resolveFieldConfig,
-  // Deprecated re-exports
-  defineComponentConfig,
-  validateComponentConfig,
   type ComponentEntry,
   type FieldConfig,
-  type FieldOverride,
   type FormPrimitivesConfig,
   type ZodFormsConfig,
-  type ZodToFormComponentConfig,
   walkSchema
 } from '@zod-to-form/core';
 import { generateFormComponent } from './codegen.js';
@@ -30,23 +25,9 @@ import { runInit, type InitOptions } from './init.js';
 import { generateServerAction } from './server-action.js';
 import { startWatch } from './watcher.js';
 
-export {
-  defineConfig,
-  validateConfig,
-  // Deprecated aliases
-  defineComponentConfig,
-  validateComponentConfig
-};
+export { defineConfig, validateConfig };
 
-export type {
-  ComponentEntry,
-  FieldConfig,
-  FormPrimitivesConfig,
-  ZodFormsConfig,
-  // Deprecated aliases
-  FieldOverride,
-  ZodToFormComponentConfig
-};
+export type { ComponentEntry, FieldConfig, FormPrimitivesConfig, ZodFormsConfig };
 
 type GenerateOptions = {
   config: string;
@@ -116,17 +97,20 @@ export async function runGenerate(options: GenerateOptions): Promise<{
     throw new Error('runGenerate requires an explicit export name.');
   }
   const exportName = options.export;
-  const componentConfig = options._loadedConfig ?? await loadConfig(path.resolve(cwd, options.config));
+  const componentConfig =
+    options._loadedConfig ?? (await loadConfig(path.resolve(cwd, options.config)));
 
   // Merge config defaults with CLI flags (CLI flag > schemas.X.[prop] > defaults.[prop])
   const schemaConfig = componentConfig.schemas?.[exportName];
-  const componentName = resolveComponentName(
-    exportName,
-    options.name ?? schemaConfig?.name
-  );
-  const effectiveMode = options.mode ?? schemaConfig?.mode ?? componentConfig.defaults?.mode ?? 'submit';
+  const componentName = resolveComponentName(exportName, options.name ?? schemaConfig?.name);
+  const effectiveMode =
+    options.mode ?? schemaConfig?.mode ?? componentConfig.defaults?.mode ?? 'submit';
   const effectiveOut = options.out ?? schemaConfig?.out ?? componentConfig.defaults?.out;
-  const effectiveServerAction = options.serverAction ?? schemaConfig?.serverAction ?? componentConfig.defaults?.serverAction ?? false;
+  const effectiveServerAction =
+    options.serverAction ??
+    schemaConfig?.serverAction ??
+    componentConfig.defaults?.serverAction ??
+    false;
   const effectiveUi = options.ui ?? componentConfig.defaults?.ui ?? 'shadcn';
   const effectiveOverwrite = componentConfig.defaults?.overwrite ?? false;
 
@@ -143,7 +127,10 @@ export async function runGenerate(options: GenerateOptions): Promise<{
     outputPath,
     componentName,
     mode: effectiveMode,
-    componentConfig: { ...componentConfig, fields: Object.keys(mergedFields).length > 0 ? mergedFields : componentConfig.fields },
+    componentConfig: {
+      ...componentConfig,
+      fields: Object.keys(mergedFields).length > 0 ? mergedFields : componentConfig.fields
+    },
     ui: effectiveUi,
     serverAction: effectiveServerAction
   };
@@ -225,7 +212,11 @@ export function createProgram(): Command {
 
       const results: Array<{ componentName: string; outputPath: string }> = [];
       for (const exportName of exportNames) {
-        const result = await runGenerate({ ...commandOptions, export: exportName, _loadedConfig: config });
+        const result = await runGenerate({
+          ...commandOptions,
+          export: exportName,
+          _loadedConfig: config
+        });
         const schemaConfig = config.schemas?.[exportName];
         const componentName = resolveComponentName(
           exportName,
@@ -264,10 +255,7 @@ export function createProgram(): Command {
       '--components <modulePath>',
       'Module path used in generated z2f.config.ts (overrides shadcn inference)'
     )
-    .option(
-      '--schemas <path>',
-      'Path to schema file or directory for autodiscovery'
-    )
+    .option('--schemas <path>', 'Path to schema file or directory for autodiscovery')
     .option('--force', 'Overwrite existing component config file', false)
     .option('--dry-run', 'Print generated config without writing files', false)
     .option('--verbose', 'Print detailed diagnostics and per-step details', false)

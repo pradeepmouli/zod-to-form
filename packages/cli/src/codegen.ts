@@ -1,12 +1,7 @@
 import path from 'node:path';
 import type { FormField } from '@zod-to-form/core';
 import { getEmptyDefault } from '@zod-to-form/core';
-import type {
-  ComponentEntry,
-  FieldOverride,
-  FormPrimitivesConfig,
-  ZodToFormComponentConfig
-} from './index.js';
+import type { ComponentEntry, FieldConfig, FormPrimitivesConfig, ZodFormsConfig } from './index.js';
 import { getFileHeader, renderField } from './templates.js';
 
 export type CodegenConfig = {
@@ -15,7 +10,7 @@ export type CodegenConfig = {
   outputPath: string;
   componentName: string;
   mode: 'submit' | 'auto-save';
-  componentConfig?: ZodToFormComponentConfig<Record<string, unknown>>;
+  componentConfig?: ZodFormsConfig<Record<string, unknown>>;
   ui: 'shadcn' | 'unstyled';
   serverAction: boolean;
   /** Wrap generated form in <FormProvider {...form}> */
@@ -49,10 +44,10 @@ function renderOverrideProps(props: Record<string, unknown> | undefined): string
 
 function getMappedFieldComponent(
   field: FormField,
-  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined
+  componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined
 ): {
   componentName?: string;
-  override?: FieldOverride;
+  override?: FieldConfig;
   entry?: ComponentEntry<Record<string, unknown>>;
   source: 'fields' | 'fieldTypes' | 'none';
 } {
@@ -72,7 +67,7 @@ function getMappedFieldComponent(
 
 function collectMappedComponentNames(
   fields: FormField[],
-  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined,
+  componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
   out = new Set<string>()
 ): Set<string> {
   for (const field of fields) {
@@ -178,10 +173,10 @@ function normalizeFieldKey(key: string): string {
 export function resolveFieldMapping<TComponents extends Record<string, unknown>>(
   fieldKey: string,
   fieldType: string | undefined,
-  componentConfig: ZodToFormComponentConfig<TComponents> | undefined
+  componentConfig: ZodFormsConfig<TComponents> | undefined
 ): {
   entry?: ComponentEntry<TComponents>;
-  override?: FieldOverride;
+  override?: FieldConfig;
   source: 'fields' | 'fieldTypes' | 'none';
 } {
   if (!componentConfig) {
@@ -291,7 +286,7 @@ function serializeDefaultValue(value: unknown): string {
 
 function renderNestedBlock(
   field: FormField,
-  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined,
+  componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
   primitives: FormPrimitivesConfig<Record<string, unknown>> | undefined,
   indent: string
 ): string {
@@ -312,7 +307,7 @@ function renderNestedBlock(
 
 function renderArrayBlock(
   field: FormField,
-  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined,
+  componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
   primitives: FormPrimitivesConfig<Record<string, unknown>> | undefined,
   indent: string
 ): string {
@@ -378,7 +373,7 @@ function capitalize(s: string): string {
  */
 function resolvePropMap(
   entry?: ComponentEntry<Record<string, unknown>>,
-  override?: FieldOverride
+  override?: FieldConfig
 ): Record<string, string> | undefined {
   const entryMap = entry?.propMap;
   const fieldMap = override?.propMap;
@@ -446,7 +441,7 @@ function renderControlledComponent(
 
 function renderFieldBlockWithConfig(
   field: FormField,
-  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined,
+  componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
   primitives: FormPrimitivesConfig<Record<string, unknown>> | undefined,
   indent = '      '
 ): string {
@@ -505,7 +500,7 @@ function renderFieldBlockWithConfig(
 /** Check if any field in the tree uses a controlled component entry */
 function hasControlledFields(
   fields: FormField[],
-  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined
+  componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined
 ): boolean {
   if (!componentConfig) return false;
   for (const field of fields) {

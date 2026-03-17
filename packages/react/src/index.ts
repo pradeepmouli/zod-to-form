@@ -15,8 +15,4 @@ export { ZodForm } from './ZodForm.js';
 export { useZodForm } from './useZodForm.js';
 export { defaultComponentMap } from './components/index.js';
 export { shadcnComponentMap } from './shadcn/index.js';
-export type {
-  RuntimeComponentConfig,
-  RuntimeComponentEntry,
-  RuntimeFieldOverride
-} from './FieldRenderer.js';
+export type { RuntimeComponentConfig, RuntimeComponentEntry } from './FieldRenderer.js';

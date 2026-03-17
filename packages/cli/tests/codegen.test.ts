@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { FormField } from '@zod-to-form/core';
 import { generateFormComponent, resolveFieldMapping } from '../src/codegen.js';
 import type { CodegenConfig } from '../src/codegen.js';
-import type { ZodToFormComponentConfig } from '../src/index.js';
+import type { ZodFormsConfig } from '../src/index.js';
 
 describe('generateFormComponent', () => {
   it('generates valid TSX with form imports and field markup', async () => {
@@ -88,7 +88,7 @@ describe('generateFormComponent', () => {
   });
 
   it('resolves field mapping with fields overriding fieldTypes', () => {
-    const config: ZodToFormComponentConfig = {
+    const config: ZodFormsConfig = {
       components: '@app/components',
       fieldTypes: {
         string: { component: 'Input' },
@@ -108,7 +108,7 @@ describe('generateFormComponent', () => {
   });
 
   it('uses fieldTypes mapping when no per-field override exists', () => {
-    const config: ZodToFormComponentConfig<{ Input: unknown }> = {
+    const config: ZodFormsConfig<{ Input: unknown }> = {
       components: '@app/components',
       fieldTypes: {
         string: { component: 'Input' }
@@ -485,7 +485,7 @@ describe('generateFormComponent', () => {
   });
 
   it('resolveFieldMapping normalizes .0. array index to bracket notation for fields lookup', () => {
-    const config: ZodToFormComponentConfig = {
+    const config: ZodFormsConfig = {
       components: '@app/components',
       fieldTypes: {
         string: { component: 'Input' },
@@ -504,7 +504,7 @@ describe('generateFormComponent', () => {
   });
 
   it('resolveFieldMapping normalizes ${index} template to bracket notation for fields lookup', () => {
-    const config: ZodToFormComponentConfig = {
+    const config: ZodFormsConfig = {
       components: '@app/components',
       fieldTypes: {
         string: { component: 'Input' },
@@ -522,7 +522,7 @@ describe('generateFormComponent', () => {
   });
 
   it('resolveFieldMapping still matches exact field key before normalizing', () => {
-    const config: ZodToFormComponentConfig = {
+    const config: ZodFormsConfig = {
       components: '@app/components',
       fieldTypes: {
         string: { component: 'Input' },

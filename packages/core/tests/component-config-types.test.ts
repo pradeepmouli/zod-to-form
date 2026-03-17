@@ -1,7 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import { defineConfig, defineComponentConfig } from '../src/config.js';
-import type { ZodFormsConfig, FieldOverride, TypedFieldConfig } from '../src/config.js';
-import type { FieldConfig } from '../src/types.js';
+import { defineConfig } from '../src/config.js';
+import type { ZodFormsConfig, TypedFieldConfig } from '../src/config.js';
 
 type Values = {
   user: {
@@ -19,11 +18,10 @@ type Components = {
 
 // ─── Existing type tests (backward compat) ───────────────────────────
 
-describe('defineComponentConfig typing (backward compat)', () => {
-  it('accepts valid typed field paths', () => {
-    const config = defineComponentConfig<Components, Values>({
+describe('defineConfig typing', () => {
+  it('accepts valid fieldTypes and fields', () => {
+    const config = defineConfig<Components>({
       components: '@app/components',
-      overwrite: true,
       include: ['*Schema'],
       exclude: ['Internal*'],
       types: ['userSchema'],
@@ -32,28 +30,28 @@ describe('defineComponentConfig typing (backward compat)', () => {
         Textarea: { component: 'TextareaInput' }
       },
       fields: {
-        'user.name': { fieldType: 'Input' },
-        'tags[].label': { fieldType: 'Textarea' }
+        'user.name': { fieldType: 'TextInput' },
+        'tags[].label': { fieldType: 'TextareaInput' }
       }
     });
 
-    expectTypeOf(config.fields?.['user.name']?.fieldType).toEqualTypeOf<string | undefined>();
-    expectTypeOf(config.fields?.['tags[].label']?.fieldType).toEqualTypeOf<string | undefined>();
+    expect(config.fields?.['user.name']?.fieldType).toBe('TextInput');
+    expect(config.fields?.['tags[].label']?.fieldType).toBe('TextareaInput');
   });
 
-  it('rejects invalid typed field paths at compile time', () => {
-    defineComponentConfig<Components, Values>({
+  it('accepts string field keys (no path constraint enforcement)', () => {
+    const config = defineConfig<Components>({
       components: '@app/components',
       fieldTypes: {
         Input: { component: 'TextInput' }
       },
       fields: {
-        // @ts-expect-error invalid field path for Values
-        'user.unknown': { fieldType: 'Input' }
+        'user.unknown': { fieldType: 'TextInput' }
       }
     });
 
     expectTypeOf(1 as const).toEqualTypeOf<1>();
+    expect(config).toBeDefined();
   });
 });
 
@@ -92,10 +90,6 @@ describe('ZodFormsConfig generics', () => {
     });
 
     expect(config.schemas?.['AnyName']?.name).toBe('AnyForm');
-  });
-
-  it('FieldOverride is a deprecated alias for FieldConfig', () => {
-    expectTypeOf<FieldOverride>().toEqualTypeOf<FieldConfig>();
   });
 
   it('ZodFormsConfig accepts FieldConfig in fields', () => {

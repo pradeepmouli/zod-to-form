@@ -1,14 +1,5 @@
-import { describe, expectTypeOf, it } from 'vitest';
-import { defineComponentConfig } from '../src/index.js';
-
-type Values = {
-  profile: {
-    bio: string;
-  };
-  tags: Array<{
-    label: string;
-  }>;
-};
+import { describe, expect, it } from 'vitest';
+import { defineConfig } from '../src/index.js';
 
 type Components = {
   Input: unknown;
@@ -18,11 +9,10 @@ type Components = {
   FieldControl: unknown;
 };
 
-describe('CLI defineComponentConfig typing', () => {
-  it('matches core typing for field paths and config controls', () => {
-    const config = defineComponentConfig<Components, Values>({
+describe('CLI defineConfig typing', () => {
+  it('accepts valid fieldTypes, formPrimitives and fields', () => {
+    const config = defineConfig<Components>({
       components: '@app/components',
-      overwrite: true,
       include: ['*Schema'],
       exclude: ['Internal*'],
       types: ['profileSchema'],
@@ -41,22 +31,21 @@ describe('CLI defineComponentConfig typing', () => {
       }
     });
 
-    expectTypeOf(config.fields?.['profile.bio']?.fieldType).toEqualTypeOf<string | undefined>();
-    expectTypeOf(config.formPrimitives?.control).toEqualTypeOf<keyof Components | undefined>();
+    expect(config.fields?.['profile.bio']?.fieldType).toBe('Textarea');
+    expect(config.formPrimitives?.control).toBe('FieldControl');
   });
 
-  it('rejects invalid field paths at compile time', () => {
-    defineComponentConfig<Components, Values>({
+  it('accepts any string field keys', () => {
+    const config = defineConfig<Components>({
       components: '@app/components',
       fieldTypes: {
         Input: { component: 'Input' }
       },
       fields: {
-        // @ts-expect-error invalid field path for Values
         'profile.missing': { fieldType: 'Input' }
       }
     });
 
-    expectTypeOf(1 as const).toEqualTypeOf<1>();
+    expect(config).toBeDefined();
   });
 });
