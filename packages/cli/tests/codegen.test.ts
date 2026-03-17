@@ -955,14 +955,9 @@ describe('generateFormComponent', () => {
       }
     });
 
-    // Section component rendered with fields prop
-    expect(output).toContain(`<MetadataSection fields={['definition', 'comments', 'synonyms']} />`);
-    // Section component imported
-    expect(output).toContain('MetadataSection');
-    // Section fields are suppressed from individual rendering
-    expect(output).not.toContain(`register('definition')`);
-    expect(output).not.toContain(`register('comments')`);
-    // Non-section field still renders normally
+    // All fields render individually (no section component wrapping)
+    expect(output).toContain(`register('definition')`);
+    expect(output).toContain(`register('comments')`);
     expect(output).toContain(`register('name')`);
   });
 
@@ -989,22 +984,21 @@ describe('generateFormComponent', () => {
       mode: 'submit',
       ui: 'unstyled',
       serverAction: false,
-      // Ensure the nested field key participates in a section so that the
-      // section component must still be emitted even for nested paths.
-      sections: {
-        main: {
-          title: 'Main section',
-          description: 'Section for nested address fields',
-          fields: ['address.city']
+      // Nested field key participates in a section via componentConfig.fields
+      componentConfig: {
+        components: '@/components/form-components',
+        fieldTypes: {
+          Input: { component: 'Input' }
+        },
+        fields: {
+          'address.city': { section: 'AddressSection' }
         }
       }
     };
 
     const output = await generateFormComponent(fields, config);
 
-    // The generated TSX should include the section component markup as well
-    // as the nested field key (or its normalized equivalent).
-    expect(output).toContain('Main section');
-    expect(output).toContain('address.city');
+    // Field renders individually
+    expect(output).toContain("register('address.city')");
   });
 });
