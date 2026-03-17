@@ -9,9 +9,6 @@ type ComponentMap = typeof defaultComponentMap;
 
 export type RuntimeComponentEntry = ComponentEntry;
 
-/** @deprecated Use FieldConfig instead */
-export type RuntimeFieldOverride = FieldConfig;
-
 export type RuntimeComponentConfig = {
   /**
    * Module specifier used by the CLI codegen to emit a static import statement.
@@ -41,7 +38,7 @@ const pendingRenderCache = new Map<
 function resolveFieldOverride(
   field: FormField,
   componentConfig: RuntimeComponentConfig | undefined
-): { entry?: RuntimeComponentEntry; override?: RuntimeFieldOverride } {
+): { entry?: RuntimeComponentEntry; override?: FieldConfig } {
   if (!componentConfig) {
     return {};
   }
@@ -336,7 +333,7 @@ function applyPropMap(
  */
 function resolvePropMap(
   entry?: RuntimeComponentEntry,
-  override?: RuntimeFieldOverride
+  override?: FieldConfig
 ): Record<string, string> | undefined {
   const entryMap = entry?.propMap;
   const fieldMap = override?.propMap;

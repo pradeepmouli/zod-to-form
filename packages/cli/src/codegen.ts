@@ -1,20 +1,8 @@
 import path from 'node:path';
 import type { FormField } from '@zod-to-form/core';
-import { getEmptyDefault, normalizeFieldKey, collectFieldSections } from '@zod-to-form/core';
-import type {
-  ComponentEntry,
-  FieldConfig,
-  FieldOverride,
-  FormPrimitivesConfig,
-  ZodToFormComponentConfig
-} from './index.js';
+import { getEmptyDefault } from '@zod-to-form/core';
+import type { ComponentEntry, FieldConfig, FormPrimitivesConfig, ZodFormsConfig } from './index.js';
 import { getFileHeader, renderField } from './templates.js';
-
-export type SectionConfig = {
-  title: string;
-  description?: string;
-  fields: string[];
-};
 
 export type CodegenConfig = {
   schemaPath: string;
@@ -22,19 +10,18 @@ export type CodegenConfig = {
   outputPath: string;
   componentName: string;
   mode: 'submit' | 'auto-save';
-  componentConfig?: ZodToFormComponentConfig<Record<string, unknown>>;
+  componentConfig?: ZodFormsConfig<Record<string, unknown>>;
   ui: 'shadcn' | 'unstyled';
   serverAction: boolean;
   /** Wrap generated form in <FormProvider {...form}> */
   formProvider?: boolean;
-  /** Top-level section groupings keyed by section name */
-  sections?: Record<string, SectionConfig>;
 };
 
 function renderLiteralProp(value: unknown): string | undefined {
   if (typeof value === 'string') {
-    // Escape backslashes first, then double quotes to produce a valid JS string literal
-    return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+    const json = JSON.stringify(value);
+    const inner = json.slice(1, -1);
+    return `"${inner}"`;
   }
   if (typeof value === 'number' || typeof value === 'boolean') {
     return `{${String(value)}}`;
@@ -59,10 +46,10 @@ function renderOverrideProps(props: Record<string, unknown> | undefined): string
 
 function getMappedFieldComponent(
   field: FormField,
-  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined
+  componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined
 ): {
   componentName?: string;
-  override?: FieldOverride;
+  override?: FieldConfig;
   entry?: ComponentEntry<Record<string, unknown>>;
   source: 'fields' | 'fieldTypes' | 'none';
 } {
@@ -82,12 +69,10 @@ function getMappedFieldComponent(
 
 function collectMappedComponentNames(
   fields: FormField[],
-  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined,
+  componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
   out = new Set<string>()
 ): Set<string> {
   for (const field of fields) {
-    if (isFieldHidden(field, componentConfig)) continue;
-
     const mapping = getMappedFieldComponent(field, componentConfig);
     if (mapping.componentName) {
       out.add(mapping.componentName);
@@ -174,13 +159,26 @@ function renderFieldContainer(
   ].join('\n');
 }
 
+/**
+ * Normalise a concrete field key (e.g. `attributes.0.typeCall.type` or
+ * `attributes.${index}.typeCall.type`) to the bracket notation used in
+ * the user-facing `fields` config (e.g. `attributes[].typeCall.type`).
+ */
+function normalizeFieldKey(key: string): string {
+  // Replace `.number.` or `.${index}.` segments with `[].`
+  let result = key.replace(/\.(?:\d+|\$\{index\})\./g, '[].');
+  // Replace trailing `.number` or `.${index}`
+  result = result.replace(/\.(?:\d+|\$\{index\})$/, '[]');
+  return result;
+}
+
 export function resolveFieldMapping<TComponents extends Record<string, unknown>>(
   fieldKey: string,
   fieldType: string | undefined,
-  componentConfig: ZodToFormComponentConfig<TComponents> | undefined
+  componentConfig: ZodFormsConfig<TComponents> | undefined
 ): {
   entry?: ComponentEntry<TComponents>;
-  override?: FieldOverride;
+  override?: FieldConfig;
   source: 'fields' | 'fieldTypes' | 'none';
 } {
   if (!componentConfig) {
@@ -225,19 +223,15 @@ function toVarName(key: string): string {
   return key.replace(/[^a-zA-Z0-9]+([a-zA-Z0-9])/g, (_, c: string) => c.toUpperCase());
 }
 
-/** Collect all array fields (recursively through nested objects), skipping hidden fields */
-function collectArrayFields(
-  fields: FormField[],
-  componentConfig?: ZodToFormComponentConfig<Record<string, unknown>>
-): FormField[] {
+/** Collect all array fields (recursively through nested objects) */
+function collectArrayFields(fields: FormField[]): FormField[] {
   const result: FormField[] = [];
   for (const field of fields) {
-    if (isFieldHidden(field, componentConfig)) continue;
     if (field.component === 'ArrayField' && !field.key.includes('.0.')) {
       result.push(field);
     }
     if (field.component === 'Fieldset' && field.children) {
-      result.push(...collectArrayFields(field.children, componentConfig));
+      result.push(...collectArrayFields(field.children));
     }
   }
   return result;
@@ -308,16 +302,13 @@ function serializeDefaultValue(value: unknown): string {
 
 function renderNestedBlock(
   field: FormField,
-  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined,
+  componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
   primitives: FormPrimitivesConfig<Record<string, unknown>> | undefined,
   indent: string
 ): string {
   const children = (field.children ?? [])
     .map((child) => renderFieldBlockWithConfig(child, componentConfig, primitives, `${indent}  `))
-    .filter(Boolean)
     .join('\n');
-
-  if (!children) return '';
 
   return [
     `${indent}<div>`,
@@ -332,7 +323,7 @@ function renderNestedBlock(
 
 function renderArrayBlock(
   field: FormField,
-  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined,
+  componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
   primitives: FormPrimitivesConfig<Record<string, unknown>> | undefined,
   indent: string
 ): string {
@@ -398,7 +389,7 @@ function capitalize(s: string): string {
  */
 function resolvePropMap(
   entry?: ComponentEntry<Record<string, unknown>>,
-  override?: FieldOverride
+  override?: FieldConfig
 ): Record<string, string> | undefined {
   const entryMap = entry?.propMap;
   const fieldMap = override?.propMap;
@@ -464,62 +455,12 @@ function renderControlledComponent(
   ].join('\n');
 }
 
-function isFieldHidden(
-  field: FormField,
-  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined
-): boolean {
-  // Check schema-level .meta({ hidden: true })
-  if (field.hidden) return true;
-  // Check config fields[path].hidden
-  if (!componentConfig?.fields) return false;
-  const override =
-    componentConfig.fields[field.key] ?? componentConfig.fields[normalizeFieldKey(field.key)];
-  if (override?.hidden === true) return true;
-  // Fields with a section are rendered by the section component, not individually
-  if (override?.section) return true;
-  return false;
-}
-
-/**
- * Collect section groupings from the config using the shared core utility.
- */
-function collectSections(
-  fields: FormField[],
-  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined
-): Map<string, string[]> {
-  if (!componentConfig?.fields) return new Map<string, string[]>();
-  const configFields = componentConfig.fields;
-  return collectFieldSections(
-    fields,
-    (key: string) => configFields[key] ?? configFields[normalizeFieldKey(key)]
-  );
-}
-
-/**
- * Render section components that group multiple fields.
- * Each section component receives a `fields` prop with the field names it should bind to.
- */
-function renderSections(sections: Map<string, string[]>, indent: string): string {
-  if (sections.size === 0) return '';
-
-  const blocks: string[] = [];
-  for (const [componentName, fieldKeys] of sections) {
-    const fieldsArrayStr = fieldKeys.map((k) => `'${k}'`).join(', ');
-    blocks.push(`${indent}<${componentName} fields={[${fieldsArrayStr}]} />`);
-  }
-  return blocks.join('\n');
-}
-
 function renderFieldBlockWithConfig(
   field: FormField,
-  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined,
+  componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
   primitives: FormPrimitivesConfig<Record<string, unknown>> | undefined,
   indent = '      '
 ): string {
-  if (isFieldHidden(field, componentConfig)) {
-    return '';
-  }
-
   const mapping = getMappedFieldComponent(field, componentConfig);
 
   if (field.hasCustomRender) {
@@ -575,7 +516,7 @@ function renderFieldBlockWithConfig(
 /** Check if any field in the tree uses a controlled component entry */
 function hasControlledFields(
   fields: FormField[],
-  componentConfig: ZodToFormComponentConfig<Record<string, unknown>> | undefined
+  componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined
 ): boolean {
   if (!componentConfig) return false;
   for (const field of fields) {
@@ -592,23 +533,15 @@ export async function generateFormComponent(
   config: CodegenConfig
 ): Promise<string> {
   const schemaImportPath = getSchemaImportPath(config);
-  const arrayFields = collectArrayFields(fields, config.componentConfig);
+  const arrayFields = collectArrayFields(fields);
   const hasArrays = arrayFields.length > 0;
   const formPrimitives = config.componentConfig?.formPrimitives;
   const useFormProvider = config.formProvider || config.mode === 'auto-save';
   const hasControlled = hasControlledFields(fields, config.componentConfig);
 
-  // Collect section groupings
-  const sections = collectSections(fields, config.componentConfig);
-
   const mappedComponents = collectMappedComponentNames(fields, config.componentConfig);
   const primitiveComponents = collectFormPrimitiveNames(formPrimitives);
   const importNames = new Set<string>([...mappedComponents, ...primitiveComponents]);
-
-  // Add section component names to imports
-  for (const sectionName of sections.keys()) {
-    importNames.add(sectionName);
-  }
 
   const componentImportLine =
     config.componentConfig && importNames.size > 0
@@ -623,98 +556,11 @@ export async function generateFormComponent(
     componentImportLine,
     { hasControlled, formProvider: useFormProvider }
   );
-  // When top-level sections are configured, group fields inside <section> HTML elements.
-  let body: string;
-  if (config.sections && Object.keys(config.sections).length > 0) {
-    const topLevelSections = config.sections;
-    // Build field-key → section-key mapping (normalize array indices for matching)
-    const fieldToSectionKey = new Map<string, string>();
-    for (const sectionKey of Object.keys(topLevelSections)) {
-      for (const fk of topLevelSections[sectionKey]!.fields) {
-        fieldToSectionKey.set(fk, sectionKey);
-        // Also store the normalized form so concrete-index keys (e.g. items.0.name)
-        // match fields in bracket notation (items[].name) and vice-versa
-        const normalizedFk = normalizeFieldKey(fk);
-        if (normalizedFk !== fk) {
-          fieldToSectionKey.set(normalizedFk, sectionKey);
-        }
-      }
-    }
-
-    // Also add normalized field keys to the lookup so we match fields by either form
-    for (const field of fields) {
-      const normalized = normalizeFieldKey(field.key);
-      if (
-        normalized !== field.key &&
-        fieldToSectionKey.has(normalized) &&
-        !fieldToSectionKey.has(field.key)
-      ) {
-        fieldToSectionKey.set(field.key, fieldToSectionKey.get(normalized)!);
-      }
-    }
-
-    // Pre-group fields by section key (single pass instead of O(n) filter per section)
-    const sectionFieldGroups = new Map<string, FormField[]>();
-    for (const field of fields) {
-      const sk = fieldToSectionKey.get(field.key);
-      if (sk) {
-        const group = sectionFieldGroups.get(sk);
-        if (group) group.push(field);
-        else sectionFieldGroups.set(sk, [field]);
-      }
-    }
-
-    const renderedParts: string[] = [];
-    const emittedSections = new Set<string>();
-    const fieldIndent = '      ';
-    const innerIndent = fieldIndent + '  ';
-
-    for (const field of fields) {
-      const sectionKey = fieldToSectionKey.get(field.key);
-
-      if (sectionKey && !emittedSections.has(sectionKey)) {
-        emittedSections.add(sectionKey);
-        const sectionDef = topLevelSections[sectionKey]!;
-        const sectionFields = sectionFieldGroups.get(sectionKey) ?? [];
-
-        const sectionBody = sectionFields
-          .map((f) =>
-            renderFieldBlockWithConfig(f, config.componentConfig, formPrimitives, innerIndent)
-          )
-          .filter(Boolean)
-          .join('\n');
-
-        const descLine = sectionDef.description
-          ? `\n${innerIndent}<p>${sectionDef.description}</p>`
-          : '';
-
-        renderedParts.push(
-          `${fieldIndent}<section>`,
-          `${innerIndent}<h2>${sectionDef.title}</h2>${descLine}`,
-          sectionBody,
-          `${fieldIndent}</section>`
-        );
-      } else if (!sectionKey) {
-        const rendered = renderFieldBlockWithConfig(
-          field,
-          config.componentConfig,
-          formPrimitives,
-          fieldIndent
-        );
-        if (rendered) renderedParts.push(rendered);
-      }
-      // Fields whose section is already emitted are skipped (rendered inside the section block)
-    }
-
-    body = renderedParts.filter(Boolean).join('\n');
-  } else {
-    body = fields
-      .map((field) =>
-        renderFieldBlockWithConfig(field, config.componentConfig, formPrimitives, '      ')
-      )
-      .filter(Boolean)
-      .join('\n');
-  }
+  const body = fields
+    .map((field) =>
+      renderFieldBlockWithConfig(field, config.componentConfig, formPrimitives, '      ')
+    )
+    .join('\n');
 
   // useFieldArray hook declarations
   const arrayHooks = arrayFields
@@ -769,18 +615,8 @@ export async function generateFormComponent(
   const formTail =
     config.mode === 'auto-save' ? [] : [`      <button type="submit">Submit</button>`];
 
-  // Render section components after the regular fields
-  const sectionIndent = useFormProvider ? '        ' : '      ';
-  const sectionBlock = renderSections(sections, sectionIndent);
-
   // Form body with optional FormProvider wrapping
-  const formContent = [
-    formOpen,
-    body,
-    ...(sectionBlock ? [sectionBlock] : []),
-    ...formTail,
-    `    </form>`
-  ];
+  const formContent = [formOpen, body, ...formTail, `    </form>`];
 
   const wrappedContent = useFormProvider
     ? [

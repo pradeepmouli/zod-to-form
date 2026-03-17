@@ -2,11 +2,7 @@ import path from 'node:path';
 import { access } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { createJiti } from 'jiti';
-import {
-  validateConfig,
-  normalizeConfig,
-  type ZodFormsConfig
-} from '@zod-to-form/core';
+import { validateConfig, normalizeConfig, type ZodFormsConfig } from '@zod-to-form/core';
 
 const requireFromHere = createRequire(import.meta.url);
 
@@ -108,9 +104,6 @@ export async function loadConfig(
   return normalizeConfig(validated);
 }
 
-/** @deprecated Use loadConfig instead */
-export const loadComponentConfig = loadConfig;
-
 async function fileExists(filePath: string): Promise<boolean> {
   try {
     await access(filePath);
@@ -139,9 +132,6 @@ export async function resolveDefaultConfigPath(cwd: string): Promise<string | un
   return undefined;
 }
 
-/** @deprecated Use resolveDefaultConfigPath instead */
-export const resolveDefaultComponentConfigPath = resolveDefaultConfigPath;
-
 export async function loadDefaultConfig(
   cwd: string
 ): Promise<ZodFormsConfig<Record<string, unknown>> | undefined> {
@@ -152,6 +142,3 @@ export async function loadDefaultConfig(
 
   return loadConfig(defaultPath);
 }
-
-/** @deprecated Use loadDefaultConfig instead */
-export const loadDefaultComponentConfig = loadDefaultConfig;

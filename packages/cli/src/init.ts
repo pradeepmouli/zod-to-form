@@ -475,14 +475,79 @@ function resolveFieldTypeEntries(
   return presetNames.map((name) => ({ name, controlled: false }));
 }
 
-function buildConfigTemplate(
+function toImportSpecifierFromAbsolute(outputPath: string, absoluteTargetPath: string): string {
+  const relativePath = toPosixPath(path.relative(path.dirname(outputPath), absoluteTargetPath));
+  const specifier = relativePath.startsWith('.') ? relativePath : `./${relativePath}`;
+
+  if (specifier.endsWith('.tsx') || specifier.endsWith('.jsx')) {
+    return `${specifier.slice(0, -4)}.js`;
+  }
+
+  if (specifier.endsWith('.ts')) {
+    return `${specifier.slice(0, -3)}.js`;
+  }
+
+  return specifier;
+}
+
+function resolveComponentTypeImportSpecifier(
+  cwd: string,
+  outputPath: string,
   modulePath: string,
+  explicitModulePath: string | undefined
+): string {
+  const importPath = explicitModulePath?.trim() || modulePath;
+
+  if (importPath.startsWith('./') || importPath.startsWith('../')) {
+    return toImportSpecifierFromAbsolute(outputPath, path.resolve(cwd, importPath));
+  }
+
+  return importPath;
+}
+
+function resolveSchemaTypeImportSpecifier(
+  cwd: string,
+  outputPath: string,
+  schemaPath: string | undefined,
+  explicitSchemaPath: string | undefined
+): string | undefined {
+  const importPath = explicitSchemaPath?.trim() || schemaPath;
+
+  if (!importPath) {
+    return undefined;
+  }
+
+  return toImportSpecifierFromAbsolute(outputPath, path.resolve(cwd, importPath));
+}
+
+function buildConfigTemplate(
+  cwd: string,
+  outputPath: string,
+  modulePath: string,
+  explicitModulePath: string | undefined,
   formPrimitives: FormPrimitivesConfig,
   fieldTypeEntries: DiscoveredComponent[],
   discoveredSchemas: DiscoveredSchemas,
+  explicitSchemaPath: string | undefined,
   preset: 'shadcn' | 'unstyled' | undefined
 ): string {
   const presetImportName = preset ? PRESET_IMPORT_NAME[preset] : undefined;
+  const componentsImportPath = resolveComponentTypeImportSpecifier(
+    cwd,
+    outputPath,
+    modulePath,
+    explicitModulePath
+  );
+  const schemaImportPath = resolveSchemaTypeImportSpecifier(
+    cwd,
+    outputPath,
+    discoveredSchemas.schemaPath,
+    explicitSchemaPath
+  );
+  const defineConfigGenerics =
+    discoveredSchemas.exports.length > 0
+      ? '<typeof Components, typeof ZodSchemas>'
+      : '<typeof Components>';
 
   // Build import line
   const importNames = ['defineConfig'];
@@ -510,7 +575,10 @@ function buildConfigTemplate(
   const lines = [
     `import { ${importNames.join(', ')} } from '@zod-to-form/core';`,
     ``,
-    `export default defineConfig({`,
+    `import type * as Components from '${componentsImportPath}';`,
+    ...(schemaImportPath ? [`import type * as ZodSchemas from '${schemaImportPath}';`] : []),
+    ``,
+    `export default defineConfig${defineConfigGenerics}({`,
     `  components: '${modulePath}',`
   ];
 
@@ -678,10 +746,14 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   const preset = shadcn.exists ? ('shadcn' as const) : undefined;
   const fieldTypeEntries = resolveFieldTypeEntries(discoveredComponents, preset);
   const code = buildConfigTemplate(
+    cwd,
+    outputPath,
     modulePath,
+    options.components,
     discoveredPrimitives.primitives,
     fieldTypeEntries,
     discoveredSchemas,
+    options.schemas,
     preset
   );
 

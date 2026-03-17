@@ -6,11 +6,7 @@ import {
   loadConfig,
   loadDefaultConfig,
   loadSchema,
-  resolveDefaultConfigPath,
-  // Deprecated aliases
-  loadComponentConfig,
-  loadDefaultComponentConfig,
-  resolveDefaultComponentConfigPath
+  resolveDefaultConfigPath
 } from '../src/loader.js';
 
 async function createTempDir(): Promise<string> {
@@ -120,9 +116,7 @@ describe('loadConfig', () => {
       'utf8'
     );
 
-    await expect(loadConfig(configPath)).rejects.toThrow(
-      /include must be an array of strings/
-    );
+    await expect(loadConfig(configPath)).rejects.toThrow(/include must be an array of strings/);
   });
 
   it('throws clear error for invalid formPrimitives values', async () => {
@@ -194,9 +188,7 @@ describe('loadConfig', () => {
       'utf8'
     );
 
-    await expect(loadConfig(configPath)).rejects.toThrow(
-      /components must be a non-empty string/
-    );
+    await expect(loadConfig(configPath)).rejects.toThrow(/components must be a non-empty string/);
   });
 
   it('resolves default z2f.config.ts before component-config.ts', async () => {
@@ -297,12 +289,5 @@ describe('loadConfig', () => {
 
     const config = await loadConfig(configPath);
     expect(config.defaults?.overwrite).toBe(true);
-  });
-
-  it('deprecated aliases still work', () => {
-    // Verify deprecated aliases are exported and point to the same functions
-    expect(loadComponentConfig).toBe(loadConfig);
-    expect(loadDefaultComponentConfig).toBe(loadDefaultConfig);
-    expect(resolveDefaultComponentConfigPath).toBe(resolveDefaultConfigPath);
   });
 });

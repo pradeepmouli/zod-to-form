@@ -1,6 +1,5 @@
 name: CI
 
-# TEMPLATE: Customize branches and workflow triggers for your project
 on:
   push:
     branches-ignore: ["sub**"]
@@ -66,4 +65,3 @@ jobs:
       - name: Security Audit
         run: pnpm audit --audit-level moderate
         continue-on-error: true
-

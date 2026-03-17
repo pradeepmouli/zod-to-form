@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { FormField } from '@zod-to-form/core';
 import { generateFormComponent, resolveFieldMapping } from '../src/codegen.js';
 import type { CodegenConfig } from '../src/codegen.js';
-import type { ZodToFormComponentConfig } from '../src/index.js';
+import type { ZodFormsConfig } from '../src/index.js';
 
 describe('generateFormComponent', () => {
   it('generates valid TSX with form imports and field markup', async () => {
@@ -88,7 +88,7 @@ describe('generateFormComponent', () => {
   });
 
   it('resolves field mapping with fields overriding fieldTypes', () => {
-    const config: ZodToFormComponentConfig = {
+    const config: ZodFormsConfig = {
       components: '@app/components',
       fieldTypes: {
         string: { component: 'Input' },
@@ -108,7 +108,7 @@ describe('generateFormComponent', () => {
   });
 
   it('uses fieldTypes mapping when no per-field override exists', () => {
-    const config: ZodToFormComponentConfig<{ Input: unknown }> = {
+    const config: ZodFormsConfig<{ Input: unknown }> = {
       components: '@app/components',
       fieldTypes: {
         string: { component: 'Input' }
@@ -485,7 +485,7 @@ describe('generateFormComponent', () => {
   });
 
   it('resolveFieldMapping normalizes .0. array index to bracket notation for fields lookup', () => {
-    const config: ZodToFormComponentConfig = {
+    const config: ZodFormsConfig = {
       components: '@app/components',
       fieldTypes: {
         string: { component: 'Input' },
@@ -504,7 +504,7 @@ describe('generateFormComponent', () => {
   });
 
   it('resolveFieldMapping normalizes ${index} template to bracket notation for fields lookup', () => {
-    const config: ZodToFormComponentConfig = {
+    const config: ZodFormsConfig = {
       components: '@app/components',
       fieldTypes: {
         string: { component: 'Input' },
@@ -522,7 +522,7 @@ describe('generateFormComponent', () => {
   });
 
   it('resolveFieldMapping still matches exact field key before normalizing', () => {
-    const config: ZodToFormComponentConfig = {
+    const config: ZodFormsConfig = {
       components: '@app/components',
       fieldTypes: {
         string: { component: 'Input' },
@@ -955,14 +955,9 @@ describe('generateFormComponent', () => {
       }
     });
 
-    // Section component rendered with fields prop
-    expect(output).toContain(`<MetadataSection fields={['definition', 'comments', 'synonyms']} />`);
-    // Section component imported
-    expect(output).toContain('MetadataSection');
-    // Section fields are suppressed from individual rendering
-    expect(output).not.toContain(`register('definition')`);
-    expect(output).not.toContain(`register('comments')`);
-    // Non-section field still renders normally
+    // All fields render individually (no section component wrapping)
+    expect(output).toContain(`register('definition')`);
+    expect(output).toContain(`register('comments')`);
     expect(output).toContain(`register('name')`);
   });
 
@@ -989,22 +984,21 @@ describe('generateFormComponent', () => {
       mode: 'submit',
       ui: 'unstyled',
       serverAction: false,
-      // Ensure the nested field key participates in a section so that the
-      // section component must still be emitted even for nested paths.
-      sections: {
-        main: {
-          title: 'Main section',
-          description: 'Section for nested address fields',
-          fields: ['address.city']
+      // Nested field key participates in a section via componentConfig.fields
+      componentConfig: {
+        components: '@/components/form-components',
+        fieldTypes: {
+          Input: { component: 'Input' }
+        },
+        fields: {
+          'address.city': { section: 'AddressSection' }
         }
       }
     };
 
     const output = await generateFormComponent(fields, config);
 
-    // The generated TSX should include the section component markup as well
-    // as the nested field key (or its normalized equivalent).
-    expect(output).toContain('Main section');
-    expect(output).toContain('address.city');
+    // Field renders individually
+    expect(output).toContain("register('address.city')");
   });
 });

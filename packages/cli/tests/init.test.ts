@@ -26,6 +26,10 @@ describe('runInit', () => {
 
     const content = await readFile(result.outputPath, 'utf8');
     expect(content).toContain(`defineConfig`);
+    expect(content).toContain(
+      `import type * as Components from '@/components/zod-form-components';`
+    );
+    expect(content).toContain(`export default defineConfig<typeof Components>({`);
     expect(content).toContain(`components: '@/components/zod-form-components'`);
     expect(content).toContain(`formPrimitives: {`);
     expect(content).toContain(`field: 'Field'`);
@@ -50,7 +54,28 @@ describe('runInit', () => {
 
     expect(result.wroteFile).toBe(true);
     const content = await readFile(result.outputPath, 'utf8');
+    expect(content).toContain(
+      `import type * as Components from '@rune-langium/design-system/ui/input';`
+    );
     expect(content).toContain(`components: '@rune-langium/design-system/ui/input'`);
+
+    process.chdir(originalCwd);
+  });
+
+  it('uses explicit relative --components path for typed imports', async () => {
+    const dir = await createTempDir();
+    process.chdir(dir);
+
+    const result = await runInit({
+      components: './src/components/zod-form-components.ts',
+      out: './nested/config'
+    });
+
+    const content = await readFile(result.outputPath, 'utf8');
+    expect(content).toContain(
+      `import type * as Components from '../../src/components/zod-form-components.js';`
+    );
+    expect(content).toContain(`components: './src/components/zod-form-components.ts'`);
 
     process.chdir(originalCwd);
   });
@@ -243,7 +268,9 @@ describe('runInit', () => {
     const content = await readFile(result.outputPath, 'utf8');
 
     // Imports SHADCN_FIELD_TYPES alongside defineConfig
-    expect(content).toContain(`import { defineConfig, SHADCN_FIELD_TYPES } from '@zod-to-form/core'`);
+    expect(content).toContain(
+      `import { defineConfig, SHADCN_FIELD_TYPES } from '@zod-to-form/core'`
+    );
     // preset field emitted
     expect(content).toContain(`preset: 'shadcn'`);
     // Spread in fieldTypes
@@ -264,7 +291,9 @@ describe('runInit', () => {
       'utf8'
     );
 
-    await mkdir(path.join(dir, 'src', 'components', 'ui', 'zod-form-components'), { recursive: true });
+    await mkdir(path.join(dir, 'src', 'components', 'ui', 'zod-form-components'), {
+      recursive: true
+    });
     await writeFile(
       path.join(dir, 'src', 'components', 'ui', 'zod-form-components', 'index.ts'),
       [
@@ -324,10 +353,44 @@ describe('runInit', () => {
     const result = await runInit({ schemas: './schemas.ts' });
     const content = await readFile(result.outputPath, 'utf8');
 
+    expect(content).toContain(
+      `import type * as Components from '@/components/zod-form-components';`
+    );
+    expect(content).toContain(`import type * as ZodSchemas from './schemas.js';`);
+    expect(content).toContain(
+      `export default defineConfig<typeof Components, typeof ZodSchemas>({`
+    );
     expect(content).toContain('schemas: {');
     expect(content).toContain('UserSchema: {}');
     expect(content).toContain('OrderSchema: {}');
     expect(content).not.toContain('notASchema');
+
+    process.chdir(originalCwd);
+  });
+
+  it('uses explicit --schemas path for typed imports', async () => {
+    const dir = await createTempDir();
+    process.chdir(dir);
+
+    await mkdir(path.join(dir, 'src', 'generated'), { recursive: true });
+    await writeFile(
+      path.join(dir, 'src', 'generated', 'zod-schemas.ts'),
+      [
+        "import { z } from 'zod';",
+        'export const UserSchema = z.object({ name: z.string() });'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const result = await runInit({
+      schemas: './src/generated/zod-schemas.ts',
+      out: './nested/config'
+    });
+    const content = await readFile(result.outputPath, 'utf8');
+
+    expect(content).toContain(
+      `import type * as ZodSchemas from '../../src/generated/zod-schemas.js';`
+    );
 
     process.chdir(originalCwd);
   });
@@ -339,7 +402,29 @@ describe('runInit', () => {
     const result = await runInit({});
     const content = await readFile(result.outputPath, 'utf8');
 
+    expect(content).not.toContain(`import type * as ZodSchemas`);
     expect(content).not.toContain('schemas:');
+
+    process.chdir(originalCwd);
+  });
+
+  it('writes output-relative schema type imports for nested config output paths', async () => {
+    const dir = await createTempDir();
+    process.chdir(dir);
+
+    await writeFile(
+      path.join(dir, 'schemas.ts'),
+      [
+        "import { z } from 'zod';",
+        'export const UserSchema = z.object({ name: z.string() });'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const result = await runInit({ schemas: './schemas.ts', out: './nested/config' });
+    const content = await readFile(result.outputPath, 'utf8');
+
+    expect(content).toContain(`import type * as ZodSchemas from '../../schemas.js';`);
 
     process.chdir(originalCwd);
   });

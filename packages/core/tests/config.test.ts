@@ -3,17 +3,15 @@ import {
   defineConfig,
   validateConfig,
   resolveFieldConfig,
-  normalizeConfig,
-  defineComponentConfig,
-  validateComponentConfig
+  normalizeConfig
 } from '../src/config.js';
 import type { ZodFormsConfig } from '../src/config.js';
 
 // ─── Existing tests (backward compat) ────────────────────────────────
 
 describe('component config contracts (backward compat)', () => {
-  it('defineComponentConfig returns input config unchanged', () => {
-    const config = defineComponentConfig({
+  it('defineConfig returns input config unchanged', () => {
+    const config = defineConfig({
       components: '@app/components',
       fieldTypes: {
         Input: { component: 'TextInput' }
@@ -28,8 +26,8 @@ describe('component config contracts (backward compat)', () => {
     expect(config.fields?.['user.name']?.fieldType).toBe('Input');
   });
 
-  it('validateComponentConfig accepts valid component config object', () => {
-    const parsed = validateComponentConfig({
+  it('validateConfig accepts valid component config object', () => {
+    const parsed = validateConfig({
       components: '@app/components',
       overwrite: true,
       types: ['userSchema'],
@@ -49,9 +47,9 @@ describe('component config contracts (backward compat)', () => {
     expect(parsed.fieldTypes['Input']?.component).toBe('TextInput');
   });
 
-  it('validateComponentConfig rejects invalid include/exclude/types shape', () => {
+  it('validateConfig rejects invalid include/exclude/types shape', () => {
     expect(() =>
-      validateComponentConfig({
+      validateConfig({
         components: '@app/components',
         fieldTypes: {
           Input: { component: 'TextInput' }
@@ -61,9 +59,9 @@ describe('component config contracts (backward compat)', () => {
     ).toThrow(/include must be an array of strings/);
   });
 
-  it('validateComponentConfig rejects invalid formPrimitives shape', () => {
+  it('validateConfig rejects invalid formPrimitives shape', () => {
     expect(() =>
-      validateComponentConfig({
+      validateConfig({
         components: '@app/components',
         fieldTypes: {
           Input: { component: 'TextInput' }
@@ -75,9 +73,9 @@ describe('component config contracts (backward compat)', () => {
     ).toThrow(/formPrimitives\.label must be a non-empty string/);
   });
 
-  it('validateComponentConfig rejects invalid fields shape', () => {
+  it('validateConfig rejects invalid fields shape', () => {
     expect(() =>
-      validateComponentConfig({
+      validateConfig({
         components: '@app/components',
         fieldTypes: {
           Input: { component: 'TextInput' }
@@ -185,13 +183,13 @@ describe('validateConfig', () => {
   });
 
   it('deprecated aliases still work (T011)', () => {
-    const config = defineComponentConfig({
+    const config = defineConfig({
       components: '@app/components',
       fieldTypes: { Input: { component: 'Input' } }
     });
     expect(config.components).toBe('@app/components');
 
-    const validated = validateComponentConfig({
+    const validated = validateConfig({
       components: '@app/components',
       fieldTypes: { Input: { component: 'Input' } }
     });
