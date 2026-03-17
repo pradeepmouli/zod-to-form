@@ -19,7 +19,9 @@ export type CodegenConfig = {
 
 function renderLiteralProp(value: unknown): string | undefined {
   if (typeof value === 'string') {
-    return `"${value.replace(/"/g, '\\"')}"`;
+    const json = JSON.stringify(value);
+    const inner = json.slice(1, -1);
+    return `"${inner}"`;
   }
   if (typeof value === 'number' || typeof value === 'boolean') {
     return `{${String(value)}}`;
