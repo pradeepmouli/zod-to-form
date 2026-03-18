@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { z } from 'zod';
+import type { FormMeta } from '@zod-to-form/core';
 import { useZodForm } from '../src/useZodForm.js';
 
 describe('useZodForm', () => {
@@ -87,6 +88,74 @@ describe('useZodForm', () => {
 
     await waitFor(() => {
       expect(onValueChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('fields option', () => {
+    it('applies flat field config overrides via fields option', () => {
+      const schema = z.object({
+        name: z.string(),
+        bio: z.string()
+      });
+
+      const { result } = renderHook(() =>
+        useZodForm(schema, {
+          fields: {
+            name: { component: 'Input', order: 0 },
+            bio: { component: 'Textarea', order: 1 }
+          }
+        })
+      );
+
+      expect(result.current.fields).toHaveLength(2);
+      expect(result.current.fields[0]?.key).toBe('name');
+      expect(result.current.fields[0]?.component).toBe('Input');
+      expect(result.current.fields[1]?.key).toBe('bio');
+      expect(result.current.fields[1]?.component).toBe('Textarea');
+    });
+
+    it('formRegistry takes precedence over fields', () => {
+      const name = z.string();
+      const schema = z.object({ name });
+
+      // Register as textarea via the registry
+      const formRegistry = z.registry<FormMeta>();
+      formRegistry.add(name, { component: 'Textarea' });
+
+      const { result } = renderHook(() =>
+        useZodForm(schema, {
+          formRegistry,
+          // fields would keep it as Input, but registry should win
+          fields: {
+            name: { component: 'Input' }
+          }
+        })
+      );
+
+      // If formRegistry wins, component is Textarea (not Input from fields)
+      expect(result.current.fields[0]?.component).toBe('Textarea');
+    });
+
+    it('empty fields object does not create a registry', () => {
+      const schema = z.object({ name: z.string() });
+
+      const { result } = renderHook(() => useZodForm(schema, { fields: {} }));
+
+      // Should still produce fields with default components
+      expect(result.current.fields).toHaveLength(1);
+      expect(result.current.fields[0]?.component).toBeDefined();
+    });
+
+    it('memoizes effectiveRegistry when fields reference is stable', () => {
+      const schema = z.object({ name: z.string() });
+      const fields = { name: { component: 'Input', order: 0 } };
+
+      const { result, rerender } = renderHook(() => useZodForm(schema, { fields }));
+      const firstFieldsRef = result.current.fields;
+
+      rerender();
+
+      expect(result.current.fields).toBe(firstFieldsRef);
     });
   });
 });

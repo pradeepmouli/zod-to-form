@@ -87,38 +87,39 @@ describe('generateFormComponent', () => {
     expect(output).not.toContain(`register('bio')`);
   });
 
-  it('resolves field mapping with fields overriding fieldTypes', () => {
+  it('resolves field mapping with fields overriding components', () => {
     const config: ZodFormsConfig = {
-      components: '@app/components',
-      fieldTypes: {
-        string: { component: 'Input' },
-        'cross-ref': { component: 'TypeSelector' }
+      components: {
+        source: '@app/components',
+        overrides: {
+          TypeSelector: { controlled: false }
+        }
       },
       fields: {
-        'DataForm.superType': { fieldType: 'cross-ref', props: { refType: 'Data' } }
+        'DataForm.superType': { component: 'TypeSelector', props: { refType: 'Data' } }
       }
     };
 
-    const result = resolveFieldMapping('DataForm.superType', 'string', config);
+    const result = resolveFieldMapping('DataForm.superType', 'Input', config);
 
     expect(result.source).toBe('fields');
-    expect(result.entry?.component).toBe('TypeSelector');
-    expect(result.override?.fieldType).toBe('cross-ref');
+    expect(result.componentName).toBe('TypeSelector');
+    expect(result.override?.component).toBe('TypeSelector');
     expect(result.override?.props).toEqual({ refType: 'Data' });
   });
 
-  it('uses fieldTypes mapping when no per-field override exists', () => {
+  it('uses components mapping when no per-field override exists', () => {
     const config: ZodFormsConfig<{ Input: unknown }> = {
-      components: '@app/components',
-      fieldTypes: {
-        string: { component: 'Input' }
+      components: {
+        source: '@app/components',
+        overrides: {}
       }
     };
 
-    const result = resolveFieldMapping('UserForm.name', 'string', config);
+    const result = resolveFieldMapping('UserForm.name', 'Input', config);
 
-    expect(result.source).toBe('fieldTypes');
-    expect(result.entry?.component).toBe('Input');
+    expect(result.source).toBe('components');
+    expect(result.componentName).toBe('Input');
     expect(result.override).toBeUndefined();
   });
 
@@ -181,13 +182,9 @@ describe('generateFormComponent', () => {
       ui: 'shadcn',
       serverAction: false,
       componentConfig: {
-        components: '@app/components',
-        fieldTypes: {
-          string: { component: 'Input' },
-          'cross-ref': { component: 'TypeSelector' }
-        },
+        components: { source: '@app/components' },
         fields: {
-          'DataForm.superType': { fieldType: 'cross-ref', props: { refType: 'Data' } }
+          'DataForm.superType': { component: 'TypeSelector', props: { refType: 'Data' } }
         }
       }
     });
@@ -223,14 +220,11 @@ describe('generateFormComponent', () => {
       ui: 'shadcn',
       serverAction: false,
       componentConfig: {
-        components: '@app/components',
+        components: { source: '@app/components' },
         formPrimitives: {
           field: 'Field',
           label: 'FieldLabel',
           control: 'FieldControl'
-        },
-        fieldTypes: {
-          string: { component: 'Input' }
         }
       }
     });
@@ -486,58 +480,55 @@ describe('generateFormComponent', () => {
 
   it('resolveFieldMapping normalizes .0. array index to bracket notation for fields lookup', () => {
     const config: ZodFormsConfig = {
-      components: '@app/components',
-      fieldTypes: {
-        string: { component: 'Input' },
-        'cross-ref': { component: 'TypeSelector' }
+      components: {
+        source: '@app/components',
+        overrides: {}
       },
       fields: {
-        'attributes[].typeCall.type': { fieldType: 'cross-ref' }
+        'attributes[].typeCall.type': { component: 'TypeSelector' }
       }
     };
 
     // Concrete `.0.` key should match the bracket-notation config key
-    const result = resolveFieldMapping('attributes.0.typeCall.type', 'string', config);
+    const result = resolveFieldMapping('attributes.0.typeCall.type', 'Input', config);
 
     expect(result.source).toBe('fields');
-    expect(result.entry?.component).toBe('TypeSelector');
+    expect(result.componentName).toBe('TypeSelector');
   });
 
   it('resolveFieldMapping normalizes ${index} template to bracket notation for fields lookup', () => {
     const config: ZodFormsConfig = {
-      components: '@app/components',
-      fieldTypes: {
-        string: { component: 'Input' },
-        'cross-ref': { component: 'TypeSelector' }
+      components: {
+        source: '@app/components',
+        overrides: {}
       },
       fields: {
-        'items[].name': { fieldType: 'cross-ref' }
+        'items[].name': { component: 'TypeSelector' }
       }
     };
 
-    const result = resolveFieldMapping('items.${index}.name', 'string', config);
+    const result = resolveFieldMapping('items.${index}.name', 'Input', config);
 
     expect(result.source).toBe('fields');
-    expect(result.entry?.component).toBe('TypeSelector');
+    expect(result.componentName).toBe('TypeSelector');
   });
 
   it('resolveFieldMapping still matches exact field key before normalizing', () => {
     const config: ZodFormsConfig = {
-      components: '@app/components',
-      fieldTypes: {
-        string: { component: 'Input' },
-        'cross-ref': { component: 'TypeSelector' }
+      components: {
+        source: '@app/components',
+        overrides: {}
       },
       fields: {
-        superType: { fieldType: 'cross-ref' }
+        superType: { component: 'TypeSelector' }
       }
     };
 
     // Exact match — no normalization needed
-    const result = resolveFieldMapping('superType', 'string', config);
+    const result = resolveFieldMapping('superType', 'Input', config);
 
     expect(result.source).toBe('fields');
-    expect(result.entry?.component).toBe('TypeSelector');
+    expect(result.componentName).toBe('TypeSelector');
   });
 
   it('renders custom component instead of expanding Fieldset children when fields override exists', async () => {
@@ -588,13 +579,9 @@ describe('generateFormComponent', () => {
       ui: 'shadcn',
       serverAction: false,
       componentConfig: {
-        components: '@app/components',
-        fieldTypes: {
-          string: { component: 'Input' },
-          'cross-ref': { component: 'TypeSelector' }
-        },
+        components: { source: '@app/components' },
         fields: {
-          superType: { fieldType: 'cross-ref' }
+          superType: { component: 'TypeSelector' }
         }
       }
     });
@@ -715,15 +702,10 @@ describe('generateFormComponent', () => {
       ui: 'shadcn',
       serverAction: false,
       componentConfig: {
-        components: '@app/components',
-        fieldTypes: {
-          string: { component: 'Input' },
-          'cross-ref': { component: 'TypeSelector' },
-          cardinality: { component: 'CardinalitySelector' }
-        },
+        components: { source: '@app/components' },
         fields: {
-          'attributes[].typeCall.type': { fieldType: 'cross-ref' },
-          'attributes[].card': { fieldType: 'cardinality' }
+          'attributes[].typeCall.type': { component: 'TypeSelector' },
+          'attributes[].card': { component: 'CardinalitySelector' }
         }
       }
     });
@@ -769,9 +751,14 @@ describe('generateFormComponent', () => {
       ui: 'unstyled',
       serverAction: false,
       componentConfig: {
-        components: '@app/components',
-        fieldTypes: {
-          Select: { component: 'MySelect', controlled: true }
+        components: {
+          source: '@app/components',
+          overrides: {
+            MySelect: { controlled: true }
+          }
+        },
+        fields: {
+          kind: { component: 'MySelect' }
         }
       }
     });
@@ -807,13 +794,17 @@ describe('generateFormComponent', () => {
       ui: 'unstyled',
       serverAction: false,
       componentConfig: {
-        components: '@app/components',
-        fieldTypes: {
-          Select: {
-            component: 'TypeSelector',
-            controlled: true,
-            propMap: { onSelect: 'field.onChange', value: 'field.value' }
+        components: {
+          source: '@app/components',
+          overrides: {
+            TypeSelector: {
+              controlled: true,
+              propMap: { onSelect: 'field.onChange', value: 'field.value' }
+            }
           }
+        },
+        fields: {
+          type: { component: 'TypeSelector' }
         }
       }
     });
@@ -942,11 +933,7 @@ describe('generateFormComponent', () => {
       ui: 'shadcn',
       serverAction: false,
       componentConfig: {
-        components: '@/components/form-components',
-        fieldTypes: {
-          Input: { component: 'Input' },
-          Textarea: { component: 'Textarea' }
-        },
+        components: { source: '@/components/form-components' },
         fields: {
           definition: { section: 'MetadataSection' },
           comments: { section: 'MetadataSection' },
@@ -986,10 +973,7 @@ describe('generateFormComponent', () => {
       serverAction: false,
       // Nested field key participates in a section via componentConfig.fields
       componentConfig: {
-        components: '@/components/form-components',
-        fieldTypes: {
-          Input: { component: 'Input' }
-        },
+        components: { source: '@/components/form-components' },
         fields: {
           'address.city': { section: 'AddressSection' }
         }

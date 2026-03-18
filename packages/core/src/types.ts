@@ -1,4 +1,4 @@
-import type { ZodType } from 'zod';
+import type { $ZodArray, $ZodObject, $ZodRegistry, $ZodType } from 'zod/v4/core';
 
 // ─── FormField: Intermediate Representation ───────────────────────────
 
@@ -61,9 +61,9 @@ export interface FormField {
 
 // ─── FieldConfig: Serializable field configuration ────────────────────
 
-export interface FieldConfig {
-  /** Override component, e.g. "textarea", "switch", "combobox" */
-  fieldType?: string;
+type FieldConfigBase = {
+  /** Component name override, e.g. "Textarea", "Switch", "Combobox" */
+  component?: string;
   /** Display order override */
   order?: number;
   /** Hide field from UI (remains in form state) */
@@ -72,7 +72,7 @@ export interface FieldConfig {
   gridColumn?: string;
   /** Arbitrary field metadata props forwarded by processors */
   props?: Record<string, unknown>;
-  /** Per-field prop mapping override (merges over ComponentEntry.propMap) */
+  /** Per-field prop mapping override (merges over ComponentOverride.propMap) */
   propMap?: Record<string, string>;
   /**
    * Group this field into a named section component.
@@ -81,7 +81,21 @@ export interface FieldConfig {
    * The section component reads its fields from FormProvider context.
    */
   section?: string;
-}
+};
+
+type FieldConfigExtras<T extends $ZodType> =
+  // T is the unparameterized base — preserve open fallbacks for runtime/registry use
+  $ZodType extends T
+    ? { fields?: Record<string, FieldConfig>; arrayItems?: FieldConfig }
+    : T extends $ZodObject<infer Shape>
+      ? { fields?: { [K in keyof Shape]?: FieldConfig<Shape[K]> }; arrayItems?: never }
+      : T extends $ZodArray<infer Item>
+        ? // Item is inferred as SomeType (not $ZodType) — intersection narrows to satisfy FieldConfig's constraint
+          { arrayItems?: FieldConfig<Item & $ZodType>; fields?: never }
+        : // leaf schema types (string, number, boolean, etc.) — neither field applies
+          Record<never, never>;
+
+export type FieldConfig<T extends $ZodType = $ZodType> = FieldConfigBase & FieldConfigExtras<T>;
 
 // ─── FormMeta: Registry Annotation ────────────────────────────────────
 
@@ -108,8 +122,8 @@ export interface FormProcessorContext {
   formRegistry?: ZodFormRegistry;
   /** Current field path stack */
   path: string[];
-  /** Cycle detection for recursive schemas */
-  seen: WeakSet<ZodType>;
+  /** Tracks visited schema objects — prevents infinite loops from recursive schemas and avoids re-processing the same reference */
+  seen: WeakSet<$ZodType>;
   /** Maximum recursion depth (default: 5) */
   maxDepth: number;
   /** Current recursion depth */
@@ -119,11 +133,11 @@ export interface FormProcessorContext {
    * Provided by the walker for use in nesting processors (object, array, union).
    * Undefined only in unit-test contexts where nesting is not being tested.
    */
-  processChild?: (schema: ZodType, key: string) => FormField;
+  processChild?: (schema: $ZodType, key: string) => FormField;
 }
 
 export type FormProcessor = (
-  schema: ZodType,
+  schema: $ZodType,
   ctx: FormProcessorContext,
   field: FormField,
   params: ProcessParams
@@ -131,16 +145,8 @@ export type FormProcessor = (
 
 // ─── Public API Options ───────────────────────────────────────────────
 
-/**
- * Type alias for the form registry. Uses the Zod registry system
- * with FormMeta as the metadata shape.
- * Consumers create this via: `const formRegistry = z.registry<FormMeta>()`
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ZodFormRegistry = {
-  get(schema: ZodType): FormMeta | undefined;
-  has(schema: ZodType): boolean;
-};
+/** Zod v4 registry parameterized with FormMeta. Create via `z.registry<FormMeta>()`. */
+export type ZodFormRegistry = $ZodRegistry<FormMeta>;
 
 export interface WalkOptions {
   /** Custom form registry for metadata annotations */

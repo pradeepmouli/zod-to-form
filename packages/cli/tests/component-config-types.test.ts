@@ -10,9 +10,14 @@ type Components = {
 };
 
 describe('CLI defineConfig typing', () => {
-  it('accepts valid fieldTypes, formPrimitives and fields', () => {
+  it('accepts valid components overrides, formPrimitives and fields', () => {
     const config = defineConfig<Components>({
-      components: '@app/components',
+      components: {
+        source: '@app/components',
+        overrides: {
+          Textarea: { controlled: false }
+        }
+      },
       include: ['*Schema'],
       exclude: ['Internal*'],
       types: ['profileSchema'],
@@ -21,28 +26,23 @@ describe('CLI defineConfig typing', () => {
         label: 'FieldLabel',
         control: 'FieldControl'
       },
-      fieldTypes: {
-        Input: { component: 'Input' },
-        Textarea: { component: 'Textarea' }
-      },
       fields: {
-        'profile.bio': { fieldType: 'Textarea' },
-        'tags[].label': { fieldType: 'Input' }
+        'profile.bio': { component: 'Textarea' },
+        'tags[].label': { component: 'Input' }
       }
     });
 
-    expect(config.fields?.['profile.bio']?.fieldType).toBe('Textarea');
+    expect(config.fields?.['profile.bio']?.component).toBe('Textarea');
     expect(config.formPrimitives?.control).toBe('FieldControl');
   });
 
   it('accepts any string field keys', () => {
     const config = defineConfig<Components>({
-      components: '@app/components',
-      fieldTypes: {
-        Input: { component: 'Input' }
+      components: {
+        source: '@app/components'
       },
       fields: {
-        'profile.missing': { fieldType: 'Input' }
+        'profile.missing': { component: 'Input' }
       }
     });
 

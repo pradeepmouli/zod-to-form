@@ -1,4 +1,4 @@
-import type { ZodType } from 'zod';
+import type { $ZodType as ZodType } from 'zod/v4/core';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
 import { regexToMask } from '../utils.js';
 import { getDef, getBag } from './_utils.js';
@@ -11,7 +11,6 @@ export function processString(
 ): void {
   const bag = getBag(schema);
   const meta = ctx.formRegistry?.get(schema);
-  const fieldType = meta?.fieldType?.toLowerCase();
   const format = typeof bag['format'] === 'string' ? bag['format'] : undefined;
   const minimum = typeof bag['minimum'] === 'number' ? bag['minimum'] : undefined;
   const maximum = typeof bag['maximum'] === 'number' ? bag['maximum'] : undefined;
@@ -22,7 +21,7 @@ export function processString(
       ? ([...patternsSet][0] as RegExp).source
       : undefined;
 
-  field.component = fieldType === 'textarea' ? 'Textarea' : 'Input';
+  field.component = meta?.component ?? 'Input';
   field.props = {
     ...field.props,
     type: format === 'email' || format === 'url' ? format : 'text'

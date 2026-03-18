@@ -5,7 +5,7 @@ import { walkSchema } from '../src/walker.js';
 describe('metadata resolution', () => {
   it('applies global metadata and form registry overrides with correct precedence', () => {
     const formRegistry = z.registry<{
-      fieldType?: string;
+      component?: string;
       order?: number;
       hidden?: boolean;
       gridColumn?: string;
@@ -18,7 +18,7 @@ describe('metadata resolution', () => {
     const role = z.enum(['user', 'admin']).meta({ title: 'Account Role' });
     const secret = z.string();
 
-    formRegistry.add(bio, { fieldType: 'textarea', order: 2, gridColumn: '1 / -1' });
+    formRegistry.add(bio, { component: 'Textarea', order: 2, gridColumn: '1 / -1' });
     formRegistry.add(role, { order: 1 });
     formRegistry.add(secret, { hidden: true });
 
@@ -42,13 +42,13 @@ describe('metadata resolution', () => {
     expect(secretField?.hidden).toBe(true);
   });
 
-  it('prefers custom processor output over overlapping FormMeta fieldType', () => {
+  it('prefers custom processor output over overlapping FormMeta component', () => {
     const formRegistry = z.registry<{
-      fieldType?: string;
+      component?: string;
     }>();
 
     const name = z.string();
-    formRegistry.add(name, { fieldType: 'textarea' });
+    formRegistry.add(name, { component: 'Textarea' });
 
     const schema = z.object({ name });
     const fields = walkSchema(schema, {

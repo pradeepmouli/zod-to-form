@@ -1,16 +1,31 @@
 import { z } from 'zod';
+import type { $ZodType } from 'zod/v4/core';
 import type { FieldConfig } from './types.js';
 
-// ─── Shared Types ─────────────────────────────────────────────────────
+// ─── Component Override ───────────────────────────────────────────────
 
-export type ComponentEntry<T extends Record<string, unknown> = Record<string, unknown>> = {
-  component: keyof T & string;
-  render?: () => Promise<unknown>;
+/** Per-component metadata override. Only components that differ from defaults need an entry. */
+export type ComponentOverride = {
   /** When true, use Controller/useController instead of register() spread */
   controlled?: boolean;
   /** Map RHF field props to component-specific prop names (e.g. { onSelect: 'field.onChange' }) */
   propMap?: Record<string, string>;
 };
+
+// ─── Components Config ────────────────────────────────────────────────
+
+export type ComponentPreset = 'shadcn' | 'unstyled';
+
+export type ComponentsConfig<T extends Record<string, unknown> = Record<string, unknown>> = {
+  /** Import path for the components module */
+  source: string;
+  /** Preset that provides base overrides */
+  preset?: ComponentPreset;
+  /** Per-component overrides, strongly typed to module export keys */
+  overrides?: { [K in keyof T & string]?: ComponentOverride };
+};
+
+// ─── Shared Types ─────────────────────────────────────────────────────
 
 export type FormPrimitivesConfig<T extends Record<string, unknown> = Record<string, unknown>> = {
   field?: keyof T & string;
@@ -25,27 +40,27 @@ type TypedFieldConfigForComponent<
   TComponents extends Record<string, unknown>,
   K extends keyof TComponents & string
 > = {
-  fieldType: K;
+  component: K;
   order?: number;
   hidden?: boolean;
   gridColumn?: string;
   props?: TComponents[K] extends Record<string, unknown>
     ? Partial<TComponents[K]>
     : Record<string, unknown>;
-  /** Per-field prop mapping override (merges over ComponentEntry.propMap) */
+  /** Per-field prop mapping override (merges over ComponentOverride.propMap) */
   propMap?: Record<string, string>;
   /** Group into a named section component */
   section?: string;
 };
 
-/** Field config with no fieldType specified (untyped props) */
+/** Field config with no component specified (untyped props) */
 type UntypedFieldConfig = {
-  fieldType?: undefined;
+  component?: undefined;
   order?: number;
   hidden?: boolean;
   gridColumn?: string;
   props?: Record<string, unknown>;
-  /** Per-field prop mapping override (merges over ComponentEntry.propMap) */
+  /** Per-field prop mapping override (merges over ComponentOverride.propMap) */
   propMap?: Record<string, string>;
   /** Group into a named section component */
   section?: string;
@@ -53,8 +68,8 @@ type UntypedFieldConfig = {
 
 /**
  * Discriminated union over component keys.
- * When `fieldType` is set to a known component key, `props` is constrained
- * to that component's prop type. When `fieldType` is omitted, `props` is
+ * When `component` is set to a known component key, `props` is constrained
+ * to that component's prop type. When `component` is omitted, `props` is
  * an open `Record<string, unknown>`.
  */
 export type TypedFieldConfig<
@@ -65,7 +80,7 @@ export type TypedFieldConfig<
     }[keyof TComponents & string]
   | UntypedFieldConfig;
 
-// ─── New Config Types ─────────────────────────────────────────────────
+// ─── Config Types ────────────────────────────────────────────────────
 
 export type ConfigDefaults = {
   mode?: 'submit' | 'auto-save';
@@ -88,15 +103,11 @@ export type ZodTypeConfig<
   fields?: Partial<Record<TFieldKeys, TypedFieldConfig<TComponents>>>;
 };
 
-export type FieldTypePreset = 'shadcn' | 'unstyled';
-
 export type ZodFormsConfig<
   TComponents extends Record<string, unknown> = Record<string, unknown>,
   TSchemas extends Record<string, unknown> = Record<string, unknown>
 > = {
-  components: string;
-  preset?: FieldTypePreset;
-  fieldTypes: Record<string, ComponentEntry<TComponents>>;
+  components: ComponentsConfig<TComponents>;
   formPrimitives?: FormPrimitivesConfig<TComponents>;
   defaults?: ConfigDefaults;
   types?: string[];
@@ -105,7 +116,7 @@ export type ZodFormsConfig<
   fields?: Record<string, TypedFieldConfig<TComponents>>;
   schemas?: {
     [K in keyof TSchemas & string]?: ZodTypeConfig<
-      TSchemas[K] extends z.ZodType ? SchemaFieldPath<TSchemas[K]> : string,
+      TSchemas[K] extends $ZodType ? SchemaFieldPath<TSchemas[K]> : string,
       TComponents
     >;
   };
@@ -160,28 +171,31 @@ type FieldPath<TValues extends Record<string, unknown>> =
     : never;
 
 /** Extracts dot-notation field paths from a Zod schema's inferred type */
-type SchemaFieldPath<T extends z.ZodType> =
+type SchemaFieldPath<T extends $ZodType> =
   z.infer<T> extends infer O ? (O extends Record<string, unknown> ? FieldPath<O> : string) : string;
 
 // ─── Validation Schemas ───────────────────────────────────────────────
 
 const nonEmptyStringSchema = z.string().trim().min(1);
 
-const componentEntrySchema = z
+const componentOverrideSchema = z
   .object({
-    component: nonEmptyStringSchema,
-    render: z
-      .unknown()
-      .optional()
-      .refine((value) => value === undefined || typeof value === 'function'),
     controlled: z.boolean().optional(),
     propMap: z.record(z.string(), z.string()).optional()
   })
-  .passthrough();
+  .loose();
+
+const componentsConfigSchema = z
+  .object({
+    source: nonEmptyStringSchema,
+    preset: z.enum(['shadcn', 'unstyled']).optional(),
+    overrides: z.record(z.string(), componentOverrideSchema).optional()
+  })
+  .loose();
 
 const fieldConfigSchema = z
   .object({
-    fieldType: nonEmptyStringSchema.optional(),
+    component: nonEmptyStringSchema.optional(),
     order: z.number().optional(),
     hidden: z.boolean().optional(),
     gridColumn: z.string().optional(),
@@ -189,14 +203,14 @@ const fieldConfigSchema = z
     propMap: z.record(z.string(), z.string()).optional(),
     section: z.string().optional()
   })
-  .passthrough();
+  .loose();
 
 const fieldOverrideSchema = z
   .object({
-    fieldType: nonEmptyStringSchema,
+    component: nonEmptyStringSchema,
     props: z.record(z.string(), z.unknown()).optional()
   })
-  .passthrough();
+  .loose();
 
 const defaultsSchema = z
   .object({
@@ -207,7 +221,7 @@ const defaultsSchema = z
     serverAction: z.boolean().optional(),
     formProvider: z.boolean().optional()
   })
-  .passthrough()
+  .loose()
   .optional();
 
 const zodTypeConfigSchema = z
@@ -218,23 +232,21 @@ const zodTypeConfigSchema = z
     serverAction: z.boolean().optional(),
     fields: z.record(z.string(), fieldConfigSchema).optional()
   })
-  .passthrough();
+  .loose();
 
 const configSchema = z
   .object({
-    components: nonEmptyStringSchema,
-    preset: z.enum(['shadcn', 'unstyled']).optional(),
+    components: componentsConfigSchema,
     overwrite: z.boolean().optional(),
     include: z.array(z.string()).optional(),
     exclude: z.array(z.string()).optional(),
     types: z.array(z.string()).optional(),
-    fieldTypes: z.record(z.string(), componentEntrySchema),
     formPrimitives: z.record(z.string(), nonEmptyStringSchema).optional(),
     fields: z.record(z.string(), fieldOverrideSchema.or(fieldConfigSchema)).optional(),
     defaults: defaultsSchema,
     schemas: z.record(z.string(), zodTypeConfigSchema).optional()
   })
-  .passthrough();
+  .loose();
 
 // ─── Error Formatting ─────────────────────────────────────────────────
 
@@ -252,27 +264,22 @@ function formatValidationError(error: z.ZodError, source: string): Error {
   }
 
   if (root === 'components') {
-    return new Error(`${source}.components must be a non-empty string.`);
-  }
-
-  if (root === 'fieldTypes') {
     if (!entry) {
-      return new Error(`${source}.fieldTypes must be an object.`);
+      return new Error(`${source}.components must be an object.`);
     }
 
-    if (!property) {
-      return new Error(`${source}.fieldTypes.${entry} must be an object.`);
+    if (entry === 'source') {
+      return new Error(`${source}.components.source must be a non-empty string.`);
     }
 
-    if (property === 'component') {
-      return new Error(`${source}.fieldTypes.${entry}.component must be a non-empty string.`);
+    if (entry === 'overrides') {
+      if (!property) {
+        return new Error(`${source}.components.overrides must be an object when provided.`);
+      }
+      return new Error(`${source}.components.overrides.${property} must be an object.`);
     }
 
-    if (property === 'render') {
-      return new Error(`${source}.fieldTypes.${entry}.render must be a function when provided.`);
-    }
-
-    return new Error(`${source}.fieldTypes.${entry} must be an object.`);
+    return new Error(`${source}.components.${entry} is invalid.`);
   }
 
   if (root === 'formPrimitives') {
@@ -292,8 +299,8 @@ function formatValidationError(error: z.ZodError, source: string): Error {
       return new Error(`${source}.fields.${entry} must be an object.`);
     }
 
-    if (property === 'fieldType') {
-      return new Error(`${source}.fields.${entry}.fieldType must be a non-empty string.`);
+    if (property === 'component') {
+      return new Error(`${source}.fields.${entry}.component must be a non-empty string.`);
     }
 
     if (property === 'props') {
@@ -354,44 +361,37 @@ function formatValidationError(error: z.ZodError, source: string): Error {
   return new Error(`${source} is invalid: ${issue.message}`);
 }
 
-// ─── Preset Component Maps ───────────────────────────────────────────
+// ─── Preset Override Maps ─────────────────────────────────────────────
 
-export const SHADCN_FIELD_TYPES: Record<string, ComponentEntry> = {
-  Input: { component: 'Input' },
-  Textarea: { component: 'Textarea' },
-  Select: { component: 'Select' },
-  Checkbox: { component: 'Checkbox' },
-  Switch: { component: 'Switch' },
-  DatePicker: { component: 'DatePicker' },
-  FileInput: { component: 'FileInput' }
-};
+/** shadcn preset — no controlled components by default */
+export const SHADCN_OVERRIDES: Record<string, ComponentOverride> = {};
 
-export const DEFAULT_FIELD_TYPES: Record<string, ComponentEntry> = {
-  Input: { component: 'Input' },
-  Textarea: { component: 'Textarea' },
-  Select: { component: 'Select' },
-  Checkbox: { component: 'Checkbox' }
-};
+/** Default/unstyled preset — no controlled components by default */
+export const DEFAULT_OVERRIDES: Record<string, ComponentOverride> = {};
 
 // ─── Public Functions ─────────────────────────────────────────────────
 
-const PRESET_MAP: Record<FieldTypePreset, Record<string, ComponentEntry>> = {
-  shadcn: SHADCN_FIELD_TYPES,
-  unstyled: DEFAULT_FIELD_TYPES
+const PRESET_MAP: Record<ComponentPreset, Record<string, ComponentOverride>> = {
+  shadcn: SHADCN_OVERRIDES,
+  unstyled: DEFAULT_OVERRIDES
 };
 
 export function defineConfig<
   TComponents extends Record<string, unknown> = Record<string, unknown>,
   TSchemas extends Record<string, unknown> = Record<string, unknown>
 >(config: ZodFormsConfig<TComponents, TSchemas>): ZodFormsConfig<TComponents, TSchemas> {
-  if (!config.preset) {
+  const preset = config.components.preset;
+  if (!preset) {
     return config;
   }
 
-  const base = PRESET_MAP[config.preset];
+  const base = PRESET_MAP[preset];
   return {
     ...config,
-    fieldTypes: { ...base, ...config.fieldTypes } as typeof config.fieldTypes
+    components: {
+      ...config.components,
+      overrides: { ...base, ...config.components.overrides } as typeof config.components.overrides
+    }
   };
 }
 

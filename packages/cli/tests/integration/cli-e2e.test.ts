@@ -21,14 +21,10 @@ async function createFixture() {
     configPath,
     [
       'export default {',
-      "  components: '@app/components',",
+      '  components: {',
+      "    source: '@app/components',",
+      '  },',
       '  overwrite: false,',
-      '  fieldTypes: {',
-      "    string: { component: 'Input' },",
-      "    number: { component: 'Input' },",
-      "    Input: { component: 'Input' },",
-      "    Checkbox: { component: 'Checkbox' }",
-      '  }',
       '};'
     ].join('\n'),
     'utf8'
@@ -94,14 +90,10 @@ describe('CLI generate command', () => {
       overwriteConfigPath,
       [
         'export default {',
-        "  components: '@app/components',",
+        '  components: {',
+        "    source: '@app/components',",
+        '  },',
         '  overwrite: true,',
-        '  fieldTypes: {',
-        "    string: { component: 'Input' },",
-        "    number: { component: 'Input' },",
-        "    Input: { component: 'Input' },",
-        "    Checkbox: { component: 'Checkbox' }",
-        '  }',
         '};'
       ].join('\n'),
       'utf8'
@@ -161,15 +153,11 @@ describe('CLI generate command', () => {
       configWithTypesPath,
       [
         'export default {',
-        "  components: '@app/components',",
+        '  components: {',
+        "    source: '@app/components',",
+        '  },',
         "  types: ['userSchema'],",
         '  overwrite: true,',
-        '  fieldTypes: {',
-        "    string: { component: 'Input' },",
-        "    number: { component: 'Input' },",
-        "    Input: { component: 'Input' },",
-        "    Checkbox: { component: 'Checkbox' }",
-        '  }',
         '};'
       ].join('\n'),
       'utf8'
@@ -303,16 +291,10 @@ describe('CLI generate performance benchmark', () => {
       configPath,
       [
         'export default {',
-        "  components: '@app/components',",
+        '  components: {',
+        "    source: '@app/components',",
+        '  },',
         '  overwrite: true,',
-        '  fieldTypes: {',
-        "    string: { component: 'Input' },",
-        "    number: { component: 'Input' },",
-        "    boolean: { component: 'Checkbox' },",
-        "    Select: { component: 'Select' },",
-        "    Input: { component: 'Input' },",
-        "    Checkbox: { component: 'Checkbox' }",
-        '  }',
         '};'
       ].join('\n'),
       'utf8'
