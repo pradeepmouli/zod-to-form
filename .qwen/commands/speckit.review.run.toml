@@ -1,19 +1,14 @@
----
-description: "Comprehensive code review using specialized agents \u2014 orchestrates\
-  \ code, comments, tests, errors, types, and simplify agents sequentially."
-scripts:
-  sh: scripts/bash/detect-changed-files.sh
-  ps: scripts/powershell/detect-changed-files.ps1
----
+description = "Comprehensive code review using specialized agents — orchestrates code, comments, tests, errors, types, and simplify agents sequentially."
 
+# Extension: review
+# Config: .specify/extensions/review/
 
-<!-- Extension: review -->
-<!-- Config: .specify/extensions/review/ -->
+prompt = """
 # Comprehensive PR Review
 
 Run a comprehensive pull request review using multiple specialized agents, each focusing on a different aspect of code quality.
 
-**Review Aspects (optional):** "$ARGUMENTS"
+**Review Aspects (optional):** "{{args}}"
 
 ## Review Workflow:
 
@@ -176,3 +171,4 @@ Run a comprehensive pull request review using multiple specialized agents, each 
 - Each agent focuses on its specialty for deep analysis
 - Results are actionable with specific file:line references
 - Agents use appropriate models for their complexity
+"""
