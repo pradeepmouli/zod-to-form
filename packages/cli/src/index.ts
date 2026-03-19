@@ -164,7 +164,8 @@ export async function runGenerate(options: GenerateOptions): Promise<{
   } catch (error: unknown) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
       throw new Error(
-        `Cannot read existing file at "${outputPath}": ${(error as Error).message}. Check file permissions.`
+        `Cannot read existing file at "${outputPath}": ${(error as Error).message}. Check file permissions.`,
+        { cause: error }
       );
     }
   }
