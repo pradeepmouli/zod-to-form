@@ -10,6 +10,7 @@
 ### Session 2026-03-19
 
 - Q: What happens when a developer fills in and submits the rendered preview form? → A: Submit displays the validated/parsed values and any validation errors in a results panel below the form.
+- Q: Should the playground include a UI toggle to switch between component maps (default vs shadcn)? → A: Yes, include a dropdown/toggle to switch between default and shadcn component maps.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -124,6 +125,7 @@ A developer new to zod-to-form wants to learn by example. They browse a curated 
 - **FR-012**: System MUST enforce sandbox boundaries — only `zod` and `@zod-to-form/core` APIs are available in the editor; arbitrary imports are not supported.
 - **FR-013**: System MUST enforce a maximum processing depth and timeout to prevent infinite loops or excessive recursion from freezing the interface.
 - **FR-015**: System MUST display a results panel after form submission showing the validated/parsed output data and any validation errors from the Zod schema.
+- **FR-016**: System MUST provide a dropdown/toggle to switch the form preview between the default (unstyled) and shadcn component maps.
 - **FR-014**: System MUST be keyboard-accessible and navigable, with proper focus management between editor and preview panes.
 
 ### Key Entities
@@ -150,4 +152,4 @@ A developer new to zod-to-form wants to learn by example. They browse a curated 
 - Schema evaluation happens in a sandboxed browser context (no server-side execution required).
 - The playground is a standalone web application that can be deployed to a static hosting service.
 - The playground targets modern evergreen browsers (Chrome, Firefox, Safari, Edge — latest 2 versions).
-- The initial release focuses on the default (unstyled) component map; shadcn/ui theming support may be added later.
+- The initial release includes both the default (unstyled) and shadcn component maps, switchable via a UI toggle.
