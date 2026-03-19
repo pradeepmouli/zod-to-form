@@ -11,6 +11,7 @@
 
 - Q: What happens when a developer fills in and submits the rendered preview form? → A: Submit displays the validated/parsed values and any validation errors in a results panel below the form.
 - Q: Should the playground include a UI toggle to switch between component maps (default vs shadcn)? → A: Yes, include a dropdown/toggle to switch between default and shadcn component maps.
+- Q: Should the playground support importing custom shadcn components and exporting/importing z2f.config files? → A: Yes, support both: importing a custom set of components from the shadcn repo, and export/save/import of z2f.config files.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -64,7 +65,24 @@ A developer building a custom renderer or debugging unexpected form output wants
 
 ---
 
-### User Story 4 — Share Playground State via URL (Priority: P3)
+### User Story 4 — Import Custom Components & Manage z2f.config (Priority: P2)
+
+A developer wants to go beyond the built-in component maps and bring in their own custom shadcn components from their project's component repository. They also want to export the current playground configuration as a `z2f.config` file they can drop into their project, or import an existing `z2f.config` to reproduce their project's form setup in the playground.
+
+**Why this priority**: The z2f.config file is the bridge between playground experimentation and real-world usage. Being able to import/export config lets developers use the playground as a prototyping tool for their actual projects, not just a demo sandbox.
+
+**Independent Test**: Can be tested by importing a z2f.config file, verifying the playground reflects its settings, modifying settings, and exporting a new config file that is valid for use with the CLI.
+
+**Acceptance Scenarios**:
+
+1. **Given** the playground is open, **When** the developer clicks "Import Config", **Then** they can upload or paste a `z2f.config` file and the playground applies its component mappings, field overrides, and settings.
+2. **Given** a configured playground session, **When** the developer clicks "Export Config", **Then** a valid `z2f.config` file is generated and downloadable, reflecting the current schema, metadata, and component selections.
+3. **Given** the playground with the shadcn component map active, **When** the developer imports custom shadcn components, **Then** the imported components are available in the component map and can be used via metadata overrides.
+4. **Given** an imported z2f.config with invalid or unrecognized fields, **When** the config is loaded, **Then** the system displays a warning identifying the invalid fields and applies only the valid portions.
+
+---
+
+### User Story 5 — Share Playground State via URL (Priority: P3)
 
 A developer has configured a schema in the playground and wants to share it with a colleague or include it in documentation. They click a "Share" button and receive a URL that, when opened, restores the exact editor content and configuration.
 
@@ -80,7 +98,7 @@ A developer has configured a schema in the playground and wants to share it with
 
 ---
 
-### User Story 5 — Browse and Load Example Schemas (Priority: P3)
+### User Story 6 — Browse and Load Example Schemas (Priority: P3)
 
 A developer new to zod-to-form wants to learn by example. They browse a curated gallery of example schemas (e.g., registration form, settings page, multi-step wizard, file upload) and load any example into the editor with one click to study and modify it.
 
@@ -126,6 +144,10 @@ A developer new to zod-to-form wants to learn by example. They browse a curated 
 - **FR-013**: System MUST enforce a maximum processing depth and timeout to prevent infinite loops or excessive recursion from freezing the interface.
 - **FR-015**: System MUST display a results panel after form submission showing the validated/parsed output data and any validation errors from the Zod schema.
 - **FR-016**: System MUST provide a dropdown/toggle to switch the form preview between the default (unstyled) and shadcn component maps.
+- **FR-017**: System MUST allow importing a `z2f.config` file (upload or paste) that applies component mappings, field overrides, and settings to the playground session.
+- **FR-018**: System MUST allow exporting the current playground configuration as a valid, downloadable `z2f.config` file compatible with the zod-to-form CLI.
+- **FR-019**: System MUST allow importing custom shadcn components from a repository URL or package, making them available in the component map for use via metadata overrides.
+- **FR-020**: System MUST validate imported z2f.config files and display warnings for invalid or unrecognized fields, applying only valid portions.
 - **FR-014**: System MUST be keyboard-accessible and navigable, with proper focus management between editor and preview panes.
 
 ### Key Entities
@@ -133,6 +155,7 @@ A developer new to zod-to-form wants to learn by example. They browse a curated 
 - **Playground Session**: The current state of the editor content, selected configuration options, and active panel (preview/inspect). Persisted in browser local storage.
 - **Example Schema**: A curated schema with a title, description, category, and source code. Bundled with the playground.
 - **Share Token**: An encoded representation of the editor content embedded in a URL fragment for stateless sharing.
+- **z2f.config**: A configuration file defining component mappings, field overrides, and form generation settings. Importable into and exportable from the playground, compatible with the zod-to-form CLI.
 
 ## Success Criteria *(mandatory)*
 
