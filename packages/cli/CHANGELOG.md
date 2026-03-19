@@ -1,5 +1,14 @@
 # @zod-to-form/cli
 
+## 0.6.1
+
+### Patch Changes
+
+- [#49](https://github.com/pradeepmouli/zod-to-form/pull/49) [`c5e441a`](https://github.com/pradeepmouli/zod-to-form/commit/c5e441a5fa47d38d3c74f06d5dc40c6ca5f66833) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - docs: update changelog and READMEs to reflect v0.6.0 state
+
+- Updated dependencies [[`c5e441a`](https://github.com/pradeepmouli/zod-to-form/commit/c5e441a5fa47d38d3c74f06d5dc40c6ca5f66833)]:
+  - @zod-to-form/core@0.6.1
+
 ## 0.6.0
 
 ### Minor Changes
