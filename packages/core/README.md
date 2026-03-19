@@ -70,11 +70,28 @@ Built-in processor registry for core Zod types.
 
 Namespace export of individual processor implementations.
 
+### `defineConfig(config)`
+
+Type-safe config builder for `ZodFormsConfig`. Merges preset overrides into the returned config object.
+
+### `validateConfig(value, source?)`
+
+Validates a raw config object against the config schema. Throws with a descriptive message on failure.
+
+### `resolveFieldConfig(globalFields, schemaFields)`
+
+Merges global and per-schema field configs with schema-level overrides taking priority.
+
 ### Utility Exports
 
 - `inferLabel(key: string)`
 - `joinPath(...parts: string[])`
 - `createBaseField(key: string, zodType: string)`
+- `getEmptyDefault(schema)` — schema-inferred type-safe empty value
+- `normalizeFieldKey(key)` — normalize dot-path field keys
+- `collectFieldSections(fields)` — group fields by section name
+- `registerDeep(registry, schema, meta)` — register metadata on a schema and its children
+- `registerFlat(registry, schema, fieldConfigs)` — register flat field configs onto schema shapes
 
 ## Types
 
@@ -84,11 +101,21 @@ Core public types:
 - `FormFieldOption`
 - `FormFieldConstraints`
 - `FormMeta`
+- `FieldConfig`
 - `FormProcessor`
 - `FormProcessorContext`
 - `ProcessParams`
 - `WalkOptions`
 - `ZodFormRegistry`
+- `ComponentOverride`
+- `ComponentPreset`
+- `ComponentsConfig`
+- `FormPrimitivesConfig`
+- `TypedFieldConfig`
+- `ZodFormsConfig`
+- `ZodTypeConfig`
+- `ConfigDefaults`
+- `StripIndexSignature`
 
 ## Form Metadata via Zod Registry
 
@@ -107,7 +134,7 @@ const schema = z.object({
 });
 
 formRegistry.add(schema.shape.bio, {
-  fieldType: 'textarea',
+  component: 'Textarea',
   order: 1,
   gridColumn: 'span 2'
 });
