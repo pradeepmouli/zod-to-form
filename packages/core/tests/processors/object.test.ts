@@ -91,9 +91,9 @@ describe('processCrossRef', () => {
     const schema = z.string();
     const field = createBaseField('superType', 'string');
 
-    const formRegistry = z.registry<{ fieldType?: string; props?: Record<string, unknown> }>();
+    const formRegistry = z.registry<{ component?: string; props?: Record<string, unknown> }>();
     formRegistry.add(schema, {
-      fieldType: 'cross-ref',
+      component: 'cross-ref',
       props: { refType: 'Data' }
     });
 

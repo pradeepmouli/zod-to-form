@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { Component, type ReactNode } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { FieldRenderer } from '../src/FieldRenderer.js';
@@ -163,21 +163,19 @@ describe('FieldRenderer', () => {
     expect(document.querySelector('datalist')).toBeInTheDocument();
   });
 
-  it('resolves configured runtime component and caches render resolver across fields', async () => {
+  it('resolves configured runtime component from componentModule', () => {
     const customInput = (props: Record<string, unknown>) => {
       return <input data-testid="runtime-input" {...props} />;
     };
-    const renderResolver = vi.fn(async () => customInput);
 
     function TestHarness() {
       const form = useForm({ defaultValues: { name: '', alias: '' } });
       const componentConfig: RuntimeComponentConfig = {
-        components: '@unused/components',
-        fieldTypes: {
-          Input: {
-            component: 'RuntimeInput',
-            render: renderResolver
-          }
+        components: {
+          source: '@unused/components'
+        },
+        componentModule: {
+          Input: customInput
         }
       };
 
@@ -219,16 +217,13 @@ describe('FieldRenderer', () => {
 
     render(<TestHarness />);
 
-    await waitFor(() => {
-      expect(screen.getAllByTestId('runtime-input')).toHaveLength(2);
-    });
-    expect(renderResolver).toHaveBeenCalledTimes(1);
+    expect(screen.getAllByTestId('runtime-input')).toHaveLength(2);
   });
 
-  it('throws explicit runtime diagnostic for invalid component module resolution', async () => {
+  it('throws explicit runtime diagnostic for invalid component module resolution', () => {
     const field: FormField = {
       key: 'kind',
-      component: 'Input',
+      component: 'MissingComponent',
       props: { type: 'text' },
       label: 'Kind',
       required: true,
@@ -247,12 +242,11 @@ describe('FieldRenderer', () => {
               field={field}
               components={defaultComponentMap}
               componentConfig={{
-                components: './components/index.js',
+                components: {
+                  source: './components/index.js'
+                },
                 // componentModule provided but does not export 'MissingComponent'
-                componentModule: {},
-                fieldTypes: {
-                  Input: { component: 'MissingComponent' }
-                }
+                componentModule: {}
               }}
             />
           </FormProvider>
@@ -262,51 +256,6 @@ describe('FieldRenderer', () => {
 
     render(<InvalidModuleHarness />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('runtime-error')).toHaveTextContent('INVALID_RUNTIME_COMPONENT');
-    });
-  });
-
-  it('throws explicit runtime diagnostic for invalid render override result', async () => {
-    const field: FormField = {
-      key: 'kind',
-      component: 'Input',
-      props: { type: 'text' },
-      label: 'Kind',
-      required: true,
-      readOnly: false,
-      hidden: false,
-      constraints: {},
-      zodType: 'string'
-    };
-
-    function InvalidRenderHarness() {
-      const form = useForm({ defaultValues: { kind: '' } });
-      return (
-        <TestErrorBoundary>
-          <FormProvider {...form}>
-            <FieldRenderer
-              field={field}
-              components={defaultComponentMap}
-              componentConfig={{
-                components: '@unused/components',
-                fieldTypes: {
-                  Input: {
-                    component: 'RuntimeInputInvalid',
-                    render: async () => 'not-a-component'
-                  }
-                }
-              }}
-            />
-          </FormProvider>
-        </TestErrorBoundary>
-      );
-    }
-
-    render(<InvalidRenderHarness />);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('runtime-error')).toHaveTextContent('INVALID_COMPONENT_ENTRY');
-    });
+    expect(screen.getByTestId('runtime-error')).toHaveTextContent('INVALID_RUNTIME_COMPONENT');
   });
 });

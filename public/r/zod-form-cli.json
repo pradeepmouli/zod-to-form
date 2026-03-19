@@ -4,24 +4,14 @@
   "type": "registry:file",
   "title": "ZodForm CLI Bootstrapper",
   "description": "Pre-configured z2f.config.ts for the @zod-to-form/cli codegen pipeline with shadcn/ui defaults.",
-  "devDependencies": [
-    "@zod-to-form/cli"
-  ],
-  "registryDependencies": [
-    "field",
-    "input",
-    "select",
-    "checkbox",
-    "textarea",
-    "switch",
-    "label"
-  ],
+  "devDependencies": ["@zod-to-form/cli"],
+  "registryDependencies": ["field", "input", "select", "checkbox", "textarea", "switch", "label"],
   "files": [
     {
       "path": "z2f.config.ts",
       "type": "registry:file",
       "target": "~/z2f.config.ts",
-      "content": "import { defineConfig, SHADCN_FIELD_TYPES } from '@zod-to-form/core';\n\nexport default defineConfig({\n  components: '@/components/ui/zod-form-components',\n  preset: 'shadcn',\n  formPrimitives: {\n    field: 'Field',\n    label: 'FieldLabel',\n    control: 'FieldControl',\n  },\n  defaults: {\n    mode: 'submit',\n    ui: 'shadcn',\n    overwrite: false,\n    serverAction: false,\n  },\n  fieldTypes: {\n    ...SHADCN_FIELD_TYPES,\n  },\n});\n"
+      "content": "import { defineConfig, SHADCN_OVERRIDES } from '@zod-to-form/core';\n\nexport default defineConfig({\n  components: {\n    source: '@/components/ui/zod-form-components',\n    preset: 'shadcn',\n    overrides: {\n      ...SHADCN_OVERRIDES,\n    },\n  },\n  formPrimitives: {\n    field: 'Field',\n    label: 'FieldLabel',\n    control: 'FieldControl',\n  },\n  defaults: {\n    mode: 'submit',\n    ui: 'shadcn',\n    overwrite: false,\n    serverAction: false,\n  },\n});\n"
     }
   ]
 }

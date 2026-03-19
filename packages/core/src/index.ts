@@ -15,8 +15,9 @@ export type {
 } from './types.js';
 
 export type {
-  ComponentEntry,
-  FieldTypePreset,
+  ComponentOverride,
+  ComponentPreset,
+  ComponentsConfig,
   FormPrimitivesConfig,
   TypedFieldConfig,
   ZodFormsConfig,
@@ -30,8 +31,8 @@ export {
   validateConfig,
   resolveFieldConfig,
   normalizeConfig,
-  SHADCN_FIELD_TYPES,
-  DEFAULT_FIELD_TYPES
+  SHADCN_OVERRIDES,
+  DEFAULT_OVERRIDES
 } from './config.js';
 
 export {
@@ -45,4 +46,5 @@ export {
 
 export { walkSchema } from './walker.js';
 export { builtinProcessors, createProcessors } from './registry.js';
+export { registerDeep, registerFlat } from './register.js';
 export * as processors from './processors/index.js';

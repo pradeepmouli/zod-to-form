@@ -11,15 +11,7 @@
     "@hookform/resolvers",
     "zod"
   ],
-  "registryDependencies": [
-    "field",
-    "input",
-    "select",
-    "checkbox",
-    "textarea",
-    "switch",
-    "label"
-  ],
+  "registryDependencies": ["field", "input", "select", "checkbox", "textarea", "switch", "label"],
   "files": [
     {
       "path": "components/zod-form.tsx",

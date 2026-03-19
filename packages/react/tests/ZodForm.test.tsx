@@ -72,7 +72,7 @@ describe('ZodForm', () => {
 
   it('applies form metadata overrides in rendering', async () => {
     const formRegistry = z.registry<{
-      fieldType?: string;
+      component?: string;
       order?: number;
       hidden?: boolean;
       gridColumn?: string;
@@ -86,8 +86,8 @@ describe('ZodForm', () => {
     const isActive = z.boolean().meta({ title: 'Active User' });
     const hiddenToken = z.string();
 
-    formRegistry.add(bio, { fieldType: 'textarea', order: 2, gridColumn: '1 / -1' });
-    formRegistry.add(isActive, { fieldType: 'switch', order: 1 });
+    formRegistry.add(bio, { component: 'Textarea', order: 2, gridColumn: '1 / -1' });
+    formRegistry.add(isActive, { component: 'Switch', order: 1 });
     formRegistry.add(hiddenToken, { hidden: true });
 
     const schema = z.object({ bio, isActive, hiddenToken });

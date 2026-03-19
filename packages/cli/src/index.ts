@@ -13,12 +13,15 @@ import {
   defineConfig,
   validateConfig,
   resolveFieldConfig,
-  type ComponentEntry,
+  registerFlat,
+  type ComponentOverride,
   type FieldConfig,
+  type FormMeta,
   type FormPrimitivesConfig,
   type ZodFormsConfig,
   walkSchema
 } from '@zod-to-form/core';
+import { z } from 'zod';
 import { generateFormComponent } from './codegen.js';
 import { loadConfig, loadSchema, resolveSchemaExportNames } from './loader.js';
 import { runInit, type InitOptions } from './init.js';
@@ -27,7 +30,7 @@ import { startWatch } from './watcher.js';
 
 export { defineConfig, validateConfig };
 
-export type { ComponentEntry, FieldConfig, FormPrimitivesConfig, ZodFormsConfig };
+export type { ComponentOverride, FieldConfig, FormPrimitivesConfig, ZodFormsConfig };
 
 type GenerateOptions = {
   config: string;
@@ -116,10 +119,20 @@ export async function runGenerate(options: GenerateOptions): Promise<{
 
   const outputPath = resolveOutputPath(cwd, effectiveOut, componentName);
   const schema = await loadSchema(schemaPath, exportName);
-  const fields = walkSchema(schema as never);
 
   // Merge field configs: schemas.X.fields over global fields
   const mergedFields = resolveFieldConfig(componentConfig.fields, schemaConfig?.fields);
+
+  // Populate a fresh registry from the merged flat config so walkSchema
+  // sees the same overrides that codegen templates used to apply manually.
+  const formRegistry = z.registry<FormMeta>();
+  if (Object.keys(mergedFields).length > 0) {
+    // SAFETY: ZodObject extends $ZodType at runtime but TS nominal typing requires the cast
+    registerFlat(formRegistry, schema as never, mergedFields);
+  }
+
+  // SAFETY: same as above — loadSchema returns a ZodObject which is $ZodType at runtime
+  const fields = walkSchema(schema as never, { formRegistry });
 
   const config = {
     schemaPath,
@@ -148,7 +161,14 @@ export async function runGenerate(options: GenerateOptions): Promise<{
     if (!effectiveOverwrite) {
       return { outputPath, code, wroteFile: false };
     }
-  } catch {}
+  } catch (error: unknown) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      throw new Error(
+        `Cannot read existing file at "${outputPath}": ${(error as Error).message}. Check file permissions.`,
+        { cause: error }
+      );
+    }
+  }
 
   await mkdir(path.dirname(outputPath), { recursive: true });
   await writeFile(outputPath, code, 'utf8');

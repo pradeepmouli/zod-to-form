@@ -1,4 +1,4 @@
-import type { ZodType } from 'zod';
+import type { $ZodType as ZodType } from 'zod/v4/core';
 import { inferLabel } from '../utils.js';
 import type { FormField, FormFieldOption, FormProcessorContext, ProcessParams } from '../types.js';
 import { getDef } from './_utils.js';

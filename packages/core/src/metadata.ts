@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { globalRegistry } from 'zod/v4/core';
 import type { FormMeta, ZodFormRegistry } from './types.js';
 
 export type ResolvedMetadata = FormMeta & {
@@ -8,8 +8,10 @@ export type ResolvedMetadata = FormMeta & {
   deprecated?: boolean;
 };
 
+/** Merge global + form registry metadata for a schema. Form registry keys take precedence. */
 export function resolveMetadata(schema: unknown, formRegistry?: ZodFormRegistry): ResolvedMetadata {
-  const globalMeta = z.globalRegistry.get(schema as never) as
+  // SAFETY: `as never` bridges untyped `schema` to the registry's generic constraint — callers always pass $ZodType-compatible values
+  const globalMeta = globalRegistry.get(schema as never) as
     | {
         title?: string;
         description?: string;
@@ -17,6 +19,7 @@ export function resolveMetadata(schema: unknown, formRegistry?: ZodFormRegistry)
         deprecated?: boolean;
       }
     | undefined;
+  // SAFETY: same as above — schema is $ZodType at runtime
   const formMeta = formRegistry?.get(schema as never) as FormMeta | undefined;
 
   return {

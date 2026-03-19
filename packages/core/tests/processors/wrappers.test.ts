@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
+import type { $ZodType } from 'zod/v4/core';
 import {
   processOptional,
   processNullable,
@@ -34,7 +35,7 @@ describe('wrapper processors', () => {
     const field = createBaseField('nickname', 'optional');
     const innerProcessor = vi.fn(
       (
-        _schema: z.ZodType,
+        _schema: $ZodType,
         _ctx: FormProcessorContext,
         target: FormField,
         _params: ProcessParams
