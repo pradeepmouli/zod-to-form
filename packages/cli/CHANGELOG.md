@@ -1,5 +1,17 @@
 # @zod-to-form/cli
 
+## 0.6.0
+
+### Minor Changes
+
+- [#45](https://github.com/pradeepmouli/zod-to-form/pull/45) [`05c934e`](https://github.com/pradeepmouli/zod-to-form/commit/05c934ec6a57ca5beb012fbc2e29c02570f1e6e7) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - chore: add speckit review extensions and tooling config
+  - refactor: unify fieldType and component into single `component` property
+
+### Patch Changes
+
+- Updated dependencies [[`05c934e`](https://github.com/pradeepmouli/zod-to-form/commit/05c934ec6a57ca5beb012fbc2e29c02570f1e6e7)]:
+  - @zod-to-form/core@0.6.0
+
 ## 0.5.0
 
 ### Minor Changes
