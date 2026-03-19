@@ -12,6 +12,7 @@
 - Q: What happens when a developer fills in and submits the rendered preview form? → A: Submit displays the validated/parsed values and any validation errors in a results panel below the form.
 - Q: Should the playground include a UI toggle to switch between component maps (default vs shadcn)? → A: Yes, include a dropdown/toggle to switch between default and shadcn component maps.
 - Q: Should the playground support importing custom shadcn components and exporting/importing z2f.config files? → A: Yes, support both: importing a custom set of components from the shadcn repo, and export/save/import of z2f.config files.
+- Q: How should the split-pane layout behave on narrow screens / mobile devices? → A: Stack panes vertically with tab switching between editor and preview.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -129,7 +130,7 @@ A developer new to zod-to-form wants to learn by example. They browse a curated 
 
 ### Functional Requirements
 
-- **FR-001**: System MUST provide a split-pane interface with a code editor on the left and a live form preview on the right.
+- **FR-001**: System MUST provide a split-pane interface with a code editor on the left and a live form preview on the right. On narrow screens, panes MUST stack vertically with tab switching between editor and preview.
 - **FR-002**: System MUST pre-load a starter Zod v4 schema in the editor on first visit.
 - **FR-003**: System MUST re-render the form preview when the schema in the editor changes, within 1 second of the developer pausing input.
 - **FR-004**: System MUST display clear, human-readable error messages in the preview pane when the schema contains syntax or type errors.
