@@ -58,7 +58,6 @@ Props:
 - `onValueChange`: called with parsed output on valid field updates
 - `mode`: `'onSubmit' | 'onChange' | 'onBlur'`
 - `defaultValues`: partial initial values
-- `values`: external values for controlled form population
 - `components`: partial override map for default components
 - `componentConfig`: runtime component mapping/field overrides
 - `formRegistry`: metadata registry from `@zod-to-form/core`
