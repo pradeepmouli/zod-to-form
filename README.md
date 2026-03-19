@@ -168,6 +168,7 @@ export default defineConfig({
     },
   },
   fields: {
+    birthday: { component: 'MyDatePicker' },
     bio: { component: 'MyRichTextEditor', props: { rows: 6 } },
   },
 });
