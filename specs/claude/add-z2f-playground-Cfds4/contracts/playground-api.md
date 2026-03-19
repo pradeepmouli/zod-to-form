@@ -6,14 +6,48 @@ The playground is a client-only SPA with no external APIs. These contracts defin
 
 ---
 
-## Contract 1: Transpilation Pipeline
+## Contract 1: Worker Message Protocol
+
+### `worker/protocol.ts` — Shared types between main thread and Web Worker
+
+```typescript
+/** Main thread → Worker */
+type EvalRequest = {
+  type: 'eval';
+  id: string;        // Unique request ID for cancellation/matching
+  source: string;    // Raw TypeScript source from editor
+};
+
+/** Worker → Main thread (success) */
+type EvalSuccess = {
+  type: 'result';
+  id: string;
+  fields: FormField[];  // Serializable IR from walkSchema()
+};
+
+/** Worker → Main thread (error) */
+type EvalFailure = {
+  type: 'error';
+  id: string;
+  error: EvaluationError;
+};
+
+type WorkerResponse = EvalSuccess | EvalFailure;
+```
+
+**Guarantees**:
+- All messages are structured-clone-safe (no class instances, no functions)
+- `id` enables the client to discard stale responses after cancellation
+- `FormField[]` is the only data that crosses the Worker boundary — no Zod schema instances
+
+---
+
+## Contract 2: Worker-Side Transpilation
 
 ### `transpile(source: string): TranspileResult`
 
-Converts TypeScript source to JavaScript.
+Runs **inside the Worker**. Converts TypeScript source to JavaScript via Sucrase.
 
-**Input**: Raw TypeScript string from the editor
-**Output**:
 ```typescript
 type TranspileResult =
   | { ok: true; code: string }
@@ -27,21 +61,19 @@ type TranspileResult =
 
 ---
 
-## Contract 2: Schema Evaluation Sandbox
+## Contract 3: Worker-Side Sandbox Evaluation
 
-### `evaluate(jsCode: string, globals?: Record<string, unknown>): EvalResult`
+### `evaluate(jsCode: string): EvalResult`
 
-Evaluates transpiled JavaScript and extracts a Zod schema.
+Runs **inside the Worker**. Evaluates transpiled JavaScript and extracts a Zod schema.
 
-**Input**: JavaScript code string (output of `transpile`)
-**Output**:
 ```typescript
 type EvalResult =
   | { ok: true; schema: z.ZodType }
   | { ok: false; error: EvaluationError };
 ```
 
-**Sandbox Scope** (default globals):
+**Sandbox Scope** (globals available to user code):
 ```typescript
 {
   z: typeof import('zod'),
@@ -55,14 +87,43 @@ type EvalResult =
 
 **Guarantees**:
 - `import`/`require` statements are rejected with `type: 'import'` error
-- Evaluation timeout: 3 seconds → `type: 'timeout'` error
-- No access to `window`, `document`, `fetch`, `XMLHttpRequest`, `eval`, `Function`
+- No access to `self`, `fetch`, `XMLHttpRequest`, `importScripts` (overridden to no-ops in Worker scope)
 - The returned schema has a valid `._zod` property (validated before returning)
 - Never throws — all errors are captured in the result type
 
 ---
 
-## Contract 3: URL Share Encoding
+## Contract 4: Worker Client (Main Thread)
+
+### `EvalWorkerClient`
+
+Promise-based wrapper around the Web Worker with timeout and cancellation.
+
+```typescript
+class EvalWorkerClient {
+  /** Evaluate source code. Returns FormField[] or throws EvaluationError. */
+  eval(source: string): Promise<FormField[]>;
+
+  /** Cancel any in-flight evaluation. */
+  cancel(): void;
+
+  /** Terminate and respawn the Worker (used after timeout). */
+  restart(): void;
+
+  /** Clean up the Worker entirely. */
+  dispose(): void;
+}
+```
+
+**Guarantees**:
+- `eval()` rejects with `type: 'timeout'` after 3 seconds and auto-restarts the Worker
+- Calling `eval()` while a previous eval is in-flight cancels the previous request (stale responses are dropped by `id` mismatch)
+- `dispose()` terminates the Worker; subsequent `eval()` calls throw
+- Thread-safe: Worker hangs (infinite loops) cannot freeze the main UI
+
+---
+
+## Contract 5: URL Share Encoding
 
 ### `encodeShareState(state: ShareInput): string`
 
@@ -89,7 +150,7 @@ Decompresses URL hash fragment back to playground state.
 
 ---
 
-## Contract 4: localStorage Persistence
+## Contract 6: localStorage Persistence
 
 ### `savePlaygroundState(state: PersistedState): void`
 ### `loadPlaygroundState(): PersistedState | null`
@@ -114,7 +175,7 @@ type PersistedState = {
 
 ---
 
-## Contract 5: z2f.config Import/Export
+## Contract 7: z2f.config Import/Export
 
 ### `importConfig(input: string | File): Promise<ConfigImportResult>`
 
@@ -136,7 +197,7 @@ Returns a JSON string representing a valid `z2f.config.json` file.
 
 ---
 
-## Contract 6: Debounced Evaluation Hook
+## Contract 8: Debounced Evaluation Hook
 
 ### `useDebouncedEval(source: string, options: EvalOptions): EvalState`
 
@@ -144,12 +205,10 @@ Returns a JSON string representing a valid `z2f.config.json` file.
 type EvalOptions = {
   debounceMs?: number;    // Default: 300
   maxDepth?: number;      // Default: 10 (walkSchema option)
-  componentMap?: ComponentMap;
 };
 
 type EvalState = {
   fields: FormField[] | null;
-  schema: z.ZodType | null;
   error: EvaluationError | null;
   isEvaluating: boolean;
 };
@@ -157,6 +216,7 @@ type EvalState = {
 
 **Guarantees**:
 - Debounces evaluation by `debounceMs` after last source change
-- Retains last successful `fields`/`schema` when current evaluation fails (FR-005)
-- Sets `isEvaluating: true` during transpile+evaluate+walk pipeline
-- Cancels in-flight evaluation if source changes before completion
+- Delegates to `EvalWorkerClient.eval()` — all transpilation/evaluation runs off-thread
+- Retains last successful `fields` when current evaluation fails (FR-005)
+- Sets `isEvaluating: true` while the Worker is processing
+- Cancels in-flight Worker evaluation if source changes before response arrives

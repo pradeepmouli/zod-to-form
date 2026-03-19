@@ -91,11 +91,15 @@ apps/
     │   │       ├── ExampleGallery.tsx  # Modal/drawer with example list
     │   │       └── examples.ts        # Curated example schema definitions
     │   ├── lib/
-    │   │   ├── transpile.ts           # Sucrase TS→JS transpilation
-    │   │   ├── evaluate.ts            # Sandboxed schema evaluation
     │   │   ├── share.ts               # lz-string URL encode/decode
     │   │   ├── storage.ts             # localStorage persistence
     │   │   └── config-io.ts           # z2f.config import/export/validation
+    │   ├── worker/
+    │   │   ├── eval-worker.ts         # Web Worker: transpile + evaluate + walkSchema
+    │   │   ├── transpile.ts           # Sucrase TS→JS transpilation (runs in worker)
+    │   │   ├── evaluate.ts            # new Function() sandbox (runs in worker)
+    │   │   ├── protocol.ts            # Worker message types (shared with main thread)
+    │   │   └── client.ts              # Main-thread Worker client with timeout/cancellation
     │   ├── hooks/
     │   │   ├── usePlaygroundState.ts   # Central state management hook
     │   │   ├── useDebouncedEval.ts     # Debounced transpile → evaluate pipeline
@@ -108,6 +112,7 @@ apps/
         ├── unit/
         │   ├── transpile.test.ts
         │   ├── evaluate.test.ts
+        │   ├── worker-client.test.ts
         │   ├── share.test.ts
         │   ├── storage.test.ts
         │   └── config-io.test.ts
@@ -123,36 +128,55 @@ apps/
 ### Data Flow
 
 ```
-┌─────────────┐     ┌──────────┐     ┌──────────────┐     ┌──────────────┐
-│ CodeMirror   │────▶│ Sucrase  │────▶│ Sandboxed    │────▶│ walkSchema() │
-│ (TS source)  │     │ transpile│     │ evaluate()   │     │ → FormField[]│
-└─────────────┘     └──────────┘     └──────────────┘     └──────┬───────┘
-                                                                  │
-                                          ┌───────────────────────┤
-                                          │                       │
-                                    ┌─────▼─────┐         ┌──────▼───────┐
-                                    │ <ZodForm>  │         │ IRInspector  │
-                                    │ (preview)  │         │ (inspect)    │
-                                    └─────┬─────┘         └──────────────┘
-                                          │
-                                    ┌─────▼──────┐
-                                    │ ResultsPanel│
-                                    │ (on submit) │
-                                    └────────────┘
+                              ┌─── Web Worker ──────────────────────────┐
+┌─────────────┐    postMsg    │ ┌──────────┐  ┌──────────┐  ┌────────┐ │  postMsg   ┌──────────┐
+│ CodeMirror   │─────────────▶│ │ Sucrase  │─▶│ evaluate │─▶│ walk   │ │──────────▶│ FormField│
+│ (TS source)  │              │ │ transpile│  │ sandbox  │  │ Schema │ │ FormField[]│ [] result│
+└─────────────┘              │ └──────────┘  └──────────┘  └────────┘ │           └─────┬────┘
+                              └────────────────────────────────────────┘                 │
+                                                                          ┌──────────────┤
+                                                                          │              │
+                                                                    ┌─────▼─────┐ ┌─────▼──────┐
+                                                                    │ <ZodForm>  │ │ IRInspector │
+                                                                    │ (preview)  │ │ (inspect)   │
+                                                                    └─────┬─────┘ └────────────┘
+                                                                          │
+                                                                    ┌─────▼──────┐
+                                                                    │ ResultsPanel│
+                                                                    │ (on submit) │
+                                                                    └────────────┘
 ```
 
-### Schema Evaluation Sandbox
+### Schema Evaluation Sandbox (Web Worker)
 
-The sandbox prevents arbitrary code execution while allowing Zod schema definitions:
+All transpilation, evaluation, and schema walking run inside a **dedicated Web Worker**, keeping the main thread free and providing natural isolation against infinite loops.
 
-1. **Transpile**: Sucrase converts TypeScript to JavaScript (stripping types only, no bundling)
-2. **Evaluate**: `new Function()` with a controlled scope object containing only:
+**Worker pipeline** (`worker/eval-worker.ts`):
+
+1. **Receive**: Main thread posts `{ type: 'eval', source: string, id: string }` message
+2. **Transpile**: Sucrase converts TypeScript to JavaScript (stripping types only, no bundling)
+3. **Validate imports**: Reject any `import`/`require` statements with a clear error
+4. **Evaluate**: `new Function()` with a controlled scope containing only:
    - `z` — the Zod v4 namespace
    - `zod` — alias for `z`
    - `core` — selected `@zod-to-form/core` exports (e.g., `defineConfig`)
-3. **Import blocking**: Any `import`/`require` statements are stripped or rejected pre-evaluation with a clear error
-4. **Timeout**: `setTimeout` wrapper kills evaluation after 3 seconds
-5. **Depth limit**: `walkSchema()` already enforces max depth via its existing `maxDepth` option
+   - No access to `self`, `fetch`, `XMLHttpRequest`, `importScripts`
+5. **Walk**: `walkSchema(schema)` → `FormField[]` IR
+6. **Respond**: Post `{ type: 'result', id, fields: FormField[] }` or `{ type: 'error', id, error: EvaluationError }` back
+
+**Worker client** (`worker/client.ts`):
+
+- Wraps `postMessage` / `onmessage` in a Promise-based API
+- **Timeout**: Terminates and respawns the Worker after 3 seconds of no response (handles infinite loops)
+- **Cancellation**: New eval request cancels any in-flight request (drops stale responses by `id` mismatch)
+- **Serialization**: `FormField[]` is plain JSON — no Zod instances cross the boundary. The main thread reconstructs the Zod schema separately for `<ZodForm>` rendering (re-evaluates on main thread only when the user submits the form, using the last known-good transpiled JS)
+
+**Why Web Worker over main-thread eval**:
+- Infinite loops in user code cannot freeze the UI — the Worker is terminated and respawned
+- Natural thread isolation prevents accidental DOM access
+- Vite handles Worker bundling natively: `new Worker(new URL('./worker/eval-worker.ts', import.meta.url), { type: 'module' })`
+
+**Depth limit**: `walkSchema()` already enforces max depth via its existing `maxDepth` option
 
 ### Responsive Layout Strategy
 
@@ -177,51 +201,68 @@ The playground lets users switch between `defaultComponentMap` and `shadcnCompon
 - **Import**: File upload (`.json`/`.ts`) or paste JSON into a dialog. Validate against `ZodFormsConfig` schema using `validateConfig()` from `@zod-to-form/core`. Show warnings for invalid fields, apply valid portions.
 - **Export**: Serialize current playground config (component map selection, field overrides) as a `z2f.config.json` file. Trigger browser download.
 
+### Dogfooding: Using Zod + z2f Internally
+
+The playground **eats its own pudding** — wherever the playground has its own forms or validated data, it uses Zod for validation and `<ZodForm>` / `useZodForm` for rendering:
+
+- **Config import dialog**: The "paste JSON" form uses a Zod schema to validate the pasted config text field, rendered via `<ZodForm>` with the shadcn component map
+- **Share URL params**: Zod schema validates decoded URL hash parameters (`code`, `map`, `tab`)
+- **localStorage persistence**: `PersistedState` is validated via a Zod schema on load (handles corrupt/outdated data gracefully)
+- **Example schema metadata**: Example entries are validated against a Zod schema at build time
+- **Settings/preferences** (if any): Any playground settings forms use `<ZodForm>`
+
+This serves two purposes:
+1. **Quality signal**: If z2f can't render its own playground's forms well, that's a bug to fix
+2. **Living documentation**: The playground source code becomes a real-world usage example of the library
+
 ## Implementation Phases
 
 ### Phase 1: Core Editor + Preview (P1 — Story 1)
 
-Scaffold the playground app, wire CodeMirror to a debounced transpile→evaluate→render pipeline.
+Scaffold the playground app, wire CodeMirror to a Web Worker transpile→evaluate→render pipeline.
 
 1. Create `apps/playground` package with Vite + React + Tailwind + shadcn/ui
 2. Update `pnpm-workspace.yaml` to include `apps/*`
-3. Implement `transpile.ts` (Sucrase) + `evaluate.ts` (sandbox) + unit tests
-4. Implement `SchemaEditor.tsx` (CodeMirror 6 with TypeScript mode)
-5. Implement `FormPreview.tsx` (renders `<ZodForm>` from evaluated schema)
-6. Implement `PlaygroundShell.tsx` (split-pane layout)
-7. Implement `useDebouncedEval.ts` hook (300ms debounce, error capture)
-8. Implement `ErrorDisplay.tsx` (syntax/runtime errors)
-9. Implement `storage.ts` (localStorage persistence) + `usePlaygroundState.ts`
-10. Add starter schema that loads on first visit
-11. Integration test: edit schema → form updates
+3. Implement `worker/protocol.ts` (message types shared between main thread and Worker)
+4. Implement `worker/transpile.ts` (Sucrase) + `worker/evaluate.ts` (sandbox) + unit tests
+5. Implement `worker/eval-worker.ts` (Web Worker entry: transpile → evaluate → walkSchema)
+6. Implement `worker/client.ts` (Promise-based client with timeout/cancellation) + unit tests
+7. Implement `SchemaEditor.tsx` (CodeMirror 6 with TypeScript mode)
+8. Implement `FormPreview.tsx` (renders `<ZodForm>` from evaluated schema)
+9. Implement `PlaygroundShell.tsx` (split-pane layout)
+10. Implement `useDebouncedEval.ts` hook (300ms debounce, posts to Worker client)
+11. Implement `ErrorDisplay.tsx` (syntax/runtime/timeout errors)
+12. Implement `storage.ts` (localStorage persistence) + `usePlaygroundState.ts`
+13. Add starter schema that loads on first visit
+14. Integration test: edit schema → Worker evaluates → form updates
 
 ### Phase 2: Metadata, Inspect, Results (P2 — Stories 2, 3)
 
-12. Implement `ResultsPanel.tsx` (form submit → show parsed values + errors)
-13. Implement `IRInspector.tsx` (tree view of `FormField[]`)
-14. Verify metadata annotations (`z.registry()`) work in the sandbox
-15. Add component map toggle (`ComponentMapToggle.tsx`)
+15. Implement `ResultsPanel.tsx` (form submit → show parsed values + errors)
+16. Implement `IRInspector.tsx` (tree view of `FormField[]`)
+17. Verify metadata annotations (`z.registry()`) work in the Worker sandbox
+18. Add component map toggle (`ComponentMapToggle.tsx`)
 
 ### Phase 3: Config Management (P2 — Story 4)
 
-16. Implement `config-io.ts` (import/export/validate z2f.config)
-17. Implement `ConfigImportExport.tsx` dialog
-18. Implement `CustomComponentImport.tsx` (load external shadcn components)
+19. Implement `config-io.ts` (import/export/validate z2f.config)
+20. Implement `ConfigImportExport.tsx` dialog
+21. Implement `CustomComponentImport.tsx` (load external shadcn components)
 
 ### Phase 4: Sharing + Examples (P3 — Stories 5, 6)
 
-19. Implement `share.ts` (lz-string encode/decode) + unit tests
-20. Add share button to header
-21. Implement `examples.ts` (5+ curated schemas)
-22. Implement `ExampleGallery.tsx` modal with categories
-23. Add unsaved-changes warning when loading example
+22. Implement `share.ts` (lz-string encode/decode) + unit tests
+23. Add share button to header
+24. Implement `examples.ts` (5+ curated schemas)
+25. Implement `ExampleGallery.tsx` modal with categories
+26. Add unsaved-changes warning when loading example
 
 ### Phase 5: Responsive + Polish
 
-24. Implement `ResponsiveTabs.tsx` + `useMediaQuery.ts` for mobile layout
-25. Keyboard accessibility audit (focus management, tab order, ARIA)
-26. Performance optimization (lazy-load CodeMirror, code-split examples)
-27. Final integration tests
+27. Implement `ResponsiveTabs.tsx` + `useMediaQuery.ts` for mobile layout
+28. Keyboard accessibility audit (focus management, tab order, ARIA)
+29. Performance optimization (lazy-load CodeMirror, code-split examples)
+30. Final integration tests
 
 ## Complexity Tracking
 

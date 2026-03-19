@@ -98,40 +98,78 @@ function transpile(tsCode: string): string {
 ## R3: Sandboxed Schema Evaluation
 
 ### Decision
-Use `new Function()` with a controlled scope object. No Web Worker (unnecessary for synchronous evaluation).
+Use a **Web Worker** that bundles Sucrase, Zod, and `@zod-to-form/core`. The Worker runs `new Function()` with a controlled scope, then walks the resulting schema to `FormField[]`. Only the serializable `FormField[]` crosses the Worker boundary.
 
 ### Rationale
-- Schema evaluation is synchronous and fast (<50ms for typical schemas)
-- Web Workers add message-passing complexity without security benefit (same origin)
-- The controlled scope prevents access to `window`, `document`, `fetch`, etc.
-- `import`/`require` statements are detected and rejected pre-evaluation
+- **Infinite-loop safety**: User code runs in a separate thread — if it hangs, the main thread remains responsive. The client terminates and respawns the Worker after a 3-second timeout.
+- **Natural DOM isolation**: Workers have no access to `window`, `document`, or the DOM.
+- **Clean architecture**: The entire transpile→evaluate→walk pipeline is encapsulated in one Worker, with a simple request/response message protocol.
+- **Vite-native**: `new Worker(new URL('./worker/eval-worker.ts', import.meta.url), { type: 'module' })` — Vite bundles the Worker file separately with zero config.
 
-### Implementation
+### Worker-Side Implementation
 ```typescript
-const ALLOWED_GLOBALS = { z: zod, zod, console: { log: () => {}, warn: () => {} } };
+// worker/eval-worker.ts
+import { transform } from 'sucrase';
+import * as z from 'zod';
+import { walkSchema } from '@zod-to-form/core';
 
-function evaluate(jsCode: string): z.ZodType {
-  // Strip/reject import/require statements
-  if (/\b(import|require)\s*[\('"]/m.test(jsCode)) {
-    throw new Error('Imports are not supported in the playground sandbox');
+self.onmessage = (e: MessageEvent<EvalRequest>) => {
+  const { source, id } = e.data;
+  try {
+    // 1. Transpile TS → JS
+    const js = transform(source, { transforms: ['typescript'], disableESTransforms: true }).code;
+    // 2. Reject imports
+    if (/\b(import|require)\s*[\('"]/m.test(js)) {
+      throw { type: 'import', message: 'Imports are not supported in the playground sandbox' };
+    }
+    // 3. Evaluate with controlled scope
+    const fn = new Function('z', 'zod', js);
+    const schema = fn(z, z);
+    if (!schema?._zod) throw { type: 'runtime', message: 'Expression must evaluate to a Zod schema' };
+    // 4. Walk to FormField[]
+    const fields = walkSchema(schema);
+    self.postMessage({ type: 'result', id, fields });
+  } catch (err) {
+    self.postMessage({ type: 'error', id, error: normalizeError(err) });
   }
-  // Wrap in function with controlled scope
-  const fn = new Function(...Object.keys(ALLOWED_GLOBALS), jsCode);
-  const result = fn(...Object.values(ALLOWED_GLOBALS));
-  // Validate result is a Zod schema
-  if (!result?._zod) throw new Error('Schema must export a Zod type');
-  return result;
+};
+```
+
+### Main-Thread Client
+```typescript
+// worker/client.ts — simplified
+class EvalWorkerClient {
+  private worker: Worker;
+  private pending: Map<string, { resolve, reject, timer }>;
+
+  eval(source: string): Promise<FormField[]> {
+    const id = crypto.randomUUID();
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.terminate(); // kill hung worker
+        reject({ type: 'timeout', message: 'Evaluation timed out (3s)' });
+      }, 3000);
+      this.pending.set(id, { resolve, reject, timer });
+      this.worker.postMessage({ type: 'eval', source, id });
+    });
+  }
+
+  private terminate() {
+    this.worker.terminate();
+    this.worker = this.createWorker(); // respawn
+  }
 }
 ```
 
-### Timeout Protection
-- Wrap evaluation in `Promise.race` with a 3-second `setTimeout` rejection
-- For synchronous hangs (infinite loops), a Web Worker can be added later as an enhancement
+### FormField[] Serialization
+- `FormField[]` is plain data (strings, numbers, booleans, arrays, objects) — serializes cleanly via structured clone
+- Zod schema instances do **not** cross the boundary
+- For form submission (which needs the live Zod schema for validation), the main thread re-evaluates the last known-good JS on demand using `new Function()` — this is a one-shot operation triggered by user click, not a continuous pipeline
 
 ### Alternatives Considered
-- **iframe sandbox**: Stronger isolation but complex message-passing for schema objects (can't serialize Zod instances across frames)
-- **Web Worker**: Unnecessary overhead; schema evaluation is fast and synchronous. Can't share Zod class instances across worker boundary.
-- **Realm/ShadowRealm**: Not yet widely supported in browsers
+- **Main-thread `new Function()` only**: Simpler but infinite loops freeze the UI with no recovery. `Promise.race` with `setTimeout` cannot interrupt synchronous execution.
+- **iframe sandbox**: Stronger browsing-context isolation but complex message-passing, and Zod/core would need to be loaded separately inside the iframe.
+- **Realm/ShadowRealm**: Not yet widely supported in browsers.
 
 ---
 
