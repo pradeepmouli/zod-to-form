@@ -37,7 +37,7 @@ Alias: `z2f`.
 
 Required options:
 
-- `--config <path>`: path to generate config (`.json` or `.ts`)
+- `--config <path>`: path to config file (`.json` or `.ts`) that drives generation
 - `--schema <path>`: path to schema module
 
 Optional options:

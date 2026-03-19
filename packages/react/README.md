@@ -102,7 +102,7 @@ Shadcn-oriented component map export.
 
 ## Runtime Component Config
 
-Use `componentConfig` to map field types and specific field paths to custom components at runtime.
+Use `componentConfig` to map specific field paths to custom components and apply per-component overrides at runtime.
 
 ```tsx
 import { ZodForm } from '@zod-to-form/react';

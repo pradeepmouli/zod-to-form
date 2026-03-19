@@ -477,7 +477,7 @@ import componentConfig from './z2f.config';
 Both paths resolve the same config in the same priority order:
 
 1. **Per-field override** (`config.fields['bio']`) — highest priority
-2. **Field type mapping** (`config.fieldTypes['Textarea']`) — fallback
+2. **Component override** (`config.components.overrides['MySelect']`) — component-level metadata (controlled, propMap)
 3. **Default rendering** — built-in `<input>`, `<select>`, etc.
 
 The difference is only in *when* resolution happens: the CLI resolves at build time and emits static code, the runtime resolves at render time and loads components dynamically. The resulting form structure, field mapping, and override props are identical.
