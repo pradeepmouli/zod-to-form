@@ -121,6 +121,7 @@ Control rendering via Zod v4's native registry API:
 
 ```typescript
 import type { FormMeta } from '@zod-to-form/core';
+import { z } from 'zod';
 
 const formRegistry = z.registry<FormMeta>();
 
