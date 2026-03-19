@@ -5,6 +5,12 @@
 **Status**: Draft
 **Input**: User description: "add an interactive playground for zod-to-form (z2f studio)"
 
+## Clarifications
+
+### Session 2026-03-19
+
+- Q: What happens when a developer fills in and submits the rendered preview form? → A: Submit displays the validated/parsed values and any validation errors in a results panel below the form.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 — Write Schema, See Form Instantly (Priority: P1)
@@ -21,6 +27,7 @@ A developer exploring zod-to-form opens Z2F Studio in their browser and is greet
 2. **Given** a valid schema in the editor, **When** the developer adds a new string field to the schema, **Then** a corresponding text input appears in the preview within 1 second.
 3. **Given** a valid schema in the editor, **When** the developer introduces a syntax error, **Then** the preview pane displays a human-readable error message and retains the last valid form.
 4. **Given** a valid schema in the editor, **When** the developer adds Zod constraints (e.g., `.min(3)`, `.email()`), **Then** the form preview reflects those constraints (validation messages appear on submit or interaction).
+5. **Given** a rendered form in the preview, **When** the developer fills in values and clicks submit, **Then** a results panel below the form displays the validated/parsed output data and any validation errors.
 
 ---
 
@@ -116,6 +123,7 @@ A developer new to zod-to-form wants to learn by example. They browse a curated 
 - **FR-011**: System MUST persist editor content to browser local storage to survive page reloads and tab closures.
 - **FR-012**: System MUST enforce sandbox boundaries — only `zod` and `@zod-to-form/core` APIs are available in the editor; arbitrary imports are not supported.
 - **FR-013**: System MUST enforce a maximum processing depth and timeout to prevent infinite loops or excessive recursion from freezing the interface.
+- **FR-015**: System MUST display a results panel after form submission showing the validated/parsed output data and any validation errors from the Zod schema.
 - **FR-014**: System MUST be keyboard-accessible and navigable, with proper focus management between editor and preview panes.
 
 ### Key Entities
