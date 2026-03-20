@@ -27,6 +27,7 @@
 
 import { createElement, type HTMLAttributes, type LabelHTMLAttributes } from 'react';
 import type { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
+import type { FormFieldOption } from '@zod-to-form/core';
 import { defaultComponentMap } from '../components/index.js';
 
 // ─── Shadcn-style Input stub ──────────────────────────────────────────────────
@@ -65,7 +66,11 @@ function ShadcnTextarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
 
 // ─── Shadcn-style Select stub ─────────────────────────────────────────────────
 
-function ShadcnSelect(props: SelectHTMLAttributes<HTMLSelectElement>) {
+type ShadcnSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
+  options?: FormFieldOption[];
+};
+
+function ShadcnSelect({ options, ...props }: ShadcnSelectProps) {
   return createElement('select', {
     ...props,
     className: [
@@ -77,7 +82,15 @@ function ShadcnSelect(props: SelectHTMLAttributes<HTMLSelectElement>) {
     ]
       .join(' ')
       .trim()
-  });
+  },
+    ...(options ?? []).map((option) =>
+      createElement('option', {
+        key: `${option.value}`,
+        value: option.value,
+        disabled: option.disabled
+      }, option.label)
+    )
+  );
 }
 
 // ─── Shadcn-style Field wrapper ──────────────────────────────────────────────
