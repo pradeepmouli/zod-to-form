@@ -78,7 +78,7 @@ export function Header({
           style={{
             color: "var(--text-muted)",
             fontFamily: "'JetBrains Mono', monospace",
-            opacity: 0.5,
+            opacity: 0.7,
           }}
         >
           v{__APP_VERSION__}
