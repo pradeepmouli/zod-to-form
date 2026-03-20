@@ -52,17 +52,20 @@ interface CustomComponentImportProps {
   isOpen: boolean;
   onClose: () => void;
   onImport: (components: Record<string, string>) => void;
+  onSwitchToShadcn?: () => void;
 }
 
 export function CustomComponentImport({
   isOpen,
   onClose,
   onImport,
+  onSwitchToShadcn,
 }: CustomComponentImportProps) {
   const [customName, setCustomName] = useState("");
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fetched, setFetched] = useState<FetchedComponent[]>([]);
+  const [expandedSource, setExpandedSource] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -124,6 +127,7 @@ export function CustomComponentImport({
 
   const handleRemove = (name: string) => {
     setFetched((prev) => prev.filter((c) => c.name !== name));
+    if (expandedSource === name) setExpandedSource(null);
   };
 
   const handleImport = () => {
@@ -136,6 +140,9 @@ export function CustomComponentImport({
       components[comp.title] = comp.code;
     }
     onImport(components);
+    if (onSwitchToShadcn) {
+      onSwitchToShadcn();
+    }
     setFetched([]);
     setCustomName("");
     setError(null);
@@ -165,7 +172,7 @@ export function CustomComponentImport({
 
         <div className="p-4 space-y-4 overflow-auto">
           <p className="text-xs text-zinc-400">
-            Fetch components from the{" "}
+            Browse components from the{" "}
             <a
               href={SHADCN_DOCS_URL}
               target="_blank"
@@ -174,8 +181,8 @@ export function CustomComponentImport({
             >
               shadcn/ui registry
             </a>
-            . Components will be available in the component map for use via
-            metadata overrides.
+            . Importing will switch the preview to the shadcn component map and
+            save the source code for reference.
           </p>
 
           <div>
@@ -233,27 +240,43 @@ export function CustomComponentImport({
                 Fetched Components ({fetched.length})
               </h3>
               {fetched.map((comp) => (
-                <div
-                  key={comp.name}
-                  className="flex items-center justify-between px-3 py-2 bg-zinc-800/50 rounded"
-                >
-                  <div className="min-w-0">
-                    <span className="text-sm text-zinc-200 font-mono">
-                      {comp.name}
-                    </span>
-                    {comp.dependencies.length > 0 && (
-                      <span className="text-xs text-zinc-500 ml-2">
-                        deps: {comp.dependencies.join(", ")}
+                <div key={comp.name} className="bg-zinc-800/50 rounded overflow-hidden">
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <div className="min-w-0 flex items-center gap-2">
+                      <span className="text-sm text-zinc-200 font-mono">
+                        {comp.name}
                       </span>
-                    )}
+                      {comp.dependencies.length > 0 && (
+                        <span className="text-xs text-zinc-500">
+                          deps: {comp.dependencies.join(", ")}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 ml-2 shrink-0">
+                      <button
+                        onClick={() =>
+                          setExpandedSource(
+                            expandedSource === comp.name ? null : comp.name,
+                          )
+                        }
+                        className="text-xs text-violet-400 hover:text-violet-300"
+                      >
+                        {expandedSource === comp.name ? "Hide" : "Source"}
+                      </button>
+                      <button
+                        onClick={() => handleRemove(comp.name)}
+                        className="text-xs text-red-400 hover:text-red-300"
+                        aria-label={`Remove ${comp.name}`}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => handleRemove(comp.name)}
-                    className="text-xs text-red-400 hover:text-red-300 ml-2 shrink-0"
-                    aria-label={`Remove ${comp.name}`}
-                  >
-                    Remove
-                  </button>
+                  {expandedSource === comp.name && (
+                    <pre className="px-3 pb-3 text-xs text-zinc-400 overflow-auto max-h-48 border-t border-zinc-700/50">
+                      <code>{comp.code}</code>
+                    </pre>
+                  )}
                 </div>
               ))}
               <button
@@ -261,7 +284,7 @@ export function CustomComponentImport({
                 className="w-full text-xs px-3 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded transition-colors font-medium"
               >
                 Import {fetched.length} Component
-                {fetched.length > 1 ? "s" : ""}
+                {fetched.length > 1 ? "s" : ""} &amp; Switch to shadcn
               </button>
             </div>
           )}

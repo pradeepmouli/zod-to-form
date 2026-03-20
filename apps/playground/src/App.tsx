@@ -108,7 +108,6 @@ export function App() {
             submitResult={state.submitResult}
             onSubmitResult={setSubmitResult}
             editorContent={state.editorContent}
-            customComponents={state.customComponents}
           />
         }
         inspect={<IRInspector fields={displayFields} />}
@@ -143,6 +142,7 @@ export function App() {
             isOpen={customImportOpen}
             onClose={() => setCustomImportOpen(false)}
             onImport={handleCustomComponentImport}
+            onSwitchToShadcn={() => setComponentMap("shadcn")}
           />
         </Suspense>
       )}
