@@ -2,6 +2,21 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const REGISTRIES_URL = "https://ui.shadcn.com/r/registries.json";
 
+const CORS_SAFE_HOSTS = ["ui.shadcn.com"];
+
+function registryFetch(url: string, init?: RequestInit): Promise<Response> {
+  try {
+    const parsed = new URL(url);
+    if (CORS_SAFE_HOSTS.includes(parsed.hostname)) {
+      return fetch(url, init);
+    }
+  } catch {
+    return fetch(url, init);
+  }
+  const proxied = `/api/registry-proxy?url=${encodeURIComponent(url)}`;
+  return fetch(proxied, init);
+}
+
 interface CommunityRegistry {
   name: string;
   homepage: string;
@@ -55,6 +70,48 @@ function deriveComponentUrl(urlPattern: string, name: string): string {
   return urlPattern.replace("{name}", name);
 }
 
+const PROBE_NAMES = [
+  "accordion", "alert", "alert-dialog", "aspect-ratio", "avatar",
+  "badge", "breadcrumb", "button", "calendar", "card",
+  "carousel", "chart", "checkbox", "collapsible", "combobox",
+  "command", "context-menu", "dialog", "drawer", "dropdown-menu",
+  "form", "hover-card", "input", "input-otp", "label",
+  "menubar", "navigation-menu", "pagination", "popover", "progress",
+  "radio-group", "resizable", "scroll-area", "select", "separator",
+  "sheet", "sidebar", "skeleton", "slider", "sonner",
+  "switch", "table", "tabs", "textarea", "toggle",
+  "toggle-group", "tooltip",
+];
+
+async function probeRegistry(
+  urlPattern: string,
+): Promise<RegistryComponentItem[]> {
+  const results = await Promise.allSettled(
+    PROBE_NAMES.map(async (name) => {
+      const url = deriveComponentUrl(urlPattern, name);
+      const controller = new AbortController();
+      const res = await registryFetch(url, {
+        signal: controller.signal,
+        headers: { Accept: "application/json" },
+      });
+      if (res.ok) {
+        controller.abort();
+        return { name, type: "registry:ui" as const };
+      }
+      return null;
+    }),
+  );
+
+  const found: RegistryComponentItem[] = [];
+  for (const r of results) {
+    if (r.status === "fulfilled" && r.value) {
+      found.push(r.value);
+    }
+  }
+  found.sort((a, b) => a.name.localeCompare(b.name));
+  return found;
+}
+
 interface CustomComponentImportProps {
   isOpen: boolean;
   onClose: () => void;
@@ -79,7 +136,7 @@ export function CustomComponentImport({
     useState<CommunityRegistry | null>(null);
   const [components, setComponents] = useState<RegistryComponentItem[]>([]);
   const [componentsLoading, setComponentsLoading] = useState(false);
-  const [componentsError, setComponentsError] = useState<string | null>(null);
+  const [indexAvailable, setIndexAvailable] = useState(true);
   const [componentSearch, setComponentSearch] = useState("");
 
   const [isFetching, setIsFetching] = useState<string | null>(null);
@@ -124,13 +181,13 @@ export function CustomComponentImport({
       setSelectedLibrary(lib);
       setComponents([]);
       setComponentsLoading(true);
-      setComponentsError(null);
+      setIndexAvailable(true);
       setComponentSearch("");
       setError(null);
 
       const indexUrl = deriveIndexUrl(lib.url);
 
-      fetch(indexUrl)
+      registryFetch(indexUrl)
         .then((res) => {
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           return res.json();
@@ -152,15 +209,26 @@ export function CustomComponentImport({
               item.type === "registry:block",
           );
           uiItems.sort((a, b) => a.name.localeCompare(b.name));
-          setComponents(uiItems);
-          setComponentsLoading(false);
-          setTimeout(() => componentSearchRef.current?.focus(), 50);
+          if (uiItems.length > 0) {
+            setComponents(uiItems);
+            setComponentsLoading(false);
+            setTimeout(() => componentSearchRef.current?.focus(), 50);
+          } else {
+            probeRegistry(lib.url).then((probed) => {
+              setComponents(probed);
+              if (probed.length === 0) setIndexAvailable(false);
+              setComponentsLoading(false);
+              setTimeout(() => componentSearchRef.current?.focus(), 50);
+            });
+          }
         })
         .catch(() => {
-          setComponentsError(
-            "Failed to load components from this registry.",
-          );
-          setComponentsLoading(false);
+          probeRegistry(lib.url).then((probed) => {
+            setComponents(probed);
+            if (probed.length === 0) setIndexAvailable(false);
+            setComponentsLoading(false);
+            setTimeout(() => componentSearchRef.current?.focus(), 50);
+          });
         });
     },
     [],
@@ -180,7 +248,7 @@ export function CustomComponentImport({
 
       try {
         const url = deriveComponentUrl(selectedLibrary.url, name);
-        const res = await fetch(url);
+        const res = await registryFetch(url);
         if (!res.ok) {
           setError(`Component "${name}" not found in ${selectedLibrary.name}.`);
           setIsFetching(null);
@@ -251,7 +319,7 @@ export function CustomComponentImport({
   const goBack = () => {
     setSelectedLibrary(null);
     setComponents([]);
-    setComponentsError(null);
+    setIndexAvailable(true);
     setComponentSearch("");
     setError(null);
     setTimeout(() => searchRef.current?.focus(), 50);
@@ -363,7 +431,7 @@ export function CustomComponentImport({
               onSearchChange={setComponentSearch}
               components={filteredComponents}
               loading={componentsLoading}
-              error={componentsError}
+              indexAvailable={indexAvailable}
               searchTerm={compSearchLower}
               library={selectedLibrary}
               isFetching={isFetching}
@@ -610,7 +678,7 @@ function ComponentBrowser({
   onSearchChange,
   components,
   loading,
-  error,
+  indexAvailable,
   searchTerm,
   library,
   isFetching,
@@ -622,34 +690,39 @@ function ComponentBrowser({
   onSearchChange: (value: string) => void;
   components: RegistryComponentItem[];
   loading: boolean;
-  error: string | null;
+  indexAvailable: boolean;
   searchTerm: string;
   library: CommunityRegistry;
   isFetching: string | null;
   fetchedNames: Set<string>;
   onFetch: (name: string) => void;
 }) {
+  const hasComponents = !loading && components.length > 0;
+  const showManualEntry = !loading && !indexAvailable;
+
   return (
     <>
-      <div className="flex gap-2 items-center">
-        <input
-          ref={searchRef}
-          type="text"
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Filter components..."
-          className="input-glass flex-1 px-3 py-2 text-sm"
-        />
-        <a
-          href={library.homepage}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs shrink-0 px-2 py-1.5 rounded transition-colors"
-          style={{ color: "var(--accent-violet)" }}
-        >
-          Docs
-        </a>
-      </div>
+      {hasComponents && (
+        <div className="flex gap-2 items-center">
+          <input
+            ref={searchRef}
+            type="text"
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Filter components..."
+            className="input-glass flex-1 px-3 py-2 text-sm"
+          />
+          <a
+            href={library.homepage}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs shrink-0 px-2 py-1.5 rounded transition-colors"
+            style={{ color: "var(--accent-violet)" }}
+          >
+            Docs
+          </a>
+        </div>
+      )}
 
       {loading && (
         <div
@@ -660,20 +733,49 @@ function ComponentBrowser({
         </div>
       )}
 
-      {error && (
-        <div
-          className="glass-panel text-xs p-3 text-center"
-          style={{
-            color: "rgb(248, 113, 113)",
-            background: "rgba(239, 68, 68, 0.06)",
-            border: "1px solid rgba(239, 68, 68, 0.15)",
-          }}
-        >
-          {error}
+      {showManualEntry && (
+        <div className="space-y-3">
+          <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+            This registry doesn&apos;t publish a component index. Type a
+            component name to fetch it directly from{" "}
+            <a
+              href={library.homepage}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "var(--accent-violet)" }}
+              className="underline"
+            >
+              {library.name}
+            </a>
+            .
+          </p>
+          <div className="flex gap-2">
+            <input
+              ref={searchRef}
+              type="text"
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && search.trim()) onFetch(search.trim());
+              }}
+              placeholder="Component name (e.g., button)"
+              disabled={isFetching !== null}
+              className="input-glass flex-1 px-3 py-2 text-sm disabled:opacity-50"
+            />
+            <button
+              onClick={() => {
+                if (search.trim()) onFetch(search.trim());
+              }}
+              disabled={isFetching !== null || !search.trim()}
+              className="btn-accent text-xs px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+            >
+              {isFetching ? "Fetching..." : "Fetch"}
+            </button>
+          </div>
         </div>
       )}
 
-      {!loading && !error && components.length === 0 && (
+      {!loading && indexAvailable && components.length === 0 && (
         <div
           className="text-xs text-center py-6"
           style={{ color: "var(--text-muted)" }}
@@ -684,7 +786,7 @@ function ComponentBrowser({
         </div>
       )}
 
-      {!loading && components.length > 0 && (
+      {hasComponents && (
         <div className="flex flex-wrap gap-1.5">
           {components.map((item) => {
             const key = `${library.name}/${item.name}`;
@@ -734,7 +836,7 @@ function ComponentBrowser({
         </div>
       )}
 
-      {!loading && components.length > 0 && (
+      {hasComponents && (
         <p
           className="text-xs"
           style={{ color: "var(--text-muted)" }}
