@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const SHADCN_REGISTRY_BASE = "https://ui.shadcn.com/r";
+const SHADCN_INDEX_URL = `${SHADCN_REGISTRY_BASE}/index.json`;
 const SHADCN_DOCS_URL = "https://ui.shadcn.com/docs/directory";
 
-const SUPPORTED_COMPONENTS = [
+const SUPPORTED_COMPONENTS = new Set([
   "input",
   "textarea",
   "select",
@@ -12,21 +13,13 @@ const SUPPORTED_COMPONENTS = [
   "label",
   "button",
   "radio-group",
-];
+]);
 
-const OTHER_COMPONENTS = [
-  "slider",
-  "calendar",
-  "popover",
-  "dialog",
-  "card",
-  "tabs",
-  "badge",
-  "separator",
-  "tooltip",
-  "alert",
-  "form",
-];
+interface RegistryIndexItem {
+  name: string;
+  type: string;
+  registryDependencies?: string[];
+}
 
 interface RegistryFile {
   path: string;
@@ -66,42 +59,74 @@ export function CustomComponentImport({
   onSwitchToShadcn,
   compilationErrors = {},
 }: CustomComponentImportProps) {
-  const [customName, setCustomName] = useState("");
-  const [isFetching, setIsFetching] = useState(false);
+  const [search, setSearch] = useState("");
+  const [registry, setRegistry] = useState<RegistryIndexItem[]>([]);
+  const [registryLoading, setRegistryLoading] = useState(false);
+  const [registryError, setRegistryError] = useState<string | null>(null);
+  const [isFetching, setIsFetching] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [fetched, setFetched] = useState<FetchedComponent[]>([]);
   const [expandedSource, setExpandedSource] = useState<string | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (registry.length > 0) {
+      searchRef.current?.focus();
+      return;
+    }
+
+    setRegistryLoading(true);
+    setRegistryError(null);
+
+    fetch(SHADCN_INDEX_URL)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data: RegistryIndexItem[]) => {
+        const uiComponents = data.filter((item) => item.type === "registry:ui");
+        uiComponents.sort((a, b) => a.name.localeCompare(b.name));
+        setRegistry(uiComponents);
+        setRegistryLoading(false);
+        setTimeout(() => searchRef.current?.focus(), 50);
+      })
+      .catch(() => {
+        setRegistryError("Failed to load registry index. Check your connection.");
+        setRegistryLoading(false);
+      });
+  }, [isOpen, registry.length]);
 
   if (!isOpen) return null;
 
-  const allComponents = [...SUPPORTED_COMPONENTS, ...OTHER_COMPONENTS];
+  const searchLower = search.toLowerCase().trim();
+  const filtered = searchLower
+    ? registry.filter((item) => item.name.includes(searchLower))
+    : registry;
+
+  const fetchedNames = new Set(fetched.map((c) => c.name));
 
   const fetchComponent = async (name: string) => {
-    const normalized = name.trim().toLowerCase();
-    if (!normalized) {
-      setError("Enter a component name");
-      return;
-    }
-    if (fetched.some((c) => c.name === normalized)) {
-      setError(`"${normalized}" is already in the list`);
+    if (fetchedNames.has(name)) {
+      setError(`"${name}" is already in the list`);
       return;
     }
 
-    setIsFetching(true);
+    setIsFetching(name);
     setError(null);
 
     try {
       let res = await fetch(
-        `${SHADCN_REGISTRY_BASE}/styles/new-york/${normalized}.json`,
+        `${SHADCN_REGISTRY_BASE}/styles/new-york/${name}.json`,
       );
       if (!res.ok) {
-        res = await fetch(`${SHADCN_REGISTRY_BASE}/${normalized}.json`);
+        res = await fetch(`${SHADCN_REGISTRY_BASE}/${name}.json`);
       }
       if (!res.ok) {
         setError(
-          `Component "${normalized}" not found in the shadcn registry. Check the name at ${SHADCN_DOCS_URL}`,
+          `Component "${name}" not found in the shadcn registry.`,
         );
-        setIsFetching(false);
+        setIsFetching(null);
         return;
       }
 
@@ -109,15 +134,15 @@ export function CustomComponentImport({
       const mainFile = data.files?.[0];
       if (!mainFile?.content) {
         setError(
-          `Component "${normalized}" has no source code in the registry`,
+          `Component "${name}" has no source code in the registry.`,
         );
-        setIsFetching(false);
+        setIsFetching(null);
         return;
       }
 
       const title =
         data.title ||
-        normalized
+        name
           .split("-")
           .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
           .join("");
@@ -125,19 +150,18 @@ export function CustomComponentImport({
       setFetched((prev) => [
         ...prev,
         {
-          name: normalized,
+          name,
           title,
           code: mainFile.content,
           dependencies: data.dependencies ?? [],
         },
       ]);
-      setCustomName("");
     } catch {
       setError(
-        "Failed to fetch from the shadcn registry. Check your connection.",
+        "Failed to fetch component. Check your connection.",
       );
     } finally {
-      setIsFetching(false);
+      setIsFetching(null);
     }
   };
 
@@ -160,14 +184,10 @@ export function CustomComponentImport({
       onSwitchToShadcn();
     }
     setFetched([]);
-    setCustomName("");
+    setSearch("");
     setError(null);
     onClose();
   };
-
-  const compiledCount = Object.keys(compilationErrors).length > 0
-    ? fetched.filter((c) => !compilationErrors[c.name]).length
-    : 0;
 
   return (
     <div
@@ -176,17 +196,24 @@ export function CustomComponentImport({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="modal-panel w-full max-w-lg max-h-[80vh] flex flex-col">
+      <div className="modal-panel w-full max-w-lg max-h-[85vh] flex flex-col">
         <div
           className="flex items-center justify-between p-4"
           style={{ borderBottom: "1px solid var(--border-subtle)" }}
         >
-          <h2
-            className="text-sm font-bold"
-            style={{ color: "var(--text-primary)" }}
-          >
-            Import shadcn/ui Components
-          </h2>
+          <div>
+            <h2
+              className="text-sm font-bold"
+              style={{ color: "var(--text-primary)" }}
+            >
+              Import shadcn/ui Components
+            </h2>
+            <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+              {registry.length > 0
+                ? `${registry.length} components available`
+                : "Loading registry..."}
+            </p>
+          </div>
           <button
             onClick={onClose}
             className="text-lg leading-none transition-colors w-7 h-7 flex items-center justify-center rounded-md"
@@ -203,92 +230,128 @@ export function CustomComponentImport({
           </button>
         </div>
 
-        <div className="p-4 space-y-4 overflow-auto">
-          <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-            Fetch real{" "}
-            <a
-              href={SHADCN_DOCS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "var(--accent-violet)" }}
-              className="underline"
-            >
-              shadcn/ui
-            </a>{" "}
-            components from the registry. They&apos;re compiled at runtime and
-            used in the live preview. Components with supported dependencies
-            (Radix UI, Lucide icons, CVA) work out of the box.
-          </p>
+        <div className="p-4 space-y-3 overflow-auto flex-1 min-h-0">
+          <input
+            ref={searchRef}
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search components..."
+            className="input-glass w-full px-3 py-2 text-sm"
+            autoFocus
+          />
 
-          <div>
-            <label
-              className="text-xs block mb-1.5"
-              style={{ color: "var(--text-secondary)" }}
+          {registryLoading && (
+            <div
+              className="text-xs text-center py-8"
+              style={{ color: "var(--text-muted)" }}
             >
-              Supported (Radix deps bundled)
-            </label>
-            <div className="flex flex-wrap gap-1.5">
-              {SUPPORTED_COMPONENTS.filter(
-                (c) => !fetched.some((f) => f.name === c),
-              ).map((name) => (
-                <button
-                  key={name}
-                  onClick={() => fetchComponent(name)}
-                  disabled={isFetching}
-                  className="btn-glass text-xs px-2.5 py-1 disabled:opacity-50"
-                >
-                  {name}
-                </button>
-              ))}
+              Loading shadcn/ui registry...
             </div>
-          </div>
+          )}
 
-          <div>
-            <label
-              className="text-xs block mb-1.5"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              Other (may need missing deps)
-            </label>
-            <div className="flex flex-wrap gap-1.5">
-              {OTHER_COMPONENTS.filter(
-                (c) => !fetched.some((f) => f.name === c),
-              )
-                .slice(0, 8)
-                .map((name) => (
-                  <button
-                    key={name}
-                    onClick={() => fetchComponent(name)}
-                    disabled={isFetching}
-                    className="btn-glass text-xs px-2.5 py-1 disabled:opacity-50"
-                    style={{ opacity: 0.7 }}
-                  >
-                    {name}
-                  </button>
-                ))}
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={customName}
-              onChange={(e) => setCustomName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") fetchComponent(customName);
+          {registryError && (
+            <div
+              className="glass-panel text-xs p-3 text-center"
+              style={{
+                color: "rgb(248, 113, 113)",
+                background: "rgba(239, 68, 68, 0.06)",
+                border: "1px solid rgba(239, 68, 68, 0.15)",
               }}
-              placeholder="Component name (e.g., accordion)"
-              disabled={isFetching}
-              className="input-glass flex-1 px-3 py-1.5 text-sm disabled:opacity-50"
-            />
-            <button
-              onClick={() => fetchComponent(customName)}
-              disabled={isFetching || !customName.trim()}
-              className="btn-accent text-xs px-3 py-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
             >
-              {isFetching ? "Fetching..." : "Fetch"}
-            </button>
-          </div>
+              {registryError}
+            </div>
+          )}
+
+          {!registryLoading && !registryError && filtered.length === 0 && (
+            <div
+              className="text-xs text-center py-6"
+              style={{ color: "var(--text-muted)" }}
+            >
+              {searchLower
+                ? `No components matching "${search}"`
+                : "No components found"}
+            </div>
+          )}
+
+          {!registryLoading && filtered.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {filtered.map((item) => {
+                const isSupported = SUPPORTED_COMPONENTS.has(item.name);
+                const isAlreadyFetched = fetchedNames.has(item.name);
+                const isCurrentlyFetching = isFetching === item.name;
+
+                return (
+                  <button
+                    key={item.name}
+                    onClick={() => fetchComponent(item.name)}
+                    disabled={isAlreadyFetched || isCurrentlyFetching || isFetching !== null}
+                    className="btn-glass text-xs px-2.5 py-1.5 disabled:cursor-not-allowed transition-all"
+                    style={{
+                      opacity: isAlreadyFetched ? 0.4 : isSupported ? 1 : 0.7,
+                      borderColor: isAlreadyFetched
+                        ? "rgba(34, 197, 94, 0.3)"
+                        : isSupported
+                          ? "rgba(249, 115, 22, 0.25)"
+                          : undefined,
+                      background: isAlreadyFetched
+                        ? "rgba(34, 197, 94, 0.08)"
+                        : undefined,
+                    }}
+                    title={
+                      isAlreadyFetched
+                        ? "Already added"
+                        : isSupported
+                          ? "Supported — bundled Radix dependencies"
+                          : "May need additional dependencies"
+                    }
+                  >
+                    {isCurrentlyFetching ? (
+                      <span style={{ color: "var(--accent-violet)" }}>
+                        fetching...
+                      </span>
+                    ) : (
+                      <>
+                        {isAlreadyFetched && (
+                          <span style={{ color: "rgb(34, 197, 94)", marginRight: 4 }}>
+                            ✓
+                          </span>
+                        )}
+                        {item.name}
+                        {isSupported && !isAlreadyFetched && (
+                          <span
+                            style={{
+                              color: "var(--accent-violet)",
+                              marginLeft: 4,
+                              fontSize: "0.65rem",
+                            }}
+                          >
+                            ●
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {!registryLoading && registry.length > 0 && (
+            <p className="text-xs flex items-center gap-1.5" style={{ color: "var(--text-muted)" }}>
+              <span style={{ color: "var(--accent-violet)" }}>●</span>
+              Supported (bundled Radix deps) — others may need missing dependencies.{" "}
+              <a
+                href={SHADCN_DOCS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "var(--accent-violet)" }}
+                className="underline"
+              >
+                Docs
+              </a>
+            </p>
+          )}
 
           {error && (
             <div
@@ -305,14 +368,14 @@ export function CustomComponentImport({
 
           {fetched.length > 0 && (
             <div
-              className="pt-4 space-y-2"
+              className="pt-3 space-y-2"
               style={{ borderTop: "1px solid var(--border-subtle)" }}
             >
               <h3
                 className="text-xs font-medium"
                 style={{ color: "var(--text-secondary)" }}
               >
-                Fetched Components ({fetched.length})
+                Ready to import ({fetched.length})
               </h3>
               {fetched.map((comp) => {
                 const compError = compilationErrors[comp.name];
@@ -327,7 +390,7 @@ export function CustomComponentImport({
                         : "1px solid var(--border-subtle)",
                     }}
                   >
-                    <div className="flex items-center justify-between px-3 py-2.5">
+                    <div className="flex items-center justify-between px-3 py-2">
                       <div className="min-w-0 flex items-center gap-2">
                         <span
                           className="text-sm"
@@ -340,7 +403,7 @@ export function CustomComponentImport({
                         </span>
                         {comp.dependencies.length > 0 && (
                           <span
-                            className="text-xs"
+                            className="text-xs truncate"
                             style={{ color: "var(--text-muted)" }}
                           >
                             deps: {comp.dependencies.join(", ")}
