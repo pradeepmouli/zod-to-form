@@ -49,7 +49,7 @@ export function FormPreview({
     [onSubmitResult],
   );
 
-  const schema = useSchemaFromSource(editorContent, fields);
+  const { schema, formRegistry } = useSchemaFromSource(editorContent, fields);
 
   return (
     <div className="h-full flex flex-col overflow-auto">
@@ -78,6 +78,7 @@ export function FormPreview({
             schema={schema}
             components={components}
             onSubmit={handleSubmit}
+            formRegistry={formRegistry}
             className="space-y-4"
           >
             <button

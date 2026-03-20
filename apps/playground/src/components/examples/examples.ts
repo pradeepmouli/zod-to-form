@@ -4,15 +4,31 @@ export const EXAMPLES: ExampleSchema[] = [
   {
     id: "registration-form",
     title: "User Registration",
-    description: "Basic registration with string, email, password, and constraints",
+    description: "Registration form with labels, placeholders, and validation",
     category: "basic",
-    tags: ["string", "email", "password", "validation"],
+    tags: ["string", "email", "password", "validation", "meta"],
     source: `const schema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters").max(20),
-  email: z.string().email("Please enter a valid email"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string(),
-  acceptTerms: z.boolean(),
+  username: z.string()
+    .min(3, "Username must be at least 3 characters")
+    .max(20)
+    .meta({
+      title: "Username",
+      description: "Choose a unique username",
+      examples: ["johndoe42"],
+    }),
+  email: z.string()
+    .email("Please enter a valid email")
+    .meta({
+      title: "Email Address",
+      examples: ["you@example.com"],
+    }),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .meta({ title: "Password" }),
+  confirmPassword: z.string()
+    .meta({ title: "Confirm Password" }),
+  acceptTerms: z.boolean()
+    .meta({ title: "I accept the terms and conditions" }),
 });
 
 schema;
@@ -21,16 +37,43 @@ schema;
   {
     id: "settings-page",
     title: "Settings Page",
-    description: "Boolean toggles, enums, and optional fields",
+    description: "Toggles, enums, and optional fields with inline metadata",
     category: "basic",
-    tags: ["boolean", "enum", "optional", "default"],
+    tags: ["boolean", "enum", "optional", "default", "meta"],
     source: `const schema = z.object({
-  displayName: z.string().min(1, "Display name is required"),
-  theme: z.enum(["light", "dark", "system"]),
-  language: z.enum(["en", "es", "fr", "de", "ja"]),
-  emailNotifications: z.boolean().default(true),
-  marketingEmails: z.boolean().default(false),
-  bio: z.string().max(500).optional(),
+  displayName: z.string()
+    .min(1, "Display name is required")
+    .meta({
+      title: "Display Name",
+      examples: ["Jane Smith"],
+    }),
+  theme: z.enum(["light", "dark", "system"])
+    .meta({
+      title: "Theme",
+      description: "Choose your preferred appearance",
+    }),
+  language: z.enum(["en", "es", "fr", "de", "ja"])
+    .meta({ title: "Language" }),
+  emailNotifications: z.boolean()
+    .default(true)
+    .meta({
+      title: "Email Notifications",
+      description: "Receive updates via email",
+    }),
+  marketingEmails: z.boolean()
+    .default(false)
+    .meta({
+      title: "Marketing Emails",
+      description: "Receive promotional content",
+    }),
+  bio: z.string()
+    .max(500)
+    .optional()
+    .meta({
+      title: "Bio",
+      description: "Tell us about yourself",
+      examples: ["I'm a developer who loves..."],
+    }),
 });
 
 schema;
@@ -39,15 +82,38 @@ schema;
   {
     id: "contact-form",
     title: "Contact Form",
-    description: "Textarea, select, and required fields",
+    description: "Textarea, select, and required fields with descriptions",
     category: "basic",
-    tags: ["string", "textarea", "select", "required"],
+    tags: ["string", "textarea", "select", "required", "meta"],
     source: `const schema = z.object({
-  name: z.string().min(2, "Name is required"),
-  email: z.string().email("Valid email required"),
-  subject: z.enum(["general", "support", "billing", "feedback"]),
-  message: z.string().min(10, "Message must be at least 10 characters").max(2000),
-  priority: z.enum(["low", "medium", "high"]).default("medium"),
+  name: z.string()
+    .min(2, "Name is required")
+    .meta({
+      title: "Your Name",
+      examples: ["Jane Doe"],
+    }),
+  email: z.string()
+    .email("Valid email required")
+    .meta({
+      title: "Email",
+      examples: ["jane@example.com"],
+    }),
+  subject: z.enum(["general", "support", "billing", "feedback"])
+    .meta({
+      title: "Subject",
+      description: "What is this regarding?",
+    }),
+  message: z.string()
+    .min(10, "Message must be at least 10 characters")
+    .max(2000)
+    .meta({
+      title: "Message",
+      description: "Describe your inquiry in detail",
+      examples: ["I'd like to ask about..."],
+    }),
+  priority: z.enum(["low", "medium", "high"])
+    .default("medium")
+    .meta({ title: "Priority" }),
 });
 
 schema;
@@ -56,24 +122,41 @@ schema;
   {
     id: "nested-address",
     title: "Nested Address",
-    description: "Nested objects with address fields",
+    description: "Nested objects with address fields and inline metadata",
     category: "advanced",
-    tags: ["nested", "object", "optional"],
+    tags: ["nested", "object", "optional", "meta"],
     source: `const addressSchema = z.object({
-  street: z.string().min(1, "Street is required"),
-  city: z.string().min(1, "City is required"),
-  state: z.string().min(1, "State is required"),
-  zip: z.string().min(5, "ZIP code must be at least 5 characters"),
-  country: z.enum(["US", "CA", "UK", "AU", "DE"]),
+  street: z.string()
+    .min(1, "Street is required")
+    .meta({ title: "Street Address", examples: ["123 Main St"] }),
+  city: z.string()
+    .min(1, "City is required")
+    .meta({ title: "City", examples: ["San Francisco"] }),
+  state: z.string()
+    .min(1, "State is required")
+    .meta({ title: "State / Province", examples: ["CA"] }),
+  zip: z.string()
+    .min(5, "ZIP code must be at least 5 characters")
+    .meta({ title: "ZIP / Postal Code", examples: ["94102"] }),
+  country: z.enum(["US", "CA", "UK", "AU", "DE"])
+    .meta({ title: "Country" }),
 });
 
 const schema = z.object({
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  email: z.string().email(),
+  firstName: z.string()
+    .min(1)
+    .meta({ title: "First Name", examples: ["Jane"] }),
+  lastName: z.string()
+    .min(1)
+    .meta({ title: "Last Name", examples: ["Doe"] }),
+  email: z.string()
+    .email()
+    .meta({ title: "Email", examples: ["jane@example.com"] }),
   shippingAddress: addressSchema,
   billingAddress: addressSchema.optional(),
-  sameAsBilling: z.boolean().default(true),
+  sameAsBilling: z.boolean()
+    .default(true)
+    .meta({ title: "Billing address same as shipping" }),
 });
 
 schema;
@@ -82,21 +165,53 @@ schema;
   {
     id: "multi-field-wizard",
     title: "Multi-Field Form",
-    description: "Complex form with many field types and metadata",
+    description: "Complex form showcasing many field types with rich metadata",
     category: "patterns",
-    tags: ["metadata", "sections", "ordering", "complex"],
+    tags: ["metadata", "sections", "ordering", "complex", "meta"],
     source: `const schema = z.object({
-  firstName: z.string().min(1, "Required"),
-  lastName: z.string().min(1, "Required"),
-  dateOfBirth: z.string(),
-  gender: z.enum(["male", "female", "other", "prefer-not-to-say"]),
-  phone: z.string().optional(),
-  email: z.string().email(),
-  website: z.string().url().optional(),
-  experience: z.number().min(0).max(50),
-  role: z.enum(["developer", "designer", "manager", "other"]),
-  newsletter: z.boolean().default(false),
-  notes: z.string().max(1000).optional(),
+  firstName: z.string()
+    .min(1, "Required")
+    .meta({ title: "First Name", examples: ["Jane"] }),
+  lastName: z.string()
+    .min(1, "Required")
+    .meta({ title: "Last Name", examples: ["Doe"] }),
+  dateOfBirth: z.string()
+    .meta({ title: "Date of Birth", examples: ["1990-01-15"] }),
+  gender: z.enum(["male", "female", "other", "prefer-not-to-say"])
+    .meta({ title: "Gender" }),
+  phone: z.string()
+    .optional()
+    .meta({ title: "Phone Number", examples: ["+1 (555) 123-4567"] }),
+  email: z.string()
+    .email()
+    .meta({ title: "Email Address", examples: ["jane@company.com"] }),
+  website: z.string()
+    .url()
+    .optional()
+    .meta({ title: "Personal Website", examples: ["https://janedoe.dev"] }),
+  experience: z.number()
+    .min(0)
+    .max(50)
+    .meta({ title: "Years of Experience" }),
+  role: z.enum(["developer", "designer", "manager", "other"])
+    .meta({
+      title: "Role",
+      description: "Your primary role in the organization",
+    }),
+  newsletter: z.boolean()
+    .default(false)
+    .meta({
+      title: "Subscribe to Newsletter",
+      description: "Get weekly updates delivered to your inbox",
+    }),
+  notes: z.string()
+    .max(1000)
+    .optional()
+    .meta({
+      title: "Additional Notes",
+      description: "Anything else you'd like us to know",
+      examples: ["I'm interested in..."],
+    }),
 });
 
 schema;
@@ -107,11 +222,17 @@ schema;
     title: "Login Form",
     description: "Simple login with email and password",
     category: "basic",
-    tags: ["string", "email", "password", "simple"],
+    tags: ["string", "email", "password", "simple", "meta"],
     source: `const schema = z.object({
-  email: z.string().email("Please enter a valid email"),
-  password: z.string().min(1, "Password is required"),
-  rememberMe: z.boolean().default(false),
+  email: z.string()
+    .email("Please enter a valid email")
+    .meta({ title: "Email", examples: ["you@example.com"] }),
+  password: z.string()
+    .min(1, "Password is required")
+    .meta({ title: "Password" }),
+  rememberMe: z.boolean()
+    .default(false)
+    .meta({ title: "Remember me" }),
 });
 
 schema;
@@ -120,47 +241,88 @@ schema;
   {
     id: "metadata-labels",
     title: "Metadata & Labels",
-    description: "Registry annotations for labels, descriptions, placeholders, and component overrides",
+    description: "Using .meta() for labels, descriptions, and placeholders",
     category: "advanced",
-    tags: ["metadata", "registry", "labels", "descriptions", "placeholders"],
-    source: `const registry = z.globalRegistry;
-
-const schema = z.object({
-  fullName: z.string().min(2),
-  email: z.string().email(),
-  bio: z.string().max(500).optional(),
-  role: z.enum(["admin", "editor", "viewer"]),
-  notifications: z.boolean().default(true),
-});
-
-z.globalRegistry.add(schema.shape.fullName, {
-  label: "Full Name",
-  description: "Your display name",
-  placeholder: "John Doe",
-});
-
-z.globalRegistry.add(schema.shape.email, {
-  label: "Email Address",
-  placeholder: "john@example.com",
-});
-
-z.globalRegistry.add(schema.shape.bio, {
-  label: "Biography",
-  description: "Tell us about yourself",
-  placeholder: "I am a...",
-});
-
-z.globalRegistry.add(schema.shape.role, {
-  label: "User Role",
-  description: "Select the permission level",
-});
-
-z.globalRegistry.add(schema.shape.notifications, {
-  label: "Email Notifications",
-  description: "Receive updates via email",
+    tags: ["metadata", "meta", "labels", "descriptions", "placeholders"],
+    source: `const schema = z.object({
+  fullName: z.string()
+    .min(2)
+    .meta({
+      title: "Full Name",
+      description: "Your display name visible to other users",
+      examples: ["John Doe"],
+    }),
+  email: z.string()
+    .email()
+    .meta({
+      title: "Email Address",
+      description: "We'll never share your email",
+      examples: ["john@example.com"],
+    }),
+  bio: z.string()
+    .max(500)
+    .optional()
+    .meta({
+      title: "Biography",
+      description: "Tell us about yourself (max 500 chars)",
+      examples: ["I'm a software engineer who loves building..."],
+    }),
+  role: z.enum(["admin", "editor", "viewer"])
+    .meta({
+      title: "User Role",
+      description: "Determines permission level in the system",
+    }),
+  notifications: z.boolean()
+    .default(true)
+    .meta({
+      title: "Email Notifications",
+      description: "Receive updates when someone mentions you",
+    }),
 });
 
 schema;
+`,
+  },
+  {
+    id: "form-registry",
+    title: "ZodFormRegistry",
+    description: "Using a ZodFormRegistry for component overrides, ordering, and hidden fields",
+    category: "patterns",
+    tags: ["registry", "ZodFormRegistry", "component", "order", "hidden", "advanced"],
+    source: `const formRegistry = z.registry();
+
+const schema = z.object({
+  name: z.string()
+    .min(2)
+    .meta({ title: "Full Name", examples: ["Jane Doe"] })
+    .register(formRegistry, { order: 1 }),
+  bio: z.string()
+    .max(500)
+    .optional()
+    .meta({
+      title: "About Me",
+      description: "Share a bit about yourself",
+      examples: ["I enjoy building things with code..."],
+    })
+    .register(formRegistry, { component: "Textarea", order: 3 }),
+  email: z.string()
+    .email()
+    .meta({ title: "Email Address", examples: ["jane@example.com"] })
+    .register(formRegistry, { order: 2 }),
+  role: z.enum(["admin", "editor", "viewer"])
+    .meta({ title: "Role", description: "Permission level" })
+    .register(formRegistry, { order: 4 }),
+  internalId: z.string()
+    .default("auto-generated")
+    .meta({ title: "Internal ID" })
+    .register(formRegistry, { hidden: true }),
+  newsletter: z.boolean()
+    .default(false)
+    .meta({ title: "Subscribe to newsletter" })
+    .register(formRegistry, { order: 5 }),
+});
+
+({ schema, formRegistry });
 `,
   },
 ];

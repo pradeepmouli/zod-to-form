@@ -29,7 +29,10 @@ self.onmessage = (e: MessageEvent<EvalRequest>) => {
   }
 
   try {
-    const fields = walkSchema(evalResult.schema);
+    const walkOptions = evalResult.formRegistry
+      ? { formRegistry: evalResult.formRegistry }
+      : undefined;
+    const fields = walkSchema(evalResult.schema, walkOptions);
     const response: WorkerResponse = { type: "result", id, fields };
     self.postMessage(response);
   } catch (err: unknown) {

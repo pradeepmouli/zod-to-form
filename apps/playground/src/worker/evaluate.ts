@@ -1,9 +1,10 @@
 import * as z from "zod";
 import { defineConfig, registerDeep, registerFlat } from "@zod-to-form/core";
+import type { ZodFormRegistry } from "@zod-to-form/core";
 import type { EvaluationError } from "../types/playground.ts";
 
 export type EvalResult =
-  | { ok: true; schema: z.ZodType }
+  | { ok: true; schema: z.ZodType; formRegistry?: ZodFormRegistry }
   | { ok: false; error: EvaluationError };
 
 const IMPORT_RE = /\b(import)\s+|(\bimport)\s*\(|(\brequire)\s*\(/m;
@@ -34,6 +35,10 @@ function wrapLastExpression(code: string): string {
   return lines.join("\n");
 }
 
+function isZodSchema(value: unknown): value is z.ZodType {
+  return !!value && typeof value === "object" && "_zod" in value;
+}
+
 export function evaluate(jsCode: string): EvalResult {
   if (IMPORT_RE.test(jsCode)) {
     return {
@@ -58,18 +63,31 @@ export function evaluate(jsCode: string): EvalResult {
     const fn = new Function(...argNames, wrappedCode);
     const result = fn(...argValues);
 
-    if (!result || typeof result !== "object" || !("_zod" in result)) {
-      return {
-        ok: false,
-        error: {
-          type: "runtime",
-          message:
-            "The code must return a Zod schema. Make sure the last expression evaluates to a schema (e.g., 'const schema = z.object({...}); schema;').",
-        },
-      };
+    if (isZodSchema(result)) {
+      return { ok: true, schema: result };
     }
 
-    return { ok: true, schema: result as z.ZodType };
+    if (
+      result &&
+      typeof result === "object" &&
+      "schema" in result &&
+      isZodSchema(result.schema)
+    ) {
+      const formRegistry =
+        result.formRegistry && typeof result.formRegistry === "object" && "get" in result.formRegistry
+          ? (result.formRegistry as ZodFormRegistry)
+          : undefined;
+      return { ok: true, schema: result.schema as z.ZodType, formRegistry };
+    }
+
+    return {
+      ok: false,
+      error: {
+        type: "runtime",
+        message:
+          "The code must return a Zod schema or { schema, formRegistry }. Make sure the last expression evaluates to a schema (e.g., 'schema;') or an object with both (e.g., '{ schema, formRegistry };').",
+      },
+    };
   } catch (err: unknown) {
     const error = err as Error;
     return {
