@@ -65,7 +65,8 @@ export function useZodForm<TSchema extends ZodObject>(
   schema: TSchema,
   options?: UseZodFormOptions<TSchema>
 ) {
-  const baseResolver = useMemo(() => zodResolver(schema), [schema]);
+  // SAFETY: ZodObject extends $ZodType at runtime but TS nominal typing on _zod.version requires the cast
+  const baseResolver = useMemo(() => zodResolver(schema as never), [schema]);
 
   // Build a registry from flat field config when no explicit registry is provided
   const effectiveRegistry = useMemo(() => {

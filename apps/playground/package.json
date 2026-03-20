@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsgo --noEmit"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.6",
