@@ -179,7 +179,7 @@ export function App() {
             isOpen={customImportOpen}
             onClose={() => setCustomImportOpen(false)}
             onImport={handleCustomComponentImport}
-            onSwitchToShadcn={() => setComponentMap("shadcn")}
+            onSwitchToStyled={() => setComponentMap("shadcn")}
             compilationErrors={compilationErrors}
           />
         </Suspense>

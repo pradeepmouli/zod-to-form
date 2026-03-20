@@ -54,7 +54,7 @@ interface CustomComponentImportProps {
   isOpen: boolean;
   onClose: () => void;
   onImport: (components: Record<string, string>) => void;
-  onSwitchToShadcn?: () => void;
+  onSwitchToStyled?: () => void;
   compilationErrors?: Record<string, string>;
 }
 
@@ -62,7 +62,7 @@ export function CustomComponentImport({
   isOpen,
   onClose,
   onImport,
-  onSwitchToShadcn,
+  onSwitchToStyled,
   compilationErrors = {},
 }: CustomComponentImportProps) {
   const [search, setSearch] = useState("");
@@ -245,8 +245,8 @@ export function CustomComponentImport({
     }
 
     onImport(importMap);
-    if (onSwitchToShadcn) {
-      onSwitchToShadcn();
+    if (onSwitchToStyled) {
+      onSwitchToStyled();
     }
     setFetched([]);
     setSearch("");

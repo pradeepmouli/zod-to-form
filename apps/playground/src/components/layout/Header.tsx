@@ -80,10 +80,10 @@ export function Header({
             onComponentMapChange(e.target.value as ComponentMapType)
           }
           className="btn-glass text-xs px-2.5 py-1.5 outline-none cursor-pointer"
-          aria-label="Component map"
+          aria-label="Form theme"
         >
-          <option value="default">Default</option>
-          <option value="shadcn">shadcn/ui</option>
+          <option value="default">Plain HTML</option>
+          <option value="shadcn">Styled</option>
         </select>
 
         <button
