@@ -81,16 +81,6 @@ export function App() {
   );
 
   useEffect(() => {
-    if (state.customComponents) {
-      console.log("[z2f] customComponents sources:", Object.keys(state.customComponents));
-    }
-    console.log("[z2f] compiledComponents:", Object.keys(compiledComponents));
-    if (Object.keys(compilationResult.errors).length > 0) {
-      console.log("[z2f] compilation errors:", compilationResult.errors);
-    }
-  }, [state.customComponents, compiledComponents, compilationResult.errors]);
-
-  useEffect(() => {
     setCompilationErrors(compilationResult.errors);
   }, [compilationResult.errors]);
 

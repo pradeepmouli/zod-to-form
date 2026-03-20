@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
-const REGISTRIES_URL = "https://ui.shadcn.com/r/registries.json";
-
 const INJECTED_CSS_ID = "z2f-registry-css";
 
 function injectRegistryCss(cssContents: string[]) {
@@ -15,115 +13,41 @@ function injectRegistryCss(cssContents: string[]) {
   style.textContent = (style.textContent ?? "") + "\n" + combined;
 }
 
-const CORS_SAFE_HOSTS = ["ui.shadcn.com"];
-
-function registryFetch(url: string, init?: RequestInit): Promise<Response> {
-  try {
-    const parsed = new URL(url);
-    if (CORS_SAFE_HOSTS.includes(parsed.hostname)) {
-      return fetch(url, init);
-    }
-  } catch {
-    return fetch(url, init);
-  }
-  const proxied = `/api/registry-proxy?url=${encodeURIComponent(url)}`;
-  return fetch(proxied, init);
-}
-
 interface CommunityRegistry {
   name: string;
-  homepage: string;
+  homepage?: string;
   url: string;
-  description: string;
+  description?: string;
 }
 
-interface RegistryComponentItem {
+interface SearchResultItem {
+  registry: string;
   name: string;
-  type: string;
-  dependencies?: string[];
+  addCommandArgument: string;
+  type?: string;
+  description?: string;
 }
 
-interface RegistryFile {
+interface ResolvedFile {
   path: string;
   type: string;
-  content: string;
+  content: string | null;
 }
 
-interface RegistryItemDetail {
-  name: string;
-  type: string;
-  title?: string;
-  description?: string;
-  dependencies?: string[];
-  registryDependencies?: string[];
-  files: RegistryFile[];
+interface ResolveResult {
+  files: ResolvedFile[];
+  dependencies: string[];
+  devDependencies: string[];
+  cssVars: Record<string, Record<string, string>>;
 }
 
 interface FetchedComponent {
   name: string;
   title: string;
-  code: string;
+  resolvedFiles: ResolvedFile[];
   cssFiles: string[];
   dependencies: string[];
   library: string;
-}
-
-const SHADCN_ENTRY: CommunityRegistry = {
-  name: "shadcn/ui",
-  homepage: "https://ui.shadcn.com",
-  url: "https://ui.shadcn.com/r/styles/new-york/{name}.json",
-  description:
-    "Beautifully designed components that you can copy and paste into your apps. Built with Radix UI and Tailwind CSS.",
-};
-
-function deriveIndexUrl(urlPattern: string): string {
-  return urlPattern.replace("{name}", "index");
-}
-
-function deriveComponentUrl(urlPattern: string, name: string): string {
-  return urlPattern.replace("{name}", name);
-}
-
-const PROBE_NAMES = [
-  "accordion", "alert", "alert-dialog", "aspect-ratio", "avatar",
-  "badge", "breadcrumb", "button", "calendar", "card",
-  "carousel", "chart", "checkbox", "collapsible", "combobox",
-  "command", "context-menu", "dialog", "drawer", "dropdown-menu",
-  "form", "hover-card", "input", "input-otp", "label",
-  "menubar", "navigation-menu", "pagination", "popover", "progress",
-  "radio-group", "resizable", "scroll-area", "select", "separator",
-  "sheet", "sidebar", "skeleton", "slider", "sonner",
-  "switch", "table", "tabs", "textarea", "toggle",
-  "toggle-group", "tooltip",
-];
-
-async function probeRegistry(
-  urlPattern: string,
-): Promise<RegistryComponentItem[]> {
-  const results = await Promise.allSettled(
-    PROBE_NAMES.map(async (name) => {
-      const url = deriveComponentUrl(urlPattern, name);
-      const controller = new AbortController();
-      const res = await registryFetch(url, {
-        signal: controller.signal,
-        headers: { Accept: "application/json" },
-      });
-      if (res.ok) {
-        controller.abort();
-        return { name, type: "registry:ui" as const };
-      }
-      return null;
-    }),
-  );
-
-  const found: RegistryComponentItem[] = [];
-  for (const r of results) {
-    if (r.status === "fulfilled" && r.value) {
-      found.push(r.value);
-    }
-  }
-  found.sort((a, b) => a.name.localeCompare(b.name));
-  return found;
 }
 
 interface CustomComponentImportProps {
@@ -148,9 +72,8 @@ export function CustomComponentImport({
 
   const [selectedLibrary, setSelectedLibrary] =
     useState<CommunityRegistry | null>(null);
-  const [components, setComponents] = useState<RegistryComponentItem[]>([]);
+  const [components, setComponents] = useState<SearchResultItem[]>([]);
   const [componentsLoading, setComponentsLoading] = useState(false);
-  const [indexAvailable, setIndexAvailable] = useState(true);
   const [componentSearch, setComponentSearch] = useState("");
 
   const [isFetching, setIsFetching] = useState<string | null>(null);
@@ -171,7 +94,7 @@ export function CustomComponentImport({
     setRegistriesLoading(true);
     setRegistriesError(null);
 
-    fetch(REGISTRIES_URL)
+    fetch("/api/shadcn/registries")
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -184,7 +107,7 @@ export function CustomComponentImport({
       })
       .catch(() => {
         setRegistriesError(
-          "Failed to load community registries. Check your connection.",
+          "Failed to load registries. Check your connection.",
         );
         setRegistriesLoading(false);
       });
@@ -195,54 +118,26 @@ export function CustomComponentImport({
       setSelectedLibrary(lib);
       setComponents([]);
       setComponentsLoading(true);
-      setIndexAvailable(true);
       setComponentSearch("");
       setError(null);
 
-      const indexUrl = deriveIndexUrl(lib.url);
+      const registryName = lib.name.startsWith("@") ? lib.name : `@${lib.name}`;
 
-      registryFetch(indexUrl)
+      fetch(`/api/shadcn/search?registry=${encodeURIComponent(registryName)}&limit=200`)
         .then((res) => {
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           return res.json();
         })
-        .then((data: RegistryComponentItem[] | { items?: RegistryComponentItem[] }) => {
-          let items: RegistryComponentItem[];
-          if (Array.isArray(data)) {
-            items = data;
-          } else if (data.items && Array.isArray(data.items)) {
-            items = data.items;
-          } else {
-            items = [];
-          }
-
-          const uiItems = items.filter(
-            (item) =>
-              item.type === "registry:ui" ||
-              item.type === "registry:component" ||
-              item.type === "registry:block",
-          );
-          uiItems.sort((a, b) => a.name.localeCompare(b.name));
-          if (uiItems.length > 0) {
-            setComponents(uiItems);
-            setComponentsLoading(false);
-            setTimeout(() => componentSearchRef.current?.focus(), 50);
-          } else {
-            probeRegistry(lib.url).then((probed) => {
-              setComponents(probed);
-              if (probed.length === 0) setIndexAvailable(false);
-              setComponentsLoading(false);
-              setTimeout(() => componentSearchRef.current?.focus(), 50);
-            });
-          }
+        .then((data: { items: SearchResultItem[]; pagination: { total: number } }) => {
+          const items = data.items ?? [];
+          items.sort((a, b) => a.name.localeCompare(b.name));
+          setComponents(items);
+          setComponentsLoading(false);
+          setTimeout(() => componentSearchRef.current?.focus(), 50);
         })
         .catch(() => {
-          probeRegistry(lib.url).then((probed) => {
-            setComponents(probed);
-            if (probed.length === 0) setIndexAvailable(false);
-            setComponentsLoading(false);
-            setTimeout(() => componentSearchRef.current?.focus(), 50);
-          });
+          setComponents([]);
+          setComponentsLoading(false);
         });
     },
     [],
@@ -261,85 +156,56 @@ export function CustomComponentImport({
       setError(null);
 
       try {
-        const url = deriveComponentUrl(selectedLibrary.url, name);
-        const res = await registryFetch(url);
-        if (!res.ok) {
-          setError(`Component "${name}" not found in ${selectedLibrary.name}.`);
-          setIsFetching(null);
-          return;
-        }
+        const registryName = selectedLibrary.name.startsWith("@")
+          ? selectedLibrary.name
+          : `@${selectedLibrary.name}`;
+        const itemArg = registryName === "@shadcn" || !selectedLibrary.name.startsWith("@")
+          ? name
+          : `${registryName}/${name}`;
 
-        const data: RegistryItemDetail = await res.json();
-        const tsxFile = data.files?.find(
-          (f) => f.content && (f.path.endsWith(".tsx") || f.path.endsWith(".ts") || f.path.endsWith(".jsx") || f.path.endsWith(".js")),
-        );
-        if (!tsxFile?.content) {
-          setError(`Component "${name}" has no source code in the registry.`);
-          setIsFetching(null);
-          return;
-        }
-
-        const cssFiles = (data.files ?? [])
-          .filter((f) => f.content && f.path.endsWith(".css"))
-          .map((f) => f.content);
-
-        const title =
-          data.title ||
-          name
-            .split("-")
-            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-            .join("");
-
-        const newComponents: FetchedComponent[] = [];
-
-        const regDeps = data.registryDependencies ?? [];
-        if (regDeps.length > 0) {
-          const existingNames = new Set(fetched.map((c) => {
-            const sn = c.name.includes("/") ? c.name.split("/").pop()! : c.name;
-            return sn;
-          }));
-
-          for (const dep of regDeps) {
-            if (existingNames.has(dep)) continue;
-            try {
-              const depUrl = SHADCN_ENTRY.url.replace("{name}", dep);
-              const depRes = await registryFetch(depUrl);
-              if (!depRes.ok) continue;
-              const depData: RegistryItemDetail = await depRes.json();
-              const depTsx = depData.files?.find(
-                (f) => f.content && (f.path.endsWith(".tsx") || f.path.endsWith(".ts")),
-              );
-              if (!depTsx?.content) continue;
-              const depCss = (depData.files ?? [])
-                .filter((f) => f.content && f.path.endsWith(".css"))
-                .map((f) => f.content);
-              newComponents.push({
-                name: dep,
-                title: dep.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(""),
-                code: depTsx.content,
-                cssFiles: depCss,
-                dependencies: depData.dependencies ?? [],
-                library: "shadcn/ui (auto)",
-              });
-              existingNames.add(dep);
-            } catch {
-              console.warn(`[z2f] Failed to auto-fetch registry dependency: ${dep}`);
-            }
-          }
-        }
-
-        newComponents.push({
-          name: key,
-          title,
-          code: tsxFile.content,
-          cssFiles,
-          dependencies: data.dependencies ?? [],
-          library: selectedLibrary.name,
+        const res = await fetch("/api/shadcn/resolve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items: [itemArg] }),
         });
 
-        setFetched((prev) => [...prev, ...newComponents]);
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+          setError(err.error ?? `Component "${name}" not found.`);
+          setIsFetching(null);
+          return;
+        }
+
+        const data: ResolveResult = await res.json();
+
+        if (!data.files || data.files.length === 0) {
+          setError(`No files returned for "${name}".`);
+          setIsFetching(null);
+          return;
+        }
+
+        const cssFiles = data.files
+          .filter((f) => f.content && f.path.endsWith(".css"))
+          .map((f) => f.content!);
+
+        const title = name
+          .split("-")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" ");
+
+        setFetched((prev) => [
+          ...prev,
+          {
+            name: key,
+            title,
+            resolvedFiles: data.files.filter((f) => f.content != null),
+            cssFiles,
+            dependencies: data.dependencies,
+            library: selectedLibrary.name,
+          },
+        ]);
       } catch {
-        setError("Failed to fetch component. Check your connection.");
+        setError("Failed to resolve component. Check your connection.");
       } finally {
         setIsFetching(null);
       }
@@ -357,18 +223,20 @@ export function CustomComponentImport({
       setError("Add at least one component before importing");
       return;
     }
+
     const importMap: Record<string, string> = {};
-    const seen = new Set<string>();
+
     for (const comp of fetched) {
-      let shortName = comp.name.includes("/")
-        ? comp.name.split("/").pop()!
-        : comp.name;
-      if (seen.has(shortName)) {
-        const lib = comp.library.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
-        shortName = `${lib}-${shortName}`;
+      for (const file of comp.resolvedFiles) {
+        if (!file.content) continue;
+        if (file.path.endsWith(".css")) continue;
+
+        const moduleKey = file.path
+          .replace(/\.(tsx|ts|jsx|js)$/, "")
+          .replace(/^registry\/[^/]+\//, "");
+
+        importMap[moduleKey] = file.content;
       }
-      seen.add(shortName);
-      importMap[shortName] = comp.code;
     }
 
     const allCss = fetched.flatMap((c) => c.cssFiles);
@@ -389,7 +257,6 @@ export function CustomComponentImport({
   const goBack = () => {
     setSelectedLibrary(null);
     setComponents([]);
-    setIndexAvailable(true);
     setComponentSearch("");
     setError(null);
     setTimeout(() => searchRef.current?.focus(), 50);
@@ -399,13 +266,20 @@ export function CustomComponentImport({
 
   const fetchedNames = new Set(fetched.map((c) => c.name));
 
+  const SHADCN_ENTRY: CommunityRegistry = {
+    name: "@shadcn",
+    homepage: "https://ui.shadcn.com",
+    url: "https://ui.shadcn.com/r/{name}.json",
+    description:
+      "Beautifully designed components built with Radix UI and Tailwind CSS.",
+  };
   const allRegistries = [SHADCN_ENTRY, ...registries];
   const searchLower = search.toLowerCase().trim();
   const filteredRegistries = searchLower
     ? allRegistries.filter(
         (r) =>
           r.name.toLowerCase().includes(searchLower) ||
-          r.description.toLowerCase().includes(searchLower),
+          (r.description ?? "").toLowerCase().includes(searchLower),
       )
     : allRegistries;
 
@@ -459,7 +333,7 @@ export function CustomComponentImport({
                 {selectedLibrary
                   ? `${components.length > 0 ? `${components.length} components` : componentsLoading ? "Loading..." : "Browse components"}`
                   : registries.length > 0
-                    ? `${allRegistries.length} registries from shadcn/ui community`
+                    ? `${allRegistries.length} registries via shadcn`
                     : "Loading registries..."}
               </p>
             </div>
@@ -501,7 +375,6 @@ export function CustomComponentImport({
               onSearchChange={setComponentSearch}
               components={filteredComponents}
               loading={componentsLoading}
-              indexAvailable={indexAvailable}
               searchTerm={compSearchLower}
               library={selectedLibrary}
               isFetching={isFetching}
@@ -538,6 +411,9 @@ export function CustomComponentImport({
                 const shortName = comp.name.includes("/")
                   ? comp.name.split("/").pop()!
                   : comp.name;
+                const fileNames = comp.resolvedFiles
+                  .filter((f) => !f.path.endsWith(".css"))
+                  .map((f) => f.path.split("/").pop());
                 const compError = compilationErrors[shortName];
                 return (
                   <div
@@ -565,7 +441,7 @@ export function CustomComponentImport({
                           className="text-xs truncate"
                           style={{ color: "var(--text-muted)" }}
                         >
-                          {comp.library}
+                          {comp.library} &middot; {comp.resolvedFiles.length} file{comp.resolvedFiles.length !== 1 ? "s" : ""}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 ml-2 shrink-0">
@@ -578,7 +454,7 @@ export function CustomComponentImport({
                           className="text-xs transition-colors"
                           style={{ color: "var(--accent-violet)" }}
                         >
-                          {expandedSource === comp.name ? "Hide" : "Source"}
+                          {expandedSource === comp.name ? "Hide" : "Files"}
                         </button>
                         <button
                           onClick={() => handleRemove(comp.name)}
@@ -599,16 +475,38 @@ export function CustomComponentImport({
                       </div>
                     )}
                     {expandedSource === comp.name && (
-                      <pre
-                        className="px-3 pb-3 text-xs overflow-auto max-h-48"
-                        style={{
-                          fontFamily: "var(--font-mono)",
-                          color: "var(--text-secondary)",
-                          borderTop: "1px solid var(--border-subtle)",
-                        }}
+                      <div
+                        className="px-3 pb-3 space-y-2"
+                        style={{ borderTop: "1px solid var(--border-subtle)" }}
                       >
-                        <code>{comp.code}</code>
-                      </pre>
+                        {comp.resolvedFiles.map((f) => (
+                          <div key={f.path}>
+                            <div
+                              className="text-xs py-1 font-medium"
+                              style={{
+                                fontFamily: "var(--font-mono)",
+                                color: "var(--accent-violet)",
+                              }}
+                            >
+                              {f.path}
+                            </div>
+                            <pre
+                              className="text-xs overflow-auto max-h-36"
+                              style={{
+                                fontFamily: "var(--font-mono)",
+                                color: "var(--text-secondary)",
+                              }}
+                            >
+                              <code>{f.content}</code>
+                            </pre>
+                          </div>
+                        ))}
+                        {fileNames.length > 0 && (
+                          <div className="text-xs" style={{ color: "var(--text-muted)" }}>
+                            Resolved by shadcn with all dependencies
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 );
@@ -732,7 +630,7 @@ function LibraryBrowser({
                 className="text-xs mt-0.5 line-clamp-2"
                 style={{ color: "var(--text-muted)" }}
               >
-                {lib.description}
+                {lib.description ?? ""}
               </p>
             </button>
           ))}
@@ -748,7 +646,6 @@ function ComponentBrowser({
   onSearchChange,
   components,
   loading,
-  indexAvailable,
   searchTerm,
   library,
   isFetching,
@@ -758,9 +655,8 @@ function ComponentBrowser({
   searchRef: React.RefObject<HTMLInputElement | null>;
   search: string;
   onSearchChange: (value: string) => void;
-  components: RegistryComponentItem[];
+  components: SearchResultItem[];
   loading: boolean;
-  indexAvailable: boolean;
   searchTerm: string;
   library: CommunityRegistry;
   isFetching: string | null;
@@ -768,7 +664,7 @@ function ComponentBrowser({
   onFetch: (name: string) => void;
 }) {
   const hasComponents = !loading && components.length > 0;
-  const showManualEntry = !loading && !indexAvailable;
+  const showManualEntry = !loading && components.length === 0;
 
   return (
     <>
@@ -782,15 +678,17 @@ function ComponentBrowser({
             placeholder="Filter components..."
             className="input-glass flex-1 px-3 py-2 text-sm"
           />
-          <a
-            href={library.homepage}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs shrink-0 px-2 py-1.5 rounded transition-colors"
-            style={{ color: "var(--accent-violet)" }}
-          >
-            Docs
-          </a>
+          {library.homepage && (
+            <a
+              href={library.homepage}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs shrink-0 px-2 py-1.5 rounded transition-colors"
+              style={{ color: "var(--accent-violet)" }}
+            >
+              Docs
+            </a>
+          )}
         </div>
       )}
 
@@ -806,18 +704,8 @@ function ComponentBrowser({
       {showManualEntry && (
         <div className="space-y-3">
           <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-            This registry doesn&apos;t publish a component index. Type a
-            component name to fetch it directly from{" "}
-            <a
-              href={library.homepage}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "var(--accent-violet)" }}
-              className="underline"
-            >
-              {library.name}
-            </a>
-            .
+            No index available for this registry. Type a component name to
+            resolve it directly via shadcn.
           </p>
           <div className="flex gap-2">
             <input
@@ -839,20 +727,9 @@ function ComponentBrowser({
               disabled={isFetching !== null || !search.trim()}
               className="btn-accent text-xs px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
             >
-              {isFetching ? "Fetching..." : "Fetch"}
+              {isFetching ? "Resolving..." : "Resolve"}
             </button>
           </div>
-        </div>
-      )}
-
-      {!loading && indexAvailable && components.length === 0 && (
-        <div
-          className="text-xs text-center py-6"
-          style={{ color: "var(--text-muted)" }}
-        >
-          {searchTerm
-            ? `No components matching "${searchTerm}"`
-            : "No components found in this registry."}
         </div>
       )}
 
@@ -886,7 +763,7 @@ function ComponentBrowser({
               >
                 {isCurrentlyFetching ? (
                   <span style={{ color: "var(--accent-violet)" }}>
-                    fetching...
+                    resolving...
                   </span>
                 ) : (
                   <>
@@ -911,8 +788,7 @@ function ComponentBrowser({
           className="text-xs"
           style={{ color: "var(--text-muted)" }}
         >
-          Components are compiled at runtime. Those with unsupported
-          dependencies may show compilation errors.
+          Dependencies resolved automatically via shadcn registry API.
         </p>
       )}
     </>

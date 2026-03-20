@@ -34,6 +34,7 @@ export interface CompileResult {
   ok: true;
   component: React.ComponentType<Record<string, unknown>>;
   exportName: string;
+  moduleExports: Record<string, unknown>;
 }
 
 export interface CompileError {
@@ -92,17 +93,26 @@ function resolveModule(
     if (runtimeModules[specifier]) {
       return runtimeModules[specifier];
     }
-    const shortName = specifier
-      .replace(/^@\/components\/ui\//, "")
+
+    const aliased = specifier
+      .replace(/^@\/components\//, "")
+      .replace(/^@\//, "")
       .replace(/^\.\//, "");
-    if (runtimeModules[shortName]) {
-      return runtimeModules[shortName];
+    if (runtimeModules[aliased]) {
+      return runtimeModules[aliased];
     }
+
+    if (specifier.startsWith("@/components/ui/")) {
+      const uiPath = "ui/" + specifier.slice("@/components/ui/".length);
+      if (runtimeModules[uiPath]) {
+        return runtimeModules[uiPath];
+      }
+    }
+
     for (const [key, mod] of Object.entries(runtimeModules)) {
-      if (
-        specifier.endsWith("/" + key) ||
-        specifier === "@/components/ui/" + key
-      ) {
+      const keyBase = key.split("/").pop()!;
+      const specBase = specifier.split("/").pop()!;
+      if (keyBase === specBase && key.includes("ui/")) {
         return mod;
       }
     }
@@ -181,7 +191,7 @@ ${wrappedCode}
 
     const composed = tryComposeRadixComponent(name, moduleExports);
     if (composed) {
-      return { ok: true, component: composed.component, exportName: composed.exportName };
+      return { ok: true, component: composed.component, exportName: composed.exportName, moduleExports };
     }
 
     const slotName = resolveComponentSlotName(name);
@@ -210,7 +220,7 @@ ${wrappedCode}
       };
     }
 
-    return { ok: true, component, exportName: resolvedExportName };
+    return { ok: true, component, exportName: resolvedExportName, moduleExports };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown compilation error";
     return { ok: false, error: message };
@@ -377,12 +387,14 @@ export function compileComponents(
       const result = compileComponent(name, source, compiledModules);
       if (result.ok) {
         components[result.exportName] = result.component;
-        const mod = { [result.exportName]: result.component, __esModule: true };
+        const mod = result.moduleExports ?? { [result.exportName]: result.component, __esModule: true };
         compiledModules[name] = mod;
-        const baseName = name.replace(/^8bit-/, "").replace(/^retro-/, "").replace(/^brutal-/, "").replace(/^neo-/, "");
-        if (baseName !== name) {
+
+        const baseName = name.split("/").pop()!;
+        if (baseName !== name && !compiledModules[baseName]) {
           compiledModules[baseName] = mod;
         }
+
         compiled.add(name);
         remaining.delete(name);
         progress = true;

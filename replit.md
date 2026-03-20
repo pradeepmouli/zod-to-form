@@ -55,7 +55,7 @@ Interactive browser-based playground where developers write Zod v4 schemas in a 
 ### Features
 - **Live editing**: Write Zod schemas → form updates in real-time (300ms debounce)
 - **Component maps**: Switch between Default and shadcn/ui component maps
-- **Runtime component compilation**: Fetch real shadcn/ui components from the registry, compile them at runtime (Sucrase + module sandbox), and use them in the live preview
+- **Runtime component compilation**: Import components from 150+ shadcn-compatible registries via shadcn's own registry API (`resolveRegistryItems`), compile at runtime (Sucrase + module sandbox), and use them in the live preview
 - **Code tab**: Context-aware code generation — plain HTML+RHF when using Default map, ZodForm-based with custom component imports when using shadcn/custom components
 - **IR Inspector**: Tree view of generated FormField[] intermediate representation
 - **Examples gallery**: 7 curated example schemas (basic, advanced, patterns)
@@ -73,6 +73,9 @@ Interactive browser-based playground where developers write Zod v4 schemas in a 
 - **CSS**: Custom properties in globals.css, Tailwind CSS 4 utilities, `@theme` block with shadcn/ui color tokens (input, ring, muted-foreground, destructive, etc.)
 
 ### Architecture
+- **Full architecture doc**: See `apps/playground/ARCHITECTURE.md`
+- **Server-side registry plugin** (Vite middleware): Proxies to shadcn's Node.js registry API (`resolveRegistryItems`, `getRegistries`, `searchRegistries`) — handles dependency resolution, theming, CSS vars
+- **API endpoints**: `/api/shadcn/registries`, `/api/shadcn/search`, `/api/shadcn/resolve`
 - Web Worker evaluation pipeline: transpile (Sucrase) → evaluate (sandboxed `new Function()`) → walkSchema → FormField[]
 - Import rejection in both transpile and evaluate stages
 - Auto-return wrapping for last expression in user code
@@ -83,7 +86,7 @@ Interactive browser-based playground where developers write Zod v4 schemas in a 
 ### Bundled Radix UI packages (for runtime component compilation)
 - `@radix-ui/react-checkbox`, `@radix-ui/react-switch`, `@radix-ui/react-select`
 - `@radix-ui/react-label`, `@radix-ui/react-slot`, `@radix-ui/react-radio-group`
-- Also bundled: `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`
+- Also bundled: `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`, `shadcn` (registry API)
 
 ## Notes
 
