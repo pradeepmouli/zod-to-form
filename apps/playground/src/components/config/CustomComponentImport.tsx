@@ -3,7 +3,7 @@ import { useState } from "react";
 const SHADCN_REGISTRY_BASE = "https://ui.shadcn.com/r";
 const SHADCN_DOCS_URL = "https://ui.shadcn.com/docs/directory";
 
-const COMMON_COMPONENTS = [
+const SUPPORTED_COMPONENTS = [
   "input",
   "textarea",
   "select",
@@ -12,6 +12,9 @@ const COMMON_COMPONENTS = [
   "label",
   "button",
   "radio-group",
+];
+
+const OTHER_COMPONENTS = [
   "slider",
   "calendar",
   "popover",
@@ -53,6 +56,7 @@ interface CustomComponentImportProps {
   onClose: () => void;
   onImport: (components: Record<string, string>) => void;
   onSwitchToShadcn?: () => void;
+  compilationErrors?: Record<string, string>;
 }
 
 export function CustomComponentImport({
@@ -60,6 +64,7 @@ export function CustomComponentImport({
   onClose,
   onImport,
   onSwitchToShadcn,
+  compilationErrors = {},
 }: CustomComponentImportProps) {
   const [customName, setCustomName] = useState("");
   const [isFetching, setIsFetching] = useState(false);
@@ -68,6 +73,8 @@ export function CustomComponentImport({
   const [expandedSource, setExpandedSource] = useState<string | null>(null);
 
   if (!isOpen) return null;
+
+  const allComponents = [...SUPPORTED_COMPONENTS, ...OTHER_COMPONENTS];
 
   const fetchComponent = async (name: string) => {
     const normalized = name.trim().toLowerCase();
@@ -84,7 +91,12 @@ export function CustomComponentImport({
     setError(null);
 
     try {
-      const res = await fetch(`${SHADCN_REGISTRY_BASE}/${normalized}.json`);
+      let res = await fetch(
+        `${SHADCN_REGISTRY_BASE}/styles/new-york/${normalized}.json`,
+      );
+      if (!res.ok) {
+        res = await fetch(`${SHADCN_REGISTRY_BASE}/${normalized}.json`);
+      }
       if (!res.ok) {
         setError(
           `Component "${normalized}" not found in the shadcn registry. Check the name at ${SHADCN_DOCS_URL}`,
@@ -96,7 +108,9 @@ export function CustomComponentImport({
       const data: RegistryItem = await res.json();
       const mainFile = data.files?.[0];
       if (!mainFile?.content) {
-        setError(`Component "${normalized}" has no source code in the registry`);
+        setError(
+          `Component "${normalized}" has no source code in the registry`,
+        );
         setIsFetching(false);
         return;
       }
@@ -119,7 +133,9 @@ export function CustomComponentImport({
       ]);
       setCustomName("");
     } catch {
-      setError("Failed to fetch from the shadcn registry. Check your connection.");
+      setError(
+        "Failed to fetch from the shadcn registry. Check your connection.",
+      );
     } finally {
       setIsFetching(false);
     }
@@ -137,7 +153,7 @@ export function CustomComponentImport({
     }
     const components: Record<string, string> = {};
     for (const comp of fetched) {
-      components[comp.title] = comp.code;
+      components[comp.name] = comp.code;
     }
     onImport(components);
     if (onSwitchToShadcn) {
@@ -148,6 +164,10 @@ export function CustomComponentImport({
     setError(null);
     onClose();
   };
+
+  const compiledCount = Object.keys(compilationErrors).length > 0
+    ? fetched.filter((c) => !compilationErrors[c.name]).length
+    : 0;
 
   return (
     <div
@@ -161,7 +181,10 @@ export function CustomComponentImport({
           className="flex items-center justify-between p-4"
           style={{ borderBottom: "1px solid var(--border-subtle)" }}
         >
-          <h2 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
+          <h2
+            className="text-sm font-bold"
+            style={{ color: "var(--text-primary)" }}
+          >
             Import shadcn/ui Components
           </h2>
           <button
@@ -181,20 +204,8 @@ export function CustomComponentImport({
         </div>
 
         <div className="p-4 space-y-4 overflow-auto">
-
-          <div
-            className="glass-panel text-xs p-2.5"
-            style={{
-              color: "rgb(251, 191, 36)",
-              background: "rgba(251, 191, 36, 0.06)",
-              border: "1px solid rgba(251, 191, 36, 0.15)",
-            }}
-          >
-            Component source browsing only — imported components are saved for reference but not yet compiled into the live preview. Runtime compilation is coming soon.
-          </div>
-
           <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-            Browse components from the{" "}
+            Fetch real{" "}
             <a
               href={SHADCN_DOCS_URL}
               target="_blank"
@@ -202,27 +213,55 @@ export function CustomComponentImport({
               style={{ color: "var(--accent-violet)" }}
               className="underline"
             >
-              shadcn/ui registry
-            </a>
-            . Fetched source code is saved for reference. To use shadcn
-            components in the preview, select the &ldquo;shadcn&rdquo; component map from the header dropdown.
+              shadcn/ui
+            </a>{" "}
+            components from the registry. They&apos;re compiled at runtime and
+            used in the live preview. Components with supported dependencies
+            (Radix UI, Lucide icons, CVA) work out of the box.
           </p>
 
           <div>
-            <label className="text-xs block mb-1.5" style={{ color: "var(--text-secondary)" }}>
-              Quick Add
+            <label
+              className="text-xs block mb-1.5"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Supported (Radix deps bundled)
             </label>
             <div className="flex flex-wrap gap-1.5">
-              {COMMON_COMPONENTS.filter(
+              {SUPPORTED_COMPONENTS.filter(
+                (c) => !fetched.some((f) => f.name === c),
+              ).map((name) => (
+                <button
+                  key={name}
+                  onClick={() => fetchComponent(name)}
+                  disabled={isFetching}
+                  className="btn-glass text-xs px-2.5 py-1 disabled:opacity-50"
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label
+              className="text-xs block mb-1.5"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Other (may need missing deps)
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {OTHER_COMPONENTS.filter(
                 (c) => !fetched.some((f) => f.name === c),
               )
-                .slice(0, 12)
+                .slice(0, 8)
                 .map((name) => (
                   <button
                     key={name}
                     onClick={() => fetchComponent(name)}
                     disabled={isFetching}
                     className="btn-glass text-xs px-2.5 py-1 disabled:opacity-50"
+                    style={{ opacity: 0.7 }}
                   >
                     {name}
                   </button>
@@ -265,75 +304,100 @@ export function CustomComponentImport({
           )}
 
           {fetched.length > 0 && (
-            <div className="pt-4 space-y-2" style={{ borderTop: "1px solid var(--border-subtle)" }}>
-              <h3 className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
+            <div
+              className="pt-4 space-y-2"
+              style={{ borderTop: "1px solid var(--border-subtle)" }}
+            >
+              <h3
+                className="text-xs font-medium"
+                style={{ color: "var(--text-secondary)" }}
+              >
                 Fetched Components ({fetched.length})
               </h3>
-              {fetched.map((comp) => (
-                <div
-                  key={comp.name}
-                  className="rounded-lg overflow-hidden"
-                  style={{
-                    background: "rgba(15, 20, 32, 0.6)",
-                    border: "1px solid var(--border-subtle)",
-                  }}
-                >
-                  <div className="flex items-center justify-between px-3 py-2.5">
-                    <div className="min-w-0 flex items-center gap-2">
-                      <span
-                        className="text-sm"
-                        style={{ fontFamily: "var(--font-mono)", color: "var(--text-primary)" }}
-                      >
-                        {comp.name}
-                      </span>
-                      {comp.dependencies.length > 0 && (
-                        <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                          deps: {comp.dependencies.join(", ")}
+              {fetched.map((comp) => {
+                const compError = compilationErrors[comp.name];
+                return (
+                  <div
+                    key={comp.name}
+                    className="rounded-lg overflow-hidden"
+                    style={{
+                      background: "rgba(15, 20, 32, 0.6)",
+                      border: compError
+                        ? "1px solid rgba(239, 68, 68, 0.3)"
+                        : "1px solid var(--border-subtle)",
+                    }}
+                  >
+                    <div className="flex items-center justify-between px-3 py-2.5">
+                      <div className="min-w-0 flex items-center gap-2">
+                        <span
+                          className="text-sm"
+                          style={{
+                            fontFamily: "var(--font-mono)",
+                            color: "var(--text-primary)",
+                          }}
+                        >
+                          {comp.name}
                         </span>
-                      )}
+                        {comp.dependencies.length > 0 && (
+                          <span
+                            className="text-xs"
+                            style={{ color: "var(--text-muted)" }}
+                          >
+                            deps: {comp.dependencies.join(", ")}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 ml-2 shrink-0">
+                        <button
+                          onClick={() =>
+                            setExpandedSource(
+                              expandedSource === comp.name ? null : comp.name,
+                            )
+                          }
+                          className="text-xs transition-colors"
+                          style={{ color: "var(--accent-violet)" }}
+                        >
+                          {expandedSource === comp.name ? "Hide" : "Source"}
+                        </button>
+                        <button
+                          onClick={() => handleRemove(comp.name)}
+                          className="text-xs transition-colors"
+                          style={{ color: "rgb(248, 113, 113)" }}
+                          aria-label={`Remove ${comp.name}`}
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 ml-2 shrink-0">
-                      <button
-                        onClick={() =>
-                          setExpandedSource(
-                            expandedSource === comp.name ? null : comp.name,
-                          )
-                        }
-                        className="text-xs transition-colors"
-                        style={{ color: "var(--accent-violet)" }}
-                      >
-                        {expandedSource === comp.name ? "Hide" : "Source"}
-                      </button>
-                      <button
-                        onClick={() => handleRemove(comp.name)}
-                        className="text-xs transition-colors"
+                    {compError && (
+                      <div
+                        className="px-3 pb-2 text-xs"
                         style={{ color: "rgb(248, 113, 113)" }}
-                        aria-label={`Remove ${comp.name}`}
                       >
-                        Remove
-                      </button>
-                    </div>
+                        Compilation failed: {compError}
+                      </div>
+                    )}
+                    {expandedSource === comp.name && (
+                      <pre
+                        className="px-3 pb-3 text-xs overflow-auto max-h-48"
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          color: "var(--text-secondary)",
+                          borderTop: "1px solid var(--border-subtle)",
+                        }}
+                      >
+                        <code>{comp.code}</code>
+                      </pre>
+                    )}
                   </div>
-                  {expandedSource === comp.name && (
-                    <pre
-                      className="px-3 pb-3 text-xs overflow-auto max-h-48"
-                      style={{
-                        fontFamily: "var(--font-mono)",
-                        color: "var(--text-secondary)",
-                        borderTop: "1px solid var(--border-subtle)",
-                      }}
-                    >
-                      <code>{comp.code}</code>
-                    </pre>
-                  )}
-                </div>
-              ))}
+                );
+              })}
               <button
                 onClick={handleImport}
                 className="btn-accent w-full text-xs px-3 py-2.5 rounded-lg font-medium"
               >
-                Import {fetched.length} Component
-                {fetched.length > 1 ? "s" : ""} & Switch to shadcn
+                Compile & Import {fetched.length} Component
+                {fetched.length > 1 ? "s" : ""}
               </button>
             </div>
           )}

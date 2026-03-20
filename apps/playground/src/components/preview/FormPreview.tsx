@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from "react";
+import type { ComponentType } from "react";
 import type { FormField } from "@zod-to-form/core";
 import { ZodForm, defaultComponentMap, shadcnComponentMap } from "@zod-to-form/react";
 import type {
@@ -18,6 +19,7 @@ interface FormPreviewProps {
   submitResult: SubmitResult | null;
   onSubmitResult: (result: SubmitResult) => void;
   editorContent: string;
+  compiledComponents?: Record<string, ComponentType<Record<string, unknown>>>;
 }
 
 export function FormPreview({
@@ -28,13 +30,20 @@ export function FormPreview({
   submitResult,
   onSubmitResult,
   editorContent,
+  compiledComponents,
 }: FormPreviewProps) {
   const components = useMemo(
-    () =>
-      componentMap === "shadcn"
-        ? (shadcnComponentMap as unknown as typeof defaultComponentMap)
-        : defaultComponentMap,
-    [componentMap],
+    () => {
+      const base =
+        componentMap === "shadcn"
+          ? (shadcnComponentMap as unknown as typeof defaultComponentMap)
+          : defaultComponentMap;
+      if (!compiledComponents || Object.keys(compiledComponents).length === 0) {
+        return base;
+      }
+      return { ...base, ...compiledComponents } as typeof defaultComponentMap;
+    },
+    [componentMap, compiledComponents],
   );
 
   const handleSubmit = useCallback(

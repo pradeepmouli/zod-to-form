@@ -1,4 +1,5 @@
-import { useState, useRef, lazy, Suspense } from "react";
+import { useState, useRef, useMemo, useEffect, useCallback, lazy, Suspense } from "react";
+import type { ComponentType } from "react";
 import { usePlaygroundState } from "./hooks/usePlaygroundState.ts";
 import { useDebouncedEval } from "./hooks/useDebouncedEval.ts";
 import { Header } from "./components/layout/Header.tsx";
@@ -7,6 +8,7 @@ import { FormPreview } from "./components/preview/FormPreview.tsx";
 import { CodeOutput } from "./components/preview/CodeOutput.tsx";
 import { IRInspector } from "./components/inspect/IRInspector.tsx";
 import { STARTER_SCHEMA } from "./components/examples/starter.ts";
+import { compileComponents } from "./lib/component-compiler.ts";
 
 const SchemaEditor = lazy(() =>
   import("./components/editor/SchemaEditor.tsx").then((m) => ({
@@ -62,7 +64,21 @@ export function App() {
   const [examplesOpen, setExamplesOpen] = useState(false);
   const [configOpen, setConfigOpen] = useState(false);
   const [customImportOpen, setCustomImportOpen] = useState(false);
+  const [compilationErrors, setCompilationErrors] = useState<Record<string, string>>({});
   const initialContent = useRef(state.editorContent);
+
+  const compilationResult = useMemo(() => {
+    if (!state.customComponents || Object.keys(state.customComponents).length === 0) {
+      return { components: {} as Record<string, ComponentType<Record<string, unknown>>>, errors: {} as Record<string, string> };
+    }
+    return compileComponents(state.customComponents);
+  }, [state.customComponents]);
+
+  const compiledComponents = compilationResult.components;
+
+  useEffect(() => {
+    setCompilationErrors(compilationResult.errors);
+  }, [compilationResult.errors]);
 
   const displayFields = fields ?? state.lastValidFields;
   const hasUnsavedChanges =
@@ -74,14 +90,15 @@ export function App() {
     initialContent.current = source;
   };
 
-  const handleCustomComponentImport = (
-    components: Record<string, string>,
-  ) => {
-    setCustomComponents({
-      ...state.customComponents,
-      ...components,
-    });
-  };
+  const handleCustomComponentImport = useCallback(
+    (components: Record<string, string>) => {
+      setCustomComponents({
+        ...state.customComponents,
+        ...components,
+      });
+    },
+    [state.customComponents, setCustomComponents],
+  );
 
   return (
     <div
@@ -115,6 +132,7 @@ export function App() {
             submitResult={state.submitResult}
             onSubmitResult={setSubmitResult}
             editorContent={state.editorContent}
+            compiledComponents={compiledComponents}
           />
         }
         codeOutput={
@@ -156,6 +174,7 @@ export function App() {
             onClose={() => setCustomImportOpen(false)}
             onImport={handleCustomComponentImport}
             onSwitchToShadcn={() => setComponentMap("shadcn")}
+            compilationErrors={compilationErrors}
           />
         </Suspense>
       )}

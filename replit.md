@@ -20,7 +20,7 @@ apps/
 - **Language:** TypeScript (strict, ESM)
 - **Package manager:** pnpm 10.26.1 (workspaces)
 - **Build tool:** `tsgo` (`@typescript/native-preview`) for packages; Vite for playground
-- **Testing:** Vitest (349 tests across 41 test files)
+- **Testing:** Vitest (357 tests across 42 test files)
 - **Linting/Formatting:** oxlint + oxfmt
 - **Playground:** React 19, CodeMirror 6, Tailwind CSS 4, Sucrase, lz-string
 
@@ -40,7 +40,7 @@ pnpm run lint         # Lint with oxlint
 ```bash
 pnpm --filter @zod-to-form/playground dev      # Dev server on port 5000
 pnpm --filter @zod-to-form/playground build    # Production build (static SPA)
-pnpm --filter @zod-to-form/playground test     # Unit tests (55 tests)
+pnpm --filter @zod-to-form/playground test     # Unit tests (62 tests)
 ```
 
 ## Workflows
@@ -55,6 +55,7 @@ Interactive browser-based playground where developers write Zod v4 schemas in a 
 ### Features
 - **Live editing**: Write Zod schemas → form updates in real-time (300ms debounce)
 - **Component maps**: Switch between Default and shadcn/ui component maps
+- **Runtime component compilation**: Fetch real shadcn/ui components from the registry, compile them at runtime (Sucrase + module sandbox), and use them in the live preview
 - **Code tab**: Generated React + React Hook Form JSX from CLI codegen (browser-ported)
 - **IR Inspector**: Tree view of generated FormField[] intermediate representation
 - **Examples gallery**: 7 curated example schemas (basic, advanced, patterns)
@@ -65,7 +66,9 @@ Interactive browser-based playground where developers write Zod v4 schemas in a 
 - **localStorage persistence**: Editor state persists across sessions
 
 ### Design
-- **Color palette**: Navy theme (`--bg-base: #121821`, `--bg-surface: #181F2A`, `--bg-elevated: #1E2636`, `--accent-violet: #8B5CF6`)
+- **Color palette**: Navy glassmorphism theme (`--bg-base: #121821`, `--bg-surface: #181F2A`, `--bg-elevated: #1E2636`, `--accent-violet: #F97316` orange)
+- **Branding**: zod-to-form logo (pink polygon + form card), Outfit font for title, "zod" teal + "form" pink
+- **Glass classes**: `.glass-surface`, `.glass-panel`, `.btn-glass`, `.btn-accent`, `.input-glass`, `.modal-panel`
 - **Typography**: DM Sans (UI text) + JetBrains Mono (code/editor) via Google Fonts
 - **CSS**: Custom properties in globals.css, Tailwind CSS 4 utilities
 
@@ -74,6 +77,13 @@ Interactive browser-based playground where developers write Zod v4 schemas in a 
 - Import rejection in both transpile and evaluate stages
 - Auto-return wrapping for last expression in user code
 - Controlled scope: `z`, `zod`, `core` (defineConfig, registerDeep, registerFlat)
+- Sandbox globals shadowed: `self`, `globalThis`, `fetch`, `XMLHttpRequest`, `navigator`, `WebSocket`, `EventSource`
+- Component compiler: Sucrase (TSX→CJS) + module map (React, Radix UI, CVA, Lucide, cn) + `new Function` sandbox
+
+### Bundled Radix UI packages (for runtime component compilation)
+- `@radix-ui/react-checkbox`, `@radix-ui/react-switch`, `@radix-ui/react-select`
+- `@radix-ui/react-label`, `@radix-ui/react-slot`, `@radix-ui/react-radio-group`
+- Also bundled: `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`
 
 ## Notes
 

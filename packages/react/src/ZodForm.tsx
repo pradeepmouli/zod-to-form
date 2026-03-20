@@ -12,7 +12,7 @@ import { useZodForm } from './useZodForm.js';
 type ZodFormProps<TSchema extends ZodObject> = {
   schema: TSchema;
   onSubmit?: (data: output<TSchema>) => unknown;
-  onInvalid?: (errors: Record<string, { message?: string }>) => void;
+  onInvalid?: (errors: Record<string, unknown>) => void;
   onValueChange?: (data: output<TSchema>) => void;
   mode?: 'onSubmit' | 'onChange' | 'onBlur';
   defaultValues?: Partial<output<TSchema>>;
