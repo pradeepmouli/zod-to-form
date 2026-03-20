@@ -41,21 +41,35 @@ export function Header({
       role="banner"
     >
       <div className="flex items-center gap-3">
+        <img
+          src="/logo.png"
+          alt="zod-to-form logo"
+          style={{ width: 28, height: 28 }}
+        />
         <h1
-          className="text-base font-bold tracking-tight"
+          className="text-lg tracking-tight"
           style={{
-            background: "var(--accent-gradient)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
+            fontFamily: "'Outfit', sans-serif",
+            fontWeight: 700,
+            letterSpacing: "-0.5px",
           }}
         >
-          Z2F Studio
+          <span style={{ color: "#14B8A6" }}>zod</span>
+          <span style={{ color: "var(--text-secondary)", fontWeight: 500 }}>-to-</span>
+          <span style={{ color: "#EC4899" }}>form</span>
         </h1>
         <span
           className="text-xs hidden sm:inline"
-          style={{ color: "var(--text-muted)" }}
+          style={{
+            color: "var(--text-muted)",
+            fontFamily: "'Outfit', sans-serif",
+            fontWeight: 500,
+            letterSpacing: "0.5px",
+            textTransform: "uppercase",
+            opacity: 0.7,
+          }}
         >
-          Interactive Playground
+          Studio
         </span>
       </div>
 
