@@ -20,7 +20,13 @@ interface ErrorDisplayProps {
 
 export function ErrorDisplay({ error }: ErrorDisplayProps) {
   return (
-    <div className="rounded-lg border border-red-500/20 bg-red-950/30 p-4">
+    <div
+      className="rounded-lg p-4"
+      style={{
+        background: "rgba(239, 68, 68, 0.08)",
+        border: "1px solid rgba(239, 68, 68, 0.2)",
+      }}
+    >
       <div className="flex items-center gap-2 mb-2">
         <span
           className={`text-xs font-medium px-2 py-0.5 rounded border ${TYPE_COLORS[error.type]}`}
@@ -28,13 +34,16 @@ export function ErrorDisplay({ error }: ErrorDisplayProps) {
           {TYPE_LABELS[error.type]}
         </span>
         {error.line != null && (
-          <span className="text-xs text-zinc-500">
+          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
             Line {error.line}
             {error.column != null ? `:${error.column}` : ""}
           </span>
         )}
       </div>
-      <pre className="text-sm text-red-300 whitespace-pre-wrap font-mono">
+      <pre
+        className="text-sm text-red-300 whitespace-pre-wrap"
+        style={{ fontFamily: "var(--font-mono)" }}
+      >
         {error.message}
       </pre>
     </div>

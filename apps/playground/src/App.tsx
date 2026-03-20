@@ -4,6 +4,7 @@ import { useDebouncedEval } from "./hooks/useDebouncedEval.ts";
 import { Header } from "./components/layout/Header.tsx";
 import { PlaygroundShell } from "./components/layout/PlaygroundShell.tsx";
 import { FormPreview } from "./components/preview/FormPreview.tsx";
+import { CodeOutput } from "./components/preview/CodeOutput.tsx";
 import { IRInspector } from "./components/inspect/IRInspector.tsx";
 import { STARTER_SCHEMA } from "./components/examples/starter.ts";
 
@@ -33,7 +34,10 @@ const CustomComponentImport = lazy(() =>
 
 function EditorFallback() {
   return (
-    <div className="h-full flex items-center justify-center text-zinc-500 text-sm">
+    <div
+      className="h-full flex items-center justify-center text-sm"
+      style={{ color: "var(--text-muted)" }}
+    >
       Loading editor...
     </div>
   );
@@ -80,7 +84,10 @@ export function App() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-zinc-950 text-zinc-100">
+    <div
+      className="h-full flex flex-col"
+      style={{ background: "var(--bg-base)", color: "var(--text-primary)" }}
+    >
       <Header
         componentMap={state.componentMap}
         onComponentMapChange={setComponentMap}
@@ -107,6 +114,12 @@ export function App() {
             componentMap={state.componentMap}
             submitResult={state.submitResult}
             onSubmitResult={setSubmitResult}
+            editorContent={state.editorContent}
+          />
+        }
+        codeOutput={
+          <CodeOutput
+            fields={displayFields}
             editorContent={state.editorContent}
           />
         }

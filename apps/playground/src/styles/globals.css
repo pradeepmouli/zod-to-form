@@ -1,17 +1,65 @@
 @import "tailwindcss";
 
+:root {
+  --bg-base: #121821;
+  --bg-surface: #181F2A;
+  --bg-elevated: #1E2636;
+  --bg-hover: #232C3A;
+  --border-subtle: #1F2733;
+  --border-default: #2A3545;
+  --text-primary: #DDE0E4;
+  --text-secondary: #7C8A9C;
+  --text-muted: #4A5567;
+  --accent-violet: #8B5CF6;
+  --accent-violet-hover: #7C3AED;
+  --accent-violet-muted: rgba(139, 92, 246, 0.15);
+  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+  --radius: 9px;
+}
+
 html,
 body,
 #root {
   height: 100%;
   margin: 0;
   padding: 0;
+  font-family: var(--font-sans);
+  background: var(--bg-base);
+  color: var(--text-primary);
 }
 
 .cm-editor {
   height: 100%;
+  font-family: var(--font-mono) !important;
 }
 
 .cm-scroller {
   overflow: auto;
+}
+
+.cm-editor .cm-content {
+  font-family: var(--font-mono) !important;
+}
+
+::selection {
+  background: var(--accent-violet-muted);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }

@@ -1,7 +1,6 @@
 import { useCallback, useMemo } from "react";
 import type { FormField } from "@zod-to-form/core";
 import { ZodForm, defaultComponentMap, shadcnComponentMap } from "@zod-to-form/react";
-import * as z from "zod";
 import type {
   ComponentMapType,
   EvaluationError,
@@ -9,8 +8,7 @@ import type {
 } from "../../types/playground.ts";
 import { ErrorDisplay } from "./ErrorDisplay.tsx";
 import { ResultsPanel } from "./ResultsPanel.tsx";
-import { evaluate } from "../../worker/evaluate.ts";
-import { transpile } from "../../worker/transpile.ts";
+import { useSchemaFromSource } from "../../hooks/useSchemaFromSource.ts";
 
 interface FormPreviewProps {
   fields: FormField[] | null;
@@ -51,19 +49,19 @@ export function FormPreview({
     [onSubmitResult],
   );
 
-  const schema = useMemo(() => {
-    if (!fields || fields.length === 0) return null;
-    const transpileResult = transpile(editorContent);
-    if (!transpileResult.ok) return null;
-    const evalResult = evaluate(transpileResult.code);
-    if (!evalResult.ok) return null;
-    return evalResult.schema;
-  }, [editorContent, fields]);
+  const schema = useSchemaFromSource(editorContent, fields);
 
   return (
     <div className="h-full flex flex-col overflow-auto">
       {isEvaluating && (
-        <div className="px-4 py-2 bg-blue-950/30 border-b border-blue-500/20 text-xs text-blue-400">
+        <div
+          className="px-4 py-2 text-xs"
+          style={{
+            background: "var(--accent-violet-muted)",
+            borderBottom: "1px solid var(--border-subtle)",
+            color: "var(--accent-violet)",
+          }}
+        >
           Evaluating...
         </div>
       )}
@@ -77,14 +75,18 @@ export function FormPreview({
       {fields && fields.length > 0 && schema ? (
         <div className="flex-1 p-4 overflow-auto">
           <ZodForm
-            schema={schema as z.ZodObject<z.ZodRawShape>}
+            schema={schema}
             components={components}
             onSubmit={handleSubmit}
             className="space-y-4"
           >
             <button
               type="submit"
-              className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-md transition-colors"
+              className="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+              style={{
+                background: "var(--accent-violet)",
+                color: "#fff",
+              }}
             >
               Submit
             </button>
@@ -92,7 +94,10 @@ export function FormPreview({
         </div>
       ) : (
         !error && (
-          <div className="flex-1 flex items-center justify-center text-zinc-500 text-sm">
+          <div
+            className="flex-1 flex items-center justify-center text-sm"
+            style={{ color: "var(--text-muted)" }}
+          >
             Write a Zod schema to see a live form preview
           </div>
         )

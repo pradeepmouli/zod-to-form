@@ -31,7 +31,9 @@ export function decodeShareState(hash: string): ShareState | null {
     return {
       code,
       map: (mapParam === "shadcn" ? "shadcn" : "default") as ComponentMapType,
-      tab: (tabParam === "inspect" ? "inspect" : "preview") as ActiveTab,
+      tab: (tabParam === "inspect" || tabParam === "code"
+        ? tabParam
+        : "preview") as ActiveTab,
     };
   } catch {
     return null;

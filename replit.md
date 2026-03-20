@@ -20,7 +20,7 @@ apps/
 - **Language:** TypeScript (strict, ESM)
 - **Package manager:** pnpm 10.26.1 (workspaces)
 - **Build tool:** `tsgo` (`@typescript/native-preview`) for packages; Vite for playground
-- **Testing:** Vitest (320 tests across 38 test files)
+- **Testing:** Vitest (345 tests across 41 test files)
 - **Linting/Formatting:** oxlint + oxfmt
 - **Playground:** React 19, CodeMirror 6, Tailwind CSS 4, Sucrase, lz-string
 
@@ -40,7 +40,7 @@ pnpm run lint         # Lint with oxlint
 ```bash
 pnpm --filter @zod-to-form/playground dev      # Dev server on port 5000
 pnpm --filter @zod-to-form/playground build    # Production build (static SPA)
-pnpm --filter @zod-to-form/playground test     # Unit tests (30 tests)
+pnpm --filter @zod-to-form/playground test     # Unit tests (55 tests)
 ```
 
 ## Workflows
@@ -55,6 +55,7 @@ Interactive browser-based playground where developers write Zod v4 schemas in a 
 ### Features
 - **Live editing**: Write Zod schemas → form updates in real-time (300ms debounce)
 - **Component maps**: Switch between Default and shadcn/ui component maps
+- **Code tab**: Generated React + React Hook Form JSX from CLI codegen (browser-ported)
 - **IR Inspector**: Tree view of generated FormField[] intermediate representation
 - **Examples gallery**: 7 curated example schemas (basic, advanced, patterns)
 - **Config import/export**: Import/export z2f.config.json files
@@ -62,6 +63,11 @@ Interactive browser-based playground where developers write Zod v4 schemas in a 
 - **Responsive layout**: Split-pane on desktop, tabbed on mobile
 - **Form submission**: Submit forms and see validated data or errors
 - **localStorage persistence**: Editor state persists across sessions
+
+### Design
+- **Color palette**: Navy theme (`--bg-base: #121821`, `--bg-surface: #181F2A`, `--bg-elevated: #1E2636`, `--accent-violet: #8B5CF6`)
+- **Typography**: DM Sans (UI text) + JetBrains Mono (code/editor) via Google Fonts
+- **CSS**: Custom properties in globals.css, Tailwind CSS 4 utilities
 
 ### Architecture
 - Web Worker evaluation pipeline: transpile (Sucrase) → evaluate (sandboxed `new Function()`) → walkSchema → FormField[]

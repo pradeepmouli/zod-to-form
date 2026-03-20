@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ComponentMapType, PlaygroundConfig } from "../../types/playground.ts";
+import type { ComponentMapType } from "../../types/playground.ts";
 import { encodeShareState } from "../../lib/share.ts";
 
 interface HeaderProps {
@@ -29,17 +29,37 @@ export function Header({
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+    }).catch(() => {});
+  };
+
+  const btnClass =
+    "text-xs px-3 py-1.5 rounded-lg transition-colors";
+  const btnStyle = {
+    background: "var(--bg-elevated)",
+    color: "var(--text-secondary)",
+    border: "1px solid var(--border-subtle)",
   };
 
   return (
     <header
-      className="flex items-center justify-between px-4 py-2 bg-zinc-900 border-b border-zinc-800"
+      className="flex items-center justify-between px-4 py-2.5"
+      style={{
+        background: "var(--bg-surface)",
+        borderBottom: "1px solid var(--border-subtle)",
+      }}
       role="banner"
     >
-      <div className="flex items-center gap-2">
-        <h1 className="text-base font-bold text-violet-400">Z2F Studio</h1>
-        <span className="text-xs text-zinc-500 hidden sm:inline">
+      <div className="flex items-center gap-3">
+        <h1
+          className="text-base font-bold"
+          style={{ color: "var(--accent-violet)" }}
+        >
+          Z2F Studio
+        </h1>
+        <span
+          className="text-xs hidden sm:inline"
+          style={{ color: "var(--text-muted)" }}
+        >
           Interactive Playground
         </span>
       </div>
@@ -50,7 +70,12 @@ export function Header({
           onChange={(e) =>
             onComponentMapChange(e.target.value as ComponentMapType)
           }
-          className="text-xs bg-zinc-800 text-zinc-300 border border-zinc-700 rounded px-2 py-1 outline-none focus:border-violet-500"
+          className="text-xs rounded-lg px-2 py-1.5 outline-none"
+          style={{
+            background: "var(--bg-elevated)",
+            color: "var(--text-secondary)",
+            border: "1px solid var(--border-subtle)",
+          }}
           aria-label="Component map"
         >
           <option value="default">Default</option>
@@ -59,7 +84,8 @@ export function Header({
 
         <button
           onClick={onExamplesClick}
-          className="text-xs px-3 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 rounded transition-colors"
+          className={btnClass}
+          style={btnStyle}
           aria-label="Browse example schemas"
         >
           Examples
@@ -67,7 +93,8 @@ export function Header({
 
         <button
           onClick={onConfigClick}
-          className="text-xs px-3 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 rounded transition-colors"
+          className={btnClass}
+          style={btnStyle}
           aria-label="Import or export config"
         >
           Config
@@ -75,7 +102,8 @@ export function Header({
 
         <button
           onClick={onCustomImportClick}
-          className="text-xs px-3 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 rounded transition-colors"
+          className={btnClass}
+          style={btnStyle}
           aria-label="Import custom components"
         >
           Components{customComponentCount > 0 ? ` (${customComponentCount})` : ""}
@@ -83,7 +111,13 @@ export function Header({
 
         <button
           onClick={handleShare}
-          className="text-xs px-3 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 rounded transition-colors"
+          className={btnClass}
+          style={{
+            ...btnStyle,
+            ...(copied
+              ? { color: "var(--accent-violet)", borderColor: "var(--accent-violet)" }
+              : {}),
+          }}
           aria-label="Copy share URL to clipboard"
         >
           {copied ? "Copied!" : "Share"}

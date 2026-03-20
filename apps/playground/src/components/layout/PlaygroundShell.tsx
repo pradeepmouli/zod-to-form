@@ -6,16 +6,24 @@ interface PlaygroundShellProps {
   editor: ReactNode;
   preview: ReactNode;
   inspect: ReactNode;
+  codeOutput: ReactNode;
   activeTab: ActiveTab;
   activePane: ActivePane;
   onTabChange: (tab: ActiveTab) => void;
   onPaneChange: (pane: ActivePane) => void;
 }
 
+const TABS: { id: ActiveTab; label: string }[] = [
+  { id: "preview", label: "Preview" },
+  { id: "code", label: "Code" },
+  { id: "inspect", label: "Inspect" },
+];
+
 export function PlaygroundShell({
   editor,
   preview,
   inspect,
+  codeOutput,
   activeTab,
   activePane,
   onTabChange,
@@ -24,37 +32,50 @@ export function PlaygroundShell({
   const isWide = useMediaQuery("(min-width: 768px)");
 
   const tabBar = (
-    <div className="flex border-b border-zinc-800" role="tablist" aria-label="Output view">
-      <button
-        role="tab"
-        aria-selected={activeTab === "preview"}
-        onClick={() => onTabChange("preview")}
-        className={`px-4 py-2 text-xs font-medium transition-colors ${
-          activeTab === "preview"
-            ? "text-violet-400 border-b-2 border-violet-400"
-            : "text-zinc-500 hover:text-zinc-300"
-        }`}
-      >
-        Preview
-      </button>
-      <button
-        role="tab"
-        aria-selected={activeTab === "inspect"}
-        onClick={() => onTabChange("inspect")}
-        className={`px-4 py-2 text-xs font-medium transition-colors ${
-          activeTab === "inspect"
-            ? "text-violet-400 border-b-2 border-violet-400"
-            : "text-zinc-500 hover:text-zinc-300"
-        }`}
-      >
-        Inspect
-      </button>
+    <div
+      className="flex"
+      style={{ borderBottom: "1px solid var(--border-subtle)" }}
+      role="tablist"
+      aria-label="Output view"
+    >
+      {TABS.map((tab) => (
+        <button
+          key={tab.id}
+          role="tab"
+          aria-selected={activeTab === tab.id}
+          onClick={() => onTabChange(tab.id)}
+          className="px-4 py-2.5 text-xs font-medium transition-colors"
+          style={{
+            color:
+              activeTab === tab.id
+                ? "var(--accent-violet)"
+                : "var(--text-muted)",
+            borderBottom:
+              activeTab === tab.id
+                ? "2px solid var(--accent-violet)"
+                : "2px solid transparent",
+          }}
+        >
+          {tab.label}
+        </button>
+      ))}
     </div>
   );
 
+  const getTabContent = () => {
+    switch (activeTab) {
+      case "preview":
+        return preview;
+      case "code":
+        return codeOutput;
+      case "inspect":
+        return inspect;
+    }
+  };
+
   const tabContent = (
     <div className="flex-1 min-h-0 overflow-auto" role="tabpanel">
-      {activeTab === "preview" ? preview : inspect}
+      {getTabContent()}
     </div>
   );
 
@@ -62,7 +83,8 @@ export function PlaygroundShell({
     return (
       <div className="flex-1 grid grid-cols-2 min-h-0">
         <div
-          className="border-r border-zinc-800 min-h-0 overflow-hidden"
+          className="min-h-0 overflow-hidden"
+          style={{ borderRight: "1px solid var(--border-subtle)" }}
           role="region"
           aria-label="Schema editor"
         >
@@ -78,31 +100,33 @@ export function PlaygroundShell({
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      <div className="flex border-b border-zinc-800" role="tablist" aria-label="Pane selector">
-        <button
-          role="tab"
-          aria-selected={activePane === "editor"}
-          onClick={() => onPaneChange("editor")}
-          className={`flex-1 px-4 py-2 text-xs font-medium transition-colors ${
-            activePane === "editor"
-              ? "text-violet-400 border-b-2 border-violet-400"
-              : "text-zinc-500 hover:text-zinc-300"
-          }`}
-        >
-          Editor
-        </button>
-        <button
-          role="tab"
-          aria-selected={activePane === "preview"}
-          onClick={() => onPaneChange("preview")}
-          className={`flex-1 px-4 py-2 text-xs font-medium transition-colors ${
-            activePane === "preview"
-              ? "text-violet-400 border-b-2 border-violet-400"
-              : "text-zinc-500 hover:text-zinc-300"
-          }`}
-        >
-          Preview
-        </button>
+      <div
+        className="flex"
+        style={{ borderBottom: "1px solid var(--border-subtle)" }}
+        role="tablist"
+        aria-label="Pane selector"
+      >
+        {(["editor", "preview"] as const).map((pane) => (
+          <button
+            key={pane}
+            role="tab"
+            aria-selected={activePane === pane}
+            onClick={() => onPaneChange(pane)}
+            className="flex-1 px-4 py-2.5 text-xs font-medium transition-colors"
+            style={{
+              color:
+                activePane === pane
+                  ? "var(--accent-violet)"
+                  : "var(--text-muted)",
+              borderBottom:
+                activePane === pane
+                  ? "2px solid var(--accent-violet)"
+                  : "2px solid transparent",
+            }}
+          >
+            {pane === "editor" ? "Editor" : "Preview"}
+          </button>
+        ))}
       </div>
       <div className="flex-1 min-h-0 overflow-auto" role="tabpanel">
         {activePane === "editor" ? (

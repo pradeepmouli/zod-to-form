@@ -52,6 +52,11 @@ export function createEditorExtensions(
     EditorView.theme({
       "&": { height: "100%", fontSize: "14px" },
       ".cm-scroller": { overflow: "auto" },
+      ".cm-content": { fontFamily: "var(--font-mono)" },
+      ".cm-gutters": {
+        background: "var(--bg-surface)",
+        borderRight: "1px solid var(--border-subtle)",
+      },
     }),
   ];
 }

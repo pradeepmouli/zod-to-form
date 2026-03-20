@@ -56,25 +56,43 @@ export function ExampleGallery({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg w-full max-w-lg max-h-[80vh] flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b border-zinc-800">
-          <h2 className="text-sm font-bold text-zinc-100">Example Schemas</h2>
+      <div
+        className="w-full max-w-lg max-h-[80vh] flex flex-col"
+        style={{
+          background: "var(--bg-surface)",
+          border: "1px solid var(--border-subtle)",
+          borderRadius: "var(--radius)",
+        }}
+      >
+        <div
+          className="flex items-center justify-between p-4"
+          style={{ borderBottom: "1px solid var(--border-subtle)" }}
+        >
+          <h2 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
+            Example Schemas
+          </h2>
           <button
             onClick={onClose}
-            className="text-zinc-500 hover:text-zinc-300 text-lg leading-none"
+            className="text-lg leading-none transition-colors"
+            style={{ color: "var(--text-muted)" }}
             aria-label="Close"
           >
             &times;
           </button>
         </div>
 
-        <div className="p-4 border-b border-zinc-800">
+        <div className="p-4" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
           <input
             type="text"
             placeholder="Search examples..."
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="w-full px-3 py-1.5 text-sm bg-zinc-800 border border-zinc-700 rounded text-zinc-200 placeholder-zinc-500 outline-none focus:border-violet-500"
+            className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors"
+            style={{
+              background: "var(--bg-elevated)",
+              border: "1px solid var(--border-subtle)",
+              color: "var(--text-primary)",
+            }}
           />
         </div>
 
@@ -84,7 +102,10 @@ export function ExampleGallery({
             if (!items?.length) return null;
             return (
               <div key={cat}>
-                <h3 className="text-xs font-medium text-zinc-500 uppercase tracking-wide mb-2">
+                <h3
+                  className="text-xs font-medium uppercase tracking-wide mb-2"
+                  style={{ color: "var(--text-muted)" }}
+                >
                   {CATEGORY_LABELS[cat]}
                 </h3>
                 <div className="space-y-1">
@@ -92,12 +113,19 @@ export function ExampleGallery({
                     <button
                       key={ex.id}
                       onClick={() => handleSelect(ex.source)}
-                      className="w-full text-left px-3 py-2 rounded hover:bg-zinc-800 transition-colors"
+                      className="w-full text-left px-3 py-2 rounded-lg transition-colors"
+                      style={{ color: "var(--text-primary)" }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background = "var(--bg-hover)")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background = "transparent")
+                      }
                     >
-                      <div className="text-sm font-medium text-zinc-200">
+                      <div className="text-sm font-medium">
                         {ex.title}
                       </div>
-                      <div className="text-xs text-zinc-500">
+                      <div className="text-xs" style={{ color: "var(--text-muted)" }}>
                         {ex.description}
                       </div>
                     </button>
@@ -107,7 +135,10 @@ export function ExampleGallery({
             );
           })}
           {filtered.length === 0 && (
-            <p className="text-sm text-zinc-500 text-center py-4">
+            <p
+              className="text-sm text-center py-4"
+              style={{ color: "var(--text-muted)" }}
+            >
               No examples match your search
             </p>
           )}

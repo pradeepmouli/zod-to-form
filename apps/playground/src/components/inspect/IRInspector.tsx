@@ -14,25 +14,38 @@ function FieldNode({ field, depth }: { field: FormField; depth: number }) {
     <div>
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full text-left flex items-center gap-1 py-1 hover:bg-zinc-800/50 rounded px-1"
+        className="w-full text-left flex items-center gap-1 py-1 rounded px-1 transition-colors"
         style={{ paddingLeft: indent }}
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.background = "var(--bg-hover)")
+        }
+        onMouseLeave={(e) =>
+          (e.currentTarget.style.background = "transparent")
+        }
         aria-expanded={expanded}
       >
         {hasChildren && (
-          <span className="text-zinc-500 text-xs w-4 text-center">
+          <span className="text-xs w-4 text-center" style={{ color: "var(--text-muted)" }}>
             {expanded ? "▼" : "▶"}
           </span>
         )}
         {!hasChildren && <span className="w-4" />}
 
-        <span className="text-violet-400 text-sm font-mono">{field.key}</span>
-        <span className="text-zinc-600 text-xs ml-1">{field.component}</span>
+        <span
+          className="text-sm"
+          style={{ fontFamily: "var(--font-mono)", color: "var(--accent-violet)" }}
+        >
+          {field.key}
+        </span>
+        <span className="text-xs ml-1" style={{ color: "var(--text-muted)" }}>
+          {field.component}
+        </span>
 
         {field.required && (
           <span className="text-red-400 text-xs ml-1">*</span>
         )}
         {field.label && field.label !== field.key && (
-          <span className="text-zinc-500 text-xs ml-2 truncate">
+          <span className="text-xs ml-2 truncate" style={{ color: "var(--text-muted)" }}>
             "{field.label}"
           </span>
         )}
@@ -41,24 +54,29 @@ function FieldNode({ field, depth }: { field: FormField; depth: number }) {
       {expanded && (
         <div>
           <div
-            className="text-xs text-zinc-500 space-y-0.5 py-1"
-            style={{ paddingLeft: indent + 20 }}
+            className="text-xs space-y-0.5 py-1"
+            style={{ paddingLeft: indent + 20, color: "var(--text-muted)" }}
           >
             {field.description && (
               <div>
-                desc: <span className="text-zinc-400">{field.description}</span>
+                desc:{" "}
+                <span style={{ color: "var(--text-secondary)" }}>
+                  {field.description}
+                </span>
               </div>
             )}
             {field.placeholder && (
               <div>
                 placeholder:{" "}
-                <span className="text-zinc-400">{field.placeholder}</span>
+                <span style={{ color: "var(--text-secondary)" }}>
+                  {field.placeholder}
+                </span>
               </div>
             )}
             {field.defaultValue !== undefined && (
               <div>
                 default:{" "}
-                <span className="text-zinc-400">
+                <span style={{ color: "var(--text-secondary)" }}>
                   {JSON.stringify(field.defaultValue)}
                 </span>
               </div>
@@ -66,7 +84,7 @@ function FieldNode({ field, depth }: { field: FormField; depth: number }) {
             {field.constraints && Object.keys(field.constraints).length > 0 && (
               <div>
                 constraints:{" "}
-                <span className="text-zinc-400">
+                <span style={{ color: "var(--text-secondary)" }}>
                   {JSON.stringify(field.constraints)}
                 </span>
               </div>
@@ -74,7 +92,7 @@ function FieldNode({ field, depth }: { field: FormField; depth: number }) {
             {field.options && field.options.length > 0 && (
               <div>
                 options:{" "}
-                <span className="text-zinc-400">
+                <span style={{ color: "var(--text-secondary)" }}>
                   [{field.options.map((o) => `"${o.label}"`).join(", ")}]
                 </span>
               </div>
@@ -96,7 +114,10 @@ export function IRInspector({ fields }: IRInspectorProps) {
 
   if (!fields || fields.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center text-zinc-500 text-sm">
+      <div
+        className="h-full flex items-center justify-center text-sm"
+        style={{ color: "var(--text-muted)" }}
+      >
         No fields to inspect
       </div>
     );
@@ -104,23 +125,29 @@ export function IRInspector({ fields }: IRInspectorProps) {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800">
-        <span className="text-xs text-zinc-500">
+      <div
+        className="flex items-center justify-between px-4 py-2"
+        style={{ borderBottom: "1px solid var(--border-subtle)" }}
+      >
+        <span className="text-xs" style={{ color: "var(--text-muted)" }}>
           {fields.length} field{fields.length !== 1 ? "s" : ""}
         </span>
         <div className="flex gap-1">
-          <button
-            onClick={() => setViewMode("tree")}
-            className={`text-xs px-2 py-0.5 rounded ${viewMode === "tree" ? "bg-violet-600 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
-          >
-            Tree
-          </button>
-          <button
-            onClick={() => setViewMode("json")}
-            className={`text-xs px-2 py-0.5 rounded ${viewMode === "json" ? "bg-violet-600 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
-          >
-            JSON
-          </button>
+          {(["tree", "json"] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setViewMode(mode)}
+              className="text-xs px-2 py-0.5 rounded-md transition-colors"
+              style={{
+                background:
+                  viewMode === mode ? "var(--accent-violet)" : "transparent",
+                color:
+                  viewMode === mode ? "#fff" : "var(--text-muted)",
+              }}
+            >
+              {mode === "tree" ? "Tree" : "JSON"}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -132,7 +159,10 @@ export function IRInspector({ fields }: IRInspectorProps) {
             ))}
           </div>
         ) : (
-          <pre className="text-sm text-zinc-300 font-mono whitespace-pre-wrap p-2">
+          <pre
+            className="text-sm whitespace-pre-wrap p-2"
+            style={{ fontFamily: "var(--font-mono)", color: "var(--text-primary)" }}
+          >
             {JSON.stringify(
               fields,
               (key, value) => {

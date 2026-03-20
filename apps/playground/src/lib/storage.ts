@@ -32,7 +32,9 @@ export function loadPlaygroundState(): PersistedState | null {
       componentMap:
         parsed.componentMap === "shadcn" ? "shadcn" : "default",
       activeTab:
-        parsed.activeTab === "inspect" ? "inspect" : "preview",
+        parsed.activeTab === "inspect" || parsed.activeTab === "code"
+          ? parsed.activeTab
+          : "preview",
       config: (parsed.config as PersistedState["config"]) ?? null,
       version: CURRENT_VERSION,
     };

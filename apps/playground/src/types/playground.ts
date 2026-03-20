@@ -1,7 +1,7 @@
 import type { FormField } from "@zod-to-form/core";
 
 export type ComponentMapType = "default" | "shadcn";
-export type ActiveTab = "preview" | "inspect";
+export type ActiveTab = "preview" | "inspect" | "code";
 export type ActivePane = "editor" | "preview";
 
 export interface EvaluationError {
