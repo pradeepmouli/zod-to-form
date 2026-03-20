@@ -120,11 +120,10 @@ Renders a complete form with correct input types, labels derived from field name
 Control rendering via Zod v4's native registry API:
 
 ```typescript
-const formRegistry = z.registry<{
-  fieldType?: string;
-  order?: number;
-  hidden?: boolean;
-}>();
+import type { FormMeta } from '@zod-to-form/core';
+import { z } from 'zod';
+
+const formRegistry = z.registry<FormMeta>();
 
 const schema = z.object({
   name: z.string().meta({ title: 'Full Name' }),
@@ -132,7 +131,7 @@ const schema = z.object({
   bio: z.string().optional(),
 });
 
-formRegistry.register(schema.shape.bio, { fieldType: 'textarea' });
+formRegistry.add(schema.shape.bio, { component: 'Textarea' });
 ```
 
 ```tsx
@@ -161,15 +160,16 @@ Use a shared component config to keep shadcn as the base while overriding specif
 import { defineConfig } from '@zod-to-form/core';
 
 export default defineConfig({
-  components: '@/components/ui',
-  preset: 'shadcn',
-  fieldTypes: {
-    DatePicker: { component: 'MyDatePicker', controlled: true },
-    Textarea: { component: 'MyRichTextEditor' },
-    // All other field types fall through to shadcn defaults
+  components: {
+    source: '@/components/ui',
+    preset: 'shadcn',
+    overrides: {
+      MyDatePicker: { controlled: true },
+    },
   },
   fields: {
-    bio: { fieldType: 'Textarea', props: { rows: 6 } },
+    birthday: { component: 'MyDatePicker' },
+    bio: { component: 'MyRichTextEditor', props: { rows: 6 } },
   },
 });
 ```
@@ -332,15 +332,20 @@ When a component doesn't support `ref` forwarding (custom selects, date pickers,
 import { defineConfig } from '@zod-to-form/core';
 
 export default defineConfig({
-  components: '@/components/ui',
-  fieldTypes: {
-    Select: { component: 'MySelect', controlled: true },
-    DatePicker: {
-      component: 'MyDatePicker',
-      controlled: true,
-      propMap: { onSelect: 'field.onChange' } // remap RHF props
-    }
-  }
+  components: {
+    source: '@/components/ui',
+    overrides: {
+      MySelect: { controlled: true },
+      MyDatePicker: {
+        controlled: true,
+        propMap: { onSelect: 'field.onChange' }, // remap RHF props
+      },
+    },
+  },
+  fields: {
+    role: { component: 'MySelect' },
+    birthDate: { component: 'MyDatePicker' },
+  },
 });
 ```
 
@@ -357,9 +362,10 @@ With `propMap`, RHF field props are remapped to your component's API (e.g., `fie
 
 ### Hidden Fields
 
-Hide a field from rendering while keeping it in the schema and form state:
+Hide a field from rendering while keeping it in the schema and form state. Set `hidden` on a field in the config:
 
 ```typescript
+// In z2f.config.ts fields:
 fields: {
   internalId: { hidden: true }
 }
@@ -367,9 +373,10 @@ fields: {
 
 ### Section Grouping
 
-Group multiple fields into a single custom section component:
+Group multiple fields into a single custom section component. Set `section` on fields in the config:
 
 ```typescript
+// In z2f.config.ts fields:
 fields: {
   source: { section: 'MetadataSection' },
   version: { section: 'MetadataSection' },
@@ -385,17 +392,16 @@ Override field config for specific schemas:
 
 ```typescript
 export default defineConfig({
-  components: '@/components/ui',
-  fieldTypes: { /* ... */ },
+  components: { source: '@/components/ui', preset: 'shadcn' },
   fields: {
-    description: { fieldType: 'Textarea' } // global default
+    description: { component: 'Textarea' } // global default
   },
   schemas: {
     userSchema: {
       name: 'UserForm',
       mode: 'auto-save',
       fields: {
-        description: { fieldType: 'Input' } // override for this schema only
+        description: { component: 'Input' } // override for this schema only
       }
     }
   }
@@ -413,19 +419,18 @@ Both the runtime renderer and the CLI codegen accept the **same component config
 import { defineConfig } from '@zod-to-form/core';
 
 export default defineConfig({
-  components: '@/components/ui',
-  preset: 'shadcn',
-  fieldTypes: {
-    Input: { component: 'TextInput' },
-    Textarea: { component: 'TextareaInput' },
-    Select: { component: 'SelectInput', controlled: true },
-    Checkbox: { component: 'CheckboxInput' },
-    DatePicker: { component: 'DateInput', controlled: true },
-    'cross-ref': { component: 'TypeSelector', controlled: true },
+  components: {
+    source: '@/components/ui',
+    preset: 'shadcn',
+    overrides: {
+      SelectInput: { controlled: true },
+      DateInput: { controlled: true },
+      TypeSelector: { controlled: true },
+    },
   },
   fields: {
-    bio: { fieldType: 'Textarea', props: { rows: 6 } },
-    'address.country': { fieldType: 'cross-ref', props: { refType: 'Country' } },
+    bio: { component: 'TextareaInput', props: { rows: 6 } },
+    'address.country': { component: 'TypeSelector', props: { refType: 'Country' } },
   },
 });
 ```
@@ -443,13 +448,13 @@ npx z2f generate \
 The generated file will contain:
 
 ```tsx
-// Static imports from your config
-import { TextInput, TextareaInput, TypeSelector } from '@/components/ui';
+// Static imports resolved from your config
+import { TextareaInput, TypeSelector } from '@/components/ui';
 
 // ...
 <TextareaInput id="bio" {...register('bio')} rows={6} />
 
-// Controlled component generates Controller:
+// Controlled component generates Controller wrapper:
 <Controller name="address.country" control={control}
   render={({ field }) => <TypeSelector {...field} refType="Country" />} />
 ```
@@ -472,7 +477,7 @@ import componentConfig from './z2f.config';
 Both paths resolve the same config in the same priority order:
 
 1. **Per-field override** (`config.fields['bio']`) — highest priority
-2. **Field type mapping** (`config.fieldTypes['Textarea']`) — fallback
+2. **Component override** (`config.components.overrides['MySelect']`) — component-level metadata (controlled, propMap)
 3. **Default rendering** — built-in `<input>`, `<select>`, etc.
 
 The difference is only in *when* resolution happens: the CLI resolves at build time and emits static code, the runtime resolves at render time and loads components dynamically. The resulting form structure, field mapping, and override props are identical.
@@ -559,12 +564,12 @@ const schema = z.object({
 });
 
 formRegistry.add(schema.shape.title, {
-  fieldType: 'textarea',
+  component: 'Textarea',
   order: 1
 });
 
 formRegistry.add(schema.shape.superType, {
-  fieldType: 'cross-ref',
+  component: 'TypeSelector',
   props: { refType: 'Data' }
 });
 
@@ -656,7 +661,7 @@ No. zod-to-form targets **Zod v4 only** (`zod@^4.0.0`). It relies on Zod v4's `_
 Yes. There are two approaches:
 
 - **Runtime:** Pass a `components` map to `<ZodForm>` that maps field types to your React components. A `shadcnComponentMap` is included out of the box. Extend it with a shared config file that overrides specific field types — see [Extending shadcn with custom components](#extending-shadcn-with-custom-components).
-- **CLI:** Use `preset: 'shadcn'` (default) or `preset: 'unstyled'`, and provide a `--config` file to map field types to your own component imports.
+- **CLI:** Use `components.preset: 'shadcn'` (default) or `'unstyled'`, and provide a `--config` file to map fields to your own component imports.
 
 Both paths accept the same config shape — you can define your component mapping once and share it across runtime and CLI. See [Shared Component Configuration](#shared-component-configuration) for a full example.
 </details>
@@ -664,7 +669,7 @@ Both paths accept the same config shape — you can define your component mappin
 <details>
 <summary><strong>What about components that don't support ref forwarding?</strong></summary>
 
-Mark them as `controlled: true` in the config's `fieldTypes`. The CLI generates a `<Controller>` wrapper, and the runtime uses `useController` — no manual `forwardRef` adapters needed. Use `propMap` to remap RHF field props to your component's API. See [Controlled Components](#controlled-components).
+Mark them as `controlled: true` in the config's `components.overrides`. The CLI generates a `<Controller>` wrapper, and the runtime uses `useController` — no manual `forwardRef` adapters needed. Use `propMap` to remap RHF field props to your component's API. See [Controlled Components](#controlled-components).
 </details>
 
 <details>
@@ -741,4 +746,4 @@ MIT — see [LICENSE](LICENSE) for details.
 
 ---
 
-**Author**: Pradeep Mouli · **Version**: 0.3.0 · **Zod**: v4.x only
+**Author**: Pradeep Mouli · **Version**: 0.6.0 · **Zod**: v4.x only

@@ -10,3 +10,40 @@ hooks:
     prompt: Run verify to validate implementation against specification?
     description: Post-implementation verification gate
     condition: null
+  - extension: review
+    command: speckit.review.run
+    enabled: true
+    optional: true
+    prompt: Run PR review on implemented changes?
+    description: Comprehensive review after implementation
+    condition: null
+  - extension: sync
+    command: speckit.sync.analyze
+    enabled: true
+    optional: true
+    prompt: Check for spec drift after implementation?
+    description: ''
+    condition: null
+  - extension: workflows
+    command: speckit.workflows.review
+    enabled: true
+    optional: true
+    prompt: Run final code review before committing?
+    description: Review implementation before commit
+    condition: null
+  after_tasks:
+  - extension: workflows
+    command: speckit.workflows.review
+    enabled: true
+    optional: true
+    prompt: Run code review quality gates?
+    description: Review workflow before implementation begins
+    condition: null
+  before_commit:
+  - extension: workflows
+    command: speckit.workflows.review
+    enabled: true
+    optional: true
+    prompt: Confirm review is approved before committing?
+    description: Ensure review is complete before git commit
+    condition: null

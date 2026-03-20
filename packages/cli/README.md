@@ -37,13 +37,13 @@ Alias: `z2f`.
 
 Required options:
 
+- `--config <path>`: path to config file (`.json` or `.ts`) that drives generation
 - `--schema <path>`: path to schema module
-- `--export <name>`: named export containing the schema
 
 Optional options:
 
+- `--export <name>`: named export containing the schema (optional when `config.types` or `config.include` are set)
 - `--mode <mode>`: `submit | auto-save` (default `submit`)
-- `--config <path>`: path to generate config (`.json` or `.ts`) **required**
 - `--out <path>`: output directory or `.tsx` file path
 - `--name <componentName>`: generated component name override
 - `--ui <preset>`: `shadcn | unstyled` (default `shadcn`)
@@ -78,6 +78,7 @@ Optional options:
 
 - `--out <path>`: output file or directory (default `z2f.config.ts`)
 - `--components <modulePath>`: module path assigned to `components` in generated config (overrides inference)
+- `--schemas <path>`: path to schema file or directory for autodiscovery
 - `--force`: overwrite existing config file
 - `--dry-run`: print generated config and skip file writes
 - `--verbose`: print detailed diagnostics for each step
@@ -139,42 +140,36 @@ zod-to-form init --components ../../src/components/zod-form-components
 
 The package exports helpers to define and validate component config.
 
-### `defineComponentConfig(...)`
+### `defineConfig(...)`
 
-`defineComponentConfig` gives type-safe field path support (including array path normalization).
+`defineConfig` (re-exported from `@zod-to-form/core`) gives type-safe config construction with preset merging.
 
 ```ts
-import { defineComponentConfig } from '@zod-to-form/cli';
+import { defineConfig } from '@zod-to-form/cli';
 
-type Values = {
-  profile: { bio: string };
-  tags: Array<{ label: string }>;
-};
-
-type Components = {
-  TextInput: unknown;
-  TextareaInput: unknown;
-};
-
-export default defineComponentConfig<Components, Values>({
-  components: '@/components/form-components',
-  overwrite: true,
+export default defineConfig({
+  components: {
+    source: '@/components/form-components',
+    preset: 'shadcn',
+    overrides: {
+      TextareaInput: { controlled: false },
+    },
+  },
   types: ['userSchema'],
   include: ['*Schema'],
   exclude: ['Internal*'],
+  defaults: {
+    overwrite: true,
+  },
   formPrimitives: {
     field: 'Field',
     label: 'FieldLabel',
-    control: 'FieldControl'
-  },
-  fieldTypes: {
-    Input: { component: 'TextInput' },
-    textarea: { component: 'TextareaInput' }
+    control: 'FieldControl',
   },
   fields: {
-    'profile.bio': { fieldType: 'textarea', props: { rows: 5 } },
-    'tags[].label': { fieldType: 'Input' }
-  }
+    'profile.bio': { component: 'TextareaInput', props: { rows: 5 } },
+    'tags[].label': { component: 'TextInput' },
+  },
 });
 ```
 
@@ -198,14 +193,14 @@ formPrimitives: {
 }
 ```
 
-### `validateComponentConfig(...)`
+### `validateConfig(...)`
 
-Use at runtime when loading external config objects.
+Use at runtime when loading external config objects. Validates and returns a typed `ZodFormsConfig`.
 
 ```ts
-import { validateComponentConfig } from '@zod-to-form/cli';
+import { validateConfig } from '@zod-to-form/cli';
 
-const parsed = validateComponentConfig(configObject, 'component-config');
+const parsed = validateConfig(configObject, 'component-config');
 ```
 
 ## Programmatic API

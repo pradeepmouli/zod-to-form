@@ -19,34 +19,33 @@ type Components = {
 // ─── Existing type tests (backward compat) ───────────────────────────
 
 describe('defineConfig typing', () => {
-  it('accepts valid fieldTypes and fields', () => {
+  it('accepts valid components and fields', () => {
     const config = defineConfig<Components>({
-      components: '@app/components',
+      components: {
+        source: '@app/components',
+        overrides: {}
+      },
       include: ['*Schema'],
       exclude: ['Internal*'],
       types: ['userSchema'],
-      fieldTypes: {
-        Input: { component: 'Input' },
-        Textarea: { component: 'Textarea' }
-      },
       fields: {
-        'user.name': { fieldType: 'Input' },
-        'tags[].label': { fieldType: 'Textarea' }
+        'user.name': { component: 'Input' },
+        'tags[].label': { component: 'Textarea' }
       }
     });
 
-    expect(config.fields?.['user.name']?.fieldType).toBe('Input');
-    expect(config.fields?.['tags[].label']?.fieldType).toBe('Textarea');
+    expect(config.fields?.['user.name']?.component).toBe('Input');
+    expect(config.fields?.['tags[].label']?.component).toBe('Textarea');
   });
 
   it('accepts string field keys (no path constraint enforcement)', () => {
     const config = defineConfig<Components>({
-      components: '@app/components',
-      fieldTypes: {
-        Input: { component: 'Input' }
+      components: {
+        source: '@app/components',
+        overrides: {}
       },
       fields: {
-        'user.unknown': { fieldType: 'Input' }
+        'user.unknown': { component: 'Input' }
       }
     });
 
@@ -65,9 +64,9 @@ describe('ZodFormsConfig generics', () => {
     };
 
     const config = defineConfig<Components, Schemas>({
-      components: '@app/components',
-      fieldTypes: {
-        Input: { component: 'Input' }
+      components: {
+        source: '@app/components',
+        overrides: {}
       },
       schemas: {
         UserSchema: { name: 'UserForm' },
@@ -80,9 +79,9 @@ describe('ZodFormsConfig generics', () => {
 
   it('defaults TSchemas to Record<string, unknown> allowing any keys', () => {
     const config = defineConfig({
-      components: '@app/components',
-      fieldTypes: {
-        Input: { component: 'Input' as const }
+      components: {
+        source: '@app/components',
+        overrides: {}
       },
       schemas: {
         AnyName: { name: 'AnyForm' }
@@ -94,11 +93,13 @@ describe('ZodFormsConfig generics', () => {
 
   it('ZodFormsConfig accepts FieldConfig in fields', () => {
     const config: ZodFormsConfig = {
-      components: '@app/components',
-      fieldTypes: {},
+      components: {
+        source: '@app/components',
+        overrides: {}
+      },
       fields: {
         email: {
-          fieldType: 'Input',
+          component: 'Input',
           order: 1,
           hidden: false,
           gridColumn: 'span 2',

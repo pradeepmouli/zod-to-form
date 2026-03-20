@@ -1,0 +1,2 @@
+# Submodule configuration must be declared in the repository root .gitmodules.
+# The bats-* submodules previously listed here should be configured in the root .gitmodules file.

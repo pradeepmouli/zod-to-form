@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { inferLabel, joinPath, regexToMask, getEmptyDefault, createBaseField } from '../src/utils.js';
+import {
+  inferLabel,
+  joinPath,
+  regexToMask,
+  getEmptyDefault,
+  createBaseField
+} from '../src/utils.js';
 import type { FormField } from '../src/types.js';
 
 describe('inferLabel', () => {
@@ -150,7 +156,14 @@ describe('getEmptyDefault', () => {
 
   it('returns first option value for enum fields', () => {
     expect(
-      getEmptyDefault(field({ options: [{ value: 'admin', label: 'Admin' }, { value: 'user', label: 'User' }] }))
+      getEmptyDefault(
+        field({
+          options: [
+            { value: 'admin', label: 'Admin' },
+            { value: 'user', label: 'User' }
+          ]
+        })
+      )
     ).toBe('admin');
   });
 

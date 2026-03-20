@@ -2,8 +2,16 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
-import { createProgram } from '../../src/index.js';
+import { createProgram, runGenerate } from '../../src/index.js';
 import { startWatch } from '../../src/watcher.js';
+
+vi.mock('node:fs/promises', async () => {
+  const actual = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
+  return {
+    ...actual,
+    readFile: vi.fn(actual.readFile as typeof actual.readFile)
+  };
+});
 
 async function createFixture() {
   const dir = await mkdtemp(path.join(tmpdir(), 'zodform-cli-e2e-'));
@@ -21,14 +29,10 @@ async function createFixture() {
     configPath,
     [
       'export default {',
-      "  components: '@app/components',",
+      '  components: {',
+      "    source: '@app/components',",
+      '  },',
       '  overwrite: false,',
-      '  fieldTypes: {',
-      "    string: { component: 'Input' },",
-      "    number: { component: 'Input' },",
-      "    Input: { component: 'Input' },",
-      "    Checkbox: { component: 'Checkbox' }",
-      '  }',
       '};'
     ].join('\n'),
     'utf8'
@@ -94,14 +98,10 @@ describe('CLI generate command', () => {
       overwriteConfigPath,
       [
         'export default {',
-        "  components: '@app/components',",
+        '  components: {',
+        "    source: '@app/components',",
+        '  },',
         '  overwrite: true,',
-        '  fieldTypes: {',
-        "    string: { component: 'Input' },",
-        "    number: { component: 'Input' },",
-        "    Input: { component: 'Input' },",
-        "    Checkbox: { component: 'Checkbox' }",
-        '  }',
         '};'
       ].join('\n'),
       'utf8'
@@ -161,15 +161,11 @@ describe('CLI generate command', () => {
       configWithTypesPath,
       [
         'export default {',
-        "  components: '@app/components',",
+        '  components: {',
+        "    source: '@app/components',",
+        '  },',
         "  types: ['userSchema'],",
         '  overwrite: true,',
-        '  fieldTypes: {',
-        "    string: { component: 'Input' },",
-        "    number: { component: 'Input' },",
-        "    Input: { component: 'Input' },",
-        "    Checkbox: { component: 'Checkbox' }",
-        '  }',
         '};'
       ].join('\n'),
       'utf8'
@@ -199,6 +195,33 @@ describe('CLI generate command', () => {
     expect(content).toContain('function UserForm');
 
     process.chdir(originalCwd);
+  });
+
+  it('throws a user-facing error when the output file cannot be read (EACCES)', async () => {
+    const { schemaPath, outDir, configPath } = await createFixture();
+
+    const originalCwd = process.cwd();
+    process.chdir(path.dirname(schemaPath));
+
+    const permissionError = Object.assign(
+      new Error(`EACCES: permission denied, open '${path.join(outDir, 'UserForm.tsx')}'`),
+      { code: 'EACCES' }
+    );
+    vi.mocked(readFile).mockRejectedValueOnce(permissionError);
+
+    try {
+      await expect(
+        runGenerate({
+          config: configPath,
+          schema: schemaPath,
+          export: 'userSchema',
+          out: outDir
+        })
+      ).rejects.toThrow('Cannot read existing file');
+    } finally {
+      vi.mocked(readFile).mockRestore();
+      process.chdir(originalCwd);
+    }
   });
 });
 
@@ -303,16 +326,10 @@ describe('CLI generate performance benchmark', () => {
       configPath,
       [
         'export default {',
-        "  components: '@app/components',",
+        '  components: {',
+        "    source: '@app/components',",
+        '  },',
         '  overwrite: true,',
-        '  fieldTypes: {',
-        "    string: { component: 'Input' },",
-        "    number: { component: 'Input' },",
-        "    boolean: { component: 'Checkbox' },",
-        "    Select: { component: 'Select' },",
-        "    Input: { component: 'Input' },",
-        "    Checkbox: { component: 'Checkbox' }",
-        '  }',
         '};'
       ].join('\n'),
       'utf8'

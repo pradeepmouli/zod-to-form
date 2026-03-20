@@ -12,23 +12,25 @@ import type { ZodFormsConfig } from '../src/config.js';
 describe('component config contracts (backward compat)', () => {
   it('defineConfig returns input config unchanged', () => {
     const config = defineConfig({
-      components: '@app/components',
-      fieldTypes: {
-        Input: { component: 'TextInput' }
+      components: {
+        source: '@app/components',
+        overrides: {}
       },
       fields: {
-        'user.name': { fieldType: 'Input', props: { placeholder: 'Name' } }
+        'user.name': { component: 'Input', props: { placeholder: 'Name' } }
       }
     });
 
-    expect(config.components).toBe('@app/components');
-    expect(config.fieldTypes['Input']?.component).toBe('TextInput');
-    expect(config.fields?.['user.name']?.fieldType).toBe('Input');
+    expect(config.components.source).toBe('@app/components');
+    expect(config.fields?.['user.name']?.component).toBe('Input');
   });
 
   it('validateConfig accepts valid component config object', () => {
     const parsed = validateConfig({
-      components: '@app/components',
+      components: {
+        source: '@app/components',
+        overrides: {}
+      },
       overwrite: true,
       types: ['userSchema'],
       include: ['*Schema'],
@@ -37,22 +39,18 @@ describe('component config contracts (backward compat)', () => {
         field: 'Field',
         label: 'FieldLabel',
         control: 'FieldControl'
-      },
-      fieldTypes: {
-        Input: { component: 'TextInput' }
       }
     });
 
-    expect(parsed.components).toBe('@app/components');
-    expect(parsed.fieldTypes['Input']?.component).toBe('TextInput');
+    expect(parsed.components.source).toBe('@app/components');
   });
 
   it('validateConfig rejects invalid include/exclude/types shape', () => {
     expect(() =>
       validateConfig({
-        components: '@app/components',
-        fieldTypes: {
-          Input: { component: 'TextInput' }
+        components: {
+          source: '@app/components',
+          overrides: {}
         },
         include: [123]
       })
@@ -62,9 +60,9 @@ describe('component config contracts (backward compat)', () => {
   it('validateConfig rejects invalid formPrimitives shape', () => {
     expect(() =>
       validateConfig({
-        components: '@app/components',
-        fieldTypes: {
-          Input: { component: 'TextInput' }
+        components: {
+          source: '@app/components',
+          overrides: {}
         },
         formPrimitives: {
           label: ''
@@ -76,9 +74,9 @@ describe('component config contracts (backward compat)', () => {
   it('validateConfig rejects invalid fields shape', () => {
     expect(() =>
       validateConfig({
-        components: '@app/components',
-        fieldTypes: {
-          Input: { component: 'TextInput' }
+        components: {
+          source: '@app/components',
+          overrides: {}
         },
         fields: 'bad'
       })
@@ -91,9 +89,9 @@ describe('component config contracts (backward compat)', () => {
 describe('defineConfig', () => {
   it('returns identity — config in equals config out', () => {
     const input = {
-      components: '@/components/ui',
-      fieldTypes: {
-        Input: { component: 'Input' as const }
+      components: {
+        source: '@/components/ui',
+        overrides: {}
       }
     };
 
@@ -103,9 +101,9 @@ describe('defineConfig', () => {
 
   it('returns config with defaults and schemas sections', () => {
     const config = defineConfig({
-      components: '@/components/ui',
-      fieldTypes: {
-        Input: { component: 'Input' as const }
+      components: {
+        source: '@/components/ui',
+        overrides: {}
       },
       defaults: {
         mode: 'submit',
@@ -118,7 +116,7 @@ describe('defineConfig', () => {
           name: 'UserForm',
           mode: 'auto-save',
           fields: {
-            email: { fieldType: 'Input', order: 1 }
+            email: { component: 'Input', order: 1 }
           }
         }
       }
@@ -135,9 +133,9 @@ describe('defineConfig', () => {
 describe('validateConfig', () => {
   it('accepts new shape with defaults and schemas', () => {
     const result = validateConfig({
-      components: '@/components/ui',
-      fieldTypes: {
-        Input: { component: 'Input' }
+      components: {
+        source: '@/components/ui',
+        overrides: {}
       },
       defaults: {
         mode: 'submit',
@@ -152,48 +150,51 @@ describe('validateConfig', () => {
           out: './forms',
           serverAction: true,
           fields: {
-            email: { fieldType: 'Input', order: 1, hidden: false }
+            email: { component: 'Input', order: 1, hidden: false }
           }
         }
       }
     });
 
-    expect(result.components).toBe('@/components/ui');
+    expect(result.components.source).toBe('@/components/ui');
     expect(result.defaults?.mode).toBe('submit');
     expect(result.schemas?.['UserSchema']?.name).toBe('UserForm');
   });
 
   it('accepts old shape without defaults/schemas (backward compat) (T010)', () => {
     const result = validateConfig({
-      components: '@app/components',
+      components: {
+        source: '@app/components',
+        overrides: {}
+      },
       overwrite: true,
       types: ['userSchema'],
       include: ['*Schema'],
       exclude: ['Internal*'],
-      fieldTypes: {
-        Input: { component: 'TextInput' }
-      },
       fields: {
-        'user.name': { fieldType: 'Input', props: { placeholder: 'Name' } }
+        'user.name': { component: 'Input', props: { placeholder: 'Name' } }
       }
     });
 
-    expect(result.components).toBe('@app/components');
-    expect(result.fieldTypes['Input']?.component).toBe('TextInput');
+    expect(result.components.source).toBe('@app/components');
   });
 
   it('deprecated aliases still work (T011)', () => {
     const config = defineConfig({
-      components: '@app/components',
-      fieldTypes: { Input: { component: 'Input' } }
+      components: {
+        source: '@app/components',
+        overrides: {}
+      }
     });
-    expect(config.components).toBe('@app/components');
+    expect(config.components.source).toBe('@app/components');
 
     const validated = validateConfig({
-      components: '@app/components',
-      fieldTypes: { Input: { component: 'Input' } }
+      components: {
+        source: '@app/components',
+        overrides: {}
+      }
     });
-    expect(validated.components).toBe('@app/components');
+    expect(validated.components.source).toBe('@app/components');
   });
 });
 
@@ -202,11 +203,13 @@ describe('validateConfig', () => {
 describe('FieldConfig alignment', () => {
   it('FieldConfig fields match FormMeta fields minus render', () => {
     const config = defineConfig({
-      components: '@/ui',
-      fieldTypes: { Input: { component: 'Input' as const } },
+      components: {
+        source: '@/ui',
+        overrides: {}
+      },
       fields: {
         email: {
-          fieldType: 'Input',
+          component: 'Input',
           order: 1,
           hidden: false,
           gridColumn: 'span 2',
@@ -217,7 +220,7 @@ describe('FieldConfig alignment', () => {
 
     const fieldConfig = config.fields?.['email'];
     expect(fieldConfig).toBeDefined();
-    expect(fieldConfig?.fieldType).toBe('Input');
+    expect(fieldConfig?.component).toBe('Input');
     expect(fieldConfig?.order).toBe(1);
     expect(fieldConfig?.hidden).toBe(false);
     expect(fieldConfig?.gridColumn).toBe('span 2');
@@ -232,8 +235,8 @@ describe('FieldConfig alignment', () => {
 describe('resolveFieldConfig', () => {
   it('merges schema fields over global fields at property level', () => {
     const globalFields = {
-      email: { fieldType: 'Input', order: 1, props: { placeholder: 'Email' } },
-      name: { fieldType: 'Input', order: 2 }
+      email: { component: 'Input', order: 1, props: { placeholder: 'Email' } },
+      name: { component: 'Input', order: 2 }
     };
 
     const schemaFields = {
@@ -243,12 +246,12 @@ describe('resolveFieldConfig', () => {
     const result = resolveFieldConfig(globalFields, schemaFields);
 
     // email: schema fields merge over global (property level, not object replace)
-    expect(result['email']?.fieldType).toBe('Input'); // kept from global
+    expect(result['email']?.component).toBe('Input'); // kept from global
     expect(result['email']?.order).toBe(5); // overridden by schema
     expect(result['email']?.props?.['placeholder']).toBe('Override'); // overridden by schema
 
     // name: unchanged from global
-    expect(result['name']?.fieldType).toBe('Input');
+    expect(result['name']?.component).toBe('Input');
     expect(result['name']?.order).toBe(2);
   });
 
@@ -257,23 +260,23 @@ describe('resolveFieldConfig', () => {
   });
 
   it('returns schema fields when global is undefined', () => {
-    const schemaFields = { email: { fieldType: 'Input' } };
+    const schemaFields = { email: { component: 'Input' } };
     const result = resolveFieldConfig(undefined, schemaFields);
-    expect(result['email']?.fieldType).toBe('Input');
+    expect(result['email']?.component).toBe('Input');
   });
 
   it('returns global fields when schema is undefined', () => {
-    const globalFields = { email: { fieldType: 'Input' } };
+    const globalFields = { email: { component: 'Input' } };
     const result = resolveFieldConfig(globalFields, undefined);
-    expect(result['email']?.fieldType).toBe('Input');
+    expect(result['email']?.component).toBe('Input');
   });
 
   it('adds schema-only fields to result', () => {
-    const globalFields = { email: { fieldType: 'Input' } };
-    const schemaFields = { password: { fieldType: 'Input', props: { type: 'password' } } };
+    const globalFields = { email: { component: 'Input' } };
+    const schemaFields = { password: { component: 'Input', props: { type: 'password' } } };
     const result = resolveFieldConfig(globalFields, schemaFields);
-    expect(result['email']?.fieldType).toBe('Input');
-    expect(result['password']?.fieldType).toBe('Input');
+    expect(result['email']?.component).toBe('Input');
+    expect(result['password']?.component).toBe('Input');
   });
 });
 
@@ -282,9 +285,11 @@ describe('resolveFieldConfig', () => {
 describe('normalizeConfig', () => {
   it('migrates top-level overwrite to defaults.overwrite', () => {
     const config = validateConfig({
-      components: '@/ui',
-      overwrite: true,
-      fieldTypes: { Input: { component: 'Input' } }
+      components: {
+        source: '@/ui',
+        overrides: {}
+      },
+      overwrite: true
     });
 
     const normalized = normalizeConfig(config);
@@ -294,9 +299,11 @@ describe('normalizeConfig', () => {
 
   it('does not override existing defaults.overwrite', () => {
     const config = {
-      components: '@/ui',
+      components: {
+        source: '@/ui',
+        overrides: {}
+      },
       overwrite: true,
-      fieldTypes: { Input: { component: 'Input' } },
       defaults: { overwrite: false }
     } as ZodFormsConfig & { overwrite?: boolean };
 
@@ -306,8 +313,10 @@ describe('normalizeConfig', () => {
 
   it('returns config unchanged when no top-level overwrite', () => {
     const config = validateConfig({
-      components: '@/ui',
-      fieldTypes: { Input: { component: 'Input' } }
+      components: {
+        source: '@/ui',
+        overrides: {}
+      }
     });
 
     const normalized = normalizeConfig(config);
@@ -318,60 +327,59 @@ describe('normalizeConfig', () => {
 // ─── defineConfig preset behavior ─────────────────────────────────────
 
 describe('defineConfig preset', () => {
-  it('merges shadcn preset into fieldTypes when preset is shadcn', () => {
+  it('merges shadcn preset into overrides when preset is shadcn', () => {
     const config = defineConfig({
-      components: '@/ui',
-      preset: 'shadcn',
-      fieldTypes: {
-        RichText: { component: 'RichText' }
+      components: {
+        source: '@/ui',
+        preset: 'shadcn',
+        overrides: {
+          RichText: { controlled: true }
+        }
       }
     });
 
     // User's entry preserved
-    expect(config.fieldTypes['RichText']).toEqual({ component: 'RichText' });
-    // Shadcn defaults merged in
-    expect(config.fieldTypes['Input']).toEqual({ component: 'Input' });
-    expect(config.fieldTypes['Switch']).toEqual({ component: 'Switch' });
-    expect(config.fieldTypes['DatePicker']).toEqual({ component: 'DatePicker' });
+    expect(config.components.overrides?.['RichText']).toEqual({ controlled: true });
   });
 
-  it('merges unstyled preset into fieldTypes when preset is unstyled', () => {
+  it('merges unstyled preset into overrides when preset is unstyled', () => {
     const config = defineConfig({
-      components: '@/ui',
-      preset: 'unstyled',
-      fieldTypes: {
-        CustomSelect: { component: 'CustomSelect' }
+      components: {
+        source: '@/ui',
+        preset: 'unstyled',
+        overrides: {
+          CustomSelect: { controlled: true }
+        }
       }
     });
 
-    expect(config.fieldTypes['CustomSelect']).toEqual({ component: 'CustomSelect' });
-    expect(config.fieldTypes['Input']).toEqual({ component: 'Input' });
-    expect(config.fieldTypes['Checkbox']).toEqual({ component: 'Checkbox' });
-    // Shadcn-only entries should NOT be present
-    expect(config.fieldTypes['Switch']).toBeUndefined();
-    expect(config.fieldTypes['DatePicker']).toBeUndefined();
+    expect(config.components.overrides?.['CustomSelect']).toEqual({ controlled: true });
   });
 
-  it('user fieldTypes override preset entries', () => {
+  it('user overrides override preset entries', () => {
     const config = defineConfig({
-      components: '@/ui',
-      preset: 'shadcn',
-      fieldTypes: {
-        Input: { component: 'MyCustomInput' }
+      components: {
+        source: '@/ui',
+        preset: 'shadcn',
+        overrides: {
+          Input: { controlled: true }
+        }
       }
     });
 
-    expect(config.fieldTypes['Input']).toEqual({ component: 'MyCustomInput' });
+    expect(config.components.overrides?.['Input']).toEqual({ controlled: true });
   });
 
   it('returns config unchanged when no preset is set', () => {
     const config = defineConfig({
-      components: '@/ui',
-      fieldTypes: {
-        Input: { component: 'Input' }
+      components: {
+        source: '@/ui',
+        overrides: {
+          Input: { controlled: false }
+        }
       }
     });
 
-    expect(config.fieldTypes).toEqual({ Input: { component: 'Input' } });
+    expect(config.components.overrides).toEqual({ Input: { controlled: false } });
   });
 });

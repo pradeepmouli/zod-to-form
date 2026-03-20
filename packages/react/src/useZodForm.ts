@@ -1,15 +1,19 @@
 import { useEffect, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { walkSchema } from '@zod-to-form/core';
+import { walkSchema, registerFlat } from '@zod-to-form/core';
 import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import type { output, ZodObject } from 'zod';
-import type { FormProcessor, ZodFormRegistry } from '@zod-to-form/core';
+import type { FieldConfig, FormMeta, FormProcessor, ZodFormRegistry } from '@zod-to-form/core';
 
 type UseZodFormOptions<TSchema extends ZodObject> = {
   defaultValues?: Partial<output<TSchema>>;
   /** Controlled external data — RHF re-renders on change. See react-hook-form `values` option. */
   values?: output<TSchema>;
+  /** Pre-populated registry — when provided, `fields` is ignored entirely. */
   formRegistry?: ZodFormRegistry;
+  /** Flat field config (from defineConfig / componentConfig). Auto-registers into a registry. */
+  fields?: Record<string, FieldConfig>;
   processors?: Record<string, FormProcessor>;
   mode?: 'onSubmit' | 'onChange' | 'onBlur';
   onValueChange?: (values: output<TSchema>) => void;
@@ -63,13 +67,32 @@ export function useZodForm<TSchema extends ZodObject>(
 ) {
   const baseResolver = useMemo(() => zodResolver(schema), [schema]);
 
+  // Build a registry from flat field config when no explicit registry is provided
+  const effectiveRegistry = useMemo(() => {
+    if (options?.formRegistry) return options.formRegistry;
+    if (!options?.fields || Object.keys(options.fields).length === 0) return undefined;
+    const reg = z.registry<FormMeta>();
+    try {
+      // SAFETY: ZodObject extends $ZodType at runtime but TS nominal typing requires the cast
+      registerFlat(reg, schema as never, options.fields);
+    } catch (error) {
+      console.error(
+        '[zod-to-form] Failed to register field config into registry. ' +
+          'The form will render without field overrides.',
+        error
+      );
+      return undefined;
+    }
+    return reg;
+  }, [schema, options?.formRegistry, options?.fields]);
+
   const fields = useMemo(
     () =>
       walkSchema(schema, {
-        formRegistry: options?.formRegistry,
+        formRegistry: effectiveRegistry,
         processors: options?.processors
       }),
-    [schema, options?.formRegistry, options?.processors]
+    [schema, effectiveRegistry, options?.processors]
   );
 
   const form = useForm<output<TSchema>>({

@@ -1,7 +1,12 @@
 import path from 'node:path';
 import type { FormField } from '@zod-to-form/core';
 import { getEmptyDefault } from '@zod-to-form/core';
-import type { ComponentEntry, FieldConfig, FormPrimitivesConfig, ZodFormsConfig } from './index.js';
+import type {
+  ComponentOverride,
+  FieldConfig,
+  FormPrimitivesConfig,
+  ZodFormsConfig
+} from './index.js';
 import { getFileHeader, renderField } from './templates.js';
 
 export type CodegenConfig = {
@@ -50,19 +55,19 @@ function getMappedFieldComponent(
 ): {
   componentName?: string;
   override?: FieldConfig;
-  entry?: ComponentEntry<Record<string, unknown>>;
-  source: 'fields' | 'fieldTypes' | 'none';
+  componentOverride?: ComponentOverride;
+  source: 'fields' | 'components' | 'none';
 } {
   const mapping = resolveFieldMapping(field.key, field.component, componentConfig);
 
-  if (!mapping.entry) {
+  if (!mapping.componentName) {
     return { source: mapping.source };
   }
 
   return {
-    componentName: mapping.entry.component,
+    componentName: mapping.componentName,
     override: mapping.override,
-    entry: mapping.entry,
+    componentOverride: mapping.componentOverride,
     source: mapping.source
   };
 }
@@ -74,7 +79,7 @@ function collectMappedComponentNames(
 ): Set<string> {
   for (const field of fields) {
     const mapping = getMappedFieldComponent(field, componentConfig);
-    if (mapping.componentName) {
+    if (mapping.componentName && (mapping.componentOverride || mapping.override)) {
       out.add(mapping.componentName);
     }
 
@@ -174,32 +179,44 @@ function normalizeFieldKey(key: string): string {
 
 export function resolveFieldMapping<TComponents extends Record<string, unknown>>(
   fieldKey: string,
-  fieldType: string | undefined,
+  componentName: string | undefined,
   componentConfig: ZodFormsConfig<TComponents> | undefined
 ): {
-  entry?: ComponentEntry<TComponents>;
+  componentOverride?: ComponentOverride;
   override?: FieldConfig;
-  source: 'fields' | 'fieldTypes' | 'none';
+  componentName?: string;
+  source: 'fields' | 'components' | 'none';
 } {
   if (!componentConfig) {
     return { source: 'none' };
   }
 
-  // Try exact match first, then normalised bracket-notation match
-  const override =
-    componentConfig.fields?.[fieldKey] ?? componentConfig.fields?.[normalizeFieldKey(fieldKey)];
+  const normalizedKey = normalizeFieldKey(fieldKey);
+  const override = componentConfig.fields?.[fieldKey] ?? componentConfig.fields?.[normalizedKey];
+
+  // Determine final component name: per-field override > field's default
+  const resolvedComponent = override?.component ?? componentName;
+
   if (override) {
     return {
-      entry: override.fieldType ? componentConfig.fieldTypes[override.fieldType] : undefined,
+      componentName: resolvedComponent,
+      componentOverride: resolvedComponent
+        ? (componentConfig.components.overrides?.[resolvedComponent] as
+            | ComponentOverride
+            | undefined)
+        : undefined,
       override,
       source: 'fields'
     };
   }
 
-  if (fieldType && componentConfig.fieldTypes[fieldType]) {
+  if (resolvedComponent) {
     return {
-      entry: componentConfig.fieldTypes[fieldType],
-      source: 'fieldTypes'
+      componentName: resolvedComponent,
+      componentOverride: componentConfig.components.overrides?.[resolvedComponent] as
+        | ComponentOverride
+        | undefined,
+      source: 'components'
     };
   }
 
@@ -345,16 +362,20 @@ function renderArrayBlock(
   let itemJsx: string;
   if (!indexedItemField) {
     itemJsx = `${indent}      <input {...register(\`${field.key}.\${index}\`)} />`;
-  } else if (mappedItem.componentName && mappedItem.entry?.controlled) {
+  } else if (
+    mappedItem.source === 'fields' &&
+    mappedItem.componentName &&
+    mappedItem.componentOverride?.controlled
+  ) {
     const overrideProps = renderOverrideProps(mappedItem.override?.props);
-    const propMap = resolvePropMap(mappedItem.entry, mappedItem.override);
+    const propMap = resolvePropMap(mappedItem.componentOverride, mappedItem.override);
     itemJsx = renderControlledComponent(
       indexedItemField.key,
       mappedItem.componentName,
       propMap,
       overrideProps
     );
-  } else if (mappedItem.componentName) {
+  } else if (mappedItem.source === 'fields' && mappedItem.componentName) {
     itemJsx = `<${mappedItem.componentName} {...register(\`${indexedItemField.key}\`)}${renderOverrideProps(mappedItem.override?.props)} />`;
   } else {
     itemJsx = renderFieldBlockWithConfig(
@@ -388,10 +409,10 @@ function capitalize(s: string): string {
  * Per-field entries win when keys overlap.
  */
 function resolvePropMap(
-  entry?: ComponentEntry<Record<string, unknown>>,
+  componentOverride?: ComponentOverride,
   override?: FieldConfig
 ): Record<string, string> | undefined {
-  const entryMap = entry?.propMap;
+  const entryMap = componentOverride?.propMap;
   const fieldMap = override?.propMap;
   if (!entryMap && !fieldMap) return undefined;
   return { ...entryMap, ...fieldMap };
@@ -462,7 +483,6 @@ function renderFieldBlockWithConfig(
   indent = '      '
 ): string {
   const mapping = getMappedFieldComponent(field, componentConfig);
-
   if (field.hasCustomRender) {
     const styleAttr = field.gridColumn ? ` style={{ gridColumn: '${field.gridColumn}' }}` : '';
     return [
@@ -478,8 +498,8 @@ function renderFieldBlockWithConfig(
   if (mapping.source === 'fields' && mapping.componentName) {
     const overrideProps = renderOverrideProps(mapping.override?.props);
     let content: string;
-    if (mapping.entry?.controlled) {
-      const propMap = resolvePropMap(mapping.entry, mapping.override);
+    if (mapping.componentOverride?.controlled) {
+      const propMap = resolvePropMap(mapping.componentOverride, mapping.override);
       content = renderControlledComponent(field.key, mapping.componentName, propMap, overrideProps);
     } else {
       const regExpr = field.key.includes('${')
@@ -498,11 +518,11 @@ function renderFieldBlockWithConfig(
     return renderArrayBlock(field, componentConfig, primitives, indent);
   }
 
-  if (mapping.componentName) {
+  if (mapping.componentName && (mapping.componentOverride || mapping.override)) {
     const overrideProps = renderOverrideProps(mapping.override?.props);
     let content: string;
-    if (mapping.entry?.controlled) {
-      const propMap = resolvePropMap(mapping.entry, mapping.override);
+    if (mapping.componentOverride?.controlled) {
+      const propMap = resolvePropMap(mapping.componentOverride, mapping.override);
       content = renderControlledComponent(field.key, mapping.componentName, propMap, overrideProps);
     } else {
       content = `<${mapping.componentName} id="${field.key}" {...${field.key.includes('${') ? `register(\`${field.key}\`)` : `register('${field.key}')`}}${overrideProps} />`;
@@ -521,7 +541,7 @@ function hasControlledFields(
   if (!componentConfig) return false;
   for (const field of fields) {
     const mapping = resolveFieldMapping(field.key, field.component, componentConfig);
-    if (mapping.entry?.controlled) return true;
+    if (mapping.componentOverride?.controlled) return true;
     if (field.children?.length && hasControlledFields(field.children, componentConfig)) return true;
     if (field.arrayItem && hasControlledFields([field.arrayItem], componentConfig)) return true;
   }
@@ -545,7 +565,7 @@ export async function generateFormComponent(
 
   const componentImportLine =
     config.componentConfig && importNames.size > 0
-      ? `import { ${Array.from(importNames).sort().join(', ')} } from '${config.componentConfig.components}';`
+      ? `import { ${Array.from(importNames).sort().join(', ')} } from '${config.componentConfig.components.source}';`
       : undefined;
 
   const header = getFileHeader(

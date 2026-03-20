@@ -1,4 +1,4 @@
-import type { ZodType } from 'zod';
+import type { $ZodType as ZodType } from 'zod/v4/core';
 import { resolveMetadata } from './metadata.js';
 import { processFallback } from './processors/fallback.js';
 import { getDef, getShape } from './processors/_utils.js';

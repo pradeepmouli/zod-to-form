@@ -1,4 +1,4 @@
-import type { ZodType } from 'zod';
+import type { $ZodType as ZodType } from 'zod/v4/core';
 
 export function getDef(schema: ZodType): Record<string, unknown> {
   const candidate = schema as unknown as {

@@ -1,26 +1,27 @@
-import { useEffect, useMemo, memo, useState } from 'react';
+import { useMemo, memo } from 'react';
 import type { ComponentType, ReactNode } from 'react';
-import type { FormField, FieldConfig, ComponentEntry } from '@zod-to-form/core';
+import type { FormField, FieldConfig, ComponentOverride } from '@zod-to-form/core';
 import { getEmptyDefault } from '@zod-to-form/core';
 import { useController, useFieldArray, useFormContext } from 'react-hook-form';
 import { defaultComponentMap } from './components/index.js';
 
 type ComponentMap = typeof defaultComponentMap;
 
-export type RuntimeComponentEntry = ComponentEntry;
-
 export type RuntimeComponentConfig = {
   /**
-   * Module specifier used by the CLI codegen to emit a static import statement.
-   * This field is NOT used at runtime — pass the pre-imported module via `componentModule`.
+   * Component source and optional per-component overrides.
+   * `source` is used by CLI codegen to emit a static import statement (not used at runtime).
+   * `overrides` maps component names to `ComponentOverride` metadata (controlled, propMap, etc.).
    */
-  components: string;
+  components: {
+    source: string;
+    overrides?: Record<string, ComponentOverride>;
+  };
   /**
    * The pre-imported components module object, e.g. `import * as myComponents from './components'`.
-   * Required when `fieldTypes` entries do not supply a `render` override.
+   * Used to resolve component functions by name at runtime.
    */
   componentModule?: Record<string, unknown>;
-  fieldTypes: Record<string, RuntimeComponentEntry>;
   fields?: Record<string, FieldConfig>;
   /**
    * Pre-imported section components, keyed by the section name used in `fields[key].section`.
@@ -29,16 +30,10 @@ export type RuntimeComponentConfig = {
   sectionComponents?: Record<string, ComponentType<{ fields: string[] }>>;
 };
 
-const renderResultCache = new Map<() => Promise<unknown>, ComponentType<Record<string, unknown>>>();
-const pendingRenderCache = new Map<
-  () => Promise<unknown>,
-  Promise<ComponentType<Record<string, unknown>>>
->();
-
 function resolveFieldOverride(
   field: FormField,
   componentConfig: RuntimeComponentConfig | undefined
-): { entry?: RuntimeComponentEntry; override?: FieldConfig } {
+): { override?: FieldConfig; componentOverride?: ComponentOverride } {
   if (!componentConfig) {
     return {};
   }
@@ -46,13 +41,14 @@ function resolveFieldOverride(
   const override = componentConfig.fields?.[field.key];
   if (override) {
     return {
-      entry: override.fieldType ? componentConfig.fieldTypes[override.fieldType] : undefined,
+      componentOverride:
+        componentConfig.components.overrides?.[override.component ?? field.component],
       override
     };
   }
 
   return {
-    entry: componentConfig.fieldTypes[field.component]
+    componentOverride: componentConfig.components.overrides?.[field.component]
   };
 }
 
@@ -67,45 +63,21 @@ function asComponentType(
   return value as ComponentType<Record<string, unknown>>;
 }
 
-async function resolveConfiguredComponent(
+function resolveConfiguredComponent(
   field: FormField,
-  componentConfig: RuntimeComponentConfig,
-  entry: RuntimeComponentEntry
-): Promise<ComponentType<Record<string, unknown>>> {
-  if (entry.render) {
-    const cached = renderResultCache.get(entry.render);
-    if (cached) return cached;
-
-    const pending = pendingRenderCache.get(entry.render);
-    if (pending) return pending;
-
-    const resolvePromise = entry.render().then((component) => {
-      const resolved = asComponentType(
-        component,
-        `INVALID_COMPONENT_ENTRY: field "${field.key}" render override must resolve to a function.`
-      );
-      renderResultCache.set(entry.render!, resolved);
-      return resolved;
-    });
-    pendingRenderCache.set(entry.render, resolvePromise);
-    try {
-      return await resolvePromise;
-    } finally {
-      pendingRenderCache.delete(entry.render);
-    }
-  }
-
+  componentConfig: RuntimeComponentConfig
+): ComponentType<Record<string, unknown>> {
   const mod = componentConfig.componentModule;
   if (!mod) {
     throw new Error(
-      `INVALID_RUNTIME_COMPONENT: componentModule is not provided and no render override exists for field "${field.key}". ` +
+      `INVALID_RUNTIME_COMPONENT: componentModule is not provided for field "${field.key}". ` +
         `Pass the pre-imported module as componentConfig.componentModule.`
     );
   }
-  const candidate = mod[entry.component];
+  const candidate = mod[field.component];
   return asComponentType(
     candidate,
-    `INVALID_RUNTIME_COMPONENT: component "${entry.component}" in componentModule is not a function.`
+    `INVALID_RUNTIME_COMPONENT: component "${field.component}" in componentModule is not a function.`
   );
 }
 
@@ -332,11 +304,11 @@ function applyPropMap(
  * Per-field entries win when keys overlap.
  */
 function resolvePropMap(
-  entry?: RuntimeComponentEntry,
-  override?: FieldConfig
+  componentOverride?: ComponentOverride,
+  fieldOverride?: FieldConfig
 ): Record<string, string> | undefined {
-  const entryMap = entry?.propMap;
-  const fieldMap = override?.propMap;
+  const entryMap = componentOverride?.propMap;
+  const fieldMap = fieldOverride?.propMap;
   if (!entryMap && !fieldMap) return undefined;
   return { ...entryMap, ...fieldMap };
 }
@@ -397,41 +369,12 @@ export const FieldRenderer = memo(function FieldRenderer({
     () => resolveFieldOverride(field, componentConfig),
     [field, componentConfig]
   );
-  const [configuredComponent, setConfiguredComponent] = useState<ComponentType<
-    Record<string, unknown>
-  > | null>(null);
-  const [resolveError, setResolveError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    if (!componentConfig || !mapping.entry) {
-      setConfiguredComponent(null);
-      setResolveError(null);
-      return;
-    }
-
-    let cancelled = false;
-    resolveConfiguredComponent(field, componentConfig, mapping.entry)
-      .then((component) => {
-        if (!cancelled) {
-          setConfiguredComponent(() => component);
-          setResolveError(null);
-        }
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          setConfiguredComponent(null);
-          setResolveError(error instanceof Error ? error : new Error(String(error)));
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [field, componentConfig, mapping.entry]);
-
-  if (resolveError) {
-    throw resolveError;
-  }
+  // Synchronous component resolution from componentModule
+  const configuredComponent = useMemo(() => {
+    if (!componentConfig?.componentModule) return null;
+    return resolveConfiguredComponent(field, componentConfig);
+  }, [field, componentConfig]);
 
   // T088: dispatch nested object fields to FieldsetBlock
   if (field.component === 'Fieldset') {
@@ -474,7 +417,7 @@ export const FieldRenderer = memo(function FieldRenderer({
     return null;
   }
 
-  const isControlled = mapping.entry?.controlled === true;
+  const isControlled = mapping.componentOverride?.controlled === true;
 
   const wrapperProps: Record<string, unknown> = {};
   if (field.gridColumn) {
@@ -496,7 +439,7 @@ export const FieldRenderer = memo(function FieldRenderer({
     };
     fieldContent = field.render(field, componentProps) as ReactNode;
   } else if (isControlled) {
-    const propMap = resolvePropMap(mapping.entry, mapping.override);
+    const propMap = resolvePropMap(mapping.componentOverride, mapping.override);
     fieldContent = (
       <ControlledFieldInner
         field={field}

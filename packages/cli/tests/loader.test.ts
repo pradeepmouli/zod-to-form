@@ -69,16 +69,15 @@ describe('loadConfig', () => {
       configPath,
       JSON.stringify(
         {
-          components: '@app/components',
+          components: {
+            source: '@app/components'
+          },
           overwrite: true,
           types: ['userSchema'],
           include: ['*Schema'],
           exclude: ['internal*'],
-          fieldTypes: {
-            string: { component: 'Input' }
-          },
           fields: {
-            'user.name': { fieldType: 'string', props: { placeholder: 'Name' } }
+            'user.name': { component: 'Input', props: { placeholder: 'Name' } }
           }
         },
         null,
@@ -88,12 +87,11 @@ describe('loadConfig', () => {
     );
 
     const config = await loadConfig(configPath);
-    expect(config.components).toBe('@app/components');
+    expect(config.components.source).toBe('@app/components');
     // top-level overwrite should be normalized to defaults.overwrite
     expect(config.defaults?.overwrite).toBe(true);
     expect(config.types).toEqual(['userSchema']);
-    expect(config.fieldTypes['string']?.component).toBe('Input');
-    expect(config.fields?.['user.name']?.fieldType).toBe('string');
+    expect(config.fields?.['user.name']?.component).toBe('Input');
   });
 
   it('throws clear error for invalid include/exclude/types values', async () => {
@@ -104,9 +102,8 @@ describe('loadConfig', () => {
       configPath,
       JSON.stringify(
         {
-          components: '@app/components',
-          fieldTypes: {
-            string: { component: 'Input' }
+          components: {
+            source: '@app/components'
           },
           include: [123]
         },
@@ -127,9 +124,8 @@ describe('loadConfig', () => {
       configPath,
       JSON.stringify(
         {
-          components: '@app/components',
-          fieldTypes: {
-            string: { component: 'Input' }
+          components: {
+            source: '@app/components'
           },
           formPrimitives: {
             control: ''
@@ -154,12 +150,11 @@ describe('loadConfig', () => {
       configPath,
       [
         'export default {',
-        "  components: '@app/components',",
-        '  fieldTypes: {',
-        "    'cross-ref': { component: 'TypeSelector' }",
+        '  components: {',
+        "    source: '@app/components',",
         '  },',
         '  fields: {',
-        "    'DataForm.superType': { fieldType: 'cross-ref', props: { refType: 'Data' } }",
+        "    'DataForm.superType': { component: 'TypeSelector', props: { refType: 'Data' } }",
         '  }',
         '};'
       ].join('\n'),
@@ -167,8 +162,8 @@ describe('loadConfig', () => {
     );
 
     const config = await loadConfig(configPath);
-    expect(config.components).toBe('@app/components');
-    expect(config.fieldTypes['cross-ref']?.component).toBe('TypeSelector');
+    expect(config.components.source).toBe('@app/components');
+    expect(config.fields?.['DataForm.superType']?.component).toBe('TypeSelector');
   });
 
   it('throws clear error for invalid config', async () => {
@@ -179,8 +174,9 @@ describe('loadConfig', () => {
       configPath,
       JSON.stringify(
         {
-          components: '',
-          fieldTypes: {}
+          components: {
+            source: ''
+          }
         },
         null,
         2
@@ -188,7 +184,9 @@ describe('loadConfig', () => {
       'utf8'
     );
 
-    await expect(loadConfig(configPath)).rejects.toThrow(/components must be a non-empty string/);
+    await expect(loadConfig(configPath)).rejects.toThrow(
+      /components\.source must be a non-empty string/
+    );
   });
 
   it('resolves default z2f.config.ts before component-config.ts', async () => {
@@ -198,12 +196,12 @@ describe('loadConfig', () => {
 
     await writeFile(
       preferredPath,
-      `export default { components: '@preferred/components', fieldTypes: { string: { component: 'Input' } } };\n`,
+      `export default { components: { source: '@preferred/components' } };\n`,
       'utf8'
     );
     await writeFile(
       secondaryPath,
-      `export default { components: '@secondary/components', fieldTypes: { string: { component: 'Input' } } };\n`,
+      `export default { components: { source: '@secondary/components' } };\n`,
       'utf8'
     );
 
@@ -211,7 +209,7 @@ describe('loadConfig', () => {
     expect(resolved).toBe(preferredPath);
 
     const config = await loadDefaultConfig(dir);
-    expect(config?.components).toBe('@preferred/components');
+    expect(config?.components.source).toBe('@preferred/components');
   });
 
   it('falls back to component-config.ts when z2f.config.ts is absent', async () => {
@@ -220,7 +218,7 @@ describe('loadConfig', () => {
 
     await writeFile(
       fallbackPath,
-      `export default { components: '@fallback/components', fieldTypes: { string: { component: 'Input' } } };\n`,
+      `export default { components: { source: '@fallback/components' } };\n`,
       'utf8'
     );
 
@@ -228,7 +226,7 @@ describe('loadConfig', () => {
     expect(resolved).toBe(fallbackPath);
 
     const config = await loadDefaultConfig(dir);
-    expect(config?.components).toBe('@fallback/components');
+    expect(config?.components.source).toBe('@fallback/components');
   });
 
   it('accepts new config shape with defaults and schemas (T049)', async () => {
@@ -239,8 +237,12 @@ describe('loadConfig', () => {
       configPath,
       JSON.stringify(
         {
-          components: '@app/components',
-          fieldTypes: { Input: { component: 'Input' } },
+          components: {
+            source: '@app/components',
+            overrides: {
+              Input: {}
+            }
+          },
           defaults: {
             mode: 'submit',
             ui: 'shadcn',
@@ -251,7 +253,7 @@ describe('loadConfig', () => {
               name: 'UserForm',
               mode: 'auto-save',
               fields: {
-                email: { fieldType: 'Input', order: 1 }
+                email: { component: 'Input', order: 1 }
               }
             }
           }
@@ -277,9 +279,10 @@ describe('loadConfig', () => {
       configPath,
       JSON.stringify(
         {
-          components: '@app/components',
-          overwrite: true,
-          fieldTypes: { Input: { component: 'Input' } }
+          components: {
+            source: '@app/components'
+          },
+          overwrite: true
         },
         null,
         2

@@ -42,6 +42,7 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
   const { form, fields } = useZodForm(schema, {
     defaultValues,
     formRegistry,
+    fields: componentConfig?.fields,
     processors,
     mode,
     onValueChange

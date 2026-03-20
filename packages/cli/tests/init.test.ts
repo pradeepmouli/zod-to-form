@@ -30,7 +30,7 @@ describe('runInit', () => {
       `import type * as Components from '@/components/zod-form-components';`
     );
     expect(content).toContain(`export default defineConfig<typeof Components>({`);
-    expect(content).toContain(`components: '@/components/zod-form-components'`);
+    expect(content).toContain(`source: '@/components/zod-form-components'`);
     expect(content).toContain(`formPrimitives: {`);
     expect(content).toContain(`field: 'Field'`);
     expect(content).toContain(`label: 'FieldLabel'`);
@@ -57,7 +57,7 @@ describe('runInit', () => {
     expect(content).toContain(
       `import type * as Components from '@rune-langium/design-system/ui/input';`
     );
-    expect(content).toContain(`components: '@rune-langium/design-system/ui/input'`);
+    expect(content).toContain(`source: '@rune-langium/design-system/ui/input'`);
 
     process.chdir(originalCwd);
   });
@@ -75,7 +75,7 @@ describe('runInit', () => {
     expect(content).toContain(
       `import type * as Components from '../../src/components/zod-form-components.js';`
     );
-    expect(content).toContain(`components: './src/components/zod-form-components.ts'`);
+    expect(content).toContain(`source: './src/components/zod-form-components.ts'`);
 
     process.chdir(originalCwd);
   });
@@ -103,7 +103,7 @@ describe('runInit', () => {
     const content = await readFile(result.outputPath, 'utf8');
 
     expect(result.usedShadcnDefaults).toBe(true);
-    expect(content).toContain(`components: '@/components/ui/zod-form-components'`);
+    expect(content).toContain(`source: '@/components/ui/zod-form-components'`);
 
     process.chdir(originalCwd);
   });
@@ -211,7 +211,7 @@ describe('runInit', () => {
     process.chdir(originalCwd);
   });
 
-  it('discovers component exports from module path and uses them in fieldTypes', async () => {
+  it('discovers component exports from module path and uses them in overrides', async () => {
     const dir = await createTempDir();
     process.chdir(dir);
 
@@ -234,27 +234,24 @@ describe('runInit', () => {
     const result = await runInit({});
     const content = await readFile(result.outputPath, 'utf8');
 
-    // Discovered PascalCase components should be in fieldTypes
-    expect(content).toContain(`TextInput: { component: 'TextInput' }`);
-    expect(content).toContain(`EmailInput: { component: 'EmailInput' }`);
-    expect(content).toContain(`SelectField: { component: 'SelectField' }`);
+    // Discovered PascalCase components should NOT produce overrides entries
+    // (only controlled components get overrides entries in the new API)
+    expect(content).not.toContain(`TextInput:`);
+    expect(content).not.toContain(`EmailInput:`);
+    expect(content).not.toContain(`SelectField:`);
 
-    // Form primitives should NOT be in fieldTypes
-    expect(content).not.toMatch(/fieldTypes:[\s\S]*Field: \{ component: 'Field' \}/);
-    expect(content).not.toContain(`FieldLabel: { component: 'FieldLabel' }`);
-    expect(content).not.toContain(`FieldControl: { component: 'FieldControl' }`);
+    // Form primitives should NOT be in overrides
+    expect(content).not.toContain(`FieldLabel:`);
+    expect(content).not.toContain(`FieldControl:`);
 
-    // Hooks and non-PascalCase should NOT be in fieldTypes
+    // Hooks and non-PascalCase should NOT be in overrides
     expect(content).not.toContain('useFormContext');
     expect(content).not.toContain('helperUtil');
-
-    // Hardcoded defaults should NOT appear when components are discovered
-    expect(content).not.toContain(`DatePicker: { component: 'DatePicker' }`);
 
     process.chdir(originalCwd);
   });
 
-  it('uses shadcn preset fieldTypes when components.json is present', async () => {
+  it('uses shadcn preset overrides when components.json is present', async () => {
     const dir = await createTempDir();
     process.chdir(dir);
 
@@ -267,21 +264,17 @@ describe('runInit', () => {
     const result = await runInit({});
     const content = await readFile(result.outputPath, 'utf8');
 
-    // Imports SHADCN_FIELD_TYPES alongside defineConfig
-    expect(content).toContain(
-      `import { defineConfig, SHADCN_FIELD_TYPES } from '@zod-to-form/core'`
-    );
+    // Imports SHADCN_OVERRIDES alongside defineConfig
+    expect(content).toContain(`import { defineConfig, SHADCN_OVERRIDES } from '@zod-to-form/core'`);
     // preset field emitted
     expect(content).toContain(`preset: 'shadcn'`);
-    // Spread in fieldTypes
-    expect(content).toContain(`...SHADCN_FIELD_TYPES`);
-    // No individual preset entries listed (they come from the spread)
-    expect(content).not.toContain(`Input: { component: 'Input' }`);
+    // Spread in overrides
+    expect(content).toContain(`...SHADCN_OVERRIDES`);
 
     process.chdir(originalCwd);
   });
 
-  it('merges shadcn preset spread with discovered components', async () => {
+  it('merges shadcn preset spread with discovered controlled components', async () => {
     const dir = await createTempDir();
     process.chdir(dir);
 
@@ -310,16 +303,16 @@ describe('runInit', () => {
     const content = await readFile(result.outputPath, 'utf8');
 
     // Spread for preset base
-    expect(content).toContain(`...SHADCN_FIELD_TYPES`);
-    // Discovered entries listed after the spread
-    expect(content).toContain(`RichTextEditor: { component: 'RichTextEditor' }`);
-    // ColorPicker is a known controlled component
-    expect(content).toContain(`ColorPicker: { component: 'ColorPicker', controlled: true }`);
+    expect(content).toContain(`...SHADCN_OVERRIDES`);
+    // Non-controlled discovered entries should NOT appear in overrides
+    expect(content).not.toContain(`RichTextEditor:`);
+    // ColorPicker is a known controlled component — should appear in overrides
+    expect(content).toContain(`ColorPicker: { controlled: true }`);
 
     process.chdir(originalCwd);
   });
 
-  it('falls back to hardcoded fieldTypes when no components found', async () => {
+  it('falls back to empty overrides when no components found', async () => {
     const dir = await createTempDir();
     process.chdir(dir);
 
@@ -328,9 +321,8 @@ describe('runInit', () => {
 
     // No preset emitted without shadcn
     expect(content).not.toContain('preset:');
-    expect(content).toContain(`Input: { component: 'Input' }`);
-    expect(content).toContain(`Select: { component: 'Select' }`);
-    expect(content).toContain(`Checkbox: { component: 'Checkbox' }`);
+    // Should have components.source but no overrides (no controlled components discovered)
+    expect(content).toContain(`source: '@/components/zod-form-components'`);
 
     process.chdir(originalCwd);
   });
@@ -464,7 +456,7 @@ describe('runInit', () => {
     process.chdir(originalCwd);
   });
 
-  it('marks known controlled components (Select, Switch) with controlled: true', async () => {
+  it('marks known controlled components (Select, Switch) with controlled: true in overrides', async () => {
     const dir = await createTempDir();
     process.chdir(dir);
 
@@ -485,12 +477,11 @@ describe('runInit', () => {
     const result = await runInit({});
     const content = await readFile(result.outputPath, 'utf8');
 
-    // Known controlled components get controlled: true
-    expect(content).toContain(`Select: { component: 'Select', controlled: true }`);
-    expect(content).toContain(`Switch: { component: 'Switch', controlled: true }`);
-    // Regular components do not
-    expect(content).toContain(`TextInput: { component: 'TextInput' }`);
-    expect(content).not.toContain(`TextInput: { component: 'TextInput', controlled: true }`);
+    // Known controlled components get overrides with controlled: true
+    expect(content).toContain(`Select: { controlled: true }`);
+    expect(content).toContain(`Switch: { controlled: true }`);
+    // Regular components do not appear in overrides at all
+    expect(content).not.toContain(`TextInput:`);
 
     process.chdir(originalCwd);
   });
@@ -520,10 +511,10 @@ describe('runInit', () => {
     const result = await runInit({});
     const content = await readFile(result.outputPath, 'utf8');
 
-    // Heuristic detects TypeSelector as controlled
-    expect(content).toContain(`TypeSelector: { component: 'TypeSelector', controlled: true }`);
-    // forwardRef component is NOT marked controlled
-    expect(content).not.toContain(`CustomInput: { component: 'CustomInput', controlled: true }`);
+    // Heuristic detects TypeSelector as controlled — appears in overrides
+    expect(content).toContain(`TypeSelector: { controlled: true }`);
+    // forwardRef component is NOT marked controlled — should not appear in overrides
+    expect(content).not.toContain(`CustomInput:`);
 
     process.chdir(originalCwd);
   });

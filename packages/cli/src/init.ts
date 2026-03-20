@@ -1,6 +1,6 @@
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { DEFAULT_FIELD_TYPES } from '@zod-to-form/core';
+import { DEFAULT_OVERRIDES } from '@zod-to-form/core';
 import { resolveSchemaExportNames } from './loader.js';
 
 export type InitOptions = {
@@ -446,11 +446,11 @@ async function discoverSchemas(
 }
 
 const PRESET_IMPORT_NAME: Record<string, string> = {
-  shadcn: 'SHADCN_FIELD_TYPES',
-  unstyled: 'DEFAULT_FIELD_TYPES'
+  shadcn: 'SHADCN_OVERRIDES',
+  unstyled: 'DEFAULT_OVERRIDES'
 };
 
-function resolveFieldTypeEntries(
+function resolveComponentEntries(
   discoveredComponents: DiscoveredComponents,
   preset: 'shadcn' | 'unstyled' | undefined
 ): DiscoveredComponent[] {
@@ -461,7 +461,7 @@ function resolveFieldTypeEntries(
   }
 
   // No preset: merge default entries with any discovered components as fallback
-  const presetNames = Object.keys(DEFAULT_FIELD_TYPES);
+  const presetNames = Object.keys(DEFAULT_OVERRIDES);
   if (discoveredComponents.components.length > 0) {
     const discoveredNames = new Set(discoveredComponents.components.map((c) => c.name));
     const defaults: DiscoveredComponent[] = presetNames
@@ -526,7 +526,7 @@ function buildConfigTemplate(
   modulePath: string,
   explicitModulePath: string | undefined,
   formPrimitives: FormPrimitivesConfig,
-  fieldTypeEntries: DiscoveredComponent[],
+  componentEntries: DiscoveredComponent[],
   discoveredSchemas: DiscoveredSchemas,
   explicitSchemaPath: string | undefined,
   preset: 'shadcn' | 'unstyled' | undefined
@@ -555,22 +555,23 @@ function buildConfigTemplate(
     importNames.push(presetImportName);
   }
 
-  // Build fieldTypes entries
-  const fieldTypeLines: string[] = [];
+  // Build overrides entries — only emit entries that have controlled: true
+  const overrideLines: string[] = [];
   if (presetImportName) {
-    const comma = fieldTypeEntries.length > 0 ? ',' : '';
-    fieldTypeLines.push(`    ...${presetImportName}${comma}`);
+    const controlledEntries = componentEntries.filter((entry) => entry.controlled);
+    const comma = controlledEntries.length > 0 ? ',' : '';
+    overrideLines.push(`      ...${presetImportName}${comma}`);
+    controlledEntries.forEach((entry, i) => {
+      const comma = i < controlledEntries.length - 1 ? ',' : '';
+      overrideLines.push(`      ${entry.name}: { controlled: true }${comma}`);
+    });
+  } else {
+    const controlledEntries = componentEntries.filter((entry) => entry.controlled);
+    controlledEntries.forEach((entry, i) => {
+      const comma = i < controlledEntries.length - 1 ? ',' : '';
+      overrideLines.push(`      ${entry.name}: { controlled: true }${comma}`);
+    });
   }
-  fieldTypeEntries.forEach((entry, i) => {
-    const comma = i < fieldTypeEntries.length - 1 ? ',' : '';
-    if (entry.controlled) {
-      fieldTypeLines.push(
-        `    ${entry.name}: { component: '${entry.name}', controlled: true }${comma}`
-      );
-    } else {
-      fieldTypeLines.push(`    ${entry.name}: { component: '${entry.name}' }${comma}`);
-    }
-  });
 
   const lines = [
     `import { ${importNames.join(', ')} } from '@zod-to-form/core';`,
@@ -579,14 +580,22 @@ function buildConfigTemplate(
     ...(schemaImportPath ? [`import type * as ZodSchemas from '${schemaImportPath}';`] : []),
     ``,
     `export default defineConfig${defineConfigGenerics}({`,
-    `  components: '${modulePath}',`
+    `  components: {`,
+    `    source: '${modulePath}',`
   ];
 
   if (preset) {
-    lines.push(`  preset: '${preset}',`);
+    lines.push(`    preset: '${preset}',`);
+  }
+
+  if (overrideLines.length > 0) {
+    lines.push(`    overrides: {`);
+    lines.push(...overrideLines);
+    lines.push(`    }`);
   }
 
   lines.push(
+    `  },`,
     `  formPrimitives: {`,
     `    field: '${formPrimitives.field}',`,
     `    label: '${formPrimitives.label}',`,
@@ -600,10 +609,7 @@ function buildConfigTemplate(
     `    formProvider: false`,
     `  },`,
     `  include: [],`,
-    `  exclude: [],`,
-    `  fieldTypes: {`,
-    ...fieldTypeLines,
-    `  }`
+    `  exclude: []`
   );
 
   if (discoveredSchemas.exports.length > 0) {
@@ -744,14 +750,14 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
 
   logStep('[4/5] Building config template');
   const preset = shadcn.exists ? ('shadcn' as const) : undefined;
-  const fieldTypeEntries = resolveFieldTypeEntries(discoveredComponents, preset);
+  const componentEntries = resolveComponentEntries(discoveredComponents, preset);
   const code = buildConfigTemplate(
     cwd,
     outputPath,
     modulePath,
     options.components,
     discoveredPrimitives.primitives,
-    fieldTypeEntries,
+    componentEntries,
     discoveredSchemas,
     options.schemas,
     preset
