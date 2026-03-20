@@ -121,7 +121,7 @@ export function FormPreview({
       )}
 
       {fields && fields.length > 0 && schema ? (
-        <div className="flex-1 p-5 overflow-auto">
+        <div className="flex-1 p-5 overflow-auto form-preview-area">
           <ZodForm
             schema={schema}
             components={components}

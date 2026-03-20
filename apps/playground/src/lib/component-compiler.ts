@@ -126,6 +126,11 @@ ${wrappedCode}
         .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
         .join("") || name;
 
+    const composed = tryComposeRadixComponent(name, moduleExports);
+    if (composed) {
+      return { ok: true, component: composed.component, exportName: composed.exportName };
+    }
+
     let component: React.ComponentType<Record<string, unknown>> | null = null;
 
     if (typeof moduleExports[exportName] === "function" || isForwardRef(moduleExports[exportName])) {
@@ -152,6 +157,136 @@ ${wrappedCode}
     const message = err instanceof Error ? err.message : "Unknown compilation error";
     return { ok: false, error: message };
   }
+}
+
+type AnyComponent = React.ComponentType<Record<string, unknown>>;
+
+interface ComposedResult {
+  component: AnyComponent;
+  exportName: string;
+}
+
+function isComponent(value: unknown): boolean {
+  return typeof value === "function" || isForwardRef(value);
+}
+
+function tryComposeRadixComponent(
+  name: string,
+  exports: Record<string, unknown>,
+): ComposedResult | null {
+  if (name === "select") {
+    return tryComposeSelect(exports);
+  }
+  if (name === "checkbox") {
+    return tryComposeCheckbox(exports);
+  }
+  if (name === "switch") {
+    return tryComposeSwitch(exports);
+  }
+  return null;
+}
+
+function tryComposeSelect(
+  exports: Record<string, unknown>,
+): ComposedResult | null {
+  const SelectRoot = exports["Select"];
+  const Trigger = exports["SelectTrigger"];
+  const Value = exports["SelectValue"];
+  const Content = exports["SelectContent"];
+  const Item = exports["SelectItem"];
+
+  if (
+    !isComponent(SelectRoot) ||
+    !isComponent(Trigger) ||
+    !isComponent(Content) ||
+    !isComponent(Item)
+  ) {
+    return null;
+  }
+
+  const S = SelectRoot as AnyComponent;
+  const T = Trigger as AnyComponent;
+  const V = (Value ?? (() => null)) as AnyComponent;
+  const C = Content as AnyComponent;
+  const I = Item as AnyComponent;
+
+  const ComposedSelect = React.forwardRef<
+    unknown,
+    Record<string, unknown>
+  >(function ComposedSelect(props, ref) {
+    const {
+      options,
+      value,
+      onValueChange,
+      onChange,
+      onBlur,
+      placeholder,
+      disabled,
+      required,
+      id,
+      name: fieldName,
+      className,
+      ...rest
+    } = props as {
+      options?: { value: string | number; label: string; disabled?: boolean }[];
+      value?: string;
+      onValueChange?: (v: string) => void;
+      onChange?: (v: string) => void;
+      onBlur?: () => void;
+      placeholder?: string;
+      disabled?: boolean;
+      required?: boolean;
+      id?: string;
+      name?: string;
+      className?: string;
+      [k: string]: unknown;
+    };
+
+    const handleChange = onValueChange ?? onChange;
+
+    return React.createElement(
+      S,
+      { value: value ?? "", onValueChange: handleChange, ...rest },
+      React.createElement(
+        T,
+        { ref, className, id, disabled, onBlur, "aria-required": required },
+        React.createElement(V, { placeholder: placeholder ?? "Select..." }),
+      ),
+      React.createElement(
+        C,
+        null,
+        ...(options ?? []).map((opt) =>
+          React.createElement(
+            I,
+            {
+              key: `${opt.value}`,
+              value: `${opt.value}`,
+              disabled: opt.disabled,
+            },
+            opt.label,
+          ),
+        ),
+      ),
+    );
+  });
+
+  return { component: ComposedSelect as AnyComponent, exportName: "Select" };
+}
+
+function tryComposeCheckbox(
+  exports: Record<string, unknown>,
+): ComposedResult | null {
+  const Checkbox = exports["Checkbox"];
+  if (!isComponent(Checkbox)) return null;
+  return { component: Checkbox as AnyComponent, exportName: "Checkbox" };
+}
+
+function tryComposeSwitch(
+  exports: Record<string, unknown>,
+): ComposedResult | null {
+  const Switch = exports["Switch"];
+  if (!isComponent(Switch)) return null;
+  return { component: Switch as AnyComponent, exportName: "Switch" };
 }
 
 function isForwardRef(value: unknown): boolean {
