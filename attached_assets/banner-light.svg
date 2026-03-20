@@ -1,4 +1,4 @@
-<svg width="900" height="200" viewBox="0 0 900 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="900" height="120" viewBox="0 0 900 120" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="pinkGrad" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0,-82,82,0,50,82)">
       <stop offset="0" stop-color="#D926A9"/>
@@ -30,7 +30,7 @@
     </filter>
   </defs>
 
-  <g transform="translate(213,59)">
+  <g transform="translate(260,18)">
     <g transform="scale(0.07639,0.07628)">
       <path d="M258.188,0.987c-51.217,0 -96.967,32.03 -114.488,80.159l-132.717,364.517c-17.279,47.47 -3.479,100.679 34.7,133.762l536.4,464.825c46.192,40.029 114.892,39.638 160.625,-0.912l520.988,-461.934c37.296,-33.071 50.687,-85.525 33.808,-132.425l-132.241,-367.412c-17.4,-48.346 -63.259,-80.58 -114.638,-80.58l-792.438,0.001Z" fill="url(#pinkGrad)"/>
       <path d="M258.188,0.987c-51.217,0 -96.967,32.03 -114.488,80.159l-132.717,364.517c-17.279,47.47 -3.479,100.679 34.7,133.762l536.4,464.825c46.192,40.029 114.892,39.638 160.625,-0.912l520.988,-461.934c37.296,-33.071 50.687,-85.525 33.808,-132.425l-132.241,-367.412c-17.4,-48.346 -63.259,-80.58 -114.638,-80.58l-792.438,0.001Z" fill="url(#sheen)"/>
@@ -45,8 +45,8 @@
   </g>
 
   <text
-    x="337"
-    y="112"
+    x="384"
+    y="52"
     dominant-baseline="middle"
     font-family="'Outfit',Helvetica Neue,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
     font-size="52"
@@ -56,7 +56,7 @@
 
   <text
     x="450"
-    y="158"
+    y="95"
     text-anchor="middle"
     dominant-baseline="middle"
     font-family="'JetBrains Mono',Menlo,monospace"
