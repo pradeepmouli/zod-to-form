@@ -1,24 +1,18 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
-const SHADCN_REGISTRY_BASE = "https://ui.shadcn.com/r";
-const SHADCN_INDEX_URL = `${SHADCN_REGISTRY_BASE}/index.json`;
-const SHADCN_DOCS_URL = "https://ui.shadcn.com/docs/directory";
+const REGISTRIES_URL = "https://ui.shadcn.com/r/registries.json";
 
-const SUPPORTED_COMPONENTS = new Set([
-  "input",
-  "textarea",
-  "select",
-  "checkbox",
-  "switch",
-  "label",
-  "button",
-  "radio-group",
-]);
+interface CommunityRegistry {
+  name: string;
+  homepage: string;
+  url: string;
+  description: string;
+}
 
-interface RegistryIndexItem {
+interface RegistryComponentItem {
   name: string;
   type: string;
-  registryDependencies?: string[];
+  dependencies?: string[];
 }
 
 interface RegistryFile {
@@ -27,7 +21,7 @@ interface RegistryFile {
   content: string;
 }
 
-interface RegistryItem {
+interface RegistryItemDetail {
   name: string;
   type: string;
   title?: string;
@@ -42,6 +36,23 @@ interface FetchedComponent {
   title: string;
   code: string;
   dependencies: string[];
+  library: string;
+}
+
+const SHADCN_ENTRY: CommunityRegistry = {
+  name: "shadcn/ui",
+  homepage: "https://ui.shadcn.com",
+  url: "https://ui.shadcn.com/r/styles/new-york/{name}.json",
+  description:
+    "Beautifully designed components that you can copy and paste into your apps. Built with Radix UI and Tailwind CSS.",
+};
+
+function deriveIndexUrl(urlPattern: string): string {
+  return urlPattern.replace("{name}", "index");
+}
+
+function deriveComponentUrl(urlPattern: string, name: string): string {
+  return urlPattern.replace("{name}", name);
 }
 
 interface CustomComponentImportProps {
@@ -60,110 +71,155 @@ export function CustomComponentImport({
   compilationErrors = {},
 }: CustomComponentImportProps) {
   const [search, setSearch] = useState("");
-  const [registry, setRegistry] = useState<RegistryIndexItem[]>([]);
-  const [registryLoading, setRegistryLoading] = useState(false);
-  const [registryError, setRegistryError] = useState<string | null>(null);
+  const [registries, setRegistries] = useState<CommunityRegistry[]>([]);
+  const [registriesLoading, setRegistriesLoading] = useState(false);
+  const [registriesError, setRegistriesError] = useState<string | null>(null);
+
+  const [selectedLibrary, setSelectedLibrary] =
+    useState<CommunityRegistry | null>(null);
+  const [components, setComponents] = useState<RegistryComponentItem[]>([]);
+  const [componentsLoading, setComponentsLoading] = useState(false);
+  const [componentsError, setComponentsError] = useState<string | null>(null);
+  const [componentSearch, setComponentSearch] = useState("");
+
   const [isFetching, setIsFetching] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [fetched, setFetched] = useState<FetchedComponent[]>([]);
   const [expandedSource, setExpandedSource] = useState<string | null>(null);
+
   const searchRef = useRef<HTMLInputElement>(null);
+  const componentSearchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isOpen) return;
-    if (registry.length > 0) {
+    if (registries.length > 0) {
       searchRef.current?.focus();
       return;
     }
 
-    setRegistryLoading(true);
-    setRegistryError(null);
+    setRegistriesLoading(true);
+    setRegistriesError(null);
 
-    fetch(SHADCN_INDEX_URL)
+    fetch(REGISTRIES_URL)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
-      .then((data: RegistryIndexItem[]) => {
-        const uiComponents = data.filter((item) => item.type === "registry:ui");
-        uiComponents.sort((a, b) => a.name.localeCompare(b.name));
-        setRegistry(uiComponents);
-        setRegistryLoading(false);
+      .then((data: CommunityRegistry[]) => {
+        data.sort((a, b) => a.name.localeCompare(b.name));
+        setRegistries(data);
+        setRegistriesLoading(false);
         setTimeout(() => searchRef.current?.focus(), 50);
       })
       .catch(() => {
-        setRegistryError("Failed to load registry index. Check your connection.");
-        setRegistryLoading(false);
+        setRegistriesError(
+          "Failed to load community registries. Check your connection.",
+        );
+        setRegistriesLoading(false);
       });
-  }, [isOpen, registry.length]);
+  }, [isOpen, registries.length]);
 
-  if (!isOpen) return null;
+  const selectLibrary = useCallback(
+    (lib: CommunityRegistry) => {
+      setSelectedLibrary(lib);
+      setComponents([]);
+      setComponentsLoading(true);
+      setComponentsError(null);
+      setComponentSearch("");
+      setError(null);
 
-  const searchLower = search.toLowerCase().trim();
-  const filtered = searchLower
-    ? registry.filter((item) => item.name.includes(searchLower))
-    : registry;
+      const indexUrl = deriveIndexUrl(lib.url);
 
-  const fetchedNames = new Set(fetched.map((c) => c.name));
+      fetch(indexUrl)
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then((data: RegistryComponentItem[] | { items?: RegistryComponentItem[] }) => {
+          let items: RegistryComponentItem[];
+          if (Array.isArray(data)) {
+            items = data;
+          } else if (data.items && Array.isArray(data.items)) {
+            items = data.items;
+          } else {
+            items = [];
+          }
 
-  const fetchComponent = async (name: string) => {
-    if (fetchedNames.has(name)) {
-      setError(`"${name}" is already in the list`);
-      return;
-    }
+          const uiItems = items.filter(
+            (item) =>
+              item.type === "registry:ui" ||
+              item.type === "registry:component" ||
+              item.type === "registry:block",
+          );
+          uiItems.sort((a, b) => a.name.localeCompare(b.name));
+          setComponents(uiItems);
+          setComponentsLoading(false);
+          setTimeout(() => componentSearchRef.current?.focus(), 50);
+        })
+        .catch(() => {
+          setComponentsError(
+            "Failed to load components from this registry.",
+          );
+          setComponentsLoading(false);
+        });
+    },
+    [],
+  );
 
-    setIsFetching(name);
-    setError(null);
-
-    try {
-      let res = await fetch(
-        `${SHADCN_REGISTRY_BASE}/styles/new-york/${name}.json`,
-      );
-      if (!res.ok) {
-        res = await fetch(`${SHADCN_REGISTRY_BASE}/${name}.json`);
-      }
-      if (!res.ok) {
-        setError(
-          `Component "${name}" not found in the shadcn registry.`,
-        );
-        setIsFetching(null);
+  const fetchComponent = useCallback(
+    async (name: string) => {
+      if (!selectedLibrary) return;
+      const key = `${selectedLibrary.name}/${name}`;
+      if (fetched.some((c) => c.name === key)) {
+        setError(`"${name}" from ${selectedLibrary.name} is already added`);
         return;
       }
 
-      const data: RegistryItem = await res.json();
-      const mainFile = data.files?.[0];
-      if (!mainFile?.content) {
-        setError(
-          `Component "${name}" has no source code in the registry.`,
-        );
+      setIsFetching(name);
+      setError(null);
+
+      try {
+        const url = deriveComponentUrl(selectedLibrary.url, name);
+        const res = await fetch(url);
+        if (!res.ok) {
+          setError(`Component "${name}" not found in ${selectedLibrary.name}.`);
+          setIsFetching(null);
+          return;
+        }
+
+        const data: RegistryItemDetail = await res.json();
+        const mainFile = data.files?.find((f) => f.content);
+        if (!mainFile?.content) {
+          setError(`Component "${name}" has no source code in the registry.`);
+          setIsFetching(null);
+          return;
+        }
+
+        const title =
+          data.title ||
+          name
+            .split("-")
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join("");
+
+        setFetched((prev) => [
+          ...prev,
+          {
+            name: key,
+            title,
+            code: mainFile.content,
+            dependencies: data.dependencies ?? [],
+            library: selectedLibrary.name,
+          },
+        ]);
+      } catch {
+        setError("Failed to fetch component. Check your connection.");
+      } finally {
         setIsFetching(null);
-        return;
       }
-
-      const title =
-        data.title ||
-        name
-          .split("-")
-          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-          .join("");
-
-      setFetched((prev) => [
-        ...prev,
-        {
-          name,
-          title,
-          code: mainFile.content,
-          dependencies: data.dependencies ?? [],
-        },
-      ]);
-    } catch {
-      setError(
-        "Failed to fetch component. Check your connection.",
-      );
-    } finally {
-      setIsFetching(null);
-    }
-  };
+    },
+    [selectedLibrary, fetched],
+  );
 
   const handleRemove = (name: string) => {
     setFetched((prev) => prev.filter((c) => c.name !== name));
@@ -175,11 +231,14 @@ export function CustomComponentImport({
       setError("Add at least one component before importing");
       return;
     }
-    const components: Record<string, string> = {};
+    const importMap: Record<string, string> = {};
     for (const comp of fetched) {
-      components[comp.name] = comp.code;
+      const shortName = comp.name.includes("/")
+        ? comp.name.split("/").pop()!
+        : comp.name;
+      importMap[shortName] = comp.code;
     }
-    onImport(components);
+    onImport(importMap);
     if (onSwitchToShadcn) {
       onSwitchToShadcn();
     }
@@ -188,6 +247,34 @@ export function CustomComponentImport({
     setError(null);
     onClose();
   };
+
+  const goBack = () => {
+    setSelectedLibrary(null);
+    setComponents([]);
+    setComponentsError(null);
+    setComponentSearch("");
+    setError(null);
+    setTimeout(() => searchRef.current?.focus(), 50);
+  };
+
+  if (!isOpen) return null;
+
+  const fetchedNames = new Set(fetched.map((c) => c.name));
+
+  const allRegistries = [SHADCN_ENTRY, ...registries];
+  const searchLower = search.toLowerCase().trim();
+  const filteredRegistries = searchLower
+    ? allRegistries.filter(
+        (r) =>
+          r.name.toLowerCase().includes(searchLower) ||
+          r.description.toLowerCase().includes(searchLower),
+      )
+    : allRegistries;
+
+  const compSearchLower = componentSearch.toLowerCase().trim();
+  const filteredComponents = compSearchLower
+    ? components.filter((c) => c.name.includes(compSearchLower))
+    : components;
 
   return (
     <div
@@ -201,22 +288,47 @@ export function CustomComponentImport({
           className="flex items-center justify-between p-4"
           style={{ borderBottom: "1px solid var(--border-subtle)" }}
         >
-          <div>
-            <h2
-              className="text-sm font-bold"
-              style={{ color: "var(--text-primary)" }}
-            >
-              Import shadcn/ui Components
-            </h2>
-            <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-              {registry.length > 0
-                ? `${registry.length} components available`
-                : "Loading registry..."}
-            </p>
+          <div className="flex items-center gap-2 min-w-0">
+            {selectedLibrary && (
+              <button
+                onClick={goBack}
+                className="text-sm transition-colors shrink-0"
+                style={{ color: "var(--text-muted)" }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.color = "var(--text-primary)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = "var(--text-muted)")
+                }
+                aria-label="Back to library list"
+              >
+                &larr;
+              </button>
+            )}
+            <div className="min-w-0">
+              <h2
+                className="text-sm font-bold truncate"
+                style={{ color: "var(--text-primary)" }}
+              >
+                {selectedLibrary
+                  ? selectedLibrary.name
+                  : "Component Libraries"}
+              </h2>
+              <p
+                className="text-xs mt-0.5 truncate"
+                style={{ color: "var(--text-muted)" }}
+              >
+                {selectedLibrary
+                  ? `${components.length > 0 ? `${components.length} components` : componentsLoading ? "Loading..." : "Browse components"}`
+                  : registries.length > 0
+                    ? `${allRegistries.length} registries from shadcn/ui community`
+                    : "Loading registries..."}
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="text-lg leading-none transition-colors w-7 h-7 flex items-center justify-center rounded-md"
+            className="text-lg leading-none transition-colors w-7 h-7 flex items-center justify-center rounded-md shrink-0"
             style={{ color: "var(--text-muted)" }}
             onMouseEnter={(e) =>
               (e.currentTarget.style.background = "var(--bg-hover)")
@@ -224,133 +336,40 @@ export function CustomComponentImport({
             onMouseLeave={(e) =>
               (e.currentTarget.style.background = "transparent")
             }
-            aria-label="Close custom component import"
+            aria-label="Close"
           >
             &times;
           </button>
         </div>
 
         <div className="p-4 space-y-3 overflow-auto flex-1 min-h-0">
-          <input
-            ref={searchRef}
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search components..."
-            className="input-glass w-full px-3 py-2 text-sm"
-            autoFocus
-          />
-
-          {registryLoading && (
-            <div
-              className="text-xs text-center py-8"
-              style={{ color: "var(--text-muted)" }}
-            >
-              Loading shadcn/ui registry...
-            </div>
+          {!selectedLibrary && (
+            <LibraryBrowser
+              searchRef={searchRef}
+              search={search}
+              onSearchChange={setSearch}
+              registries={filteredRegistries}
+              loading={registriesLoading}
+              error={registriesError}
+              searchTerm={searchLower}
+              onSelect={selectLibrary}
+            />
           )}
 
-          {registryError && (
-            <div
-              className="glass-panel text-xs p-3 text-center"
-              style={{
-                color: "rgb(248, 113, 113)",
-                background: "rgba(239, 68, 68, 0.06)",
-                border: "1px solid rgba(239, 68, 68, 0.15)",
-              }}
-            >
-              {registryError}
-            </div>
-          )}
-
-          {!registryLoading && !registryError && filtered.length === 0 && (
-            <div
-              className="text-xs text-center py-6"
-              style={{ color: "var(--text-muted)" }}
-            >
-              {searchLower
-                ? `No components matching "${search}"`
-                : "No components found"}
-            </div>
-          )}
-
-          {!registryLoading && filtered.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {filtered.map((item) => {
-                const isSupported = SUPPORTED_COMPONENTS.has(item.name);
-                const isAlreadyFetched = fetchedNames.has(item.name);
-                const isCurrentlyFetching = isFetching === item.name;
-
-                return (
-                  <button
-                    key={item.name}
-                    onClick={() => fetchComponent(item.name)}
-                    disabled={isAlreadyFetched || isCurrentlyFetching || isFetching !== null}
-                    className="btn-glass text-xs px-2.5 py-1.5 disabled:cursor-not-allowed transition-all"
-                    style={{
-                      opacity: isAlreadyFetched ? 0.4 : isSupported ? 1 : 0.7,
-                      borderColor: isAlreadyFetched
-                        ? "rgba(34, 197, 94, 0.3)"
-                        : isSupported
-                          ? "rgba(249, 115, 22, 0.25)"
-                          : undefined,
-                      background: isAlreadyFetched
-                        ? "rgba(34, 197, 94, 0.08)"
-                        : undefined,
-                    }}
-                    title={
-                      isAlreadyFetched
-                        ? "Already added"
-                        : isSupported
-                          ? "Supported — bundled Radix dependencies"
-                          : "May need additional dependencies"
-                    }
-                  >
-                    {isCurrentlyFetching ? (
-                      <span style={{ color: "var(--accent-violet)" }}>
-                        fetching...
-                      </span>
-                    ) : (
-                      <>
-                        {isAlreadyFetched && (
-                          <span style={{ color: "rgb(34, 197, 94)", marginRight: 4 }}>
-                            ✓
-                          </span>
-                        )}
-                        {item.name}
-                        {isSupported && !isAlreadyFetched && (
-                          <span
-                            style={{
-                              color: "var(--accent-violet)",
-                              marginLeft: 4,
-                              fontSize: "0.65rem",
-                            }}
-                          >
-                            ●
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {!registryLoading && registry.length > 0 && (
-            <p className="text-xs flex items-center gap-1.5" style={{ color: "var(--text-muted)" }}>
-              <span style={{ color: "var(--accent-violet)" }}>●</span>
-              Supported (bundled Radix deps) — others may need missing dependencies.{" "}
-              <a
-                href={SHADCN_DOCS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "var(--accent-violet)" }}
-                className="underline"
-              >
-                Docs
-              </a>
-            </p>
+          {selectedLibrary && (
+            <ComponentBrowser
+              searchRef={componentSearchRef}
+              search={componentSearch}
+              onSearchChange={setComponentSearch}
+              components={filteredComponents}
+              loading={componentsLoading}
+              error={componentsError}
+              searchTerm={compSearchLower}
+              library={selectedLibrary}
+              isFetching={isFetching}
+              fetchedNames={fetchedNames}
+              onFetch={fetchComponent}
+            />
           )}
 
           {error && (
@@ -378,7 +397,10 @@ export function CustomComponentImport({
                 Ready to import ({fetched.length})
               </h3>
               {fetched.map((comp) => {
-                const compError = compilationErrors[comp.name];
+                const shortName = comp.name.includes("/")
+                  ? comp.name.split("/").pop()!
+                  : comp.name;
+                const compError = compilationErrors[shortName];
                 return (
                   <div
                     key={comp.name}
@@ -399,16 +421,14 @@ export function CustomComponentImport({
                             color: "var(--text-primary)",
                           }}
                         >
-                          {comp.name}
+                          {shortName}
                         </span>
-                        {comp.dependencies.length > 0 && (
-                          <span
-                            className="text-xs truncate"
-                            style={{ color: "var(--text-muted)" }}
-                          >
-                            deps: {comp.dependencies.join(", ")}
-                          </span>
-                        )}
+                        <span
+                          className="text-xs truncate"
+                          style={{ color: "var(--text-muted)" }}
+                        >
+                          {comp.library}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 ml-2 shrink-0">
                         <button
@@ -426,7 +446,7 @@ export function CustomComponentImport({
                           onClick={() => handleRemove(comp.name)}
                           className="text-xs transition-colors"
                           style={{ color: "rgb(248, 113, 113)" }}
-                          aria-label={`Remove ${comp.name}`}
+                          aria-label={`Remove ${shortName}`}
                         >
                           Remove
                         </button>
@@ -467,5 +487,262 @@ export function CustomComponentImport({
         </div>
       </div>
     </div>
+  );
+}
+
+function LibraryBrowser({
+  searchRef,
+  search,
+  onSearchChange,
+  registries,
+  loading,
+  error,
+  searchTerm,
+  onSelect,
+}: {
+  searchRef: React.RefObject<HTMLInputElement | null>;
+  search: string;
+  onSearchChange: (value: string) => void;
+  registries: CommunityRegistry[];
+  loading: boolean;
+  error: string | null;
+  searchTerm: string;
+  onSelect: (lib: CommunityRegistry) => void;
+}) {
+  return (
+    <>
+      <input
+        ref={searchRef}
+        type="text"
+        value={search}
+        onChange={(e) => onSearchChange(e.target.value)}
+        placeholder="Search libraries..."
+        className="input-glass w-full px-3 py-2 text-sm"
+      />
+
+      {loading && (
+        <div
+          className="text-xs text-center py-8"
+          style={{ color: "var(--text-muted)" }}
+        >
+          Loading community registries...
+        </div>
+      )}
+
+      {error && (
+        <div
+          className="glass-panel text-xs p-3 text-center"
+          style={{
+            color: "rgb(248, 113, 113)",
+            background: "rgba(239, 68, 68, 0.06)",
+            border: "1px solid rgba(239, 68, 68, 0.15)",
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {!loading && !error && registries.length === 0 && (
+        <div
+          className="text-xs text-center py-6"
+          style={{ color: "var(--text-muted)" }}
+        >
+          {searchTerm
+            ? `No libraries matching "${searchTerm}"`
+            : "No registries found"}
+        </div>
+      )}
+
+      {!loading && registries.length > 0 && (
+        <div className="space-y-1">
+          {registries.map((lib) => (
+            <button
+              key={lib.name}
+              onClick={() => onSelect(lib)}
+              className="w-full text-left px-3 py-2.5 rounded-lg transition-all"
+              style={{
+                background: "rgba(15, 20, 32, 0.4)",
+                border: "1px solid var(--border-subtle)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(15, 20, 32, 0.8)";
+                e.currentTarget.style.borderColor = "rgba(249, 115, 22, 0.3)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(15, 20, 32, 0.4)";
+                e.currentTarget.style.borderColor = "var(--border-subtle)";
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <span
+                  className="text-sm font-medium"
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  {lib.name}
+                </span>
+                <span
+                  className="text-xs shrink-0 ml-2"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  &rarr;
+                </span>
+              </div>
+              <p
+                className="text-xs mt-0.5 line-clamp-2"
+                style={{ color: "var(--text-muted)" }}
+              >
+                {lib.description}
+              </p>
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+function ComponentBrowser({
+  searchRef,
+  search,
+  onSearchChange,
+  components,
+  loading,
+  error,
+  searchTerm,
+  library,
+  isFetching,
+  fetchedNames,
+  onFetch,
+}: {
+  searchRef: React.RefObject<HTMLInputElement | null>;
+  search: string;
+  onSearchChange: (value: string) => void;
+  components: RegistryComponentItem[];
+  loading: boolean;
+  error: string | null;
+  searchTerm: string;
+  library: CommunityRegistry;
+  isFetching: string | null;
+  fetchedNames: Set<string>;
+  onFetch: (name: string) => void;
+}) {
+  return (
+    <>
+      <div className="flex gap-2 items-center">
+        <input
+          ref={searchRef}
+          type="text"
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Filter components..."
+          className="input-glass flex-1 px-3 py-2 text-sm"
+        />
+        <a
+          href={library.homepage}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs shrink-0 px-2 py-1.5 rounded transition-colors"
+          style={{ color: "var(--accent-violet)" }}
+        >
+          Docs
+        </a>
+      </div>
+
+      {loading && (
+        <div
+          className="text-xs text-center py-8"
+          style={{ color: "var(--text-muted)" }}
+        >
+          Loading components from {library.name}...
+        </div>
+      )}
+
+      {error && (
+        <div
+          className="glass-panel text-xs p-3 text-center"
+          style={{
+            color: "rgb(248, 113, 113)",
+            background: "rgba(239, 68, 68, 0.06)",
+            border: "1px solid rgba(239, 68, 68, 0.15)",
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {!loading && !error && components.length === 0 && (
+        <div
+          className="text-xs text-center py-6"
+          style={{ color: "var(--text-muted)" }}
+        >
+          {searchTerm
+            ? `No components matching "${searchTerm}"`
+            : "No components found in this registry."}
+        </div>
+      )}
+
+      {!loading && components.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {components.map((item) => {
+            const key = `${library.name}/${item.name}`;
+            const isAlreadyFetched = fetchedNames.has(key);
+            const isCurrentlyFetching = isFetching === item.name;
+
+            return (
+              <button
+                key={item.name}
+                onClick={() => onFetch(item.name)}
+                disabled={
+                  isAlreadyFetched ||
+                  isCurrentlyFetching ||
+                  isFetching !== null
+                }
+                className="btn-glass text-xs px-2.5 py-1.5 disabled:cursor-not-allowed transition-all"
+                style={{
+                  opacity: isAlreadyFetched ? 0.4 : 1,
+                  borderColor: isAlreadyFetched
+                    ? "rgba(34, 197, 94, 0.3)"
+                    : undefined,
+                  background: isAlreadyFetched
+                    ? "rgba(34, 197, 94, 0.08)"
+                    : undefined,
+                }}
+                title={isAlreadyFetched ? "Already added" : item.name}
+              >
+                {isCurrentlyFetching ? (
+                  <span style={{ color: "var(--accent-violet)" }}>
+                    fetching...
+                  </span>
+                ) : (
+                  <>
+                    {isAlreadyFetched && (
+                      <span
+                        style={{ color: "rgb(34, 197, 94)", marginRight: 4 }}
+                      >
+                        ✓
+                      </span>
+                    )}
+                    {item.name}
+                  </>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {!loading && components.length > 0 && (
+        <p
+          className="text-xs"
+          style={{ color: "var(--text-muted)" }}
+        >
+          Components are compiled at runtime. Those with unsupported
+          dependencies may show compilation errors.
+        </p>
+      )}
+    </>
   );
 }
