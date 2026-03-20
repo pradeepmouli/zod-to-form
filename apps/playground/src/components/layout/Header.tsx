@@ -42,9 +42,9 @@ export function Header({
     >
       <div className="flex items-center gap-3">
         <img
-          src="/logo.png"
+          src="/logo.svg"
           alt="zod-to-form logo"
-          style={{ width: 28, height: 28 }}
+          style={{ width: 28, height: 24 }}
         />
         <h1
           className="text-lg tracking-tight"
