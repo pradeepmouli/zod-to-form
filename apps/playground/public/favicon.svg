@@ -1,33 +1,36 @@
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="pinkGrad" x1="10%" y1="0%" x2="90%" y2="100%">
-      <stop offset="0%" stop-color="#FF6BA6"/>
-      <stop offset="50%" stop-color="#EC4899"/>
-      <stop offset="100%" stop-color="#D926A9"/>
+    <linearGradient id="pinkGrad" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#D926A9"/>
+      <stop offset="0.5" stop-color="#EC4899"/>
+      <stop offset="1" stop-color="#F472B6"/>
     </linearGradient>
-    <linearGradient id="sheen" x1="0%" y1="0%" x2="50%" y2="60%">
-      <stop offset="0%" stop-color="white" stop-opacity="0.22"/>
-      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="white" stop-opacity="0.18"/>
+      <stop offset="0.4" stop-color="white" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="white" stop-opacity="0"/>
     </linearGradient>
-    <linearGradient id="cardGrad" x1="50%" y1="0%" x2="50%" y2="100%">
-      <stop offset="0%" stop-color="#FFFFFF"/>
-      <stop offset="100%" stop-color="#F1F5F9"/>
+    <linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F1F5F9"/>
     </linearGradient>
-    <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#2DD4BF"/>
-      <stop offset="100%" stop-color="#0D9488"/>
+    <linearGradient id="tealGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2DD4BF"/>
+      <stop offset="1" stop-color="#0D9488"/>
     </linearGradient>
-    <filter id="cardShadow" x="-15%" y="-15%" width="130%" height="140%">
-      <feDropShadow dx="0" dy="0.6" stdDeviation="0.8" flood-color="#0F172A" flood-opacity="0.18"/>
+    <filter id="cardShadow" x="-12%" y="-10%" width="124%" height="130%">
+      <feDropShadow dx="0" dy="0.5" stdDeviation="0.6" flood-color="#0F172A" flood-opacity="0.2"/>
     </filter>
   </defs>
+
   <g transform="translate(1,1.5) scale(0.02292,0.02288)">
     <path d="M258.188,0.987c-51.217,0 -96.967,32.03 -114.488,80.159l-132.717,364.517c-17.279,47.47 -3.479,100.679 34.7,133.762l536.4,464.825c46.192,40.029 114.892,39.638 160.625,-0.912l520.988,-461.934c37.296,-33.071 50.687,-85.525 33.808,-132.425l-132.241,-367.412c-17.4,-48.346 -63.259,-80.58 -114.638,-80.58l-792.438,0.001Z" fill="url(#pinkGrad)"/>
     <path d="M258.188,0.987c-51.217,0 -96.967,32.03 -114.488,80.159l-132.717,364.517c-17.279,47.47 -3.479,100.679 34.7,133.762l536.4,464.825c46.192,40.029 114.892,39.638 160.625,-0.912l520.988,-461.934c37.296,-33.071 50.687,-85.525 33.808,-132.425l-132.241,-367.412c-17.4,-48.346 -63.259,-80.58 -114.638,-80.58l-792.438,0.001Z" fill="url(#sheen)"/>
   </g>
-  <rect x="7" y="6.5" width="18" height="12" rx="2.5" fill="url(#cardGrad)" filter="url(#cardShadow)"/>
-  <rect x="9.5" y="9" width="11" height="1.4" rx="0.7" fill="#CBD5E1"/>
-  <rect x="9.5" y="12" width="7" height="1.4" rx="0.7" fill="#CBD5E1"/>
-  <rect x="18" y="14" width="5.5" height="3.5" rx="1.2" fill="url(#tealGrad)"/>
-  <path d="M19.3 15.9 L20.3 17 L22.5 14.8" stroke="white" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="7" y="6" width="18" height="12" rx="2.5" fill="url(#cardGrad)" filter="url(#cardShadow)"/>
+  <rect x="9.5" y="8.5" width="11" height="1.5" rx="0.75" fill="#CBD5E1"/>
+  <rect x="9.5" y="11.5" width="7.5" height="1.5" rx="0.75" fill="#CBD5E1"/>
+  <rect x="18" y="13.5" width="5.5" height="3.2" rx="1.4" fill="url(#tealGrad)"/>
+  <path d="M19.3 15.2 L20.4 16.3 L22.5 14.2" stroke="white" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>
