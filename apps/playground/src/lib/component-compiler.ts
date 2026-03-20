@@ -41,21 +41,53 @@ export interface CompileError {
   error: string;
 }
 
-function resolveModule(specifier: string): unknown {
+const CSS_STUB = { __esModule: true };
+
+function resolveModule(
+  specifier: string,
+  runtimeModules?: Record<string, Record<string, unknown>>,
+): unknown {
+  if (specifier.endsWith(".css")) {
+    return CSS_STUB;
+  }
+
   if (MODULE_MAP[specifier]) {
     return MODULE_MAP[specifier];
   }
+
   for (const [key, mod] of Object.entries(MODULE_MAP)) {
     if (specifier.startsWith(key + "/")) {
       return mod;
     }
   }
+
+  if (runtimeModules) {
+    if (runtimeModules[specifier]) {
+      return runtimeModules[specifier];
+    }
+    const shortName = specifier
+      .replace(/^@\/components\/ui\//, "")
+      .replace(/^\.\//, "");
+    if (runtimeModules[shortName]) {
+      return runtimeModules[shortName];
+    }
+    for (const [key, mod] of Object.entries(runtimeModules)) {
+      if (
+        specifier.endsWith("/" + key) ||
+        specifier === "@/components/ui/" + key
+      ) {
+        return mod;
+      }
+    }
+  }
+
   return null;
 }
 
 export function compileComponent(
   name: string,
   source: string,
+  runtimeModules?: Record<string, Record<string, unknown>>,
 ): CompileResult | CompileError {
   try {
     const jsCode = transform(source, {
@@ -72,7 +104,7 @@ export function compileComponent(
     const missingDeps: string[] = [];
     for (const match of requireCalls) {
       const specifier = match[1]!;
-      if (!resolveModule(specifier)) {
+      if (!resolveModule(specifier, runtimeModules)) {
         missingDeps.push(specifier);
       }
     }
@@ -87,7 +119,7 @@ export function compileComponent(
     const moduleExports: Record<string, unknown> = {};
 
     const requireFn = (specifier: string): unknown => {
-      const mod = resolveModule(specifier);
+      const mod = resolveModule(specifier, runtimeModules);
       if (!mod) {
         throw new Error(`Module not found: ${specifier}`);
       }
@@ -306,9 +338,34 @@ export function compileComponents(
 } {
   const components: Record<string, React.ComponentType<Record<string, unknown>>> = {};
   const errors: Record<string, string> = {};
+  const compiledModules: Record<string, Record<string, unknown>> = {};
 
-  for (const [name, source] of Object.entries(sources)) {
-    const result = compileComponent(name, source);
+  const compiled = new Set<string>();
+  const remaining = new Set(Object.keys(sources));
+
+  let maxPasses = remaining.size + 1;
+  while (remaining.size > 0 && maxPasses-- > 0) {
+    let progress = false;
+    for (const name of [...remaining]) {
+      const source = sources[name]!;
+      const result = compileComponent(name, source, compiledModules);
+      if (result.ok) {
+        components[result.exportName] = result.component;
+        compiledModules[name] = { [result.exportName]: result.component, __esModule: true };
+        compiled.add(name);
+        remaining.delete(name);
+        progress = true;
+      } else if (!result.error.startsWith("Missing dependencies:")) {
+        errors[name] = result.error;
+        remaining.delete(name);
+        progress = true;
+      }
+    }
+    if (!progress) break;
+  }
+
+  for (const name of remaining) {
+    const result = compileComponent(name, sources[name]!, compiledModules);
     if (result.ok) {
       components[result.exportName] = result.component;
     } else {

@@ -2,6 +2,19 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const REGISTRIES_URL = "https://ui.shadcn.com/r/registries.json";
 
+const INJECTED_CSS_ID = "z2f-registry-css";
+
+function injectRegistryCss(cssContents: string[]) {
+  let style = document.getElementById(INJECTED_CSS_ID) as HTMLStyleElement | null;
+  if (!style) {
+    style = document.createElement("style");
+    style.id = INJECTED_CSS_ID;
+    document.head.appendChild(style);
+  }
+  const combined = cssContents.join("\n\n");
+  style.textContent = (style.textContent ?? "") + "\n" + combined;
+}
+
 const CORS_SAFE_HOSTS = ["ui.shadcn.com"];
 
 function registryFetch(url: string, init?: RequestInit): Promise<Response> {
@@ -50,6 +63,7 @@ interface FetchedComponent {
   name: string;
   title: string;
   code: string;
+  cssFiles: string[];
   dependencies: string[];
   library: string;
 }
@@ -256,12 +270,18 @@ export function CustomComponentImport({
         }
 
         const data: RegistryItemDetail = await res.json();
-        const mainFile = data.files?.find((f) => f.content);
-        if (!mainFile?.content) {
+        const tsxFile = data.files?.find(
+          (f) => f.content && (f.path.endsWith(".tsx") || f.path.endsWith(".ts") || f.path.endsWith(".jsx") || f.path.endsWith(".js")),
+        );
+        if (!tsxFile?.content) {
           setError(`Component "${name}" has no source code in the registry.`);
           setIsFetching(null);
           return;
         }
+
+        const cssFiles = (data.files ?? [])
+          .filter((f) => f.content && f.path.endsWith(".css"))
+          .map((f) => f.content);
 
         const title =
           data.title ||
@@ -275,7 +295,8 @@ export function CustomComponentImport({
           {
             name: key,
             title,
-            code: mainFile.content,
+            code: tsxFile.content,
+            cssFiles,
             dependencies: data.dependencies ?? [],
             library: selectedLibrary.name,
           },
@@ -306,6 +327,12 @@ export function CustomComponentImport({
         : comp.name;
       importMap[shortName] = comp.code;
     }
+
+    const allCss = fetched.flatMap((c) => c.cssFiles);
+    if (allCss.length > 0) {
+      injectRegistryCss(allCss);
+    }
+
     onImport(importMap);
     if (onSwitchToShadcn) {
       onSwitchToShadcn();
