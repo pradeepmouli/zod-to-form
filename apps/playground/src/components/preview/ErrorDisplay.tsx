@@ -8,10 +8,10 @@ const TYPE_LABELS: Record<EvaluationError["type"], string> = {
 };
 
 const TYPE_COLORS: Record<EvaluationError["type"], string> = {
-  syntax: "bg-red-500/20 text-red-400 border-red-500/30",
-  runtime: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-  timeout: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  import: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  syntax: "bg-red-500/15 text-red-400 border-red-500/25",
+  runtime: "bg-orange-500/15 text-orange-400 border-orange-500/25",
+  timeout: "bg-yellow-500/15 text-yellow-400 border-yellow-500/25",
+  import: "bg-purple-500/15 text-purple-400 border-purple-500/25",
 };
 
 interface ErrorDisplayProps {
@@ -21,15 +21,15 @@ interface ErrorDisplayProps {
 export function ErrorDisplay({ error }: ErrorDisplayProps) {
   return (
     <div
-      className="rounded-lg p-4"
+      className="glass-panel p-4"
       style={{
-        background: "rgba(239, 68, 68, 0.08)",
-        border: "1px solid rgba(239, 68, 68, 0.2)",
+        background: "rgba(239, 68, 68, 0.06)",
+        border: "1px solid rgba(239, 68, 68, 0.15)",
       }}
     >
       <div className="flex items-center gap-2 mb-2">
         <span
-          className={`text-xs font-medium px-2 py-0.5 rounded border ${TYPE_COLORS[error.type]}`}
+          className={`text-xs font-medium px-2 py-0.5 rounded-md border ${TYPE_COLORS[error.type]}`}
         >
           {TYPE_LABELS[error.type]}
         </span>

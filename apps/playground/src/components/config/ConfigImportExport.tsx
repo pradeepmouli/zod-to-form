@@ -71,29 +71,14 @@ export function ConfigImportExport({
     setPasteValue("");
   };
 
-  const btnSecondary =
-    "text-xs px-3 py-1.5 rounded-lg transition-colors";
-  const btnSecondaryStyle = {
-    background: "var(--bg-elevated)",
-    color: "var(--text-secondary)",
-    border: "1px solid var(--border-subtle)",
-  };
-
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+      className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div
-        className="w-full max-w-md flex flex-col"
-        style={{
-          background: "var(--bg-surface)",
-          border: "1px solid var(--border-subtle)",
-          borderRadius: "var(--radius)",
-        }}
-      >
+      <div className="modal-panel w-full max-w-md flex flex-col">
         <div
           className="flex items-center justify-between p-4"
           style={{ borderBottom: "1px solid var(--border-subtle)" }}
@@ -103,8 +88,14 @@ export function ConfigImportExport({
           </h2>
           <button
             onClick={onClose}
-            className="text-lg leading-none transition-colors"
+            className="text-lg leading-none transition-colors w-7 h-7 flex items-center justify-center rounded-md"
             style={{ color: "var(--text-muted)" }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = "var(--bg-hover)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = "transparent")
+            }
             aria-label="Close config dialog"
           >
             &times;
@@ -113,7 +104,7 @@ export function ConfigImportExport({
 
         <div className="p-4 space-y-4">
           <div>
-            <label className="text-xs block mb-1" style={{ color: "var(--text-secondary)" }}>
+            <label className="text-xs block mb-1.5" style={{ color: "var(--text-secondary)" }}>
               Paste z2f.config JSON
             </label>
             <textarea
@@ -121,22 +112,13 @@ export function ConfigImportExport({
               onChange={(e) => setPasteValue(e.target.value)}
               placeholder='{"components": {...}, "fields": {...}}'
               rows={4}
-              className="w-full px-3 py-2 text-sm rounded-lg outline-none resize-none"
-              style={{
-                fontFamily: "var(--font-mono)",
-                background: "var(--bg-elevated)",
-                border: "1px solid var(--border-subtle)",
-                color: "var(--text-primary)",
-              }}
+              className="input-glass w-full px-3 py-2 text-sm resize-none"
+              style={{ fontFamily: "var(--font-mono)" }}
             />
             <button
               onClick={handleImportPaste}
               disabled={!pasteValue.trim()}
-              className="mt-1 text-xs px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                background: "var(--accent-violet)",
-                color: "#fff",
-              }}
+              className="btn-accent mt-2 text-xs px-3 py-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
             >
               Import
             </button>
@@ -146,8 +128,7 @@ export function ConfigImportExport({
             <span className="text-xs" style={{ color: "var(--text-muted)" }}>or</span>
             <button
               onClick={() => fileRef.current?.click()}
-              className={btnSecondary}
-              style={btnSecondaryStyle}
+              className="btn-glass text-xs px-3 py-1.5"
             >
               Upload File
             </button>
@@ -162,11 +143,11 @@ export function ConfigImportExport({
 
           {error && (
             <div
-              className="text-xs rounded-lg p-2"
+              className="glass-panel text-xs p-2.5"
               style={{
                 color: "rgb(248, 113, 113)",
-                background: "rgba(239, 68, 68, 0.08)",
-                border: "1px solid rgba(239, 68, 68, 0.2)",
+                background: "rgba(239, 68, 68, 0.06)",
+                border: "1px solid rgba(239, 68, 68, 0.15)",
               }}
             >
               {error}
@@ -174,11 +155,11 @@ export function ConfigImportExport({
           )}
           {warnings.length > 0 && (
             <div
-              className="text-xs rounded-lg p-2 space-y-1"
+              className="glass-panel text-xs p-2.5 space-y-1"
               style={{
                 color: "rgb(250, 204, 21)",
-                background: "rgba(234, 179, 8, 0.08)",
-                border: "1px solid rgba(234, 179, 8, 0.2)",
+                background: "rgba(234, 179, 8, 0.06)",
+                border: "1px solid rgba(234, 179, 8, 0.15)",
               }}
             >
               {warnings.map((w, i) => (
@@ -196,29 +177,25 @@ export function ConfigImportExport({
                 <div className="flex gap-2">
                   <button
                     onClick={handleExport}
-                    className={btnSecondary}
-                    style={btnSecondaryStyle}
+                    className="btn-glass text-xs px-3 py-1.5"
                   >
                     Export
                   </button>
                   <button
                     onClick={handleClear}
-                    className={btnSecondary}
-                    style={{
-                      ...btnSecondaryStyle,
-                      color: "rgb(248, 113, 113)",
-                    }}
+                    className="btn-glass text-xs px-3 py-1.5"
+                    style={{ color: "rgb(248, 113, 113)" }}
                   >
                     Clear
                   </button>
                 </div>
               </div>
               <pre
-                className="text-xs rounded-lg p-2 overflow-auto max-h-32"
+                className="text-xs rounded-lg p-2.5 overflow-auto max-h-32"
                 style={{
                   fontFamily: "var(--font-mono)",
                   color: "var(--text-muted)",
-                  background: "var(--bg-elevated)",
+                  background: "rgba(15, 20, 32, 0.6)",
                 }}
               >
                 {JSON.stringify(config, null, 2)}

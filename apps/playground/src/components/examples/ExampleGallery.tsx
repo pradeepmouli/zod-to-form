@@ -51,19 +51,12 @@ export function ExampleGallery({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+      className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div
-        className="w-full max-w-lg max-h-[80vh] flex flex-col"
-        style={{
-          background: "var(--bg-surface)",
-          border: "1px solid var(--border-subtle)",
-          borderRadius: "var(--radius)",
-        }}
-      >
+      <div className="modal-panel w-full max-w-lg max-h-[80vh] flex flex-col">
         <div
           className="flex items-center justify-between p-4"
           style={{ borderBottom: "1px solid var(--border-subtle)" }}
@@ -73,8 +66,14 @@ export function ExampleGallery({
           </h2>
           <button
             onClick={onClose}
-            className="text-lg leading-none transition-colors"
+            className="text-lg leading-none transition-colors w-7 h-7 flex items-center justify-center rounded-md"
             style={{ color: "var(--text-muted)" }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = "var(--bg-hover)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = "transparent")
+            }
             aria-label="Close"
           >
             &times;
@@ -87,23 +86,18 @@ export function ExampleGallery({
             placeholder="Search examples..."
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-colors"
-            style={{
-              background: "var(--bg-elevated)",
-              border: "1px solid var(--border-subtle)",
-              color: "var(--text-primary)",
-            }}
+            className="input-glass w-full px-3 py-2 text-sm"
           />
         </div>
 
-        <div className="flex-1 overflow-auto p-4 space-y-4">
+        <div className="flex-1 overflow-auto p-4 space-y-5">
           {(["basic", "advanced", "patterns"] as const).map((cat) => {
             const items = grouped[cat];
             if (!items?.length) return null;
             return (
               <div key={cat}>
                 <h3
-                  className="text-xs font-medium uppercase tracking-wide mb-2"
+                  className="text-xs font-medium uppercase tracking-wider mb-2"
                   style={{ color: "var(--text-muted)" }}
                 >
                   {CATEGORY_LABELS[cat]}
@@ -113,19 +107,21 @@ export function ExampleGallery({
                     <button
                       key={ex.id}
                       onClick={() => handleSelect(ex.source)}
-                      className="w-full text-left px-3 py-2 rounded-lg transition-colors"
+                      className="w-full text-left px-3 py-2.5 rounded-lg transition-all"
                       style={{ color: "var(--text-primary)" }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.background = "var(--bg-hover)")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.background = "transparent")
-                      }
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "var(--bg-hover)";
+                        e.currentTarget.style.borderColor = "var(--border-default)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.borderColor = "transparent";
+                      }}
                     >
                       <div className="text-sm font-medium">
                         {ex.title}
                       </div>
-                      <div className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
                         {ex.description}
                       </div>
                     </button>

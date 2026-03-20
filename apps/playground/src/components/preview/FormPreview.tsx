@@ -55,7 +55,7 @@ export function FormPreview({
     <div className="h-full flex flex-col overflow-auto">
       {isEvaluating && (
         <div
-          className="px-4 py-2 text-xs"
+          className="px-4 py-2 text-xs font-medium"
           style={{
             background: "var(--accent-violet-muted)",
             borderBottom: "1px solid var(--border-subtle)",
@@ -73,7 +73,7 @@ export function FormPreview({
       )}
 
       {fields && fields.length > 0 && schema ? (
-        <div className="flex-1 p-4 overflow-auto">
+        <div className="flex-1 p-5 overflow-auto">
           <ZodForm
             schema={schema}
             components={components}
@@ -83,11 +83,7 @@ export function FormPreview({
           >
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-              style={{
-                background: "var(--accent-violet)",
-                color: "#fff",
-              }}
+              className="btn-accent px-5 py-2.5 text-sm rounded-lg"
             >
               Submit
             </button>

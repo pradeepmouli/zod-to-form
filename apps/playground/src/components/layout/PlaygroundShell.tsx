@@ -33,7 +33,7 @@ export function PlaygroundShell({
 
   const tabBar = (
     <div
-      className="flex"
+      className="flex gap-1 px-3 py-2"
       style={{ borderBottom: "1px solid var(--border-subtle)" }}
       role="tablist"
       aria-label="Output view"
@@ -44,16 +44,15 @@ export function PlaygroundShell({
           role="tab"
           aria-selected={activeTab === tab.id}
           onClick={() => onTabChange(tab.id)}
-          className="px-4 py-2.5 text-xs font-medium transition-colors"
+          className={`px-3 py-1.5 text-xs font-medium transition-all ${
+            activeTab === tab.id ? "tab-active" : ""
+          }`}
           style={{
             color:
               activeTab === tab.id
                 ? "var(--accent-violet)"
                 : "var(--text-muted)",
-            borderBottom:
-              activeTab === tab.id
-                ? "2px solid var(--accent-violet)"
-                : "2px solid transparent",
+            borderRadius: "6px",
           }}
         >
           {tab.label}
@@ -90,7 +89,11 @@ export function PlaygroundShell({
         >
           {editor}
         </div>
-        <div className="flex flex-col min-h-0" role="region" aria-label="Output">
+        <div
+          className="flex flex-col min-h-0 glass-surface"
+          role="region"
+          aria-label="Output"
+        >
           {tabBar}
           {tabContent}
         </div>
@@ -101,7 +104,7 @@ export function PlaygroundShell({
   return (
     <div className="flex-1 flex flex-col min-h-0">
       <div
-        className="flex"
+        className="flex gap-1 px-3 py-2"
         style={{ borderBottom: "1px solid var(--border-subtle)" }}
         role="tablist"
         aria-label="Pane selector"
@@ -112,16 +115,14 @@ export function PlaygroundShell({
             role="tab"
             aria-selected={activePane === pane}
             onClick={() => onPaneChange(pane)}
-            className="flex-1 px-4 py-2.5 text-xs font-medium transition-colors"
+            className={`flex-1 px-4 py-2 text-xs font-medium transition-all ${
+              activePane === pane ? "tab-active" : ""
+            }`}
             style={{
               color:
                 activePane === pane
                   ? "var(--accent-violet)"
                   : "var(--text-muted)",
-              borderBottom:
-                activePane === pane
-                  ? "2px solid var(--accent-violet)"
-                  : "2px solid transparent",
             }}
           >
             {pane === "editor" ? "Editor" : "Preview"}

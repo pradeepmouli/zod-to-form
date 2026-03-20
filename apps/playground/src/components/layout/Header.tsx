@@ -32,27 +32,22 @@ export function Header({
     }).catch(() => {});
   };
 
-  const btnClass =
-    "text-xs px-3 py-1.5 rounded-lg transition-colors";
-  const btnStyle = {
-    background: "var(--bg-elevated)",
-    color: "var(--text-secondary)",
-    border: "1px solid var(--border-subtle)",
-  };
-
   return (
     <header
-      className="flex items-center justify-between px-4 py-2.5"
+      className="glass-surface flex items-center justify-between px-5 py-3"
       style={{
-        background: "var(--bg-surface)",
         borderBottom: "1px solid var(--border-subtle)",
       }}
       role="banner"
     >
       <div className="flex items-center gap-3">
         <h1
-          className="text-base font-bold"
-          style={{ color: "var(--accent-violet)" }}
+          className="text-base font-bold tracking-tight"
+          style={{
+            background: "var(--accent-gradient)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
         >
           Z2F Studio
         </h1>
@@ -70,12 +65,7 @@ export function Header({
           onChange={(e) =>
             onComponentMapChange(e.target.value as ComponentMapType)
           }
-          className="text-xs rounded-lg px-2 py-1.5 outline-none"
-          style={{
-            background: "var(--bg-elevated)",
-            color: "var(--text-secondary)",
-            border: "1px solid var(--border-subtle)",
-          }}
+          className="btn-glass text-xs px-2.5 py-1.5 outline-none cursor-pointer"
           aria-label="Component map"
         >
           <option value="default">Default</option>
@@ -84,8 +74,7 @@ export function Header({
 
         <button
           onClick={onExamplesClick}
-          className={btnClass}
-          style={btnStyle}
+          className="btn-glass text-xs px-3 py-1.5"
           aria-label="Browse example schemas"
         >
           Examples
@@ -93,8 +82,7 @@ export function Header({
 
         <button
           onClick={onConfigClick}
-          className={btnClass}
-          style={btnStyle}
+          className="btn-glass text-xs px-3 py-1.5"
           aria-label="Import or export config"
         >
           Config
@@ -102,8 +90,7 @@ export function Header({
 
         <button
           onClick={onCustomImportClick}
-          className={btnClass}
-          style={btnStyle}
+          className="btn-glass text-xs px-3 py-1.5"
           aria-label="Import custom components"
         >
           Components{customComponentCount > 0 ? ` (${customComponentCount})` : ""}
@@ -111,13 +98,12 @@ export function Header({
 
         <button
           onClick={handleShare}
-          className={btnClass}
-          style={{
-            ...btnStyle,
-            ...(copied
-              ? { color: "var(--accent-violet)", borderColor: "var(--accent-violet)" }
-              : {}),
-          }}
+          className="btn-glass text-xs px-3 py-1.5"
+          style={
+            copied
+              ? { color: "var(--accent-violet)", borderColor: "var(--border-glow)" }
+              : undefined
+          }
           aria-label="Copy share URL to clipboard"
         >
           {copied ? "Copied!" : "Share"}

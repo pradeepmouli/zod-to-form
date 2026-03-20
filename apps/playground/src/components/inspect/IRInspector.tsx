@@ -14,7 +14,7 @@ function FieldNode({ field, depth }: { field: FormField; depth: number }) {
     <div>
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full text-left flex items-center gap-1 py-1 rounded px-1 transition-colors"
+        className="w-full text-left flex items-center gap-1 py-1.5 rounded-md px-1.5 transition-all"
         style={{ paddingLeft: indent }}
         onMouseEnter={(e) =>
           (e.currentTarget.style.background = "var(--bg-hover)")
@@ -126,18 +126,18 @@ export function IRInspector({ fields }: IRInspectorProps) {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <div
-        className="flex items-center justify-between px-4 py-2"
+        className="flex items-center justify-between px-4 py-2.5"
         style={{ borderBottom: "1px solid var(--border-subtle)" }}
       >
         <span className="text-xs" style={{ color: "var(--text-muted)" }}>
           {fields.length} field{fields.length !== 1 ? "s" : ""}
         </span>
-        <div className="flex gap-1">
+        <div className="flex gap-1 p-0.5 rounded-md" style={{ background: "rgba(15, 20, 32, 0.5)" }}>
           {(["tree", "json"] as const).map((mode) => (
             <button
               key={mode}
               onClick={() => setViewMode(mode)}
-              className="text-xs px-2 py-0.5 rounded-md transition-colors"
+              className="text-xs px-2.5 py-1 rounded-md transition-all"
               style={{
                 background:
                   viewMode === mode ? "var(--accent-violet)" : "transparent",

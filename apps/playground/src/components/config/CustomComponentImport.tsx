@@ -151,19 +151,12 @@ export function CustomComponentImport({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+      className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div
-        className="w-full max-w-lg max-h-[80vh] flex flex-col"
-        style={{
-          background: "var(--bg-surface)",
-          border: "1px solid var(--border-subtle)",
-          borderRadius: "var(--radius)",
-        }}
-      >
+      <div className="modal-panel w-full max-w-lg max-h-[80vh] flex flex-col">
         <div
           className="flex items-center justify-between p-4"
           style={{ borderBottom: "1px solid var(--border-subtle)" }}
@@ -173,8 +166,14 @@ export function CustomComponentImport({
           </h2>
           <button
             onClick={onClose}
-            className="text-lg leading-none transition-colors"
+            className="text-lg leading-none transition-colors w-7 h-7 flex items-center justify-center rounded-md"
             style={{ color: "var(--text-muted)" }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = "var(--bg-hover)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = "transparent")
+            }
             aria-label="Close custom component import"
           >
             &times;
@@ -198,10 +197,10 @@ export function CustomComponentImport({
           </p>
 
           <div>
-            <label className="text-xs block mb-1" style={{ color: "var(--text-secondary)" }}>
+            <label className="text-xs block mb-1.5" style={{ color: "var(--text-secondary)" }}>
               Quick Add
             </label>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1.5">
               {COMMON_COMPONENTS.filter(
                 (c) => !fetched.some((f) => f.name === c),
               )
@@ -211,12 +210,7 @@ export function CustomComponentImport({
                     key={name}
                     onClick={() => fetchComponent(name)}
                     disabled={isFetching}
-                    className="text-xs px-2 py-1 rounded-md transition-colors disabled:opacity-50"
-                    style={{
-                      background: "var(--bg-elevated)",
-                      color: "var(--text-secondary)",
-                      border: "1px solid var(--border-subtle)",
-                    }}
+                    className="btn-glass text-xs px-2.5 py-1 disabled:opacity-50"
                   >
                     {name}
                   </button>
@@ -234,21 +228,12 @@ export function CustomComponentImport({
               }}
               placeholder="Component name (e.g., accordion)"
               disabled={isFetching}
-              className="flex-1 px-3 py-1.5 text-sm rounded-lg outline-none disabled:opacity-50"
-              style={{
-                background: "var(--bg-elevated)",
-                border: "1px solid var(--border-subtle)",
-                color: "var(--text-primary)",
-              }}
+              className="input-glass flex-1 px-3 py-1.5 text-sm disabled:opacity-50"
             />
             <button
               onClick={() => fetchComponent(customName)}
               disabled={isFetching || !customName.trim()}
-              className="text-xs px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                background: "var(--accent-violet)",
-                color: "#fff",
-              }}
+              className="btn-accent text-xs px-3 py-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
             >
               {isFetching ? "Fetching..." : "Fetch"}
             </button>
@@ -256,11 +241,11 @@ export function CustomComponentImport({
 
           {error && (
             <div
-              className="text-xs rounded-lg p-2"
+              className="glass-panel text-xs p-2.5"
               style={{
                 color: "rgb(248, 113, 113)",
-                background: "rgba(239, 68, 68, 0.08)",
-                border: "1px solid rgba(239, 68, 68, 0.2)",
+                background: "rgba(239, 68, 68, 0.06)",
+                border: "1px solid rgba(239, 68, 68, 0.15)",
               }}
             >
               {error}
@@ -276,9 +261,12 @@ export function CustomComponentImport({
                 <div
                   key={comp.name}
                   className="rounded-lg overflow-hidden"
-                  style={{ background: "var(--bg-elevated)" }}
+                  style={{
+                    background: "rgba(15, 20, 32, 0.6)",
+                    border: "1px solid var(--border-subtle)",
+                  }}
                 >
-                  <div className="flex items-center justify-between px-3 py-2">
+                  <div className="flex items-center justify-between px-3 py-2.5">
                     <div className="min-w-0 flex items-center gap-2">
                       <span
                         className="text-sm"
@@ -299,14 +287,14 @@ export function CustomComponentImport({
                             expandedSource === comp.name ? null : comp.name,
                           )
                         }
-                        className="text-xs"
+                        className="text-xs transition-colors"
                         style={{ color: "var(--accent-violet)" }}
                       >
                         {expandedSource === comp.name ? "Hide" : "Source"}
                       </button>
                       <button
                         onClick={() => handleRemove(comp.name)}
-                        className="text-xs"
+                        className="text-xs transition-colors"
                         style={{ color: "rgb(248, 113, 113)" }}
                         aria-label={`Remove ${comp.name}`}
                       >
@@ -330,14 +318,10 @@ export function CustomComponentImport({
               ))}
               <button
                 onClick={handleImport}
-                className="w-full text-xs px-3 py-2 rounded-lg transition-colors font-medium"
-                style={{
-                  background: "var(--accent-violet)",
-                  color: "#fff",
-                }}
+                className="btn-accent w-full text-xs px-3 py-2.5 rounded-lg font-medium"
               >
                 Import {fetched.length} Component
-                {fetched.length > 1 ? "s" : ""} &amp; Switch to shadcn
+                {fetched.length > 1 ? "s" : ""} & Switch to shadcn
               </button>
             </div>
           )}

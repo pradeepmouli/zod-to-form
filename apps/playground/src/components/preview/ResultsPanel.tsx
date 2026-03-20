@@ -15,10 +15,10 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
       </h3>
       {result.success ? (
         <div
-          className="rounded-lg p-3"
+          className="glass-panel p-3"
           style={{
-            background: "rgba(34, 197, 94, 0.08)",
-            border: "1px solid rgba(34, 197, 94, 0.2)",
+            background: "rgba(34, 197, 94, 0.06)",
+            border: "1px solid rgba(34, 197, 94, 0.15)",
           }}
         >
           <span className="text-xs font-medium text-green-400 mb-1 block">
@@ -33,10 +33,10 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
         </div>
       ) : (
         <div
-          className="rounded-lg p-3"
+          className="glass-panel p-3"
           style={{
-            background: "rgba(239, 68, 68, 0.08)",
-            border: "1px solid rgba(239, 68, 68, 0.2)",
+            background: "rgba(239, 68, 68, 0.06)",
+            border: "1px solid rgba(239, 68, 68, 0.15)",
           }}
         >
           <span className="text-xs font-medium text-red-400 mb-1 block">

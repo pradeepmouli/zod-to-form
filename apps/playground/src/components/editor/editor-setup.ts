@@ -54,8 +54,14 @@ export function createEditorExtensions(
       ".cm-scroller": { overflow: "auto" },
       ".cm-content": { fontFamily: "var(--font-mono)" },
       ".cm-gutters": {
-        background: "var(--bg-surface)",
-        borderRight: "1px solid var(--border-subtle)",
+        background: "rgba(11, 15, 23, 0.6)",
+        borderRight: "1px solid rgba(255, 255, 255, 0.05)",
+      },
+      ".cm-activeLineGutter": {
+        background: "rgba(249, 115, 22, 0.08)",
+      },
+      ".cm-activeLine": {
+        background: "rgba(249, 115, 22, 0.04)",
       },
     }),
   ];

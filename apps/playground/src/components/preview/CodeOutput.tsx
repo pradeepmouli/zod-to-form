@@ -38,7 +38,7 @@ export function CodeOutput({ fields }: CodeOutputProps) {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <div
-        className="flex items-center justify-between px-4 py-2"
+        className="flex items-center justify-between px-4 py-2.5"
         style={{ borderBottom: '1px solid var(--border-subtle)' }}
       >
         <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
@@ -46,12 +46,12 @@ export function CodeOutput({ fields }: CodeOutputProps) {
         </span>
         <button
           onClick={handleCopy}
-          className="text-xs px-3 py-1 rounded-lg transition-colors"
-          style={{
-            background: 'var(--bg-elevated)',
-            color: copied ? 'var(--accent-violet)' : 'var(--text-secondary)',
-            border: '1px solid var(--border-subtle)',
-          }}
+          className="btn-glass text-xs px-3 py-1"
+          style={
+            copied
+              ? { color: 'var(--accent-violet)', borderColor: 'var(--border-glow)' }
+              : undefined
+          }
         >
           {copied ? "Copied!" : "Copy"}
         </button>
