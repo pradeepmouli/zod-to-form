@@ -52,7 +52,7 @@ export function FormPreview({
     if (!compiledComponents || Object.keys(compiledComponents).length === 0) {
       return undefined;
     }
-    if (componentMap !== "shadcn" && componentMap !== "custom") {
+    if (componentMap !== "shadcn") {
       return undefined;
     }
     const overrides: Record<string, { controlled?: boolean; propMap?: Record<string, string> }> = {};
@@ -82,10 +82,10 @@ export function FormPreview({
   );
 
   const handleInvalid = useCallback(
-    (fieldErrors: Record<string, { message?: string }>) => {
+    (fieldErrors: Record<string, unknown>) => {
       const errors = Object.entries(fieldErrors).map(([path, err]) => ({
         path,
-        message: err.message ?? "Validation failed",
+        message: (err as { message?: string })?.message ?? "Validation failed",
       }));
       onSubmitResult({
         success: false,
