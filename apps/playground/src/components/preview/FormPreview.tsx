@@ -20,6 +20,7 @@ interface FormPreviewProps {
   submitResult: SubmitResult | null;
   onSubmitResult: (result: SubmitResult) => void;
   editorContent: string;
+  customComponents?: Record<string, string> | null;
 }
 
 export function FormPreview({
@@ -30,14 +31,20 @@ export function FormPreview({
   submitResult,
   onSubmitResult,
   editorContent,
+  customComponents,
 }: FormPreviewProps) {
-  const components = useMemo(
-    () =>
+  const components = useMemo(() => {
+    const baseMap =
       componentMap === "shadcn"
         ? (shadcnComponentMap as unknown as typeof defaultComponentMap)
-        : defaultComponentMap,
-    [componentMap],
-  );
+        : defaultComponentMap;
+
+    if (!customComponents || Object.keys(customComponents).length === 0) {
+      return baseMap;
+    }
+
+    return baseMap;
+  }, [componentMap, customComponents]);
 
   const handleSubmit = useCallback(
     (data: Record<string, unknown>) => {

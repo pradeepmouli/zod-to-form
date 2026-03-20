@@ -29,6 +29,7 @@ function getInitialState(): PlaygroundState {
       evaluationError: null,
       submitResult: null,
       config: null,
+      customComponents: null,
     };
   }
 
@@ -43,6 +44,7 @@ function getInitialState(): PlaygroundState {
       evaluationError: null,
       submitResult: null,
       config: persisted.config,
+      customComponents: null,
     };
   }
 
@@ -55,6 +57,7 @@ function getInitialState(): PlaygroundState {
     evaluationError: null,
     submitResult: null,
     config: null,
+    customComponents: null,
   };
 }
 
@@ -106,6 +109,13 @@ export function usePlaygroundState() {
     setState((s) => ({ ...s, config }));
   }, []);
 
+  const setCustomComponents = useCallback(
+    (customComponents: Record<string, string> | null) => {
+      setState((s) => ({ ...s, customComponents }));
+    },
+    [],
+  );
+
   return {
     state,
     setEditorContent,
@@ -115,5 +125,6 @@ export function usePlaygroundState() {
     setEvalResult,
     setSubmitResult,
     setConfig,
+    setCustomComponents,
   };
 }

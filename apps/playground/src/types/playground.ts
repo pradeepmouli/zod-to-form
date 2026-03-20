@@ -56,4 +56,5 @@ export interface PlaygroundState {
   evaluationError: EvaluationError | null;
   submitResult: SubmitResult | null;
   config: PlaygroundConfig | null;
+  customComponents: Record<string, string> | null;
 }

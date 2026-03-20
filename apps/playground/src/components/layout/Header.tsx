@@ -8,6 +8,8 @@ interface HeaderProps {
   editorContent: string;
   onExamplesClick: () => void;
   onConfigClick: () => void;
+  onCustomImportClick: () => void;
+  customComponentCount: number;
 }
 
 export function Header({
@@ -16,6 +18,8 @@ export function Header({
   editorContent,
   onExamplesClick,
   onConfigClick,
+  onCustomImportClick,
+  customComponentCount,
 }: HeaderProps) {
   const [copied, setCopied] = useState(false);
 
@@ -67,6 +71,14 @@ export function Header({
           aria-label="Import or export config"
         >
           Config
+        </button>
+
+        <button
+          onClick={onCustomImportClick}
+          className="text-xs px-3 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 rounded transition-colors"
+          aria-label="Import custom components"
+        >
+          Components{customComponentCount > 0 ? ` (${customComponentCount})` : ""}
         </button>
 
         <button

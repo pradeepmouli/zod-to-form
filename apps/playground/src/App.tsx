@@ -1,14 +1,43 @@
-import { useState, useRef } from "react";
+import { useState, useRef, lazy, Suspense } from "react";
 import { usePlaygroundState } from "./hooks/usePlaygroundState.ts";
 import { useDebouncedEval } from "./hooks/useDebouncedEval.ts";
 import { Header } from "./components/layout/Header.tsx";
 import { PlaygroundShell } from "./components/layout/PlaygroundShell.tsx";
-import { SchemaEditor } from "./components/editor/SchemaEditor.tsx";
 import { FormPreview } from "./components/preview/FormPreview.tsx";
 import { IRInspector } from "./components/inspect/IRInspector.tsx";
-import { ExampleGallery } from "./components/examples/ExampleGallery.tsx";
-import { ConfigImportExport } from "./components/config/ConfigImportExport.tsx";
 import { STARTER_SCHEMA } from "./components/examples/starter.ts";
+
+const SchemaEditor = lazy(() =>
+  import("./components/editor/SchemaEditor.tsx").then((m) => ({
+    default: m.SchemaEditor,
+  })),
+);
+
+const ExampleGallery = lazy(() =>
+  import("./components/examples/ExampleGallery.tsx").then((m) => ({
+    default: m.ExampleGallery,
+  })),
+);
+
+const ConfigImportExport = lazy(() =>
+  import("./components/config/ConfigImportExport.tsx").then((m) => ({
+    default: m.ConfigImportExport,
+  })),
+);
+
+const CustomComponentImport = lazy(() =>
+  import("./components/config/CustomComponentImport.tsx").then((m) => ({
+    default: m.CustomComponentImport,
+  })),
+);
+
+function EditorFallback() {
+  return (
+    <div className="h-full flex items-center justify-center text-zinc-500 text-sm">
+      Loading editor...
+    </div>
+  );
+}
 
 export function App() {
   const {
@@ -19,6 +48,7 @@ export function App() {
     setActivePane,
     setSubmitResult,
     setConfig,
+    setCustomComponents,
   } = usePlaygroundState();
 
   const { fields, error, isEvaluating } = useDebouncedEval(
@@ -27,6 +57,7 @@ export function App() {
 
   const [examplesOpen, setExamplesOpen] = useState(false);
   const [configOpen, setConfigOpen] = useState(false);
+  const [customImportOpen, setCustomImportOpen] = useState(false);
   const initialContent = useRef(state.editorContent);
 
   const displayFields = fields ?? state.lastValidFields;
@@ -39,6 +70,15 @@ export function App() {
     initialContent.current = source;
   };
 
+  const handleCustomComponentImport = (
+    components: Record<string, string>,
+  ) => {
+    setCustomComponents({
+      ...state.customComponents,
+      ...components,
+    });
+  };
+
   return (
     <div className="h-full flex flex-col bg-zinc-950 text-zinc-100">
       <Header
@@ -47,13 +87,17 @@ export function App() {
         editorContent={state.editorContent}
         onExamplesClick={() => setExamplesOpen(true)}
         onConfigClick={() => setConfigOpen(true)}
+        onCustomImportClick={() => setCustomImportOpen(true)}
+        customComponentCount={Object.keys(state.customComponents ?? {}).length}
       />
       <PlaygroundShell
         editor={
-          <SchemaEditor
-            value={state.editorContent}
-            onChange={setEditorContent}
-          />
+          <Suspense fallback={<EditorFallback />}>
+            <SchemaEditor
+              value={state.editorContent}
+              onChange={setEditorContent}
+            />
+          </Suspense>
         }
         preview={
           <FormPreview
@@ -64,6 +108,7 @@ export function App() {
             submitResult={state.submitResult}
             onSubmitResult={setSubmitResult}
             editorContent={state.editorContent}
+            customComponents={state.customComponents}
           />
         }
         inspect={<IRInspector fields={displayFields} />}
@@ -72,18 +117,35 @@ export function App() {
         onTabChange={setActiveTab}
         onPaneChange={setActivePane}
       />
-      <ExampleGallery
-        isOpen={examplesOpen}
-        onClose={() => setExamplesOpen(false)}
-        onSelect={handleExampleSelect}
-        hasUnsavedChanges={hasUnsavedChanges}
-      />
-      <ConfigImportExport
-        isOpen={configOpen}
-        onClose={() => setConfigOpen(false)}
-        config={state.config}
-        onConfigChange={setConfig}
-      />
+      {examplesOpen && (
+        <Suspense fallback={null}>
+          <ExampleGallery
+            isOpen={examplesOpen}
+            onClose={() => setExamplesOpen(false)}
+            onSelect={handleExampleSelect}
+            hasUnsavedChanges={hasUnsavedChanges}
+          />
+        </Suspense>
+      )}
+      {configOpen && (
+        <Suspense fallback={null}>
+          <ConfigImportExport
+            isOpen={configOpen}
+            onClose={() => setConfigOpen(false)}
+            config={state.config}
+            onConfigChange={setConfig}
+          />
+        </Suspense>
+      )}
+      {customImportOpen && (
+        <Suspense fallback={null}>
+          <CustomComponentImport
+            isOpen={customImportOpen}
+            onClose={() => setCustomImportOpen(false)}
+            onImport={handleCustomComponentImport}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

@@ -41,7 +41,7 @@
 
 - [X] T010 [P] Write unit tests for `transpile()` in `apps/playground/tests/unit/transpile.test.ts` — valid TS→JS, syntax error with line/column, import rejection, disableESTransforms preserved
 - [X] T011 [P] Write unit tests for `evaluate()` in `apps/playground/tests/unit/evaluate.test.ts` — valid schema extraction, import/require rejection, non-schema result error, scope isolation (no window/document access)
-- [ ] T012 [P] Write unit tests for `EvalWorkerClient` in `apps/playground/tests/unit/worker-client.test.ts` — successful eval returns FormField[], timeout after 3s terminates and respawns, cancellation drops stale responses, dispose prevents further calls
+- [X] T012 [P] Write unit tests for `EvalWorkerClient` in `apps/playground/tests/unit/worker-client.test.ts` — successful eval returns FormField[], timeout after 3s terminates and respawns, cancellation drops stale responses, dispose prevents further calls
 
 ### Implementation
 
@@ -65,7 +65,7 @@
 ### Tests (must fail first)
 
 - [X] T019 [P] [US1] Write unit test for `storage.ts` in `apps/playground/tests/unit/storage.test.ts` — save/load round-trip with Zod schema validation, null on corrupt JSON, version field present
-- [ ] T020 [P] [US1] Write integration test in `apps/playground/tests/integration/editor-preview.test.tsx` — render PlaygroundShell, type schema text, verify FormPreview renders matching fields, introduce syntax error → ErrorDisplay shown + last valid form retained
+- [X] T020 [P] [US1] Write integration test in `apps/playground/tests/integration/editor-preview.test.tsx` — render PlaygroundShell, type schema text, verify FormPreview renders matching fields, introduce syntax error → ErrorDisplay shown + last valid form retained
 
 ### Implementation
 
@@ -133,7 +133,7 @@
 - [X] T044 [US4] Implement `apps/playground/src/components/config/ComponentMapToggle.tsx` — shadcn/ui dropdown switching between 'default' and 'shadcn' component maps, updates componentMap in usePlaygroundState *(implemented inline in Header.tsx)*
 - [X] T045 [US4] Implement `apps/playground/src/lib/config-io.ts` — importConfig (validates via Zod schema + validateConfig from core, returns warnings for invalid fields), exportConfig (serializes to z2f.config.json format) per Contract 7
 - [X] T046 [US4] Implement `apps/playground/src/components/config/ConfigImportExport.tsx` — shadcn Dialog with paste-JSON form (dogfooding: rendered via `<ZodForm>` with Zod schema for the paste input), file upload button, export/download button, warning display for invalid fields
-- [ ] T047 [US4] Implement `apps/playground/src/components/config/CustomComponentImport.tsx` — UI to specify a shadcn component repository URL or paste component code, makes imported components available in component map overrides
+- [X] T047 [US4] Implement `apps/playground/src/components/config/CustomComponentImport.tsx` — UI to fetch components from the shadcn/ui registry (https://ui.shadcn.com/r/), with quick-add buttons for common components and custom name input, makes imported components available in component map overrides
 - [X] T048 [US4] Wire ComponentMapToggle and ConfigImportExport into Header.tsx
 - [X] T049 [US4] Verify T043 tests pass
 
@@ -170,7 +170,7 @@
 
 ### Tests (must fail first)
 
-- [ ] T055 [P] [US6] Write integration test in `apps/playground/tests/integration/example-loading.test.tsx` — render ExampleGallery, click example, verify editor content updates, verify unsaved-changes warning appears when editor has modifications
+- [X] T055 [P] [US6] Write integration test in `apps/playground/tests/integration/example-loading.test.tsx` — render ExampleGallery, click example, verify editor content updates, verify unsaved-changes warning appears when editor has modifications
 
 ### Implementation
 
@@ -192,7 +192,7 @@
 - [X] T062 Implement `apps/playground/src/components/layout/ResponsiveTabs.tsx` — tab bar component for narrow screens switching between "Editor" and "Preview" panes, controlled by activePane in usePlaygroundState *(implemented inline in PlaygroundShell.tsx)*
 - [X] T063 Update `apps/playground/src/components/layout/PlaygroundShell.tsx` to use useMediaQuery: wide → split-pane, narrow → ResponsiveTabs with stacked full-width panes (FR-001)
 - [X] T064 Keyboard accessibility audit: verify tab order between editor↔preview↔inspect↔header, add aria-labels to all interactive controls, verify CodeMirror keyboard navigation, test focus management on pane/tab switches (FR-014)
-- [ ] T065 [P] Performance: lazy-load CodeMirror bundle via React.lazy + Suspense, code-split ExampleGallery and ConfigImportExport dialogs
+- [X] T065 [P] Performance: lazy-load CodeMirror bundle via React.lazy + Suspense, code-split ExampleGallery, ConfigImportExport, and CustomComponentImport dialogs
 - [X] T066 [P] Add `apps/playground/public/favicon.svg` with Z2F branding
 - [X] T067 Run full test suite (`pnpm --filter @zod-to-form/playground test`), fix any failures
 - [X] T068 Run type-check (`pnpm --filter @zod-to-form/playground type-check`), fix any errors
