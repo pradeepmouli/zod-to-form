@@ -1,6 +1,9 @@
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { readFileSync } from "fs";
+import { resolve } from "path";
+import { fileURLToPath } from "url";
 
 function shadcnRegistryPlugin(): Plugin {
   let registryConfigCache: Record<string, string> | null = null;
@@ -135,7 +138,13 @@ function shadcnRegistryPlugin(): Plugin {
   };
 }
 
+const __dirname = resolve(fileURLToPath(import.meta.url), "..");
+const pkg = JSON.parse(readFileSync(resolve(__dirname, "package.json"), "utf-8"));
+
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   plugins: [react(), tailwindcss(), shadcnRegistryPlugin()],
   server: {
     host: "0.0.0.0",

@@ -2,6 +2,8 @@ import { useState } from "react";
 import type { ComponentMapType } from "../../types/playground.ts";
 import { encodeShareState } from "../../lib/share.ts";
 
+declare const __APP_VERSION__: string;
+
 interface HeaderProps {
   componentMap: ComponentMapType;
   onComponentMapChange: (map: ComponentMapType) => void;
@@ -70,6 +72,16 @@ export function Header({
           }}
         >
           Studio
+        </span>
+        <span
+          className="text-[10px] hidden sm:inline"
+          style={{
+            color: "var(--text-muted)",
+            fontFamily: "'JetBrains Mono', monospace",
+            opacity: 0.5,
+          }}
+        >
+          v{__APP_VERSION__}
         </span>
       </div>
 
