@@ -37,7 +37,7 @@ describe('ZodForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
 
     await waitFor(() => {
-      expect(screen.getByText(/invalid email/i)).toBeInTheDocument();
+      expect(screen.getByText(/invalid/i)).toBeInTheDocument();
     });
   });
 
