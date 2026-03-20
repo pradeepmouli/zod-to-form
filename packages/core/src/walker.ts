@@ -60,7 +60,12 @@ function processField(
     }
   }
   if (metadata.props) {
-    Object.assign(field.props, metadata.props);
+    const BLOCKED_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+    for (const [k, v] of Object.entries(metadata.props)) {
+      if (!BLOCKED_KEYS.has(k)) {
+        field.props[k] = v;
+      }
+    }
   }
   if (metadata.hidden !== undefined) {
     field.hidden = metadata.hidden;

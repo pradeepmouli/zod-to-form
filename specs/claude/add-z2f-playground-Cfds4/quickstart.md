@@ -21,7 +21,7 @@ pnpm build
 pnpm --filter @zod-to-form/playground dev
 ```
 
-The playground opens at `http://localhost:5173` (default Vite port).
+The playground opens at `http://localhost:5000`.
 
 ## Development
 

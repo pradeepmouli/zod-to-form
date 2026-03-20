@@ -49,6 +49,22 @@ export function FormPreview({
     [onSubmitResult],
   );
 
+  const handleInvalid = useCallback(
+    (fieldErrors: Record<string, { message?: string }>) => {
+      const errors = Object.entries(fieldErrors).map(([path, err]) => ({
+        path,
+        message: err.message ?? "Validation failed",
+      }));
+      onSubmitResult({
+        success: false,
+        data: null,
+        errors,
+        timestamp: Date.now(),
+      });
+    },
+    [onSubmitResult],
+  );
+
   const { schema, formRegistry } = useSchemaFromSource(editorContent, fields);
 
   return (
@@ -78,6 +94,7 @@ export function FormPreview({
             schema={schema}
             components={components}
             onSubmit={handleSubmit}
+            onInvalid={handleInvalid}
             formRegistry={formRegistry}
             className="space-y-4"
           >

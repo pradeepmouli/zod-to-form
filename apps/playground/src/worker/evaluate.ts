@@ -55,11 +55,19 @@ export function evaluate(jsCode: string): EvalResult {
       z,
       zod: z,
       core: { defineConfig, registerDeep, registerFlat },
+      self: undefined,
+      globalThis: undefined,
+      fetch: undefined,
+      XMLHttpRequest: undefined,
+      importScripts: undefined,
+      navigator: undefined,
+      WebSocket: undefined,
+      EventSource: undefined,
     };
     const argNames = Object.keys(scope);
     const argValues = Object.values(scope);
 
-    const wrappedCode = wrapLastExpression(jsCode);
+    const wrappedCode = `"use strict";\n${wrapLastExpression(jsCode)}`;
     const fn = new Function(...argNames, wrappedCode);
     const result = fn(...argValues);
 

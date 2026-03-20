@@ -12,6 +12,7 @@ import { useZodForm } from './useZodForm.js';
 type ZodFormProps<TSchema extends ZodObject> = {
   schema: TSchema;
   onSubmit?: (data: output<TSchema>) => unknown;
+  onInvalid?: (errors: Record<string, { message?: string }>) => void;
   onValueChange?: (data: output<TSchema>) => void;
   mode?: 'onSubmit' | 'onChange' | 'onBlur';
   defaultValues?: Partial<output<TSchema>>;
@@ -27,6 +28,7 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
   const {
     schema,
     onSubmit,
+    onInvalid,
     onValueChange,
     mode,
     defaultValues,
@@ -62,7 +64,7 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(submitHandler)} className={className} noValidate>
+      <form onSubmit={form.handleSubmit(submitHandler, onInvalid)} className={className} noValidate>
         {fields.map((field) => (
           <FieldRenderer
             key={field.key}

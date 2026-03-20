@@ -181,6 +181,18 @@ export function CustomComponentImport({
         </div>
 
         <div className="p-4 space-y-4 overflow-auto">
+
+          <div
+            className="glass-panel text-xs p-2.5"
+            style={{
+              color: "rgb(251, 191, 36)",
+              background: "rgba(251, 191, 36, 0.06)",
+              border: "1px solid rgba(251, 191, 36, 0.15)",
+            }}
+          >
+            Component source browsing only — imported components are saved for reference but not yet compiled into the live preview. Runtime compilation is coming soon.
+          </div>
+
           <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
             Browse components from the{" "}
             <a
@@ -192,8 +204,8 @@ export function CustomComponentImport({
             >
               shadcn/ui registry
             </a>
-            . Importing will switch the preview to the shadcn component map and
-            save the source code for reference.
+            . Fetched source code is saved for reference. To use shadcn
+            components in the preview, select the &ldquo;shadcn&rdquo; component map from the header dropdown.
           </p>
 
           <div>

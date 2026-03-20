@@ -1,3 +1,4 @@
+import { validateConfig } from "@zod-to-form/core";
 import type { PlaygroundConfig } from "../types/playground.ts";
 
 export interface ConfigImportResult {
@@ -24,6 +25,13 @@ export async function importConfig(
 
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     const warnings: string[] = [];
+
+    try {
+      validateConfig(parsed, "playground-import");
+    } catch (validationErr: unknown) {
+      const msg = validationErr instanceof Error ? validationErr.message : "Unknown validation error";
+      warnings.push(`Config validation: ${msg}`);
+    }
 
     const config: PlaygroundConfig = {};
     if (parsed.components && typeof parsed.components === "object") {
