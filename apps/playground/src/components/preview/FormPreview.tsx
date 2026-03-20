@@ -1,7 +1,9 @@
 import { useCallback, useMemo } from "react";
 import type { ComponentType } from "react";
 import type { FormField } from "@zod-to-form/core";
+import { SHADCN_OVERRIDES } from "@zod-to-form/core";
 import { ZodForm, defaultComponentMap, shadcnComponentMap } from "@zod-to-form/react";
+import type { RuntimeComponentConfig } from "@zod-to-form/react";
 import type {
   ComponentMapType,
   EvaluationError,
@@ -45,6 +47,27 @@ export function FormPreview({
     },
     [componentMap, compiledComponents],
   );
+
+  const componentConfig = useMemo((): RuntimeComponentConfig | undefined => {
+    if (!compiledComponents || Object.keys(compiledComponents).length === 0) {
+      return undefined;
+    }
+    if (componentMap !== "shadcn" && componentMap !== "custom") {
+      return undefined;
+    }
+    const overrides: Record<string, { controlled?: boolean; propMap?: Record<string, string> }> = {};
+    for (const name of Object.keys(compiledComponents)) {
+      if (SHADCN_OVERRIDES[name]) {
+        overrides[name] = SHADCN_OVERRIDES[name];
+      }
+    }
+    if (Object.keys(overrides).length === 0) {
+      return undefined;
+    }
+    return {
+      components: { source: "playground-compiled", overrides },
+    };
+  }, [compiledComponents, componentMap]);
 
   const handleSubmit = useCallback(
     (data: Record<string, unknown>) => {
@@ -102,6 +125,7 @@ export function FormPreview({
           <ZodForm
             schema={schema}
             components={components}
+            componentConfig={componentConfig}
             onSubmit={handleSubmit}
             onInvalid={handleInvalid}
             formRegistry={formRegistry}

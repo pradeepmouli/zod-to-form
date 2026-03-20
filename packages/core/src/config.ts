@@ -363,8 +363,21 @@ function formatValidationError(error: z.ZodError, source: string): Error {
 
 // ─── Preset Override Maps ─────────────────────────────────────────────
 
-/** shadcn preset — no controlled components by default */
-export const SHADCN_OVERRIDES: Record<string, ComponentOverride> = {};
+/** shadcn preset — Radix-based components need controlled mode + prop mapping */
+export const SHADCN_OVERRIDES: Record<string, ComponentOverride> = {
+  Select: {
+    controlled: true,
+    propMap: { onValueChange: 'field.onChange' },
+  },
+  Checkbox: {
+    controlled: true,
+    propMap: { checked: 'field.value', onCheckedChange: 'field.onChange' },
+  },
+  Switch: {
+    controlled: true,
+    propMap: { checked: 'field.value', onCheckedChange: 'field.onChange' },
+  },
+};
 
 /** Default/unstyled preset — no controlled components by default */
 export const DEFAULT_OVERRIDES: Record<string, ComponentOverride> = {};
