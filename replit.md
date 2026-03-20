@@ -20,7 +20,7 @@ apps/
 - **Language:** TypeScript (strict, ESM)
 - **Package manager:** pnpm 10.26.1 (workspaces)
 - **Build tool:** `tsgo` (`@typescript/native-preview`) for packages; Vite for playground
-- **Testing:** Vitest (345 tests across 41 test files)
+- **Testing:** Vitest (349 tests across 41 test files)
 - **Linting/Formatting:** oxlint + oxfmt
 - **Playground:** React 19, CodeMirror 6, Tailwind CSS 4, Sucrase, lz-string
 

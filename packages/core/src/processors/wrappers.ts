@@ -13,6 +13,8 @@ function runInner(
   const innerType = typeof innerDef['type'] === 'string' ? (innerDef['type'] as string) : 'unknown';
   const processor = ctx.processors[innerType];
 
+  field.zodType = innerType;
+
   if (processor) {
     processor(innerSchema, ctx, field, params);
     return;

@@ -91,6 +91,63 @@ describe('wrapper processors', () => {
     processPipe(schema, createContext(innerProcessor), field, {});
 
     expect(innerProcessor).toHaveBeenCalledTimes(1);
-    expect(field.zodType).toBe('pipe');
+    expect(field.zodType).toBe('string');
+  });
+
+  it('optional unwraps zodType to inner type', () => {
+    const schema = z.string().optional();
+    const field = createBaseField('name', 'optional');
+    const innerProcessor = vi.fn();
+
+    processOptional(schema, createContext(innerProcessor), field, {});
+
+    expect(field.zodType).toBe('string');
+    expect(field.required).toBe(false);
+  });
+
+  it('nullable unwraps zodType to inner type', () => {
+    const schema = z.number().nullable();
+    const field = createBaseField('age', 'nullable');
+    const innerProcessor = vi.fn();
+
+    processNullable(schema, createContext(innerProcessor), field, {});
+
+    expect(field.zodType).toBe('number');
+    expect(field.required).toBe(false);
+  });
+
+  it('default unwraps zodType to inner type', () => {
+    const schema = z.string().default('hello');
+    const field = createBaseField('greeting', 'default');
+    const innerProcessor = vi.fn();
+
+    processDefault(schema, createContext(innerProcessor), field, {});
+
+    expect(field.zodType).toBe('string');
+    expect(field.defaultValue).toBe('hello');
+  });
+
+  it('chained wrappers unwrap to leaf type', () => {
+    const schema = z.string().optional().default('foo');
+    const field = createBaseField('val', 'default');
+    const innerProcessor = vi.fn();
+
+    const ctx: FormProcessorContext = {
+      processors: {
+        string: innerProcessor,
+        number: innerProcessor,
+        optional: processOptional,
+      },
+      path: [],
+      seen: new WeakSet(),
+      maxDepth: 5,
+      currentDepth: 0,
+    };
+
+    processDefault(schema, ctx, field, {});
+
+    expect(field.zodType).toBe('string');
+    expect(field.defaultValue).toBe('foo');
+    expect(field.required).toBe(false);
   });
 });
