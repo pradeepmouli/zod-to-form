@@ -1,23 +1,31 @@
 import { useMemo, useState, useCallback } from "react";
 import type { FormField } from "@zod-to-form/core";
-import { generateFormCode } from "../../lib/codegen.ts";
+import type { ComponentMapType } from "../../types/playground.ts";
+import { generateFormCode, generateZodFormCode } from "../../lib/codegen.ts";
 
 interface CodeOutputProps {
   fields: FormField[] | null;
   editorContent: string;
+  componentMap: ComponentMapType;
+  customComponentNames: string[];
 }
 
-export function CodeOutput({ fields }: CodeOutputProps) {
+export function CodeOutput({ fields, componentMap, customComponentNames }: CodeOutputProps) {
   const [copied, setCopied] = useState(false);
+
+  const useZodForm = componentMap === "shadcn" || customComponentNames.length > 0;
 
   const generatedCode = useMemo(() => {
     if (!fields || fields.length === 0) return null;
     try {
+      if (useZodForm) {
+        return generateZodFormCode(componentMap, customComponentNames);
+      }
       return generateFormCode(fields);
     } catch {
       return null;
     }
-  }, [fields]);
+  }, [fields, useZodForm, componentMap, customComponentNames]);
 
   const handleCopy = useCallback(() => {
     if (!generatedCode) return;
@@ -42,7 +50,9 @@ export function CodeOutput({ fields }: CodeOutputProps) {
         style={{ borderBottom: '1px solid var(--border-subtle)' }}
       >
         <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-          Generated React + React Hook Form component
+          {useZodForm
+            ? "Generated ZodForm component"
+            : "Generated React + React Hook Form component"}
         </span>
         <button
           onClick={handleCopy}

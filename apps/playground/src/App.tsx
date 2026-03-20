@@ -75,6 +75,10 @@ export function App() {
   }, [state.customComponents]);
 
   const compiledComponents = compilationResult.components;
+  const customComponentNames = useMemo(
+    () => Object.keys(compiledComponents),
+    [compiledComponents],
+  );
 
   useEffect(() => {
     setCompilationErrors(compilationResult.errors);
@@ -139,6 +143,8 @@ export function App() {
           <CodeOutput
             fields={displayFields}
             editorContent={state.editorContent}
+            componentMap={state.componentMap}
+            customComponentNames={customComponentNames}
           />
         }
         inspect={<IRInspector fields={displayFields} />}

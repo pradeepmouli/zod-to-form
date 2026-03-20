@@ -56,7 +56,7 @@ Interactive browser-based playground where developers write Zod v4 schemas in a 
 - **Live editing**: Write Zod schemas → form updates in real-time (300ms debounce)
 - **Component maps**: Switch between Default and shadcn/ui component maps
 - **Runtime component compilation**: Fetch real shadcn/ui components from the registry, compile them at runtime (Sucrase + module sandbox), and use them in the live preview
-- **Code tab**: Generated React + React Hook Form JSX from CLI codegen (browser-ported)
+- **Code tab**: Context-aware code generation — plain HTML+RHF when using Default map, ZodForm-based with custom component imports when using shadcn/custom components
 - **IR Inspector**: Tree view of generated FormField[] intermediate representation
 - **Examples gallery**: 7 curated example schemas (basic, advanced, patterns)
 - **Config import/export**: Import/export z2f.config.json files
@@ -70,7 +70,7 @@ Interactive browser-based playground where developers write Zod v4 schemas in a 
 - **Branding**: zod-to-form logo (pink polygon + form card), Outfit font for title, "zod" teal + "form" pink
 - **Glass classes**: `.glass-surface`, `.glass-panel`, `.btn-glass`, `.btn-accent`, `.input-glass`, `.modal-panel`
 - **Typography**: DM Sans (UI text) + JetBrains Mono (code/editor) via Google Fonts
-- **CSS**: Custom properties in globals.css, Tailwind CSS 4 utilities
+- **CSS**: Custom properties in globals.css, Tailwind CSS 4 utilities, `@theme` block with shadcn/ui color tokens (input, ring, muted-foreground, destructive, etc.)
 
 ### Architecture
 - Web Worker evaluation pipeline: transpile (Sucrase) → evaluate (sandboxed `new Function()`) → walkSchema → FormField[]

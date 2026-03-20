@@ -1,4 +1,5 @@
 import type { FormField } from "@zod-to-form/core";
+import type { ComponentMapType } from "../types/playground.ts";
 
 function registerPathExpr(path: string): string {
   return path.includes("${") ? `register(\`${path}\`)` : `register('${path}')`;
@@ -139,4 +140,71 @@ export function generateFormCode(
     `  );`,
     `}`,
   ].join("\n");
+}
+
+export function generateZodFormCode(
+  componentMap: ComponentMapType,
+  customComponentNames: string[],
+  exportName = "schema",
+  componentName = "GeneratedForm",
+): string {
+  const useShadcn = componentMap === "shadcn";
+  const hasCustom = customComponentNames.length > 0;
+
+  const imports: string[] = [
+    `import { z } from 'zod';`,
+    `import { ${exportName} } from './schema';`,
+  ];
+
+  const zodFormImports: string[] = ["ZodForm"];
+  if (useShadcn && !hasCustom) {
+    zodFormImports.push("shadcnComponentMap");
+  } else if (!useShadcn && !hasCustom) {
+    zodFormImports.push("defaultComponentMap");
+  } else {
+    zodFormImports.push(useShadcn ? "shadcnComponentMap" : "defaultComponentMap");
+  }
+  imports.push(`import { ${zodFormImports.join(", ")} } from '@zod-to-form/react';`);
+
+  if (hasCustom) {
+    for (const name of customComponentNames) {
+      imports.push(`import { ${name} } from './components/${name}';`);
+    }
+  }
+
+  const lines: string[] = [
+    ...imports,
+    ``,
+    `type FormData = z.output<typeof ${exportName}>;`,
+    ``,
+    `export function ${componentName}(props: {`,
+    `  onSubmit: (data: FormData) => void;`,
+    `}) {`,
+  ];
+
+  const baseMap = useShadcn ? "shadcnComponentMap" : "defaultComponentMap";
+
+  if (hasCustom) {
+    const overrides = customComponentNames.map((n) => `    ${n},`).join("\n");
+    lines.push(`  const components = {`);
+    lines.push(`    ...${baseMap},`);
+    lines.push(overrides);
+    lines.push(`  };`);
+    lines.push(``);
+  }
+
+  const componentsExpr = hasCustom ? "components" : baseMap;
+
+  lines.push(`  return (`);
+  lines.push(`    <ZodForm`);
+  lines.push(`      schema={${exportName}}`);
+  lines.push(`      components={${componentsExpr}}`);
+  lines.push(`      onSubmit={props.onSubmit}`);
+  lines.push(`    >`);
+  lines.push(`      <button type="submit">Submit</button>`);
+  lines.push(`    </ZodForm>`);
+  lines.push(`  );`);
+  lines.push(`}`);
+
+  return lines.join("\n");
 }

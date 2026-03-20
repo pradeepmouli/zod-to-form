@@ -1,5 +1,28 @@
 @import "tailwindcss";
 
+@theme {
+  --color-background: #0B0F17;
+  --color-foreground: #E2E5EA;
+  --color-card: rgba(18, 24, 36, 0.72);
+  --color-card-foreground: #E2E5EA;
+  --color-popover: rgba(18, 24, 36, 0.85);
+  --color-popover-foreground: #E2E5EA;
+  --color-primary: #F97316;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: rgba(26, 33, 48, 0.65);
+  --color-secondary-foreground: #E2E5EA;
+  --color-muted: rgba(26, 33, 48, 0.65);
+  --color-muted-foreground: #8B95A8;
+  --color-accent: rgba(35, 44, 62, 0.55);
+  --color-accent-foreground: #E2E5EA;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-input: rgba(255, 255, 255, 0.12);
+  --color-ring: #F97316;
+  --radius: 0.5rem;
+}
+
 :root {
   --bg-base: #0B0F17;
   --bg-surface: rgba(18, 24, 36, 0.72);
@@ -19,7 +42,7 @@
   --accent-gradient: linear-gradient(135deg, #FB923C 0%, #F97316 50%, #EA580C 100%);
   --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
-  --radius: 12px;
+  --radius-lg: 12px;
   --radius-sm: 8px;
   --blur: 16px;
   --blur-heavy: 24px;
@@ -99,7 +122,7 @@ body {
   backdrop-filter: blur(var(--blur-heavy));
   -webkit-backdrop-filter: blur(var(--blur-heavy));
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
 }
 
 .btn-glass {
@@ -162,7 +185,7 @@ body {
   backdrop-filter: blur(var(--blur-heavy));
   -webkit-backdrop-filter: blur(var(--blur-heavy));
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-elevated), var(--shadow-glow);
 }
 
