@@ -41,6 +41,33 @@ export interface CompileError {
   error: string;
 }
 
+const COMPONENT_MAP_SLOTS = [
+  "Input", "Textarea", "Select", "Checkbox", "Switch",
+  "DatePicker", "FileInput", "RadioGroup", "Combobox",
+  "Field", "FieldLabel", "FieldDescription", "FieldMessage",
+];
+
+const NAME_TO_SLOT: Record<string, string> = {};
+for (const slot of COMPONENT_MAP_SLOTS) {
+  NAME_TO_SLOT[slot.toLowerCase()] = slot;
+}
+
+function resolveComponentSlotName(registryName: string): string {
+  const normalized = registryName
+    .replace(/^8bit-/, "")
+    .replace(/^retro-/, "")
+    .replace(/^brutal-/, "")
+    .replace(/^neo-/, "")
+    .replace(/-/g, "");
+  if (NAME_TO_SLOT[normalized]) {
+    return NAME_TO_SLOT[normalized];
+  }
+  return registryName
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join("");
+}
+
 const CSS_STUB = { __esModule: true };
 
 function resolveModule(
@@ -152,26 +179,25 @@ ${wrappedCode}
     const fn = new Function("require", "React", "__exports__", sandboxedCode);
     fn(requireFn, React, moduleExports);
 
-    const exportName =
-      name
-        .split("-")
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join("") || name;
-
     const composed = tryComposeRadixComponent(name, moduleExports);
     if (composed) {
       return { ok: true, component: composed.component, exportName: composed.exportName };
     }
 
-    let component: React.ComponentType<Record<string, unknown>> | null = null;
+    const slotName = resolveComponentSlotName(name);
 
-    if (typeof moduleExports[exportName] === "function" || isForwardRef(moduleExports[exportName])) {
-      component = moduleExports[exportName] as React.ComponentType<Record<string, unknown>>;
+    let component: React.ComponentType<Record<string, unknown>> | null = null;
+    let resolvedExportName = slotName;
+
+    if (slotName && (typeof moduleExports[slotName] === "function" || isForwardRef(moduleExports[slotName]))) {
+      component = moduleExports[slotName] as React.ComponentType<Record<string, unknown>>;
+      resolvedExportName = slotName;
     } else {
       for (const [key, val] of Object.entries(moduleExports)) {
         if (key.startsWith("_")) continue;
         if (typeof val === "function" || isForwardRef(val)) {
           component = val as React.ComponentType<Record<string, unknown>>;
+          resolvedExportName = COMPONENT_MAP_SLOTS.includes(key) ? key : (slotName ?? key);
           break;
         }
       }
@@ -180,11 +206,11 @@ ${wrappedCode}
     if (!component) {
       return {
         ok: false,
-        error: `No React component export found in "${name}". Expected a named export like "${exportName}".`,
+        error: `No React component export found in "${name}".`,
       };
     }
 
-    return { ok: true, component, exportName };
+    return { ok: true, component, exportName: resolvedExportName };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown compilation error";
     return { ok: false, error: message };
@@ -351,7 +377,12 @@ export function compileComponents(
       const result = compileComponent(name, source, compiledModules);
       if (result.ok) {
         components[result.exportName] = result.component;
-        compiledModules[name] = { [result.exportName]: result.component, __esModule: true };
+        const mod = { [result.exportName]: result.component, __esModule: true };
+        compiledModules[name] = mod;
+        const baseName = name.replace(/^8bit-/, "").replace(/^retro-/, "").replace(/^brutal-/, "").replace(/^neo-/, "");
+        if (baseName !== name) {
+          compiledModules[baseName] = mod;
+        }
         compiled.add(name);
         remaining.delete(name);
         progress = true;

@@ -290,17 +290,54 @@ export function CustomComponentImport({
             .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
             .join("");
 
-        setFetched((prev) => [
-          ...prev,
-          {
-            name: key,
-            title,
-            code: tsxFile.content,
-            cssFiles,
-            dependencies: data.dependencies ?? [],
-            library: selectedLibrary.name,
-          },
-        ]);
+        const newComponents: FetchedComponent[] = [];
+
+        const regDeps = data.registryDependencies ?? [];
+        if (regDeps.length > 0) {
+          const existingNames = new Set(fetched.map((c) => {
+            const sn = c.name.includes("/") ? c.name.split("/").pop()! : c.name;
+            return sn;
+          }));
+
+          for (const dep of regDeps) {
+            if (existingNames.has(dep)) continue;
+            try {
+              const depUrl = SHADCN_ENTRY.url.replace("{name}", dep);
+              const depRes = await registryFetch(depUrl);
+              if (!depRes.ok) continue;
+              const depData: RegistryItemDetail = await depRes.json();
+              const depTsx = depData.files?.find(
+                (f) => f.content && (f.path.endsWith(".tsx") || f.path.endsWith(".ts")),
+              );
+              if (!depTsx?.content) continue;
+              const depCss = (depData.files ?? [])
+                .filter((f) => f.content && f.path.endsWith(".css"))
+                .map((f) => f.content);
+              newComponents.push({
+                name: dep,
+                title: dep.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(""),
+                code: depTsx.content,
+                cssFiles: depCss,
+                dependencies: depData.dependencies ?? [],
+                library: "shadcn/ui (auto)",
+              });
+              existingNames.add(dep);
+            } catch {
+              console.warn(`[z2f] Failed to auto-fetch registry dependency: ${dep}`);
+            }
+          }
+        }
+
+        newComponents.push({
+          name: key,
+          title,
+          code: tsxFile.content,
+          cssFiles,
+          dependencies: data.dependencies ?? [],
+          library: selectedLibrary.name,
+        });
+
+        setFetched((prev) => [...prev, ...newComponents]);
       } catch {
         setError("Failed to fetch component. Check your connection.");
       } finally {
@@ -321,10 +358,16 @@ export function CustomComponentImport({
       return;
     }
     const importMap: Record<string, string> = {};
+    const seen = new Set<string>();
     for (const comp of fetched) {
-      const shortName = comp.name.includes("/")
+      let shortName = comp.name.includes("/")
         ? comp.name.split("/").pop()!
         : comp.name;
+      if (seen.has(shortName)) {
+        const lib = comp.library.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+        shortName = `${lib}-${shortName}`;
+      }
+      seen.add(shortName);
       importMap[shortName] = comp.code;
     }
 
