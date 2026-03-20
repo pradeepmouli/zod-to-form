@@ -59,6 +59,9 @@ function processField(
       field.props['placeholder'] = metadata.examples[0];
     }
   }
+  if (metadata.props) {
+    Object.assign(field.props, metadata.props);
+  }
   if (metadata.hidden !== undefined) {
     field.hidden = metadata.hidden;
   }

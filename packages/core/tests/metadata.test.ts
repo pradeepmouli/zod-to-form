@@ -42,6 +42,22 @@ describe('metadata resolution', () => {
     expect(secretField?.hidden).toBe(true);
   });
 
+  it('applies formRegistry props to override processor defaults', () => {
+    const formRegistry = z.registry<{
+      props?: Record<string, unknown>;
+    }>();
+
+    const pw = z.string().min(1).meta({ title: 'Password' });
+    formRegistry.add(pw, { props: { type: 'password' } });
+
+    const schema = z.object({ password: pw });
+    const fields = walkSchema(schema, { formRegistry });
+
+    const field = fields.find((entry) => entry.key === 'password');
+    expect(field?.props['type']).toBe('password');
+    expect(field?.label).toBe('Password');
+  });
+
   it('prefers custom processor output over overlapping FormMeta component', () => {
     const formRegistry = z.registry<{
       component?: string;

@@ -7,7 +7,9 @@ export const EXAMPLES: ExampleSchema[] = [
     description: "Registration form with labels, placeholders, and validation",
     category: "basic",
     tags: ["string", "email", "password", "validation", "meta"],
-    source: `const schema = z.object({
+    source: `const formRegistry = z.registry();
+
+const schema = z.object({
   username: z.string()
     .min(3, "Username must be at least 3 characters")
     .max(20)
@@ -24,14 +26,16 @@ export const EXAMPLES: ExampleSchema[] = [
     }),
   password: z.string()
     .min(8, "Password must be at least 8 characters")
-    .meta({ title: "Password" }),
+    .meta({ title: "Password" })
+    .register(formRegistry, { props: { type: "password" } }),
   confirmPassword: z.string()
-    .meta({ title: "Confirm Password" }),
+    .meta({ title: "Confirm Password" })
+    .register(formRegistry, { props: { type: "password" } }),
   acceptTerms: z.boolean()
     .meta({ title: "I accept the terms and conditions" }),
 });
 
-schema;
+({ schema, formRegistry });
 `,
   },
   {
@@ -223,19 +227,22 @@ schema;
     description: "Simple login with email and password",
     category: "basic",
     tags: ["string", "email", "password", "simple", "meta"],
-    source: `const schema = z.object({
+    source: `const formRegistry = z.registry();
+
+const schema = z.object({
   email: z.string()
     .email("Please enter a valid email")
     .meta({ title: "Email", examples: ["you@example.com"] }),
   password: z.string()
     .min(1, "Password is required")
-    .meta({ title: "Password" }),
+    .meta({ title: "Password" })
+    .register(formRegistry, { props: { type: "password" } }),
   rememberMe: z.boolean()
     .default(false)
     .meta({ title: "Remember me" }),
 });
 
-schema;
+({ schema, formRegistry });
 `,
   },
   {
