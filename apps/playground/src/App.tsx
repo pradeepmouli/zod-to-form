@@ -1,44 +1,44 @@
-import { useState, useRef, useMemo, useEffect, useCallback, lazy, Suspense } from "react";
-import type { ComponentType } from "react";
-import { usePlaygroundState } from "./hooks/usePlaygroundState.ts";
-import { useDebouncedEval } from "./hooks/useDebouncedEval.ts";
-import { Header } from "./components/layout/Header.tsx";
-import { PlaygroundShell } from "./components/layout/PlaygroundShell.tsx";
-import { FormPreview } from "./components/preview/FormPreview.tsx";
-import { CodeOutput } from "./components/preview/CodeOutput.tsx";
-import { IRInspector } from "./components/inspect/IRInspector.tsx";
-import { STARTER_SCHEMA } from "./components/examples/starter.ts";
-import { compileComponents } from "./lib/component-compiler.ts";
+import { useState, useRef, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
+import type { ComponentType } from 'react';
+import { usePlaygroundState } from './hooks/usePlaygroundState.ts';
+import { useDebouncedEval } from './hooks/useDebouncedEval.ts';
+import { Header } from './components/layout/Header.tsx';
+import { PlaygroundShell } from './components/layout/PlaygroundShell.tsx';
+import { FormPreview } from './components/preview/FormPreview.tsx';
+import { CodeOutput } from './components/preview/CodeOutput.tsx';
+import { IRInspector } from './components/inspect/IRInspector.tsx';
+import { STARTER_SCHEMA } from './components/examples/starter.ts';
+import { compileComponents } from './lib/component-compiler.ts';
 
 const SchemaEditor = lazy(() =>
-  import("./components/editor/SchemaEditor.tsx").then((m) => ({
-    default: m.SchemaEditor,
-  })),
+  import('./components/editor/SchemaEditor.tsx').then((m) => ({
+    default: m.SchemaEditor
+  }))
 );
 
 const ExampleGallery = lazy(() =>
-  import("./components/examples/ExampleGallery.tsx").then((m) => ({
-    default: m.ExampleGallery,
-  })),
+  import('./components/examples/ExampleGallery.tsx').then((m) => ({
+    default: m.ExampleGallery
+  }))
 );
 
 const ConfigImportExport = lazy(() =>
-  import("./components/config/ConfigImportExport.tsx").then((m) => ({
-    default: m.ConfigImportExport,
-  })),
+  import('./components/config/ConfigImportExport.tsx').then((m) => ({
+    default: m.ConfigImportExport
+  }))
 );
 
 const CustomComponentImport = lazy(() =>
-  import("./components/config/CustomComponentImport.tsx").then((m) => ({
-    default: m.CustomComponentImport,
-  })),
+  import('./components/config/CustomComponentImport.tsx').then((m) => ({
+    default: m.CustomComponentImport
+  }))
 );
 
 function EditorFallback() {
   return (
     <div
       className="h-full flex items-center justify-center text-sm"
-      style={{ color: "var(--text-muted)" }}
+      style={{ color: 'var(--text-muted)' }}
     >
       Loading editor...
     </div>
@@ -54,12 +54,10 @@ export function App() {
     setActivePane,
     setSubmitResult,
     setConfig,
-    setCustomComponents,
+    setCustomComponents
   } = usePlaygroundState();
 
-  const { fields, error, isEvaluating } = useDebouncedEval(
-    state.editorContent,
-  );
+  const { fields, error, isEvaluating } = useDebouncedEval(state.editorContent);
 
   const [examplesOpen, setExamplesOpen] = useState(false);
   const [configOpen, setConfigOpen] = useState(false);
@@ -69,16 +67,16 @@ export function App() {
 
   const compilationResult = useMemo(() => {
     if (!state.customComponents || Object.keys(state.customComponents).length === 0) {
-      return { components: {} as Record<string, ComponentType<Record<string, unknown>>>, errors: {} as Record<string, string> };
+      return {
+        components: {} as Record<string, ComponentType<Record<string, unknown>>>,
+        errors: {} as Record<string, string>
+      };
     }
     return compileComponents(state.customComponents);
   }, [state.customComponents]);
 
   const compiledComponents = compilationResult.components;
-  const customComponentNames = useMemo(
-    () => Object.keys(compiledComponents),
-    [compiledComponents],
-  );
+  const customComponentNames = useMemo(() => Object.keys(compiledComponents), [compiledComponents]);
 
   useEffect(() => {
     setCompilationErrors(compilationResult.errors);
@@ -86,8 +84,7 @@ export function App() {
 
   const displayFields = fields ?? state.lastValidFields;
   const hasUnsavedChanges =
-    state.editorContent !== initialContent.current &&
-    state.editorContent !== STARTER_SCHEMA;
+    state.editorContent !== initialContent.current && state.editorContent !== STARTER_SCHEMA;
 
   const handleExampleSelect = (source: string) => {
     setEditorContent(source);
@@ -98,16 +95,16 @@ export function App() {
     (components: Record<string, string>) => {
       setCustomComponents({
         ...state.customComponents,
-        ...components,
+        ...components
       });
     },
-    [state.customComponents, setCustomComponents],
+    [state.customComponents, setCustomComponents]
   );
 
   return (
     <div
       className="h-full flex flex-col"
-      style={{ background: "var(--bg-base)", color: "var(--text-primary)" }}
+      style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}
     >
       <Header
         componentMap={state.componentMap}
@@ -121,10 +118,7 @@ export function App() {
       <PlaygroundShell
         editor={
           <Suspense fallback={<EditorFallback />}>
-            <SchemaEditor
-              value={state.editorContent}
-              onChange={setEditorContent}
-            />
+            <SchemaEditor value={state.editorContent} onChange={setEditorContent} />
           </Suspense>
         }
         preview={
@@ -170,6 +164,8 @@ export function App() {
             onClose={() => setConfigOpen(false)}
             config={state.config}
             onConfigChange={setConfig}
+            componentMap={state.componentMap}
+            customComponents={state.customComponents}
           />
         </Suspense>
       )}
@@ -179,7 +175,7 @@ export function App() {
             isOpen={customImportOpen}
             onClose={() => setCustomImportOpen(false)}
             onImport={handleCustomComponentImport}
-            onSwitchToStyled={() => setComponentMap("shadcn")}
+            onSwitchToStyled={() => setComponentMap('shadcn')}
             compilationErrors={compilationErrors}
           />
         </Suspense>

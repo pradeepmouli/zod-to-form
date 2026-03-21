@@ -58,6 +58,25 @@ describe('metadata resolution', () => {
     expect(field?.label).toBe('Password');
   });
 
+  it('applies render function from form registry and sets hasCustomRender', () => {
+    const formRegistry = z.registry<{
+      render?: (field: import('../src/types.js').FormField, props: unknown) => unknown;
+    }>();
+
+    const customRender = (_field: import('../src/types.js').FormField, _props: unknown) =>
+      'custom-output';
+    const name = z.string();
+    formRegistry.add(name, { render: customRender });
+
+    const schema = z.object({ name });
+    const fields = walkSchema(schema, { formRegistry });
+
+    const field = fields.find((entry) => entry.key === 'name');
+    expect(field?.hasCustomRender).toBe(true);
+    expect(typeof field?.render).toBe('function');
+    expect(field?.render?.(field, {})).toBe('custom-output');
+  });
+
   it('prefers custom processor output over overlapping FormMeta component', () => {
     const formRegistry = z.registry<{
       component?: string;

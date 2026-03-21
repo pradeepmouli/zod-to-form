@@ -1,28 +1,25 @@
-import { transform } from "sucrase";
-import type { EvaluationError } from "../types/playground.ts";
+import { transform } from 'sucrase';
+import type { EvaluationError } from '../types/playground.ts';
+import { IMPORT_RE } from './guards.ts';
 
-export type TranspileResult =
-  | { ok: true; code: string }
-  | { ok: false; error: EvaluationError };
-
-const IMPORT_RE = /\b(import)\s+|(\bimport)\s*\(|(\brequire)\s*\(/m;
+export type TranspileResult = { ok: true; code: string } | { ok: false; error: EvaluationError };
 
 export function transpile(source: string): TranspileResult {
   if (IMPORT_RE.test(source)) {
     return {
       ok: false,
       error: {
-        type: "import",
+        type: 'import',
         message:
-          "Imports are not supported in the playground sandbox. Use the globally available 'z' (Zod) and 'core' objects instead.",
-      },
+          "Imports are not supported in the playground sandbox. Use the globally available 'z' (Zod) and 'core' objects instead."
+      }
     };
   }
 
   try {
     const result = transform(source, {
-      transforms: ["typescript"],
-      disableESTransforms: true,
+      transforms: ['typescript'],
+      disableESTransforms: true
     });
     return { ok: true, code: result.code };
   } catch (err: unknown) {
@@ -30,11 +27,11 @@ export function transpile(source: string): TranspileResult {
     return {
       ok: false,
       error: {
-        type: "syntax",
-        message: error.message ?? "Syntax error",
+        type: 'syntax',
+        message: error.message ?? 'Syntax error',
         line: error.loc?.line,
-        column: error.loc?.column,
-      },
+        column: error.loc?.column
+      }
     };
   }
 }

@@ -159,6 +159,70 @@ describe('ZodForm', () => {
     });
   });
 
+  it('calls onInvalid callback when validation fails', async () => {
+    const schema = z.object({
+      email: z.string().email()
+    });
+
+    const onSubmit = vi.fn();
+    const onInvalid = vi.fn();
+
+    render(
+      <ZodForm schema={schema} onSubmit={onSubmit} onInvalid={onInvalid}>
+        <button type="submit">Submit</button>
+      </ZodForm>
+    );
+
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'not-an-email' }
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    await waitFor(() => {
+      expect(onInvalid).toHaveBeenCalled();
+    });
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('renders array fields with add/remove controls', async () => {
+    const schema = z.object({
+      tags: z.array(z.string()).min(1)
+    });
+
+    render(
+      <ZodForm schema={schema} onSubmit={vi.fn()}>
+        <button type="submit">Submit</button>
+      </ZodForm>
+    );
+
+    // Should have an Add button for the array field
+    const addButton = screen.getByRole('button', { name: /add/i });
+    expect(addButton).toBeInTheDocument();
+
+    // Click add to create an entry
+    fireEvent.click(addButton);
+
+    await waitFor(() => {
+      const inputs = document.querySelectorAll('input[name^="tags"]');
+      expect(inputs.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  it('renders readonly fields with readOnly attribute', () => {
+    const schema = z.object({
+      token: z.string().readonly()
+    });
+
+    render(
+      <ZodForm schema={schema} defaultValues={{ token: 'abc123' }} onSubmit={vi.fn()}>
+        <button type="submit">Submit</button>
+      </ZodForm>
+    );
+
+    const input = screen.getByLabelText('Token');
+    expect(input).toHaveAttribute('readonly');
+  });
+
   it('supports onSubmit and onValueChange with separate triggers', async () => {
     const schema = z.object({
       name: z.string().min(2)

@@ -1,5 +1,5 @@
-import { validateConfig } from "@zod-to-form/core";
-import type { PlaygroundConfig } from "../types/playground.ts";
+import { validateConfig } from '@zod-to-form/core';
+import type { PlaygroundConfig } from '../types/playground.ts';
 
 export interface ConfigImportResult {
   ok: true;
@@ -13,11 +13,11 @@ export interface ConfigImportError {
 }
 
 export async function importConfig(
-  input: string | File,
+  input: string | File
 ): Promise<ConfigImportResult | ConfigImportError> {
   try {
     let raw: string;
-    if (typeof input === "string") {
+    if (typeof input === 'string') {
       raw = input;
     } else {
       raw = await input.text();
@@ -27,32 +27,33 @@ export async function importConfig(
     const warnings: string[] = [];
 
     try {
-      validateConfig(parsed, "playground-import");
+      validateConfig(parsed, 'playground-import');
     } catch (validationErr: unknown) {
-      const msg = validationErr instanceof Error ? validationErr.message : "Unknown validation error";
+      const msg =
+        validationErr instanceof Error ? validationErr.message : 'Unknown validation error';
       warnings.push(`Config validation: ${msg}`);
     }
 
     const config: PlaygroundConfig = {};
-    if (parsed.components && typeof parsed.components === "object") {
+    if (parsed.components && typeof parsed.components === 'object') {
       config.components = parsed.components as Record<string, unknown>;
     } else if (parsed.components !== undefined) {
       warnings.push("'components' field is invalid and was ignored");
     }
 
-    if (parsed.fields && typeof parsed.fields === "object") {
+    if (parsed.fields && typeof parsed.fields === 'object') {
       config.fields = parsed.fields as Record<string, unknown>;
     } else if (parsed.fields !== undefined) {
       warnings.push("'fields' field is invalid and was ignored");
     }
 
-    if (parsed.defaults && typeof parsed.defaults === "object") {
+    if (parsed.defaults && typeof parsed.defaults === 'object') {
       config.defaults = parsed.defaults as Record<string, unknown>;
     } else if (parsed.defaults !== undefined) {
       warnings.push("'defaults' field is invalid and was ignored");
     }
 
-    const knownKeys = new Set(["components", "fields", "defaults"]);
+    const knownKeys = new Set(['components', 'fields', 'defaults']);
     for (const key of Object.keys(parsed)) {
       if (!knownKeys.has(key)) {
         warnings.push(`Unrecognized field '${key}' was ignored`);
@@ -61,10 +62,23 @@ export async function importConfig(
 
     return { ok: true, config, warnings };
   } catch {
-    return { ok: false, error: "Invalid JSON format" };
+    return { ok: false, error: 'Invalid JSON format' };
   }
 }
 
-export function exportConfig(config: PlaygroundConfig): string {
-  return JSON.stringify(config, null, 2);
+export interface ExportOptions {
+  config: PlaygroundConfig;
+  componentMap?: string;
+  customComponents?: Record<string, string> | null;
+}
+
+export function exportConfig(options: ExportOptions): string {
+  const output: Record<string, unknown> = { ...options.config };
+  if (options.componentMap) {
+    output.componentMap = options.componentMap;
+  }
+  if (options.customComponents && Object.keys(options.customComponents).length > 0) {
+    output.customComponents = options.customComponents;
+  }
+  return JSON.stringify(output, null, 2);
 }

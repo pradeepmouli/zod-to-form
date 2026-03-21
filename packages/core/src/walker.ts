@@ -19,7 +19,7 @@ function processField(
   const zodType = typeof def['type'] === 'string' ? (def['type'] as string) : 'unknown';
   const field = createBaseField(key, zodType);
 
-  if (seen.has(schema) || currentDepth > maxDepth) {
+  if (seen.has(schema) || currentDepth >= maxDepth) {
     field.component = 'Input';
     field.props['type'] = 'text';
     return field;
@@ -101,12 +101,15 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
 
   const maxDepth = options?.maxDepth ?? 5;
   const processors = createProcessors(options?.processors ?? {});
-  const seen = new WeakSet<ZodType>();
   const shape = getShape(def);
 
-  const fields = Object.entries(shape).map(([key, childSchema]) =>
-    processField(childSchema, key, options, processors, seen, maxDepth, 0)
-  );
+  // Each top-level field gets its own `seen` set so that reused schema instances
+  // (e.g. `const name = z.string(); z.object({ a: name, b: name })`) are handled
+  // correctly across siblings, while still detecting cycles within a single descent.
+  const fields = Object.entries(shape).map(([key, childSchema]) => {
+    const seen = new WeakSet<ZodType>();
+    return processField(childSchema, key, options, processors, seen, maxDepth, 0);
+  });
 
   return fields.sort((left, right) => {
     if (left.order === undefined && right.order === undefined) {

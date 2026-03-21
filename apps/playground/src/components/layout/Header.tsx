@@ -1,6 +1,6 @@
-import { useState } from "react";
-import type { ComponentMapType } from "../../types/playground.ts";
-import { encodeShareState } from "../../lib/share.ts";
+import { useState } from 'react';
+import type { ComponentMapType } from '../../types/playground.ts';
+import { encodeShareState } from '../../lib/share.ts';
 
 declare const __APP_VERSION__: string;
 
@@ -21,54 +21,59 @@ export function Header({
   onExamplesClick,
   onConfigClick,
   onCustomImportClick,
-  customComponentCount,
+  customComponentCount
 }: HeaderProps) {
   const [copied, setCopied] = useState(false);
+  const [shareWarning, setShareWarning] = useState(false);
 
   const handleShare = () => {
-    const hash = encodeShareState({ code: editorContent, map: componentMap });
+    const { hash, tooLarge } = encodeShareState({ code: editorContent, map: componentMap });
     const url = `${window.location.origin}${window.location.pathname}${hash}`;
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }).catch(() => {});
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        if (tooLarge) {
+          setShareWarning(true);
+          setTimeout(() => setShareWarning(false), 4000);
+        } else {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }
+      })
+      .catch(() => {});
   };
 
   return (
     <header
       className="glass-surface flex items-center justify-between px-5 py-3"
       style={{
-        borderBottom: "1px solid var(--border-subtle)",
+        borderBottom: '1px solid var(--border-subtle)'
       }}
       role="banner"
     >
       <div className="flex items-center gap-3">
-        <img
-          src="/logo.svg"
-          alt="zod-to-form logo"
-          style={{ width: 28, height: 24 }}
-        />
+        <img src="/logo.svg" alt="zod-to-form logo" style={{ width: 28, height: 24 }} />
         <h1
           className="text-lg tracking-tight"
           style={{
             fontFamily: "'Outfit', sans-serif",
             fontWeight: 700,
-            letterSpacing: "-0.5px",
+            letterSpacing: '-0.5px'
           }}
         >
-          <span style={{ color: "#14B8A6" }}>zod</span>
-          <span style={{ color: "var(--text-secondary)", fontWeight: 500 }}>-to-</span>
-          <span style={{ color: "#EC4899" }}>form</span>
+          <span style={{ color: '#14B8A6' }}>zod</span>
+          <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>-to-</span>
+          <span style={{ color: '#EC4899' }}>form</span>
         </h1>
         <span
           className="text-xs hidden sm:inline"
           style={{
-            color: "var(--text-muted)",
+            color: 'var(--text-muted)',
             fontFamily: "'Outfit', sans-serif",
             fontWeight: 500,
-            letterSpacing: "0.5px",
-            textTransform: "uppercase",
-            opacity: 0.7,
+            letterSpacing: '0.5px',
+            textTransform: 'uppercase',
+            opacity: 0.7
           }}
         >
           Studio
@@ -76,9 +81,9 @@ export function Header({
         <span
           className="text-[10px] hidden sm:inline"
           style={{
-            color: "var(--text-muted)",
+            color: 'var(--text-muted)',
             fontFamily: "'JetBrains Mono', monospace",
-            opacity: 0.7,
+            opacity: 0.7
           }}
         >
           v{__APP_VERSION__}
@@ -88,9 +93,7 @@ export function Header({
       <nav className="flex items-center gap-2" aria-label="Playground controls">
         <select
           value={componentMap}
-          onChange={(e) =>
-            onComponentMapChange(e.target.value as ComponentMapType)
-          }
+          onChange={(e) => onComponentMapChange(e.target.value as ComponentMapType)}
           className="btn-glass text-xs px-2.5 py-1.5 outline-none cursor-pointer"
           aria-label="Form theme"
         >
@@ -119,7 +122,7 @@ export function Header({
           className="btn-glass text-xs px-3 py-1.5"
           aria-label="Import custom components"
         >
-          Components{customComponentCount > 0 ? ` (${customComponentCount})` : ""}
+          Components{customComponentCount > 0 ? ` (${customComponentCount})` : ''}
         </button>
 
         <button
@@ -127,12 +130,12 @@ export function Header({
           className="btn-glass text-xs px-3 py-1.5"
           style={
             copied
-              ? { color: "var(--accent-violet)", borderColor: "var(--border-glow)" }
+              ? { color: 'var(--accent-violet)', borderColor: 'var(--border-glow)' }
               : undefined
           }
           aria-label="Copy share URL to clipboard"
         >
-          {copied ? "Copied!" : "Share"}
+          {shareWarning ? 'URL may be too long!' : copied ? 'Copied!' : 'Share'}
         </button>
       </nav>
     </header>

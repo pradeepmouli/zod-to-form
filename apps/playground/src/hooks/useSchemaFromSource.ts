@@ -1,30 +1,41 @@
-import { useMemo, useRef } from "react";
-import type { FormField } from "@zod-to-form/core";
-import type { ZodFormRegistry } from "@zod-to-form/core";
-import type * as z from "zod";
-import { transpile } from "../worker/transpile.ts";
-import { evaluate } from "../worker/evaluate.ts";
+import { useMemo, useRef } from 'react';
+import type { FormField } from '@zod-to-form/core';
+import type { ZodFormRegistry } from '@zod-to-form/core';
+import type * as z from 'zod';
+import { transpile } from '../worker/transpile.ts';
+import { evaluate } from '../worker/evaluate.ts';
 
 interface SchemaResult {
   schema: z.ZodObject<z.ZodRawShape> | null;
   formRegistry: ZodFormRegistry | undefined;
+  stale: boolean;
 }
 
+/**
+ * Re-evaluates the editor source on the main thread to obtain a live Zod schema
+ * for `<ZodForm>` binding. Only runs when the worker has confirmed valid fields,
+ * minimizing redundant evaluation. Returns a `stale` flag when falling back to
+ * a previous result.
+ */
 export function useSchemaFromSource(
   editorContent: string,
-  fields: FormField[] | null,
+  fields: FormField[] | null
 ): SchemaResult {
-  const lastGood = useRef<SchemaResult>({ schema: null, formRegistry: undefined });
+  const lastGood = useRef<SchemaResult>({ schema: null, formRegistry: undefined, stale: false });
 
   return useMemo(() => {
-    if (!fields || fields.length === 0) return lastGood.current;
+    // null fields = worker hasn't returned yet or errored; fall back to last good
+    if (fields === null) return { ...lastGood.current, stale: lastGood.current.schema !== null };
+    // empty fields is a valid result (e.g. z.object({})), proceed with evaluation
     const transpileResult = transpile(editorContent);
-    if (!transpileResult.ok) return lastGood.current;
+    if (!transpileResult.ok)
+      return { ...lastGood.current, stale: lastGood.current.schema !== null };
     const evalResult = evaluate(transpileResult.code);
-    if (!evalResult.ok) return lastGood.current;
+    if (!evalResult.ok) return { ...lastGood.current, stale: lastGood.current.schema !== null };
     const result: SchemaResult = {
       schema: evalResult.schema as z.ZodObject<z.ZodRawShape>,
       formRegistry: evalResult.formRegistry,
+      stale: false
     };
     lastGood.current = result;
     return result;

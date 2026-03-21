@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import type { FormField } from "@zod-to-form/core";
-import type { EvaluationError } from "../types/playground.ts";
-import { EvalWorkerClient } from "../worker/client.ts";
+import { useEffect, useRef, useState, useCallback } from 'react';
+import type { FormField } from '@zod-to-form/core';
+import type { EvaluationError } from '../types/playground.ts';
+import { EvalWorkerClient } from '../worker/client.ts';
 
 interface EvalState {
   fields: FormField[] | null;
@@ -11,13 +11,13 @@ interface EvalState {
 
 export function useDebouncedEval(
   source: string,
-  debounceMs = 300,
+  debounceMs = 300
 ): EvalState & { onResult: (fields: FormField[] | null, error: EvaluationError | null) => void } {
   const clientRef = useRef<EvalWorkerClient | null>(null);
   const [evalState, setEvalState] = useState<EvalState>({
     fields: null,
     error: null,
-    isEvaluating: false,
+    isEvaluating: false
   });
 
   useEffect(() => {
@@ -42,14 +42,25 @@ export function useDebouncedEval(
         setEvalState((prev) => ({
           fields,
           error: null,
-          isEvaluating: false,
+          isEvaluating: false
         }));
       } catch (err: unknown) {
-        const error = err as EvaluationError;
+        // Cancelled evals are expected during rapid typing — ignore them
+        if (
+          err &&
+          typeof err === 'object' &&
+          'message' in err &&
+          (err as EvaluationError).message === 'Cancelled'
+        )
+          return;
+        const error: EvaluationError =
+          err && typeof err === 'object' && 'type' in err && 'message' in err
+            ? (err as EvaluationError)
+            : { type: 'runtime', message: err instanceof Error ? err.message : String(err) };
         setEvalState((prev) => ({
           fields: prev.fields,
           error,
-          isEvaluating: false,
+          isEvaluating: false
         }));
       }
     }, debounceMs);
@@ -60,12 +71,9 @@ export function useDebouncedEval(
     };
   }, [source, debounceMs]);
 
-  const onResult = useCallback(
-    (fields: FormField[] | null, error: EvaluationError | null) => {
-      setEvalState({ fields, error, isEvaluating: false });
-    },
-    [],
-  );
+  const onResult = useCallback((fields: FormField[] | null, error: EvaluationError | null) => {
+    setEvalState({ fields, error, isEvaluating: false });
+  }, []);
 
   return { ...evalState, onResult };
 }

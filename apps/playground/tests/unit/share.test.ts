@@ -1,50 +1,75 @@
-import { describe, it, expect } from "vitest";
-import { encodeShareState, decodeShareState } from "../../src/lib/share.ts";
+import { describe, it, expect, vi } from 'vitest';
+import { encodeShareState, decodeShareState } from '../../src/lib/share.ts';
 
-describe("share", () => {
-  it("round-trips code through encode/decode", () => {
-    const state = { code: "const schema = z.string(); schema;" };
-    const hash = encodeShareState(state);
+describe('share', () => {
+  it('round-trips code through encode/decode', () => {
+    const state = { code: 'const schema = z.string(); schema;' };
+    const { hash } = encodeShareState(state);
     const decoded = decodeShareState(hash);
     expect(decoded).not.toBeNull();
     expect(decoded!.code).toBe(state.code);
   });
 
-  it("preserves componentMap in round-trip", () => {
-    const state = { code: "z.string();", map: "shadcn" as const };
-    const hash = encodeShareState(state);
+  it('preserves componentMap in round-trip', () => {
+    const state = { code: 'z.string();', map: 'shadcn' as const };
+    const { hash } = encodeShareState(state);
     const decoded = decodeShareState(hash);
-    expect(decoded!.map).toBe("shadcn");
+    expect(decoded!.map).toBe('shadcn');
   });
 
-  it("preserves activeTab in round-trip", () => {
-    const state = { code: "z.string();", tab: "inspect" as const };
-    const hash = encodeShareState(state);
+  it('preserves activeTab in round-trip', () => {
+    const state = { code: 'z.string();', tab: 'inspect' as const };
+    const { hash } = encodeShareState(state);
     const decoded = decodeShareState(hash);
-    expect(decoded!.tab).toBe("inspect");
+    expect(decoded!.tab).toBe('inspect');
   });
 
   it("defaults to 'default' map when not specified", () => {
-    const state = { code: "z.string();" };
-    const hash = encodeShareState(state);
+    const state = { code: 'z.string();' };
+    const { hash } = encodeShareState(state);
     const decoded = decodeShareState(hash);
-    expect(decoded!.map).toBe("default");
+    expect(decoded!.map).toBe('default');
   });
 
-  it("returns null for empty hash", () => {
-    expect(decodeShareState("")).toBeNull();
-    expect(decodeShareState("#")).toBeNull();
+  it('returns null for empty hash', () => {
+    expect(decodeShareState('')).toBeNull();
+    expect(decodeShareState('#')).toBeNull();
   });
 
-  it("returns null for corrupt hash", () => {
-    expect(decodeShareState("#code=!!!corrupt!!!")).toBeNull();
+  it('returns null for corrupt hash', () => {
+    expect(decodeShareState('#code=!!!corrupt!!!')).toBeNull();
   });
 
-  it("handles hash with leading #", () => {
-    const state = { code: "z.number();" };
-    const hash = encodeShareState(state);
-    expect(hash.startsWith("#")).toBe(true);
+  it('handles hash with leading #', () => {
+    const state = { code: 'z.number();' };
+    const { hash } = encodeShareState(state);
+    expect(hash.startsWith('#')).toBe(true);
     const decoded = decodeShareState(hash);
     expect(decoded).not.toBeNull();
+  });
+
+  it('preserves tab:code in round-trip', () => {
+    const state = { code: 'z.string();', tab: 'code' as const };
+    const { hash } = encodeShareState(state);
+    const decoded = decodeShareState(hash);
+    expect(decoded!.tab).toBe('code');
+  });
+
+  it('returns tooLarge=false for small schemas', () => {
+    const { tooLarge } = encodeShareState({ code: 'z.string();' });
+    expect(tooLarge).toBe(false);
+  });
+
+  it('returns tooLarge=true and warns for large schemas', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    let largeCode = '';
+    for (let i = 0; i < 2000; i++) {
+      largeCode += `const v${i} = ${i * 7};\n`;
+    }
+    const { hash, tooLarge } = encodeShareState({ code: largeCode });
+    expect(hash).toBeTruthy();
+    expect(tooLarge).toBe(true);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Share URL is'));
+    warnSpy.mockRestore();
   });
 });

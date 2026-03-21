@@ -1,16 +1,18 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from 'react';
 
-const INJECTED_CSS_ID = "z2f-registry-css";
+const INJECTED_CSS_ID = 'z2f-registry-css';
 
 function injectRegistryCss(cssContents: string[]) {
   let style = document.getElementById(INJECTED_CSS_ID) as HTMLStyleElement | null;
   if (!style) {
-    style = document.createElement("style");
+    style = document.createElement('style');
     style.id = INJECTED_CSS_ID;
     document.head.appendChild(style);
   }
-  const combined = cssContents.join("\n\n");
-  style.textContent = (style.textContent ?? "") + "\n" + combined;
+  // Replace all CSS rather than appending to prevent unbounded growth
+  // when importing multiple batches or re-importing the same component.
+  const combined = cssContents.join('\n\n');
+  style.textContent = combined;
 }
 
 interface CommunityRegistry {
@@ -63,18 +65,17 @@ export function CustomComponentImport({
   onClose,
   onImport,
   onSwitchToStyled,
-  compilationErrors = {},
+  compilationErrors = {}
 }: CustomComponentImportProps) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [registries, setRegistries] = useState<CommunityRegistry[]>([]);
   const [registriesLoading, setRegistriesLoading] = useState(false);
   const [registriesError, setRegistriesError] = useState<string | null>(null);
 
-  const [selectedLibrary, setSelectedLibrary] =
-    useState<CommunityRegistry | null>(null);
+  const [selectedLibrary, setSelectedLibrary] = useState<CommunityRegistry | null>(null);
   const [components, setComponents] = useState<SearchResultItem[]>([]);
   const [componentsLoading, setComponentsLoading] = useState(false);
-  const [componentSearch, setComponentSearch] = useState("");
+  const [componentSearch, setComponentSearch] = useState('');
 
   const [isFetching, setIsFetching] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +95,7 @@ export function CustomComponentImport({
     setRegistriesLoading(true);
     setRegistriesError(null);
 
-    fetch("/api/shadcn/registries")
+    fetch('/api/shadcn/registries')
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -106,42 +107,38 @@ export function CustomComponentImport({
         setTimeout(() => searchRef.current?.focus(), 50);
       })
       .catch(() => {
-        setRegistriesError(
-          "Failed to load registries. Check your connection.",
-        );
+        setRegistriesError('Failed to load registries. Check your connection.');
         setRegistriesLoading(false);
       });
   }, [isOpen, registries.length]);
 
-  const selectLibrary = useCallback(
-    (lib: CommunityRegistry) => {
-      setSelectedLibrary(lib);
-      setComponents([]);
-      setComponentsLoading(true);
-      setComponentSearch("");
-      setError(null);
+  const selectLibrary = useCallback((lib: CommunityRegistry) => {
+    setSelectedLibrary(lib);
+    setComponents([]);
+    setComponentsLoading(true);
+    setComponentSearch('');
+    setError(null);
 
-      const registryName = lib.name.startsWith("@") ? lib.name : `@${lib.name}`;
+    const registryName = lib.name.startsWith('@') ? lib.name : `@${lib.name}`;
 
-      fetch(`/api/shadcn/search?registry=${encodeURIComponent(registryName)}&limit=200`)
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
-        .then((data: { items: SearchResultItem[]; pagination: { total: number } }) => {
-          const items = data.items ?? [];
-          items.sort((a, b) => a.name.localeCompare(b.name));
-          setComponents(items);
-          setComponentsLoading(false);
-          setTimeout(() => componentSearchRef.current?.focus(), 50);
-        })
-        .catch(() => {
-          setComponents([]);
-          setComponentsLoading(false);
-        });
-    },
-    [],
-  );
+    fetch(`/api/shadcn/search?registry=${encodeURIComponent(registryName)}&limit=200`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data: { items: SearchResultItem[]; pagination: { total: number } }) => {
+        const items = data.items ?? [];
+        items.sort((a, b) => a.name.localeCompare(b.name));
+        setComponents(items);
+        setComponentsLoading(false);
+        setTimeout(() => componentSearchRef.current?.focus(), 50);
+      })
+      .catch(() => {
+        setComponents([]);
+        setComponentsLoading(false);
+        setError('Failed to load components. Check your connection.');
+      });
+  }, []);
 
   const fetchComponent = useCallback(
     async (name: string) => {
@@ -156,17 +153,18 @@ export function CustomComponentImport({
       setError(null);
 
       try {
-        const registryName = selectedLibrary.name.startsWith("@")
+        const registryName = selectedLibrary.name.startsWith('@')
           ? selectedLibrary.name
           : `@${selectedLibrary.name}`;
-        const itemArg = registryName === "@shadcn" || !selectedLibrary.name.startsWith("@")
-          ? name
-          : `${registryName}/${name}`;
+        const itemArg =
+          registryName === '@shadcn' || !selectedLibrary.name.startsWith('@')
+            ? name
+            : `${registryName}/${name}`;
 
-        const res = await fetch("/api/shadcn/resolve", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items: [itemArg] }),
+        const res = await fetch('/api/shadcn/resolve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: [itemArg] })
         });
 
         if (!res.ok) {
@@ -185,13 +183,13 @@ export function CustomComponentImport({
         }
 
         const cssFiles = data.files
-          .filter((f) => f.content && f.path.endsWith(".css"))
+          .filter((f) => f.content && f.path.endsWith('.css'))
           .map((f) => f.content!);
 
         const title = name
-          .split("-")
+          .split('-')
           .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-          .join(" ");
+          .join(' ');
 
         setFetched((prev) => [
           ...prev,
@@ -201,16 +199,16 @@ export function CustomComponentImport({
             resolvedFiles: data.files.filter((f) => f.content != null),
             cssFiles,
             dependencies: data.dependencies,
-            library: selectedLibrary.name,
-          },
+            library: selectedLibrary.name
+          }
         ]);
       } catch {
-        setError("Failed to resolve component. Check your connection.");
+        setError('Failed to resolve component. Check your connection.');
       } finally {
         setIsFetching(null);
       }
     },
-    [selectedLibrary, fetched],
+    [selectedLibrary, fetched]
   );
 
   const handleRemove = (name: string) => {
@@ -220,7 +218,7 @@ export function CustomComponentImport({
 
   const handleImport = () => {
     if (fetched.length === 0) {
-      setError("Add at least one component before importing");
+      setError('Add at least one component before importing');
       return;
     }
 
@@ -229,11 +227,11 @@ export function CustomComponentImport({
     for (const comp of fetched) {
       for (const file of comp.resolvedFiles) {
         if (!file.content) continue;
-        if (file.path.endsWith(".css")) continue;
+        if (file.path.endsWith('.css')) continue;
 
         const moduleKey = file.path
-          .replace(/\.(tsx|ts|jsx|js)$/, "")
-          .replace(/^registry\/[^/]+\//, "");
+          .replace(/\.(tsx|ts|jsx|js)$/, '')
+          .replace(/^registry\/[^/]+\//, '');
 
         importMap[moduleKey] = file.content;
       }
@@ -249,7 +247,7 @@ export function CustomComponentImport({
       onSwitchToStyled();
     }
     setFetched([]);
-    setSearch("");
+    setSearch('');
     setError(null);
     onClose();
   };
@@ -257,7 +255,7 @@ export function CustomComponentImport({
   const goBack = () => {
     setSelectedLibrary(null);
     setComponents([]);
-    setComponentSearch("");
+    setComponentSearch('');
     setError(null);
     setTimeout(() => searchRef.current?.focus(), 50);
   };
@@ -267,11 +265,10 @@ export function CustomComponentImport({
   const fetchedNames = new Set(fetched.map((c) => c.name));
 
   const SHADCN_ENTRY: CommunityRegistry = {
-    name: "@shadcn",
-    homepage: "https://ui.shadcn.com",
-    url: "https://ui.shadcn.com/r/{name}.json",
-    description:
-      "Beautifully designed components built with Radix UI and Tailwind CSS.",
+    name: '@shadcn',
+    homepage: 'https://ui.shadcn.com',
+    url: 'https://ui.shadcn.com/r/{name}.json',
+    description: 'Beautifully designed components built with Radix UI and Tailwind CSS.'
   };
   const allRegistries = [SHADCN_ENTRY, ...registries];
   const searchLower = search.toLowerCase().trim();
@@ -279,7 +276,7 @@ export function CustomComponentImport({
     ? allRegistries.filter(
         (r) =>
           r.name.toLowerCase().includes(searchLower) ||
-          (r.description ?? "").toLowerCase().includes(searchLower),
+          (r.description ?? '').toLowerCase().includes(searchLower)
       )
     : allRegistries;
 
@@ -298,56 +295,40 @@ export function CustomComponentImport({
       <div className="modal-panel w-full max-w-lg max-h-[85vh] flex flex-col">
         <div
           className="flex items-center justify-between p-4"
-          style={{ borderBottom: "1px solid var(--border-subtle)" }}
+          style={{ borderBottom: '1px solid var(--border-subtle)' }}
         >
           <div className="flex items-center gap-2 min-w-0">
             {selectedLibrary && (
               <button
                 onClick={goBack}
                 className="text-sm transition-colors shrink-0"
-                style={{ color: "var(--text-muted)" }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.color = "var(--text-primary)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.color = "var(--text-muted)")
-                }
+                style={{ color: 'var(--text-muted)' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
                 aria-label="Back to library list"
               >
                 &larr;
               </button>
             )}
             <div className="min-w-0">
-              <h2
-                className="text-sm font-bold truncate"
-                style={{ color: "var(--text-primary)" }}
-              >
-                {selectedLibrary
-                  ? selectedLibrary.name
-                  : "Component Libraries"}
+              <h2 className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+                {selectedLibrary ? selectedLibrary.name : 'Component Libraries'}
               </h2>
-              <p
-                className="text-xs mt-0.5 truncate"
-                style={{ color: "var(--text-muted)" }}
-              >
+              <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
                 {selectedLibrary
-                  ? `${components.length > 0 ? `${components.length} components` : componentsLoading ? "Loading..." : "Browse components"}`
+                  ? `${components.length > 0 ? `${components.length} components` : componentsLoading ? 'Loading...' : 'Browse components'}`
                   : registries.length > 0
                     ? `${allRegistries.length} registries via shadcn`
-                    : "Loading registries..."}
+                    : 'Loading registries...'}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="text-lg leading-none transition-colors w-7 h-7 flex items-center justify-center rounded-md shrink-0"
-            style={{ color: "var(--text-muted)" }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.background = "var(--bg-hover)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.background = "transparent")
-            }
+            style={{ color: 'var(--text-muted)' }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-hover)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             aria-label="Close"
           >
             &times;
@@ -387,9 +368,9 @@ export function CustomComponentImport({
             <div
               className="glass-panel text-xs p-2.5"
               style={{
-                color: "rgb(248, 113, 113)",
-                background: "rgba(239, 68, 68, 0.06)",
-                border: "1px solid rgba(239, 68, 68, 0.15)",
+                color: 'rgb(248, 113, 113)',
+                background: 'rgba(239, 68, 68, 0.06)',
+                border: '1px solid rgba(239, 68, 68, 0.15)'
               }}
             >
               {error}
@@ -397,33 +378,25 @@ export function CustomComponentImport({
           )}
 
           {fetched.length > 0 && (
-            <div
-              className="pt-3 space-y-2"
-              style={{ borderTop: "1px solid var(--border-subtle)" }}
-            >
-              <h3
-                className="text-xs font-medium"
-                style={{ color: "var(--text-secondary)" }}
-              >
+            <div className="pt-3 space-y-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+              <h3 className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
                 Ready to import ({fetched.length})
               </h3>
               {fetched.map((comp) => {
-                const shortName = comp.name.includes("/")
-                  ? comp.name.split("/").pop()!
-                  : comp.name;
+                const shortName = comp.name.includes('/') ? comp.name.split('/').pop()! : comp.name;
                 const fileNames = comp.resolvedFiles
-                  .filter((f) => !f.path.endsWith(".css"))
-                  .map((f) => f.path.split("/").pop());
+                  .filter((f) => !f.path.endsWith('.css'))
+                  .map((f) => f.path.split('/').pop());
                 const compError = compilationErrors[shortName];
                 return (
                   <div
                     key={comp.name}
                     className="rounded-lg overflow-hidden"
                     style={{
-                      background: "rgba(15, 20, 32, 0.6)",
+                      background: 'rgba(15, 20, 32, 0.6)',
                       border: compError
-                        ? "1px solid rgba(239, 68, 68, 0.3)"
-                        : "1px solid var(--border-subtle)",
+                        ? '1px solid rgba(239, 68, 68, 0.3)'
+                        : '1px solid var(--border-subtle)'
                     }}
                   >
                     <div className="flex items-center justify-between px-3 py-2">
@@ -431,35 +404,31 @@ export function CustomComponentImport({
                         <span
                           className="text-sm"
                           style={{
-                            fontFamily: "var(--font-mono)",
-                            color: "var(--text-primary)",
+                            fontFamily: 'var(--font-mono)',
+                            color: 'var(--text-primary)'
                           }}
                         >
                           {shortName}
                         </span>
-                        <span
-                          className="text-xs truncate"
-                          style={{ color: "var(--text-muted)" }}
-                        >
-                          {comp.library} &middot; {comp.resolvedFiles.length} file{comp.resolvedFiles.length !== 1 ? "s" : ""}
+                        <span className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
+                          {comp.library} &middot; {comp.resolvedFiles.length} file
+                          {comp.resolvedFiles.length !== 1 ? 's' : ''}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 ml-2 shrink-0">
                         <button
                           onClick={() =>
-                            setExpandedSource(
-                              expandedSource === comp.name ? null : comp.name,
-                            )
+                            setExpandedSource(expandedSource === comp.name ? null : comp.name)
                           }
                           className="text-xs transition-colors"
-                          style={{ color: "var(--accent-violet)" }}
+                          style={{ color: 'var(--accent-violet)' }}
                         >
-                          {expandedSource === comp.name ? "Hide" : "Files"}
+                          {expandedSource === comp.name ? 'Hide' : 'Files'}
                         </button>
                         <button
                           onClick={() => handleRemove(comp.name)}
                           className="text-xs transition-colors"
-                          style={{ color: "rgb(248, 113, 113)" }}
+                          style={{ color: 'rgb(248, 113, 113)' }}
                           aria-label={`Remove ${shortName}`}
                         >
                           Remove
@@ -467,25 +436,22 @@ export function CustomComponentImport({
                       </div>
                     </div>
                     {compError && (
-                      <div
-                        className="px-3 pb-2 text-xs"
-                        style={{ color: "rgb(248, 113, 113)" }}
-                      >
+                      <div className="px-3 pb-2 text-xs" style={{ color: 'rgb(248, 113, 113)' }}>
                         Compilation failed: {compError}
                       </div>
                     )}
                     {expandedSource === comp.name && (
                       <div
                         className="px-3 pb-3 space-y-2"
-                        style={{ borderTop: "1px solid var(--border-subtle)" }}
+                        style={{ borderTop: '1px solid var(--border-subtle)' }}
                       >
                         {comp.resolvedFiles.map((f) => (
                           <div key={f.path}>
                             <div
                               className="text-xs py-1 font-medium"
                               style={{
-                                fontFamily: "var(--font-mono)",
-                                color: "var(--accent-violet)",
+                                fontFamily: 'var(--font-mono)',
+                                color: 'var(--accent-violet)'
                               }}
                             >
                               {f.path}
@@ -493,8 +459,8 @@ export function CustomComponentImport({
                             <pre
                               className="text-xs overflow-auto max-h-36"
                               style={{
-                                fontFamily: "var(--font-mono)",
-                                color: "var(--text-secondary)",
+                                fontFamily: 'var(--font-mono)',
+                                color: 'var(--text-secondary)'
                               }}
                             >
                               <code>{f.content}</code>
@@ -502,7 +468,7 @@ export function CustomComponentImport({
                           </div>
                         ))}
                         {fileNames.length > 0 && (
-                          <div className="text-xs" style={{ color: "var(--text-muted)" }}>
+                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
                             Resolved by shadcn with all dependencies
                           </div>
                         )}
@@ -516,7 +482,7 @@ export function CustomComponentImport({
                 className="btn-accent w-full text-xs px-3 py-2.5 rounded-lg font-medium"
               >
                 Compile & Import {fetched.length} Component
-                {fetched.length > 1 ? "s" : ""}
+                {fetched.length > 1 ? 's' : ''}
               </button>
             </div>
           )}
@@ -534,7 +500,7 @@ function LibraryBrowser({
   loading,
   error,
   searchTerm,
-  onSelect,
+  onSelect
 }: {
   searchRef: React.RefObject<HTMLInputElement | null>;
   search: string;
@@ -557,10 +523,7 @@ function LibraryBrowser({
       />
 
       {loading && (
-        <div
-          className="text-xs text-center py-8"
-          style={{ color: "var(--text-muted)" }}
-        >
+        <div className="text-xs text-center py-8" style={{ color: 'var(--text-muted)' }}>
           Loading community registries...
         </div>
       )}
@@ -569,9 +532,9 @@ function LibraryBrowser({
         <div
           className="glass-panel text-xs p-3 text-center"
           style={{
-            color: "rgb(248, 113, 113)",
-            background: "rgba(239, 68, 68, 0.06)",
-            border: "1px solid rgba(239, 68, 68, 0.15)",
+            color: 'rgb(248, 113, 113)',
+            background: 'rgba(239, 68, 68, 0.06)',
+            border: '1px solid rgba(239, 68, 68, 0.15)'
           }}
         >
           {error}
@@ -579,13 +542,8 @@ function LibraryBrowser({
       )}
 
       {!loading && !error && registries.length === 0 && (
-        <div
-          className="text-xs text-center py-6"
-          style={{ color: "var(--text-muted)" }}
-        >
-          {searchTerm
-            ? `No libraries matching "${searchTerm}"`
-            : "No registries found"}
+        <div className="text-xs text-center py-6" style={{ color: 'var(--text-muted)' }}>
+          {searchTerm ? `No libraries matching "${searchTerm}"` : 'No registries found'}
         </div>
       )}
 
@@ -597,40 +555,34 @@ function LibraryBrowser({
               onClick={() => onSelect(lib)}
               className="w-full text-left px-3 py-2.5 rounded-lg transition-all"
               style={{
-                background: "rgba(15, 20, 32, 0.4)",
-                border: "1px solid var(--border-subtle)",
+                background: 'rgba(15, 20, 32, 0.4)',
+                border: '1px solid var(--border-subtle)'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(15, 20, 32, 0.8)";
-                e.currentTarget.style.borderColor = "rgba(249, 115, 22, 0.3)";
+                e.currentTarget.style.background = 'rgba(15, 20, 32, 0.8)';
+                e.currentTarget.style.borderColor = 'rgba(249, 115, 22, 0.3)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(15, 20, 32, 0.4)";
-                e.currentTarget.style.borderColor = "var(--border-subtle)";
+                e.currentTarget.style.background = 'rgba(15, 20, 32, 0.4)';
+                e.currentTarget.style.borderColor = 'var(--border-subtle)';
               }}
             >
               <div className="flex items-center justify-between">
                 <span
                   className="text-sm font-medium"
                   style={{
-                    fontFamily: "var(--font-mono)",
-                    color: "var(--text-primary)",
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--text-primary)'
                   }}
                 >
                   {lib.name}
                 </span>
-                <span
-                  className="text-xs shrink-0 ml-2"
-                  style={{ color: "var(--text-muted)" }}
-                >
+                <span className="text-xs shrink-0 ml-2" style={{ color: 'var(--text-muted)' }}>
                   &rarr;
                 </span>
               </div>
-              <p
-                className="text-xs mt-0.5 line-clamp-2"
-                style={{ color: "var(--text-muted)" }}
-              >
-                {lib.description ?? ""}
+              <p className="text-xs mt-0.5 line-clamp-2" style={{ color: 'var(--text-muted)' }}>
+                {lib.description ?? ''}
               </p>
             </button>
           ))}
@@ -650,7 +602,7 @@ function ComponentBrowser({
   library,
   isFetching,
   fetchedNames,
-  onFetch,
+  onFetch
 }: {
   searchRef: React.RefObject<HTMLInputElement | null>;
   search: string;
@@ -684,7 +636,7 @@ function ComponentBrowser({
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs shrink-0 px-2 py-1.5 rounded transition-colors"
-              style={{ color: "var(--accent-violet)" }}
+              style={{ color: 'var(--accent-violet)' }}
             >
               Docs
             </a>
@@ -693,19 +645,16 @@ function ComponentBrowser({
       )}
 
       {loading && (
-        <div
-          className="text-xs text-center py-8"
-          style={{ color: "var(--text-muted)" }}
-        >
+        <div className="text-xs text-center py-8" style={{ color: 'var(--text-muted)' }}>
           Loading components from {library.name}...
         </div>
       )}
 
       {showManualEntry && (
         <div className="space-y-3">
-          <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-            No index available for this registry. Type a component name to
-            resolve it directly via shadcn.
+          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+            No index available for this registry. Type a component name to resolve it directly via
+            shadcn.
           </p>
           <div className="flex gap-2">
             <input
@@ -714,7 +663,7 @@ function ComponentBrowser({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && search.trim()) onFetch(search.trim());
+                if (e.key === 'Enter' && search.trim()) onFetch(search.trim());
               }}
               placeholder="Component name (e.g., button)"
               disabled={isFetching !== null}
@@ -727,7 +676,7 @@ function ComponentBrowser({
               disabled={isFetching !== null || !search.trim()}
               className="btn-accent text-xs px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
             >
-              {isFetching ? "Resolving..." : "Resolve"}
+              {isFetching ? 'Resolving...' : 'Resolve'}
             </button>
           </div>
         </div>
@@ -744,35 +693,21 @@ function ComponentBrowser({
               <button
                 key={item.name}
                 onClick={() => onFetch(item.name)}
-                disabled={
-                  isAlreadyFetched ||
-                  isCurrentlyFetching ||
-                  isFetching !== null
-                }
+                disabled={isAlreadyFetched || isCurrentlyFetching || isFetching !== null}
                 className="btn-glass text-xs px-2.5 py-1.5 disabled:cursor-not-allowed transition-all"
                 style={{
                   opacity: isAlreadyFetched ? 0.4 : 1,
-                  borderColor: isAlreadyFetched
-                    ? "rgba(34, 197, 94, 0.3)"
-                    : undefined,
-                  background: isAlreadyFetched
-                    ? "rgba(34, 197, 94, 0.08)"
-                    : undefined,
+                  borderColor: isAlreadyFetched ? 'rgba(34, 197, 94, 0.3)' : undefined,
+                  background: isAlreadyFetched ? 'rgba(34, 197, 94, 0.08)' : undefined
                 }}
-                title={isAlreadyFetched ? "Already added" : item.name}
+                title={isAlreadyFetched ? 'Already added' : item.name}
               >
                 {isCurrentlyFetching ? (
-                  <span style={{ color: "var(--accent-violet)" }}>
-                    resolving...
-                  </span>
+                  <span style={{ color: 'var(--accent-violet)' }}>resolving...</span>
                 ) : (
                   <>
                     {isAlreadyFetched && (
-                      <span
-                        style={{ color: "rgb(34, 197, 94)", marginRight: 4 }}
-                      >
-                        ✓
-                      </span>
+                      <span style={{ color: 'rgb(34, 197, 94)', marginRight: 4 }}>✓</span>
                     )}
                     {item.name}
                   </>
@@ -784,10 +719,7 @@ function ComponentBrowser({
       )}
 
       {hasComponents && (
-        <p
-          className="text-xs"
-          style={{ color: "var(--text-muted)" }}
-        >
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
           Dependencies resolved automatically via shadcn registry API.
         </p>
       )}

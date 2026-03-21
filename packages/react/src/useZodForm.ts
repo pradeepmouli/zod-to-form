@@ -87,24 +87,32 @@ export function useZodForm<TSchema extends ZodObject>(
     return reg;
   }, [schema, options?.formRegistry, options?.fields]);
 
-  const fields = useMemo(
-    () =>
-      walkSchema(schema, {
+  const fields = useMemo(() => {
+    try {
+      return walkSchema(schema, {
         formRegistry: effectiveRegistry,
         processors: options?.processors
-      }),
-    [schema, effectiveRegistry, options?.processors]
-  );
+      });
+    } catch (err) {
+      console.error('[zod-to-form] walkSchema failed:', err);
+      return [];
+    }
+  }, [schema, effectiveRegistry, options?.processors]);
 
   const form = useForm<output<TSchema>>({
+    // SAFETY: resolver wraps baseResolver to normalize FileLists before validation.
+    // The `as never` casts are required because RHF's resolver type is nominally
+    // incompatible with Zod v4's internal version discriminant, same as zodResolver above.
     resolver: ((values: unknown, context: unknown, resolverOptions: unknown) =>
       baseResolver(
-        normalizeFileLists(values) as any,
+        normalizeFileLists(values) as never,
         context,
         resolverOptions as Parameters<typeof baseResolver>[2]
-      )) as any,
-    defaultValues: options?.defaultValues as any,
-    values: options?.values as any,
+      )) as never,
+    // SAFETY: Partial<output<TSchema>> is structurally correct but RHF's DeepPartial
+    // is not directly assignable — cast required at the RHF boundary.
+    defaultValues: options?.defaultValues as never,
+    values: options?.values as never,
     mode: options?.mode
   });
 
@@ -127,7 +135,7 @@ export function useZodForm<TSchema extends ZodObject>(
     return () => {
       subscription.unsubscribe();
     };
-  }, [options?.onValueChange, schema]);
+  }, [options?.onValueChange, schema, form]);
 
   return {
     form,

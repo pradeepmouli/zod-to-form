@@ -1,12 +1,14 @@
-import { useState, useRef } from "react";
-import type { PlaygroundConfig } from "../../types/playground.ts";
-import { importConfig, exportConfig } from "../../lib/config-io.ts";
+import { useState, useRef } from 'react';
+import type { PlaygroundConfig } from '../../types/playground.ts';
+import { importConfig, exportConfig } from '../../lib/config-io.ts';
 
 interface ConfigImportExportProps {
   isOpen: boolean;
   onClose: () => void;
   config: PlaygroundConfig | null;
   onConfigChange: (config: PlaygroundConfig | null) => void;
+  componentMap?: string;
+  customComponents?: Record<string, string> | null;
 }
 
 export function ConfigImportExport({
@@ -14,8 +16,10 @@ export function ConfigImportExport({
   onClose,
   config,
   onConfigChange,
+  componentMap,
+  customComponents
 }: ConfigImportExportProps) {
-  const [pasteValue, setPasteValue] = useState("");
+  const [pasteValue, setPasteValue] = useState('');
   const [warnings, setWarnings] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -30,7 +34,7 @@ export function ConfigImportExport({
       setWarnings(result.warnings);
       setError(null);
       if (result.warnings.length === 0) {
-        setPasteValue("");
+        setPasteValue('');
       }
     } else {
       setError(result.error);
@@ -50,16 +54,16 @@ export function ConfigImportExport({
       setError(result.error);
       setWarnings([]);
     }
-    e.target.value = "";
+    e.target.value = '';
   };
 
   const handleExport = () => {
-    const json = exportConfig(config ?? {});
-    const blob = new Blob([json], { type: "application/json" });
+    const json = exportConfig({ config: config ?? {}, componentMap, customComponents });
+    const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
-    a.download = "z2f.config.json";
+    a.download = 'z2f.config.json';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -68,7 +72,7 @@ export function ConfigImportExport({
     onConfigChange(null);
     setWarnings([]);
     setError(null);
-    setPasteValue("");
+    setPasteValue('');
   };
 
   return (
@@ -81,21 +85,17 @@ export function ConfigImportExport({
       <div className="modal-panel w-full max-w-md flex flex-col">
         <div
           className="flex items-center justify-between p-4"
-          style={{ borderBottom: "1px solid var(--border-subtle)" }}
+          style={{ borderBottom: '1px solid var(--border-subtle)' }}
         >
-          <h2 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
+          <h2 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
             z2f Config
           </h2>
           <button
             onClick={onClose}
             className="text-lg leading-none transition-colors w-7 h-7 flex items-center justify-center rounded-md"
-            style={{ color: "var(--text-muted)" }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.background = "var(--bg-hover)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.background = "transparent")
-            }
+            style={{ color: 'var(--text-muted)' }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-hover)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             aria-label="Close config dialog"
           >
             &times;
@@ -104,7 +104,7 @@ export function ConfigImportExport({
 
         <div className="p-4 space-y-4">
           <div>
-            <label className="text-xs block mb-1.5" style={{ color: "var(--text-secondary)" }}>
+            <label className="text-xs block mb-1.5" style={{ color: 'var(--text-secondary)' }}>
               Paste z2f.config JSON
             </label>
             <textarea
@@ -113,7 +113,7 @@ export function ConfigImportExport({
               placeholder='{"components": {...}, "fields": {...}}'
               rows={4}
               className="input-glass w-full px-3 py-2 text-sm resize-none"
-              style={{ fontFamily: "var(--font-mono)" }}
+              style={{ fontFamily: 'var(--font-mono)' }}
             />
             <button
               onClick={handleImportPaste}
@@ -125,7 +125,9 @@ export function ConfigImportExport({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs" style={{ color: "var(--text-muted)" }}>or</span>
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              or
+            </span>
             <button
               onClick={() => fileRef.current?.click()}
               className="btn-glass text-xs px-3 py-1.5"
@@ -145,9 +147,9 @@ export function ConfigImportExport({
             <div
               className="glass-panel text-xs p-2.5"
               style={{
-                color: "rgb(248, 113, 113)",
-                background: "rgba(239, 68, 68, 0.06)",
-                border: "1px solid rgba(239, 68, 68, 0.15)",
+                color: 'rgb(248, 113, 113)',
+                background: 'rgba(239, 68, 68, 0.06)',
+                border: '1px solid rgba(239, 68, 68, 0.15)'
               }}
             >
               {error}
@@ -157,9 +159,9 @@ export function ConfigImportExport({
             <div
               className="glass-panel text-xs p-2.5 space-y-1"
               style={{
-                color: "rgb(250, 204, 21)",
-                background: "rgba(234, 179, 8, 0.06)",
-                border: "1px solid rgba(234, 179, 8, 0.15)",
+                color: 'rgb(250, 204, 21)',
+                background: 'rgba(234, 179, 8, 0.06)',
+                border: '1px solid rgba(234, 179, 8, 0.15)'
               }}
             >
               {warnings.map((w, i) => (
@@ -169,22 +171,19 @@ export function ConfigImportExport({
           )}
 
           {config && (
-            <div className="pt-4 space-y-2" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+            <div className="pt-4 space-y-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
               <div className="flex items-center justify-between">
-                <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                   Current config
                 </span>
                 <div className="flex gap-2">
-                  <button
-                    onClick={handleExport}
-                    className="btn-glass text-xs px-3 py-1.5"
-                  >
+                  <button onClick={handleExport} className="btn-glass text-xs px-3 py-1.5">
                     Export
                   </button>
                   <button
                     onClick={handleClear}
                     className="btn-glass text-xs px-3 py-1.5"
-                    style={{ color: "rgb(248, 113, 113)" }}
+                    style={{ color: 'rgb(248, 113, 113)' }}
                   >
                     Clear
                   </button>
@@ -193,9 +192,9 @@ export function ConfigImportExport({
               <pre
                 className="text-xs rounded-lg p-2.5 overflow-auto max-h-32"
                 style={{
-                  fontFamily: "var(--font-mono)",
-                  color: "var(--text-muted)",
-                  background: "rgba(15, 20, 32, 0.6)",
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--text-muted)',
+                  background: 'rgba(15, 20, 32, 0.6)'
                 }}
               >
                 {JSON.stringify(config, null, 2)}
