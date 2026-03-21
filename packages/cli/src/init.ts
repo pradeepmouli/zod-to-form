@@ -1,6 +1,7 @@
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_OVERRIDES } from '@zod-to-form/core';
+import { buildConfigSource } from '@zod-to-form/codegen';
 import { resolveSchemaExportNames } from './loader.js';
 
 export type InitOptions = {
@@ -445,14 +446,9 @@ async function discoverSchemas(
   return { exports: [] };
 }
 
-const PRESET_IMPORT_NAME: Record<string, string> = {
-  shadcn: 'SHADCN_OVERRIDES',
-  unstyled: 'DEFAULT_OVERRIDES'
-};
-
 function resolveComponentEntries(
   discoveredComponents: DiscoveredComponents,
-  preset: 'shadcn' | 'unstyled' | undefined
+  preset: 'shadcn' | 'html' | undefined
 ): DiscoveredComponent[] {
   if (preset) {
     // When a preset is active, only return discovered (non-preset) components.
@@ -529,9 +525,8 @@ function buildConfigTemplate(
   componentEntries: DiscoveredComponent[],
   discoveredSchemas: DiscoveredSchemas,
   explicitSchemaPath: string | undefined,
-  preset: 'shadcn' | 'unstyled' | undefined
+  preset: 'shadcn' | 'html' | undefined
 ): string {
-  const presetImportName = preset ? PRESET_IMPORT_NAME[preset] : undefined;
   const componentsImportPath = resolveComponentTypeImportSpecifier(
     cwd,
     outputPath,
@@ -544,89 +539,30 @@ function buildConfigTemplate(
     discoveredSchemas.schemaPath,
     explicitSchemaPath
   );
-  const defineConfigGenerics =
-    discoveredSchemas.exports.length > 0
-      ? '<typeof Components, typeof ZodSchemas>'
-      : '<typeof Components>';
 
-  // Build import line
-  const importNames = ['defineConfig'];
-  if (presetImportName) {
-    importNames.push(presetImportName);
-  }
-
-  // Build overrides entries — only emit entries that have controlled: true
-  const overrideLines: string[] = [];
-  if (presetImportName) {
-    const controlledEntries = componentEntries.filter((entry) => entry.controlled);
-    const comma = controlledEntries.length > 0 ? ',' : '';
-    overrideLines.push(`      ...${presetImportName}${comma}`);
-    controlledEntries.forEach((entry, i) => {
-      const comma = i < controlledEntries.length - 1 ? ',' : '';
-      overrideLines.push(`      ${entry.name}: { controlled: true }${comma}`);
-    });
-  } else {
-    const controlledEntries = componentEntries.filter((entry) => entry.controlled);
-    controlledEntries.forEach((entry, i) => {
-      const comma = i < controlledEntries.length - 1 ? ',' : '';
-      overrideLines.push(`      ${entry.name}: { controlled: true }${comma}`);
-    });
-  }
-
-  const lines = [
-    `import { ${importNames.join(', ')} } from '@zod-to-form/core';`,
-    ``,
-    `import type * as Components from '${componentsImportPath}';`,
-    ...(schemaImportPath ? [`import type * as ZodSchemas from '${schemaImportPath}';`] : []),
-    ``,
-    `export default defineConfig${defineConfigGenerics}({`,
-    `  components: {`,
-    `    source: '${modulePath}',`
-  ];
-
-  if (preset) {
-    lines.push(`    preset: '${preset}',`);
-  }
-
-  if (overrideLines.length > 0) {
-    lines.push(`    overrides: {`);
-    lines.push(...overrideLines);
-    lines.push(`    }`);
-  }
-
-  lines.push(
-    `  },`,
-    `  formPrimitives: {`,
-    `    field: '${formPrimitives.field}',`,
-    `    label: '${formPrimitives.label}',`,
-    `    control: '${formPrimitives.control}'`,
-    `  },`,
-    `  defaults: {`,
-    `    mode: 'submit',`,
-    `    ui: 'shadcn',`,
-    `    overwrite: false,`,
-    `    serverAction: false,`,
-    `    formProvider: false`,
-    `  },`,
-    `  include: [],`,
-    `  exclude: []`
-  );
-
-  if (discoveredSchemas.exports.length > 0) {
-    lines[lines.length - 1] += ',';
-    lines.push(`  schemas: {`);
-    for (let i = 0; i < discoveredSchemas.exports.length; i++) {
-      const name = discoveredSchemas.exports[i];
-      const comma = i < discoveredSchemas.exports.length - 1 ? ',' : '';
-      lines.push(`    ${name}: {}${comma}`);
+  const overrides: Record<string, { controlled?: boolean }> = {};
+  for (const entry of componentEntries) {
+    if (entry.controlled) {
+      overrides[entry.name] = { controlled: true };
     }
-    lines.push(`  }`);
   }
 
-  lines.push(`});`);
-  lines.push(``);
-
-  return lines.join('\n');
+  return buildConfigSource({
+    componentSource: modulePath,
+    componentTypeImport: componentsImportPath,
+    schemaTypeImport: schemaImportPath,
+    schemaExports: discoveredSchemas.exports,
+    preset,
+    overrides,
+    formPrimitives,
+    defaults: {
+      mode: 'submit',
+      ui: 'shadcn',
+      overwrite: false,
+      serverAction: false,
+      formProvider: false
+    }
+  });
 }
 
 async function detectShadcnConfig(cwd: string): Promise<ShadcnConfigSnapshot> {

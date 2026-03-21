@@ -202,8 +202,13 @@ export function CustomComponentImport({
             library: selectedLibrary.name
           }
         ]);
-      } catch {
-        setError('Failed to resolve component. Check your connection.');
+      } catch (err) {
+        const message =
+          err instanceof TypeError && String(err).includes('fetch')
+            ? 'Network error — check your connection.'
+            : 'Failed to resolve component. See browser console for details.';
+        console.warn('[zod-to-form] Component resolve failed:', err);
+        setError(message);
       } finally {
         setIsFetching(null);
       }

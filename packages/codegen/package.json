@@ -1,0 +1,45 @@
+{
+  "name": "@zod-to-form/codegen",
+  "version": "0.6.1",
+  "description": "Browser-safe code generation for Zod v4 form components",
+  "license": "MIT",
+  "homepage": "https://github.com/pradeepmouli/zod-to-form#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pradeepmouli/zod-to-form.git",
+    "directory": "packages/codegen"
+  },
+  "keywords": [
+    "zod",
+    "codegen",
+    "forms",
+    "form-generation",
+    "typescript"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsgo -p tsconfig.build.json",
+    "clean": "rm -rf dist tsconfig.build.tsbuildinfo tsconfig.tsbuildinfo",
+    "dev": "tsgo -p tsconfig.build.json --watch",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "type-check": "tsgo --noEmit"
+  },
+  "dependencies": {
+    "@zod-to-form/core": "workspace:*"
+  },
+  "devDependencies": {
+    "zod": "^4.3.6"
+  }
+}

@@ -91,6 +91,40 @@ describe('useZodForm', () => {
     });
   });
 
+  it('coerces empty strings to undefined so optional enums pass safeParse', async () => {
+    const schema = z.object({
+      mode: z.enum(['submit', 'auto-save']).optional(),
+      label: z.string().optional()
+    });
+    const onValueChange = vi.fn();
+
+    const { result } = renderHook(() =>
+      useZodForm(schema, {
+        defaultValues: { mode: 'submit', label: 'hello' },
+        mode: 'onChange',
+        onValueChange
+      })
+    );
+
+    // Set the enum field to empty string (simulating HTML select clearing)
+    await act(async () => {
+      result.current.form.setValue('mode', '' as never, {
+        shouldDirty: true,
+        shouldValidate: true
+      });
+    });
+
+    await waitFor(() => {
+      expect(onValueChange).toHaveBeenCalled();
+    });
+
+    // Empty string should be coerced to undefined, not rejected
+    expect(onValueChange).toHaveBeenLastCalledWith(expect.objectContaining({ label: 'hello' }));
+    // mode should be undefined (coerced from "")
+    const lastCall = onValueChange.mock.calls[onValueChange.mock.calls.length - 1][0];
+    expect(lastCall.mode).toBeUndefined();
+  });
+
   describe('fields option', () => {
     it('applies flat field config overrides via fields option', () => {
       const schema = z.object({

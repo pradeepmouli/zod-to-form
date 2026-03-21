@@ -1,29 +1,44 @@
-import { javascript } from "@codemirror/lang-javascript";
-import { oneDark } from "@codemirror/theme-one-dark";
-import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
-import { searchKeymap } from "@codemirror/search";
-import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
-import { lintKeymap } from "@codemirror/lint";
+import { javascript } from '@codemirror/lang-javascript';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { searchKeymap } from '@codemirror/search';
+import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
+import type { CompletionContext, CompletionResult } from '@codemirror/autocomplete';
+import { lintKeymap } from '@codemirror/lint';
 import {
   EditorView,
   keymap,
   lineNumbers,
   highlightActiveLine,
   highlightActiveLineGutter,
-  drawSelection,
-} from "@codemirror/view";
+  drawSelection
+} from '@codemirror/view';
 import {
   syntaxHighlighting,
   defaultHighlightStyle,
   bracketMatching,
   foldGutter,
-  foldKeymap,
-} from "@codemirror/language";
-import type { Extension } from "@codemirror/state";
+  foldKeymap
+} from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
 
-export function createEditorExtensions(
-  onChange: (value: string) => void,
-): Extension[] {
+const sharedTheme = EditorView.theme({
+  '&': { height: '100%', fontSize: '14px' },
+  '.cm-scroller': { overflow: 'auto' },
+  '.cm-content': { fontFamily: 'var(--font-mono)' },
+  '.cm-gutters': {
+    background: 'rgba(11, 15, 23, 0.6)',
+    borderRight: '1px solid rgba(255, 255, 255, 0.05)'
+  },
+  '.cm-activeLineGutter': {
+    background: 'rgba(249, 115, 22, 0.08)'
+  },
+  '.cm-activeLine': {
+    background: 'rgba(249, 115, 22, 0.04)'
+  }
+});
+
+function baseExtensions(onChange: (value: string) => void): Extension[] {
   return [
     lineNumbers(),
     highlightActiveLine(),
@@ -32,7 +47,6 @@ export function createEditorExtensions(
     history(),
     foldGutter(),
     bracketMatching(),
-    autocompletion(),
     syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
     javascript({ typescript: true }),
     oneDark,
@@ -47,22 +61,19 @@ export function createEditorExtensions(
       ...searchKeymap,
       ...completionKeymap,
       ...foldKeymap,
-      ...lintKeymap,
+      ...lintKeymap
     ]),
-    EditorView.theme({
-      "&": { height: "100%", fontSize: "14px" },
-      ".cm-scroller": { overflow: "auto" },
-      ".cm-content": { fontFamily: "var(--font-mono)" },
-      ".cm-gutters": {
-        background: "rgba(11, 15, 23, 0.6)",
-        borderRight: "1px solid rgba(255, 255, 255, 0.05)",
-      },
-      ".cm-activeLineGutter": {
-        background: "rgba(249, 115, 22, 0.08)",
-      },
-      ".cm-activeLine": {
-        background: "rgba(249, 115, 22, 0.04)",
-      },
-    }),
+    sharedTheme
   ];
+}
+
+export function createEditorExtensions(onChange: (value: string) => void): Extension[] {
+  return [...baseExtensions(onChange), autocompletion()];
+}
+
+export function createConfigEditorExtensions(
+  onChange: (value: string) => void,
+  completionSource: (ctx: CompletionContext) => CompletionResult | null
+): Extension[] {
+  return [...baseExtensions(onChange), autocompletion({ override: [completionSource] })];
 }

@@ -390,6 +390,92 @@ body {
   transform: translateX(1.25rem);
 }
 
+/* ─── Config Form Styling ──────────────────────────────────────────── */
+
+.config-form-area form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.config-form-area form > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.config-form-area label {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-family: var(--font-mono);
+}
+
+.config-form-area fieldset {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  margin: 0;
+}
+
+.config-form-area fieldset > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.config-form-area legend {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  padding: 0 0.375rem;
+}
+
+.config-form-area input[type="text"],
+.config-form-area input[type="number"],
+.config-form-area select,
+.config-form-area textarea {
+  background: rgba(15, 20, 32, 0.6);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 0.375rem 0.5rem;
+  outline: none;
+  transition: all var(--transition);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.config-form-area input[type="text"]:focus,
+.config-form-area input[type="number"]:focus,
+.config-form-area select:focus,
+.config-form-area textarea:focus {
+  border-color: rgba(249, 115, 22, 0.4);
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1);
+}
+
+.config-form-area input::placeholder,
+.config-form-area textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.config-form-area select option {
+  background: #121824;
+  color: var(--text-primary);
+}
+
+.config-form-area input[type="checkbox"] {
+  accent-color: var(--accent-violet);
+  width: auto;
+}
+
+.config-form-area button[type="submit"] {
+  display: none;
+}
+
 .tab-active {
   color: var(--accent-violet);
   background: var(--accent-violet-muted);

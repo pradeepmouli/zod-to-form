@@ -95,6 +95,9 @@ importers:
       '@radix-ui/react-switch':
         specifier: ^1.2.6
         version: 1.2.6(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@zod-to-form/codegen':
+        specifier: workspace:*
+        version: link:../../packages/codegen
       '@zod-to-form/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -110,6 +113,9 @@ importers:
       codemirror:
         specifier: ^6.0.1
         version: 6.0.2
+      fflate:
+        specifier: ^0.8.2
+        version: 0.8.2
       lucide-react:
         specifier: ^0.577.0
         version: 0.577.0(react@19.2.4)
@@ -168,6 +174,9 @@ importers:
 
   packages/cli:
     dependencies:
+      '@zod-to-form/codegen':
+        specifier: workspace:*
+        version: link:../codegen
       '@zod-to-form/core':
         specifier: workspace:*
         version: link:../core
@@ -180,6 +189,16 @@ importers:
       jiti:
         specifier: ^2.6.1
         version: 2.6.1
+    devDependencies:
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
+
+  packages/codegen:
+    dependencies:
+      '@zod-to-form/core':
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       zod:
         specifier: ^4.3.6

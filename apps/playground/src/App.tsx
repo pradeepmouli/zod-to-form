@@ -7,8 +7,10 @@ import { PlaygroundShell } from './components/layout/PlaygroundShell.tsx';
 import { FormPreview } from './components/preview/FormPreview.tsx';
 import { CodeOutput } from './components/preview/CodeOutput.tsx';
 import { IRInspector } from './components/inspect/IRInspector.tsx';
+import { ConfigPane } from './components/config/ConfigPane.tsx';
 import { STARTER_SCHEMA } from './components/examples/starter.ts';
 import { compileComponents } from './lib/component-compiler.ts';
+import { exportBundle } from './lib/export.ts';
 
 const SchemaEditor = lazy(() =>
   import('./components/editor/SchemaEditor.tsx').then((m) => ({
@@ -19,12 +21,6 @@ const SchemaEditor = lazy(() =>
 const ExampleGallery = lazy(() =>
   import('./components/examples/ExampleGallery.tsx').then((m) => ({
     default: m.ExampleGallery
-  }))
-);
-
-const ConfigImportExport = lazy(() =>
-  import('./components/config/ConfigImportExport.tsx').then((m) => ({
-    default: m.ConfigImportExport
   }))
 );
 
@@ -54,13 +50,15 @@ export function App() {
     setActivePane,
     setSubmitResult,
     setConfig,
-    setCustomComponents
+    setCustomComponents,
+    setConfigTab,
+    setCodeOutputMode,
+    setPaneSizes
   } = usePlaygroundState();
 
   const { fields, error, isEvaluating } = useDebouncedEval(state.editorContent);
 
   const [examplesOpen, setExamplesOpen] = useState(false);
-  const [configOpen, setConfigOpen] = useState(false);
   const [customImportOpen, setCustomImportOpen] = useState(false);
   const [compilationErrors, setCompilationErrors] = useState<Record<string, string>>({});
   const initialContent = useRef(state.editorContent);
@@ -91,6 +89,14 @@ export function App() {
     initialContent.current = source;
   };
 
+  const handleExport = useCallback(() => {
+    exportBundle({
+      config: state.config,
+      componentMap: state.componentMap,
+      customComponents: state.customComponents
+    });
+  }, [state.config, state.componentMap, state.customComponents]);
+
   const handleCustomComponentImport = useCallback(
     (components: Record<string, string>) => {
       setCustomComponents({
@@ -111,7 +117,7 @@ export function App() {
         onComponentMapChange={setComponentMap}
         editorContent={state.editorContent}
         onExamplesClick={() => setExamplesOpen(true)}
-        onConfigClick={() => setConfigOpen(true)}
+        onExportClick={handleExport}
         onCustomImportClick={() => setCustomImportOpen(true)}
         customComponentCount={Object.keys(state.customComponents ?? {}).length}
       />
@@ -120,6 +126,17 @@ export function App() {
           <Suspense fallback={<EditorFallback />}>
             <SchemaEditor value={state.editorContent} onChange={setEditorContent} />
           </Suspense>
+        }
+        configPane={
+          <ConfigPane
+            fields={displayFields}
+            config={state.config}
+            componentMap={state.componentMap}
+            configTab={state.configTab}
+            customComponentNames={customComponentNames}
+            onConfigTabChange={setConfigTab}
+            onConfigChange={setConfig}
+          />
         }
         preview={
           <FormPreview
@@ -136,16 +153,19 @@ export function App() {
         codeOutput={
           <CodeOutput
             fields={displayFields}
-            editorContent={state.editorContent}
             componentMap={state.componentMap}
             customComponentNames={customComponentNames}
+            codeOutputMode={state.codeOutputMode}
+            onCodeOutputModeChange={setCodeOutputMode}
           />
         }
         inspect={<IRInspector fields={displayFields} />}
         activeTab={state.activeTab}
         activePane={state.activePane}
+        paneSizes={state.paneSizes}
         onTabChange={setActiveTab}
         onPaneChange={setActivePane}
+        onPaneSizesChange={setPaneSizes}
       />
       {examplesOpen && (
         <Suspense fallback={null}>
@@ -154,18 +174,6 @@ export function App() {
             onClose={() => setExamplesOpen(false)}
             onSelect={handleExampleSelect}
             hasUnsavedChanges={hasUnsavedChanges}
-          />
-        </Suspense>
-      )}
-      {configOpen && (
-        <Suspense fallback={null}>
-          <ConfigImportExport
-            isOpen={configOpen}
-            onClose={() => setConfigOpen(false)}
-            config={state.config}
-            onConfigChange={setConfig}
-            componentMap={state.componentMap}
-            customComponents={state.customComponents}
           />
         </Suspense>
       )}

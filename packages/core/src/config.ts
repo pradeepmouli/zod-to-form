@@ -14,7 +14,7 @@ export type ComponentOverride = {
 
 // ─── Components Config ────────────────────────────────────────────────
 
-export type ComponentPreset = 'shadcn' | 'unstyled';
+export type ComponentPreset = 'shadcn' | 'html';
 
 export type ComponentsConfig<T extends Record<string, unknown> = Record<string, unknown>> = {
   /** Import path for the components module */
@@ -84,7 +84,7 @@ export type TypedFieldConfig<
 
 export type ConfigDefaults = {
   mode?: 'submit' | 'auto-save';
-  ui?: 'shadcn' | 'unstyled';
+  ui?: 'shadcn' | 'html';
   out?: string;
   overwrite?: boolean;
   serverAction?: boolean;
@@ -188,7 +188,7 @@ const componentOverrideSchema = z
 const componentsConfigSchema = z
   .object({
     source: nonEmptyStringSchema,
-    preset: z.enum(['shadcn', 'unstyled']).optional(),
+    preset: z.enum(['shadcn', 'html']).optional(),
     overrides: z.record(z.string(), componentOverrideSchema).optional()
   })
   .loose();
@@ -367,26 +367,26 @@ function formatValidationError(error: z.ZodError, source: string): Error {
 export const SHADCN_OVERRIDES: Record<string, ComponentOverride> = {
   Select: {
     controlled: true,
-    propMap: { onValueChange: 'field.onChange' },
+    propMap: { onValueChange: 'field.onChange' }
   },
   Checkbox: {
     controlled: true,
-    propMap: { checked: 'field.value', onCheckedChange: 'field.onChange' },
+    propMap: { checked: 'field.value', onCheckedChange: 'field.onChange' }
   },
   Switch: {
     controlled: true,
-    propMap: { checked: 'field.value', onCheckedChange: 'field.onChange' },
-  },
+    propMap: { checked: 'field.value', onCheckedChange: 'field.onChange' }
+  }
 };
 
-/** Default/unstyled preset — no controlled components by default */
+/** Default HTML preset — no controlled components by default */
 export const DEFAULT_OVERRIDES: Record<string, ComponentOverride> = {};
 
 // ─── Public Functions ─────────────────────────────────────────────────
 
 const PRESET_MAP: Record<ComponentPreset, Record<string, ComponentOverride>> = {
   shadcn: SHADCN_OVERRIDES,
-  unstyled: DEFAULT_OVERRIDES
+  html: DEFAULT_OVERRIDES
 };
 
 export function defineConfig<
