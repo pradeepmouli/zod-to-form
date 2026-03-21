@@ -46,7 +46,7 @@ Optional options:
 - `--mode <mode>`: `submit | auto-save` (default `submit`)
 - `--out <path>`: output directory or `.tsx` file path
 - `--name <componentName>`: generated component name override
-- `--ui <preset>`: `shadcn | unstyled` (default `shadcn`)
+- `--ui <preset>`: `shadcn | html` (default `shadcn`)
 - `--dry-run`: print generated code to stdout without writing files
 - `--server-action`: generate Next.js server action next to form output
 - `--watch`: watch schema file and regenerate on changes

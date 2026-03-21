@@ -1,12 +1,12 @@
-import type { ExampleSchema } from "../../types/playground.ts";
+import type { ExampleSchema } from '../../types/playground.ts';
 
 export const EXAMPLES: ExampleSchema[] = [
   {
-    id: "registration-form",
-    title: "User Registration",
-    description: "Registration form with labels, placeholders, and validation",
-    category: "basic",
-    tags: ["string", "email", "password", "validation", "meta"],
+    id: 'registration-form',
+    title: 'User Registration',
+    description: 'Registration form with labels, placeholders, and validation',
+    category: 'basic',
+    tags: ['string', 'email', 'password', 'validation', 'meta'],
     source: `const formRegistry = z.registry();
 
 const schema = z.object({
@@ -36,14 +36,14 @@ const schema = z.object({
 });
 
 ({ schema, formRegistry });
-`,
+`
   },
   {
-    id: "settings-page",
-    title: "Settings Page",
-    description: "Toggles, enums, and optional fields with inline metadata",
-    category: "basic",
-    tags: ["boolean", "enum", "optional", "default", "meta"],
+    id: 'settings-page',
+    title: 'Settings Page',
+    description: 'Toggles, enums, and optional fields with inline metadata',
+    category: 'basic',
+    tags: ['boolean', 'enum', 'optional', 'default', 'meta'],
     source: `const schema = z.object({
   displayName: z.string()
     .min(1, "Display name is required")
@@ -81,14 +81,14 @@ const schema = z.object({
 });
 
 schema;
-`,
+`
   },
   {
-    id: "contact-form",
-    title: "Contact Form",
-    description: "Textarea, select, and required fields with descriptions",
-    category: "basic",
-    tags: ["string", "textarea", "select", "required", "meta"],
+    id: 'contact-form',
+    title: 'Contact Form',
+    description: 'Textarea, select, and required fields with descriptions',
+    category: 'basic',
+    tags: ['string', 'textarea', 'select', 'required', 'meta'],
     source: `const schema = z.object({
   name: z.string()
     .min(2, "Name is required")
@@ -121,14 +121,14 @@ schema;
 });
 
 schema;
-`,
+`
   },
   {
-    id: "nested-address",
-    title: "Nested Address",
-    description: "Nested objects with address fields and inline metadata",
-    category: "advanced",
-    tags: ["nested", "object", "optional", "meta"],
+    id: 'nested-address',
+    title: 'Nested Address',
+    description: 'Nested objects with address fields and inline metadata',
+    category: 'advanced',
+    tags: ['nested', 'object', 'optional', 'meta'],
     source: `const addressSchema = z.object({
   street: z.string()
     .min(1, "Street is required")
@@ -164,14 +164,14 @@ const schema = z.object({
 });
 
 schema;
-`,
+`
   },
   {
-    id: "multi-field-wizard",
-    title: "Multi-Field Form",
-    description: "Complex form showcasing many field types with rich metadata",
-    category: "patterns",
-    tags: ["metadata", "sections", "ordering", "complex", "meta"],
+    id: 'multi-field-wizard',
+    title: 'Multi-Field Form',
+    description: 'Complex form showcasing many field types with rich metadata',
+    category: 'patterns',
+    tags: ['metadata', 'sections', 'ordering', 'complex', 'meta'],
     source: `const schema = z.object({
   firstName: z.string()
     .min(1, "Required")
@@ -219,14 +219,14 @@ schema;
 });
 
 schema;
-`,
+`
   },
   {
-    id: "login-form",
-    title: "Login Form",
-    description: "Simple login with email and password",
-    category: "basic",
-    tags: ["string", "email", "password", "simple", "meta"],
+    id: 'login-form',
+    title: 'Login Form',
+    description: 'Simple login with email and password',
+    category: 'basic',
+    tags: ['string', 'email', 'password', 'simple', 'meta'],
     source: `const formRegistry = z.registry();
 
 const schema = z.object({
@@ -243,14 +243,14 @@ const schema = z.object({
 });
 
 ({ schema, formRegistry });
-`,
+`
   },
   {
-    id: "metadata-labels",
-    title: "Metadata & Labels",
-    description: "Using .meta() for labels, descriptions, and placeholders",
-    category: "advanced",
-    tags: ["metadata", "meta", "labels", "descriptions", "placeholders"],
+    id: 'metadata-labels',
+    title: 'Metadata & Labels',
+    description: 'Using .meta() for labels, descriptions, and placeholders',
+    category: 'advanced',
+    tags: ['metadata', 'meta', 'labels', 'descriptions', 'placeholders'],
     source: `const schema = z.object({
   fullName: z.string()
     .min(2)
@@ -288,14 +288,14 @@ const schema = z.object({
 });
 
 schema;
-`,
+`
   },
   {
-    id: "form-registry",
-    title: "ZodFormRegistry",
-    description: "Using a ZodFormRegistry for component overrides, ordering, and hidden fields",
-    category: "patterns",
-    tags: ["registry", "ZodFormRegistry", "component", "order", "hidden", "advanced"],
+    id: 'form-registry',
+    title: 'ZodFormRegistry',
+    description: 'Using a ZodFormRegistry for component overrides, ordering, and hidden fields',
+    category: 'patterns',
+    tags: ['registry', 'ZodFormRegistry', 'component', 'order', 'hidden', 'advanced'],
     source: `const formRegistry = z.registry();
 
 const schema = z.object({
@@ -330,6 +330,63 @@ const schema = z.object({
 });
 
 ({ schema, formRegistry });
-`,
+`
   },
+  {
+    id: 'config-schema-metadata',
+    title: 'Config: Schema Metadata',
+    description: 'All field config via schema .meta() and .register() — config pane starts empty',
+    category: 'patterns',
+    tags: ['config', 'metadata', 'registry', 'dogfooding'],
+    source: `const formRegistry = z.registry();
+
+const schema = z.object({
+  name: z.string()
+    .meta({ title: "Full Name", description: "Your legal name" })
+    .register(formRegistry, { order: 1 }),
+  bio: z.string()
+    .meta({ title: "Biography" })
+    .register(formRegistry, { component: "Textarea", order: 2 }),
+  role: z.enum(["admin", "editor", "viewer"])
+    .register(formRegistry, { component: "RadioGroup" }),
+});
+
+({ schema, formRegistry });
+`
+  },
+  {
+    id: 'config-external',
+    title: 'Config: External (z2f.config)',
+    description: 'Clean schema — all presentation config via the z2f.config pane',
+    category: 'patterns',
+    tags: ['config', 'external', 'defineConfig', 'dogfooding'],
+    source: `const schema = z.object({
+  name: z.string(),
+  bio: z.string(),
+  role: z.enum(["admin", "editor", "viewer"]),
+});
+
+schema;
+`
+  },
+  {
+    id: 'config-hybrid',
+    title: 'Config: Hybrid',
+    description: 'Schema metadata + config pane overrides — config takes precedence',
+    category: 'patterns',
+    tags: ['config', 'hybrid', 'metadata', 'override', 'dogfooding'],
+    source: `const formRegistry = z.registry();
+
+const schema = z.object({
+  name: z.string()
+    .meta({ title: "Full Name" })
+    .register(formRegistry, { order: 1 }),
+  bio: z.string()
+    .meta({ title: "Biography" }),
+  role: z.enum(["admin", "editor", "viewer"]),
+});
+
+({ schema, formRegistry });
+`
+  }
 ];

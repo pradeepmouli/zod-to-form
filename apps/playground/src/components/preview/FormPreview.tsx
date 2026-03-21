@@ -84,7 +84,8 @@ export function FormPreview({
       onSubmitResult({
         success: false,
         data: null,
-        errors,
+        // Zod always produces at least one error on failure
+        errors: errors as [(typeof errors)[0], ...typeof errors],
         timestamp: Date.now()
       });
     },

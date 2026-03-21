@@ -26,6 +26,9 @@ function FieldMessage(props: HTMLAttributes<HTMLParagraphElement>) {
   return createElement('p', props);
 }
 
+/** Internal wrapper component names — not user-configurable */
+const WRAPPER_NAMES = new Set(['Field', 'FieldLabel', 'FieldDescription', 'FieldMessage']);
+
 export const defaultComponentMap = {
   Input,
   Textarea,
@@ -41,3 +44,8 @@ export const defaultComponentMap = {
   FieldDescription,
   FieldMessage
 };
+
+/** User-facing field component names derived from defaultComponentMap, excluding internal wrappers */
+export const FIELD_COMPONENT_NAMES = Object.keys(defaultComponentMap).filter(
+  (name) => !WRAPPER_NAMES.has(name)
+) as ReadonlyArray<string>;

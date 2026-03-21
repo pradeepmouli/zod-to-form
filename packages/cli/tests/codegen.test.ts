@@ -748,7 +748,7 @@ describe('generateFormComponent', () => {
       outputPath: '/tmp/TestForm.tsx',
       componentName: 'TestForm',
       mode: 'submit',
-      ui: 'unstyled',
+      ui: 'html',
       serverAction: false,
       componentConfig: {
         components: {
@@ -791,7 +791,7 @@ describe('generateFormComponent', () => {
       outputPath: '/tmp/TestForm.tsx',
       componentName: 'TestForm',
       mode: 'submit',
-      ui: 'unstyled',
+      ui: 'html',
       serverAction: false,
       componentConfig: {
         components: {
@@ -835,7 +835,7 @@ describe('generateFormComponent', () => {
       outputPath: '/tmp/TestForm.tsx',
       componentName: 'TestForm',
       mode: 'submit',
-      ui: 'unstyled',
+      ui: 'html',
       serverAction: false,
       formProvider: true
     });
@@ -866,7 +866,7 @@ describe('generateFormComponent', () => {
       outputPath: '/tmp/TestForm.tsx',
       componentName: 'TestForm',
       mode: 'submit',
-      ui: 'unstyled',
+      ui: 'html',
       serverAction: false
     });
 
@@ -969,7 +969,7 @@ describe('generateFormComponent', () => {
       outputPath: '/tmp/TestFormWithNestedSection.tsx',
       componentName: 'TestFormWithNestedSection',
       mode: 'submit',
-      ui: 'unstyled',
+      ui: 'html',
       serverAction: false,
       // Nested field key participates in a section via componentConfig.fields
       componentConfig: {

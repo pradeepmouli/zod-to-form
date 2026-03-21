@@ -4,12 +4,19 @@ import { encodeShareState } from '../../lib/share.ts';
 
 declare const __APP_VERSION__: string;
 
+function shareButtonLabel(failed: boolean, warning: boolean, copied: boolean): string {
+  if (failed) return 'Copy failed';
+  if (warning) return 'URL may be too long!';
+  if (copied) return 'Copied!';
+  return 'Share';
+}
+
 interface HeaderProps {
   componentMap: ComponentMapType;
   onComponentMapChange: (map: ComponentMapType) => void;
   editorContent: string;
   onExamplesClick: () => void;
-  onConfigClick: () => void;
+  onExportClick: () => void;
   onCustomImportClick: () => void;
   customComponentCount: number;
 }
@@ -19,12 +26,13 @@ export function Header({
   onComponentMapChange,
   editorContent,
   onExamplesClick,
-  onConfigClick,
+  onExportClick,
   onCustomImportClick,
   customComponentCount
 }: HeaderProps) {
   const [copied, setCopied] = useState(false);
   const [shareWarning, setShareWarning] = useState(false);
+  const [shareFailed, setShareFailed] = useState(false);
 
   const handleShare = () => {
     const { hash, tooLarge } = encodeShareState({ code: editorContent, map: componentMap });
@@ -40,7 +48,11 @@ export function Header({
           setTimeout(() => setCopied(false), 2000);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.warn('[zod-to-form] Clipboard write failed:', err);
+        setShareFailed(true);
+        setTimeout(() => setShareFailed(false), 2000);
+      });
   };
 
   return (
@@ -110,11 +122,11 @@ export function Header({
         </button>
 
         <button
-          onClick={onConfigClick}
+          onClick={onExportClick}
           className="btn-glass text-xs px-3 py-1.5"
-          aria-label="Import or export config"
+          aria-label="Export config and components"
         >
-          Config
+          Export
         </button>
 
         <button
@@ -135,7 +147,7 @@ export function Header({
           }
           aria-label="Copy share URL to clipboard"
         >
-          {shareWarning ? 'URL may be too long!' : copied ? 'Copied!' : 'Share'}
+          {shareButtonLabel(shareFailed, shareWarning, copied)}
         </button>
       </nav>
     </header>

@@ -30,7 +30,12 @@ export function encodeShareState(state: ShareState): EncodeResult {
   return { hash, tooLarge };
 }
 
-export function decodeShareState(hash: string): ShareState | null {
+export type DecodeShareResult =
+  | { ok: true; state: ShareState }
+  | { ok: false; error: string }
+  | null; // null = no share hash present
+
+export function decodeShareState(hash: string): DecodeShareResult {
   try {
     const clean = hash.startsWith('#') ? hash.slice(1) : hash;
     if (!clean) return null;
@@ -38,7 +43,11 @@ export function decodeShareState(hash: string): ShareState | null {
     const codeCompressed = params.get('code');
     if (!codeCompressed) return null;
     const code = LZString.decompressFromEncodedURIComponent(codeCompressed);
-    if (!code) return null;
+    if (!code)
+      return {
+        ok: false,
+        error: 'Share link could not be decompressed — it may have been truncated.'
+      };
     const mapParam = params.get('map');
     const tabParam = params.get('tab');
     const raw = {
@@ -47,9 +56,9 @@ export function decodeShareState(hash: string): ShareState | null {
       tab: tabParam === 'inspect' || tabParam === 'code' ? tabParam : 'preview'
     };
     const result = ShareStateSchema.safeParse(raw);
-    if (!result.success) return null;
-    return result.data;
+    if (!result.success) return { ok: false, error: 'Share link data is invalid.' };
+    return { ok: true, state: result.data };
   } catch {
-    return null;
+    return { ok: false, error: 'Share link appears to be corrupted.' };
   }
 }

@@ -1,20 +1,20 @@
-import type { FormField } from "@zod-to-form/core";
-import type { EvaluationError } from "../types/playground.ts";
+import type { FormField } from '@zod-to-form/core';
+import type { EvaluationError } from '../types/playground.ts';
 
 export interface EvalRequest {
-  type: "eval";
+  type: 'eval';
   id: string;
   source: string;
 }
 
 export interface EvalSuccess {
-  type: "result";
+  type: 'result';
   id: string;
   fields: FormField[];
 }
 
 export interface EvalFailure {
-  type: "error";
+  type: 'error';
   id: string;
   error: EvaluationError;
 }

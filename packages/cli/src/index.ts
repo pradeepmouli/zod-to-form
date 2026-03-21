@@ -39,7 +39,7 @@ type GenerateOptions = {
   mode?: 'submit' | 'auto-save';
   out?: string;
   name?: string;
-  ui?: 'shadcn' | 'unstyled';
+  ui?: 'shadcn' | 'html';
   dryRun?: boolean;
   serverAction?: boolean;
   watch?: boolean;
@@ -204,7 +204,7 @@ export function createProgram(): Command {
     .option('--mode <mode>', 'Generation mode (submit|auto-save)')
     .option('--out <path>', 'Output directory or file path')
     .option('--name <componentName>', 'Generated component name')
-    .option('--ui <preset>', 'UI preset (shadcn|unstyled)')
+    .option('--ui <preset>', 'UI preset (shadcn|html)')
     .option('--dry-run', 'Print generated code without writing files', false)
     .option('--server-action', 'Generate a Next.js server action alongside the form', false)
     .option('--watch', 'Watch schema file for changes and regenerate on change', false)

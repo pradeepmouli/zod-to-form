@@ -44,6 +44,7 @@ export {
   collectFieldSections
 } from './utils.js';
 
+export { normalizeFormValues } from './normalize.js';
 export { walkSchema } from './walker.js';
 export { builtinProcessors, createProcessors } from './registry.js';
 export { registerDeep, registerFlat } from './register.js';
