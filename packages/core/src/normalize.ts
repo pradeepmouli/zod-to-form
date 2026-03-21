@@ -8,9 +8,10 @@
  * This function recursively normalizes these mismatches so that
  * schema.safeParse(normalizeFormValues(values)) works correctly.
  *
- * Only needed for plain HTML components. Shadcn and other component
- * libraries handle empty values natively — skip normalization when
- * using a managed preset.
+ * Called unconditionally in the resolver wrapper to ensure consistent
+ * behavior across all component libraries. While shadcn components handle
+ * most value conversions natively, normalization provides a safety net for
+ * edge cases like FileList objects.
  */
 export function normalizeFormValues(value: unknown): unknown {
   if (isFileListLike(value)) {

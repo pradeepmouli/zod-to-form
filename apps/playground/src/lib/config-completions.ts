@@ -118,7 +118,8 @@ type ConfigContext =
   | 'override-config'
   | null;
 
-function detectContext(before: string): ConfigContext {
+/** @internal Exported for testing */
+export function detectContext(before: string): ConfigContext {
   // Find the deepest open block by tracking braces
   const blocks: string[] = [];
   let lastKey = '';
@@ -174,7 +175,14 @@ function detectContext(before: string): ConfigContext {
       if (afterColon && lastKey === 'component') return 'field-config.component';
       return 'field-config';
     }
-    if (parentBlock === 'overrides') return 'override-config';
+    // overrides is inside components: defineConfig > components > overrides
+    if (currentBlock === 'overrides') return 'overrides';
+  }
+
+  if (depth === 4) {
+    const grandparent = blocks[depth - 3];
+    // override entries: defineConfig > components > overrides > ComponentName
+    if (grandparent === 'components') return 'override-config';
   }
 
   return null;

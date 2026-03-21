@@ -162,13 +162,7 @@ export function PlaygroundShell({
   }
 
   // Narrow layout: tabbed navigation with all sections
-  const mobileTabMap: Record<string, MobileTab> = {
-    preview: 'preview',
-    inspect: 'inspect',
-    code: 'code'
-  };
-  const mobileTab: MobileTab =
-    activePane === 'editor' ? 'schema' : (mobileTabMap[activeTab] ?? 'preview');
+  const mobileTab: MobileTab = activePane === 'editor' ? 'schema' : (activeTab as MobileTab);
 
   const handleMobileTabChange = (tab: MobileTab) => {
     if (tab === 'schema') {

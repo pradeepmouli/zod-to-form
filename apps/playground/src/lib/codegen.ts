@@ -150,15 +150,8 @@ export function generateZodFormCode(
     `import { ${exportName} } from './schema';`
   ];
 
-  const zodFormImports: string[] = ['ZodForm'];
-  if (useShadcn && !hasCustom) {
-    zodFormImports.push('shadcnComponentMap');
-  } else if (!useShadcn && !hasCustom) {
-    zodFormImports.push('defaultComponentMap');
-  } else {
-    zodFormImports.push(useShadcn ? 'shadcnComponentMap' : 'defaultComponentMap');
-  }
-  imports.push(`import { ${zodFormImports.join(', ')} } from '@zod-to-form/react';`);
+  const baseMapName = useShadcn ? 'shadcnComponentMap' : 'defaultComponentMap';
+  imports.push(`import { ZodForm, ${baseMapName} } from '@zod-to-form/react';`);
 
   if (hasCustom) {
     for (const name of customComponentNames) {
@@ -176,18 +169,16 @@ export function generateZodFormCode(
     `}) {`
   ];
 
-  const baseMap = useShadcn ? 'shadcnComponentMap' : 'defaultComponentMap';
-
   if (hasCustom) {
     const overrides = customComponentNames.map((n) => `    ${n},`).join('\n');
     lines.push(`  const components = {`);
-    lines.push(`    ...${baseMap},`);
+    lines.push(`    ...${baseMapName},`);
     lines.push(overrides);
     lines.push(`  };`);
     lines.push(``);
   }
 
-  const componentsExpr = hasCustom ? 'components' : baseMap;
+  const componentsExpr = hasCustom ? 'components' : baseMapName;
 
   lines.push(`  return (`);
   lines.push(`    <ZodForm`);

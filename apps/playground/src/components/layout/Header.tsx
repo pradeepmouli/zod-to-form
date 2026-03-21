@@ -4,6 +4,13 @@ import { encodeShareState } from '../../lib/share.ts';
 
 declare const __APP_VERSION__: string;
 
+function shareButtonLabel(failed: boolean, warning: boolean, copied: boolean): string {
+  if (failed) return 'Copy failed';
+  if (warning) return 'URL may be too long!';
+  if (copied) return 'Copied!';
+  return 'Share';
+}
+
 interface HeaderProps {
   componentMap: ComponentMapType;
   onComponentMapChange: (map: ComponentMapType) => void;
@@ -41,7 +48,8 @@ export function Header({
           setTimeout(() => setCopied(false), 2000);
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.warn('[zod-to-form] Clipboard write failed:', err);
         setShareFailed(true);
         setTimeout(() => setShareFailed(false), 2000);
       });
@@ -139,13 +147,7 @@ export function Header({
           }
           aria-label="Copy share URL to clipboard"
         >
-          {shareFailed
-            ? 'Copy failed'
-            : shareWarning
-              ? 'URL may be too long!'
-              : copied
-                ? 'Copied!'
-                : 'Share'}
+          {shareButtonLabel(shareFailed, shareWarning, copied)}
         </button>
       </nav>
     </header>

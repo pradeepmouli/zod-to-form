@@ -24,14 +24,21 @@ export function useSchemaFromSource(
   const lastGood = useRef<SchemaResult>({ schema: null, formRegistry: undefined, stale: false });
 
   return useMemo(() => {
+    const staleResult = (): SchemaResult => ({
+      ...lastGood.current,
+      stale: lastGood.current.schema !== null
+    });
+
     // null fields = worker hasn't returned yet or errored; fall back to last good
-    if (fields === null) return { ...lastGood.current, stale: lastGood.current.schema !== null };
+    if (fields === null) return staleResult();
+
     // empty fields is a valid result (e.g. z.object({})), proceed with evaluation
     const transpileResult = transpile(editorContent);
-    if (!transpileResult.ok)
-      return { ...lastGood.current, stale: lastGood.current.schema !== null };
+    if (!transpileResult.ok) return staleResult();
+
     const evalResult = evaluate(transpileResult.code);
-    if (!evalResult.ok) return { ...lastGood.current, stale: lastGood.current.schema !== null };
+    if (!evalResult.ok) return staleResult();
+
     const result: SchemaResult = {
       schema: evalResult.schema as z.ZodObject<z.ZodRawShape>,
       formRegistry: evalResult.formRegistry,

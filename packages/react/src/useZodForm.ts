@@ -45,15 +45,21 @@ export function useZodForm<TSchema extends ZodObject>(
     return reg;
   }, [schema, options?.formRegistry, options?.fields]);
 
-  const fields = useMemo(() => {
+  const walkResult = useMemo(() => {
     try {
-      return walkSchema(schema, {
-        formRegistry: effectiveRegistry,
-        processors: options?.processors
-      });
+      return {
+        fields: walkSchema(schema, {
+          formRegistry: effectiveRegistry,
+          processors: options?.processors
+        }),
+        error: null
+      };
     } catch (err) {
       console.error('[zod-to-form] walkSchema failed:', err);
-      return [];
+      return {
+        fields: [] as import('@zod-to-form/core').FormField[],
+        error: err instanceof Error ? err.message : 'Schema processing failed'
+      };
     }
   }, [schema, effectiveRegistry, options?.processors]);
 
@@ -97,6 +103,8 @@ export function useZodForm<TSchema extends ZodObject>(
 
   return {
     form,
-    fields
+    fields: walkResult.fields,
+    /** Non-null when walkSchema threw — lets consumers display the error instead of an empty form */
+    schemaError: walkResult.error
   };
 }

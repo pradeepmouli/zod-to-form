@@ -3,16 +3,6 @@ import type { PlaygroundConfig, ComponentMapType } from '../types/playground.ts'
 import { serializeConfigToTs } from './config-schema.ts';
 
 /**
- * Generate a full z2f.config.ts file using the shared init template.
- */
-export function generateConfigTs(
-  config: PlaygroundConfig | null,
-  componentMap: ComponentMapType
-): string {
-  return serializeConfigToTs(config, componentMap);
-}
-
-/**
  * Generate a README with shadcn installation instructions.
  */
 function generateShadcnReadme(config: PlaygroundConfig | null): string {
@@ -67,7 +57,7 @@ export interface ExportInput {
  */
 export function exportBundle(input: ExportInput): void {
   try {
-    const configTs = generateConfigTs(input.config, input.componentMap);
+    const configTs = serializeConfigToTs(input.config, input.componentMap);
     const hasCustom = input.customComponents && Object.keys(input.customComponents).length > 0;
 
     const files: Record<string, Uint8Array> = {
@@ -83,9 +73,8 @@ export function exportBundle(input: ExportInput): void {
     }
 
     const zipped = zipSync(files);
-    // TypeScript's Uint8Array<ArrayBufferLike> is not assignable to BlobPart
-    // due to SharedArrayBuffer possibility; fflate always returns standard ArrayBuffer
-    const blob = new Blob([zipped.buffer as ArrayBuffer], { type: 'application/zip' });
+    // Copy to standard Uint8Array to satisfy BlobPart (fflate returns Uint8Array<ArrayBufferLike>)
+    const blob = new Blob([new Uint8Array(zipped)], { type: 'application/zip' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -93,7 +82,8 @@ export function exportBundle(input: ExportInput): void {
     a.click();
     URL.revokeObjectURL(url);
   } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
     console.error('[zod-to-form] Export failed:', err);
-    alert('Export failed. Check the browser console for details.');
+    alert(`Export failed: ${message}`);
   }
 }

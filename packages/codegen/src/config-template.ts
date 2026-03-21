@@ -1,6 +1,7 @@
 /**
  * Browser-safe config template generator.
- * Produces the same output as the CLI `z2f init` command.
+ * Produces the defineConfig({...}) source string used by both the CLI
+ * init command and the playground.
  */
 
 export type ConfigTemplateOptions = {

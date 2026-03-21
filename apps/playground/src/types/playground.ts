@@ -21,6 +21,16 @@ export const DEFAULT_PANE_SIZES: PaneSizes = {
   rightHorizontalSplit: 50
 };
 
+/** Clamp all pane size values to the valid 10-90% range */
+export function clampPaneSizes(sizes: PaneSizes): PaneSizes {
+  const clamp = (v: number) => Math.max(10, Math.min(90, v));
+  return {
+    verticalSplit: clamp(sizes.verticalSplit),
+    leftHorizontalSplit: clamp(sizes.leftHorizontalSplit),
+    rightHorizontalSplit: clamp(sizes.rightHorizontalSplit)
+  };
+}
+
 export interface EvaluationError {
   type: 'syntax' | 'runtime' | 'timeout' | 'import';
   message: string;
@@ -33,7 +43,7 @@ export type SubmitResult =
   | {
       success: false;
       data: null;
-      errors: Array<{ path: string; message: string }>;
+      errors: [{ path: string; message: string }, ...Array<{ path: string; message: string }>];
       timestamp: number;
     };
 
@@ -47,9 +57,20 @@ export interface ExampleSchema {
 }
 
 export interface PlaygroundConfig {
-  components?: Record<string, unknown>;
+  components?: {
+    source?: string;
+    preset?: 'shadcn' | 'html';
+    [key: string]: unknown;
+  };
+  defaults?: {
+    mode?: 'submit' | 'auto-save';
+    ui?: 'shadcn' | 'html';
+    overwrite?: boolean;
+    serverAction?: boolean;
+    formProvider?: boolean;
+    [key: string]: unknown;
+  };
   fields?: Record<string, unknown>;
-  defaults?: Record<string, unknown>;
 }
 
 export interface ShareState {

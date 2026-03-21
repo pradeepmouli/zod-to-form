@@ -12,10 +12,18 @@ import type {
   SubmitResult,
   PlaygroundConfig
 } from '../types/playground.ts';
-import { DEFAULT_PANE_SIZES } from '../types/playground.ts';
+import { DEFAULT_PANE_SIZES, clampPaneSizes } from '../types/playground.ts';
 import { loadPlaygroundState, savePlaygroundState } from '../lib/storage.ts';
 import { decodeShareState } from '../lib/share.ts';
 import { STARTER_SCHEMA } from '../components/examples/starter.ts';
+
+const EMPTY_RUNTIME_STATE = {
+  activePane: 'editor' as const,
+  lastValidFields: null,
+  evaluationError: null,
+  submitResult: null,
+  customComponents: null
+};
 
 function getInitialState(): PlaygroundState {
   try {
@@ -25,59 +33,47 @@ function getInitialState(): PlaygroundState {
     if (shareResult?.ok) {
       const shared = shareResult.state;
       return {
+        ...EMPTY_RUNTIME_STATE,
         editorContent: shared.code,
         componentMap: shared.map ?? 'default',
         activeTab: shared.tab ?? 'preview',
-        activePane: 'editor',
         configTab: 'form',
         codeOutputMode: 'react',
         paneSizes: DEFAULT_PANE_SIZES,
-        lastValidFields: null,
-        evaluationError: null,
-        submitResult: null,
-        config: null,
-        customComponents: null
+        config: null
       };
     }
 
     if (shareResult && !shareResult.ok) {
       console.warn('[zod-to-form] Share link error:', shareResult.error);
     }
-  } catch {
-    // Fall through to persisted/default state
+  } catch (err) {
+    console.warn('[zod-to-form] Failed to parse share state from URL hash:', err);
   }
 
   const persisted = loadPlaygroundState();
   if (persisted) {
     return {
+      ...EMPTY_RUNTIME_STATE,
       editorContent: persisted.editorContent,
       componentMap: persisted.componentMap,
       activeTab: persisted.activeTab,
-      activePane: 'editor',
       configTab: persisted.configTab,
       codeOutputMode: persisted.codeOutputMode,
       paneSizes: persisted.paneSizes,
-      lastValidFields: null,
-      evaluationError: null,
-      submitResult: null,
-      config: persisted.config,
-      customComponents: null
+      config: persisted.config
     };
   }
 
   return {
+    ...EMPTY_RUNTIME_STATE,
     editorContent: STARTER_SCHEMA,
     componentMap: 'default',
     activeTab: 'preview',
-    activePane: 'editor',
     configTab: 'form',
     codeOutputMode: 'react',
     paneSizes: DEFAULT_PANE_SIZES,
-    lastValidFields: null,
-    evaluationError: null,
-    submitResult: null,
-    config: null,
-    customComponents: null
+    config: null
   };
 }
 
@@ -105,22 +101,46 @@ export function usePlaygroundState() {
     state.paneSizes
   ]);
 
-  function makeFieldSetter<K extends keyof PlaygroundState>(key: K) {
-    return useCallback((value: PlaygroundState[K]) => {
-      setState((s) => ({ ...s, [key]: value }));
-    }, []);
-  }
-
-  const setEditorContent = makeFieldSetter('editorContent');
-  const setComponentMap = makeFieldSetter('componentMap');
-  const setActiveTab = makeFieldSetter('activeTab');
-  const setActivePane = makeFieldSetter('activePane');
-  const setSubmitResult = makeFieldSetter('submitResult');
-  const setConfig = makeFieldSetter('config');
-  const setCustomComponents = makeFieldSetter('customComponents');
-  const setConfigTab = makeFieldSetter('configTab');
-  const setCodeOutputMode = makeFieldSetter('codeOutputMode');
-  const setPaneSizes = makeFieldSetter('paneSizes');
+  const setEditorContent = useCallback(
+    (v: PlaygroundState['editorContent']) => setState((s) => ({ ...s, editorContent: v })),
+    []
+  );
+  const setComponentMap = useCallback(
+    (v: PlaygroundState['componentMap']) => setState((s) => ({ ...s, componentMap: v })),
+    []
+  );
+  const setActiveTab = useCallback(
+    (v: PlaygroundState['activeTab']) => setState((s) => ({ ...s, activeTab: v })),
+    []
+  );
+  const setActivePane = useCallback(
+    (v: PlaygroundState['activePane']) => setState((s) => ({ ...s, activePane: v })),
+    []
+  );
+  const setSubmitResult = useCallback(
+    (v: PlaygroundState['submitResult']) => setState((s) => ({ ...s, submitResult: v })),
+    []
+  );
+  const setConfig = useCallback(
+    (v: PlaygroundState['config']) => setState((s) => ({ ...s, config: v })),
+    []
+  );
+  const setCustomComponents = useCallback(
+    (v: PlaygroundState['customComponents']) => setState((s) => ({ ...s, customComponents: v })),
+    []
+  );
+  const setConfigTab = useCallback(
+    (v: PlaygroundState['configTab']) => setState((s) => ({ ...s, configTab: v })),
+    []
+  );
+  const setCodeOutputMode = useCallback(
+    (v: PlaygroundState['codeOutputMode']) => setState((s) => ({ ...s, codeOutputMode: v })),
+    []
+  );
+  const setPaneSizes = useCallback(
+    (v: PlaygroundState['paneSizes']) => setState((s) => ({ ...s, paneSizes: clampPaneSizes(v) })),
+    []
+  );
 
   // setEvalResult updates two fields and needs special handling
   const setEvalResult = useCallback((fields: FormField[] | null, error: EvaluationError | null) => {

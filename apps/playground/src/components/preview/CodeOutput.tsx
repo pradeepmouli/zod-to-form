@@ -4,6 +4,12 @@ import { generateFormComponent } from '@zod-to-form/codegen';
 import type { ComponentMapType, CodeOutputMode } from '../../types/playground.ts';
 import { generateFormCode, generateZodFormCode } from '../../lib/codegen.ts';
 
+function copyButtonLabel(failed: boolean, copied: boolean): string {
+  if (failed) return 'Copy failed';
+  if (copied) return 'Copied!';
+  return 'Copy';
+}
+
 interface CodeOutputProps {
   fields: FormField[] | null;
   componentMap: ComponentMapType;
@@ -57,18 +63,21 @@ export function CodeOutput({
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.warn('[zod-to-form] Clipboard write failed:', err);
         setCopyFailed(true);
         setTimeout(() => setCopyFailed(false), 2000);
       });
   }, [generatedCode]);
 
-  const modeLabel =
-    codeOutputMode === 'cli'
-      ? 'CLI (Codegen) output'
-      : useZodForm
-        ? 'Generated ZodForm component'
-        : 'Generated React + React Hook Form component';
+  let modeLabel: string;
+  if (codeOutputMode === 'cli') {
+    modeLabel = 'CLI (Codegen) output';
+  } else if (useZodForm) {
+    modeLabel = 'Generated ZodForm component';
+  } else {
+    modeLabel = 'Generated React + React Hook Form component';
+  }
 
   if (!generatedCode) {
     return (
@@ -109,7 +118,7 @@ export function CodeOutput({
               : undefined
           }
         >
-          {copyFailed ? 'Copy failed' : copied ? 'Copied!' : 'Copy'}
+          {copyButtonLabel(copyFailed, copied)}
         </button>
       </div>
       <div className="flex-1 overflow-auto p-4">

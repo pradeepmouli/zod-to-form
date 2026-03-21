@@ -211,8 +211,11 @@ async function discoverFormPrimitives(
           }
         }
         logVerbose(verbose, `scanned exports from ${toPosixPath(path.relative(cwd, filePath))}`);
-      } catch {
-        // ignore unreadable candidates and continue with defaults/other candidates
+      } catch (err) {
+        logVerbose(
+          verbose,
+          `skipping unreadable candidate ${toPosixPath(path.relative(cwd, filePath))}: ${err instanceof Error ? err.message : String(err)}`
+        );
       }
     }
   }
@@ -386,8 +389,11 @@ async function discoverComponents(
         verbose,
         `scanned component exports from ${toPosixPath(path.relative(cwd, filePath))}`
       );
-    } catch {
-      // ignore unreadable files
+    } catch (err) {
+      logVerbose(
+        verbose,
+        `skipping unreadable component file: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   }
 
@@ -417,8 +423,10 @@ async function discoverSchemas(
       const exports = await resolveSchemaExportNames(resolved);
       logVerbose(verbose, `found ${String(exports.length)} schemas in ${explicitPath}`);
       return { exports, schemaPath: toPosixPath(path.relative(cwd, resolved)) };
-    } catch {
-      logVerbose(verbose, `could not load schemas from ${explicitPath}`);
+    } catch (err) {
+      console.warn(
+        `Warning: Could not load schemas from ${explicitPath}: ${err instanceof Error ? err.message : String(err)}`
+      );
       return { exports: [] };
     }
   }
@@ -436,8 +444,11 @@ async function discoverSchemas(
           logVerbose(verbose, `found ${String(exports.length)} schemas in ${relativePath}`);
           return { exports, schemaPath: relativePath };
         }
-      } catch {
-        // ignore unloadable candidates
+      } catch (err) {
+        logVerbose(
+          verbose,
+          `skipping unloadable schema candidate: ${err instanceof Error ? err.message : String(err)}`
+        );
       }
     }
   }
@@ -596,7 +607,12 @@ async function detectShadcnConfig(cwd: string): Promise<ShadcnConfigSnapshot> {
       style: typeof parsed['style'] === 'string' ? parsed['style'] : undefined,
       sourcePath: componentsPath
     };
-  } catch {
+  } catch (err) {
+    if (await exists(path.join(cwd, 'components.json'))) {
+      console.warn(
+        `Warning: Found components.json but could not parse it: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
     return {
       exists: false,
       aliases: {}

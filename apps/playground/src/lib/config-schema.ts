@@ -26,13 +26,13 @@ const fieldConfigSchema = z.object({
 
 type FieldConfigEntry = z.infer<typeof fieldConfigSchema>;
 
-/** Components section — mirrors ComponentsConfig from core */
+/** Simplified components section for playground config editing (subset of core ComponentsConfig) */
 const componentsSchema = z.object({
   source: z.string().optional(),
   preset: z.enum(['shadcn', 'html']).optional()
 });
 
-/** Defaults section — mirrors ConfigDefaults from core */
+/** Simplified defaults section for playground config editing (subset of core ConfigDefaults) */
 const defaultsSchema = z.object({
   mode: z.enum(['submit', 'auto-save']).optional(),
   ui: z.enum(['shadcn', 'html']).optional(),
@@ -147,6 +147,17 @@ export function configToFormValues(
   };
 }
 
+/** Remove entries where every value is undefined */
+function filterDefinedEntries(obj: Record<string, unknown>): Record<string, unknown> | undefined {
+  const filtered: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(obj)) {
+    if (val !== undefined) {
+      filtered[key] = val;
+    }
+  }
+  return Object.keys(filtered).length > 0 ? filtered : undefined;
+}
+
 /**
  * Convert form values back to a PlaygroundConfig.
  * Empty/undefined entries are omitted.
@@ -159,37 +170,19 @@ export function formValuesToConfig(
   const rawDefaults = (values.defaults ?? {}) as Record<string, unknown>;
   const rawFields = (values.fields ?? {}) as Record<string, FieldConfigEntry | undefined>;
 
-  // Filter out undefined component values
-  const components: Record<string, unknown> = {};
-  for (const [key, val] of Object.entries(rawComponents)) {
-    if (val !== undefined) {
-      components[key] = val;
-    }
-  }
-
-  // Filter out undefined default values
-  const defaults: Record<string, unknown> = {};
-  for (const [key, val] of Object.entries(rawDefaults)) {
-    if (val !== undefined) {
-      defaults[key] = val;
-    }
-  }
-
-  // Filter out empty field entries
-  const fields: Record<string, unknown> = {};
+  // Filter out empty field entries (where all sub-values are undefined)
+  const nonEmptyFields: Record<string, unknown> = {};
   for (const [key, entry] of Object.entries(rawFields)) {
-    if (!entry) continue;
-    const hasValue = Object.values(entry).some((v) => v !== undefined);
-    if (hasValue) {
-      fields[key] = entry;
+    if (entry && Object.values(entry).some((v) => v !== undefined)) {
+      nonEmptyFields[key] = entry;
     }
   }
 
   return {
     ...existingConfig,
-    components: Object.keys(components).length > 0 ? components : undefined,
-    defaults: Object.keys(defaults).length > 0 ? defaults : undefined,
-    fields: Object.keys(fields).length > 0 ? fields : undefined
+    components: filterDefinedEntries(rawComponents),
+    defaults: filterDefinedEntries(rawDefaults),
+    fields: Object.keys(nonEmptyFields).length > 0 ? nonEmptyFields : undefined
   };
 }
 
@@ -206,15 +199,9 @@ export function serializeConfigToTs(
   const defaults = { ...init.defaults, ...config?.defaults };
 
   return buildConfigSource({
-    componentSource: (components.source as string) ?? init.components.source,
-    preset: (components.preset as 'shadcn' | 'html' | undefined) ?? init.components.preset,
-    defaults: defaults as {
-      mode?: 'submit' | 'auto-save';
-      ui?: 'shadcn' | 'html';
-      overwrite?: boolean;
-      serverAction?: boolean;
-      formProvider?: boolean;
-    },
+    componentSource: components.source ?? init.components.source,
+    preset: components.preset ?? init.components.preset,
+    defaults,
     fields: config?.fields as Record<string, Record<string, unknown>> | undefined
   });
 }
@@ -238,14 +225,16 @@ export function parseConfigFromTs(source: string): ConfigParseResult {
       jsonStr = jsonStr.trim();
     }
 
-    // Convert JS object literal to JSON (handle unquoted keys, trailing commas, single quotes, spreads)
+    // Convert JS object literal to JSON (handle unquoted keys, trailing commas, single quotes, spreads).
+    // Limitations: string values containing unquoted-key-like patterns (e.g. "Note: foo") may be
+    // mangled. A proper JS parser would be more robust but is overkill for the playground config.
     let normalized = jsonStr
       // Remove spread expressions (e.g. ...SHADCN_OVERRIDES) — not representable in JSON
       .replace(/\.\.\.\w+,?\s*/g, '')
       // Replace single quotes with double quotes
       .replace(/'/g, '"')
-      // Add quotes around unquoted keys
-      .replace(/(\s*)(\w+)\s*:/g, '$1"$2":')
+      // Add quotes around unquoted keys (only at property positions: after { , or newline)
+      .replace(/(^|[{,]\s*)(\w+)\s*:/gm, '$1"$2":')
       // Remove trailing commas before } or ]
       .replace(/,\s*([\]}])/g, '$1');
 

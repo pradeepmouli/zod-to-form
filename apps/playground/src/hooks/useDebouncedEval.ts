@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FormField } from '@zod-to-form/core';
 import type { EvaluationError } from '../types/playground.ts';
 import { EvalWorkerClient } from '../worker/client.ts';
@@ -9,10 +9,7 @@ interface EvalState {
   isEvaluating: boolean;
 }
 
-export function useDebouncedEval(
-  source: string,
-  debounceMs = 300
-): EvalState & { onResult: (fields: FormField[] | null, error: EvaluationError | null) => void } {
+export function useDebouncedEval(source: string, debounceMs = 300): EvalState {
   const clientRef = useRef<EvalWorkerClient | null>(null);
   const [evalState, setEvalState] = useState<EvalState>({
     fields: null,
@@ -39,11 +36,11 @@ export function useDebouncedEval(
 
       try {
         const fields = await client.eval(source);
-        setEvalState((prev) => ({
+        setEvalState({
           fields,
           error: null,
           isEvaluating: false
-        }));
+        });
       } catch (err: unknown) {
         // Cancelled evals are expected during rapid typing — ignore them
         if (
@@ -51,14 +48,16 @@ export function useDebouncedEval(
           typeof err === 'object' &&
           'message' in err &&
           (err as EvaluationError).message === 'Cancelled'
-        )
+        ) {
+          setEvalState((s) => ({ ...s, isEvaluating: false }));
           return;
+        }
         const error: EvaluationError =
           err && typeof err === 'object' && 'type' in err && 'message' in err
             ? (err as EvaluationError)
             : { type: 'runtime', message: err instanceof Error ? err.message : String(err) };
-        setEvalState((prev) => ({
-          fields: prev.fields,
+        setEvalState((s) => ({
+          fields: s.fields,
           error,
           isEvaluating: false
         }));
@@ -71,9 +70,5 @@ export function useDebouncedEval(
     };
   }, [source, debounceMs]);
 
-  const onResult = useCallback((fields: FormField[] | null, error: EvaluationError | null) => {
-    setEvalState({ fields, error, isEvaluating: false });
-  }, []);
-
-  return { ...evalState, onResult };
+  return evalState;
 }
