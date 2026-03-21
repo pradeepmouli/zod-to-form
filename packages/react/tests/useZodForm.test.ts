@@ -121,7 +121,7 @@ describe('useZodForm', () => {
     // Empty string should be coerced to undefined, not rejected
     expect(onValueChange).toHaveBeenLastCalledWith(expect.objectContaining({ label: 'hello' }));
     // mode should be undefined (coerced from "")
-    const lastCall = onValueChange.mock.calls[onValueChange.mock.calls.length - 1][0];
+    const lastCall = onValueChange.mock.calls.at(-1)![0];
     expect(lastCall.mode).toBeUndefined();
   });
 
