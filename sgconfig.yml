@@ -1,0 +1,6 @@
+ruleDirs:
+  - /Users/pmouli/GitHub.nosync/zodforms/rules
+testConfigs:
+  - testDir: /Users/pmouli/GitHub.nosync/zodforms/rule-tests
+utilDirs:
+  - /Users/pmouli/GitHub.nosync/zodforms/utils

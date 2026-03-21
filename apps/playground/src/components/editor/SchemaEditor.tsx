@@ -1,17 +1,14 @@
-import { useEffect, useRef, memo } from "react";
-import { EditorState } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
-import { createEditorExtensions } from "./editor-setup.ts";
+import { useEffect, useRef, memo } from 'react';
+import { EditorState } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
+import { createEditorExtensions } from './editor-setup.ts';
 
 interface SchemaEditorProps {
   value: string;
   onChange: (value: string) => void;
 }
 
-export const SchemaEditor = memo(function SchemaEditor({
-  value,
-  onChange,
-}: SchemaEditorProps) {
+export const SchemaEditor = memo(function SchemaEditor({ value, onChange }: SchemaEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
@@ -27,9 +24,9 @@ export const SchemaEditor = memo(function SchemaEditor({
         extensions: createEditorExtensions((v) => {
           isInternalChange.current = true;
           onChangeRef.current(v);
-        }),
+        })
       }),
-      parent: containerRef.current,
+      parent: containerRef.current
     });
 
     viewRef.current = view;
@@ -51,16 +48,12 @@ export const SchemaEditor = memo(function SchemaEditor({
     const currentDoc = view.state.doc.toString();
     if (currentDoc !== value) {
       view.dispatch({
-        changes: { from: 0, to: currentDoc.length, insert: value },
+        changes: { from: 0, to: currentDoc.length, insert: value }
       });
     }
   }, [value]);
 
   return (
-    <div
-      ref={containerRef}
-      className="h-full w-full overflow-hidden"
-      aria-label="Schema editor"
-    />
+    <div ref={containerRef} className="h-full w-full overflow-hidden" aria-label="Schema editor" />
   );
 });

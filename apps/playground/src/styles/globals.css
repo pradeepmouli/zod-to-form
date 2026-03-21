@@ -1,30 +1,30 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
-  --color-background: #0B0F17;
-  --color-foreground: #E2E5EA;
+  --color-background: #0b0f17;
+  --color-foreground: #e2e5ea;
   --color-card: rgba(18, 24, 36, 0.72);
-  --color-card-foreground: #E2E5EA;
+  --color-card-foreground: #e2e5ea;
   --color-popover: rgba(18, 24, 36, 0.85);
-  --color-popover-foreground: #E2E5EA;
-  --color-primary: #F97316;
+  --color-popover-foreground: #e2e5ea;
+  --color-primary: #f97316;
   --color-primary-foreground: #ffffff;
   --color-secondary: rgba(26, 33, 48, 0.65);
-  --color-secondary-foreground: #E2E5EA;
+  --color-secondary-foreground: #e2e5ea;
   --color-muted: rgba(26, 33, 48, 0.65);
-  --color-muted-foreground: #8B95A8;
+  --color-muted-foreground: #8b95a8;
   --color-accent: rgba(35, 44, 62, 0.55);
-  --color-accent-foreground: #E2E5EA;
+  --color-accent-foreground: #e2e5ea;
   --color-destructive: #ef4444;
   --color-destructive-foreground: #ffffff;
   --color-border: rgba(255, 255, 255, 0.1);
   --color-input: rgba(255, 255, 255, 0.12);
-  --color-ring: #F97316;
+  --color-ring: #f97316;
   --radius: 0.5rem;
 }
 
 :root {
-  --bg-base: #0B0F17;
+  --bg-base: #0b0f17;
   --bg-surface: rgba(18, 24, 36, 0.72);
   --bg-elevated: rgba(26, 33, 48, 0.65);
   --bg-hover: rgba(35, 44, 62, 0.55);
@@ -32,14 +32,14 @@
   --border-subtle: rgba(255, 255, 255, 0.06);
   --border-default: rgba(255, 255, 255, 0.1);
   --border-glow: rgba(249, 115, 22, 0.25);
-  --text-primary: #E2E5EA;
-  --text-secondary: #8B95A8;
-  --text-muted: #4E5B6E;
-  --accent-violet: #F97316;
-  --accent-violet-hover: #FB923C;
+  --text-primary: #e2e5ea;
+  --text-secondary: #8b95a8;
+  --text-muted: #4e5b6e;
+  --accent-violet: #f97316;
+  --accent-violet-hover: #fb923c;
   --accent-violet-muted: rgba(249, 115, 22, 0.12);
   --accent-violet-glow: rgba(249, 115, 22, 0.3);
-  --accent-gradient: linear-gradient(135deg, #FB923C 0%, #F97316 50%, #EA580C 100%);
+  --accent-gradient: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
   --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
   --radius-lg: 12px;
@@ -171,7 +171,9 @@ body {
 
 .input-glass:focus {
   border-color: rgba(249, 115, 22, 0.4);
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1), inset 0 0 12px rgba(249, 115, 22, 0.05);
+  box-shadow:
+    0 0 0 3px rgba(249, 115, 22, 0.1),
+    inset 0 0 12px rgba(249, 115, 22, 0.05);
 }
 
 .modal-backdrop {
@@ -193,7 +195,7 @@ body {
   border-color: var(--border-subtle);
 }
 
-.form-preview-area input:not([type="checkbox"]):not([type="radio"]),
+.form-preview-area input:not([type='checkbox']):not([type='radio']),
 .form-preview-area textarea,
 .form-preview-area select {
   background: rgba(15, 20, 32, 0.6);
@@ -215,11 +217,13 @@ body {
   min-height: 80px;
 }
 
-.form-preview-area input:not([type="checkbox"]):not([type="radio"]):focus,
+.form-preview-area input:not([type='checkbox']):not([type='radio']):focus,
 .form-preview-area textarea:focus,
 .form-preview-area select:focus {
   border-color: rgba(249, 115, 22, 0.4);
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1), inset 0 0 12px rgba(249, 115, 22, 0.05);
+  box-shadow:
+    0 0 0 3px rgba(249, 115, 22, 0.1),
+    inset 0 0 12px rgba(249, 115, 22, 0.05);
 }
 
 .form-preview-area input::placeholder,
@@ -238,18 +242,18 @@ body {
   font-weight: 500;
 }
 
-.form-preview-area input[type="checkbox"],
-.form-preview-area input[type="radio"] {
+.form-preview-area input[type='checkbox'],
+.form-preview-area input[type='radio'] {
   accent-color: var(--accent-violet);
 }
 
-.form-preview-area p[class*="text-destructive"],
-.form-preview-area p[class*="text-sm"][class*="font-medium"] {
+.form-preview-area p[class*='text-destructive'],
+.form-preview-area p[class*='text-sm'][class*='font-medium'] {
   color: #ef4444;
 }
 
 .form-preview-area [data-radix-select-trigger],
-.form-preview-area button[role="combobox"] {
+.form-preview-area button[role='combobox'] {
   background: rgba(15, 20, 32, 0.6);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-sm);
@@ -269,13 +273,15 @@ body {
 }
 
 .form-preview-area [data-radix-select-trigger]:focus,
-.form-preview-area button[role="combobox"]:focus {
+.form-preview-area button[role='combobox']:focus {
   border-color: rgba(249, 115, 22, 0.4);
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1), inset 0 0 12px rgba(249, 115, 22, 0.05);
+  box-shadow:
+    0 0 0 3px rgba(249, 115, 22, 0.1),
+    inset 0 0 12px rgba(249, 115, 22, 0.05);
 }
 
 .form-preview-area [data-radix-select-content],
-.form-preview-area [role="listbox"] {
+.form-preview-area [role='listbox'] {
   background: rgba(18, 24, 36, 0.95);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-default);
@@ -287,7 +293,7 @@ body {
 }
 
 .form-preview-area [data-radix-select-item],
-.form-preview-area [role="option"] {
+.form-preview-area [role='option'] {
   padding: 0.375rem 0.75rem;
   font-size: 0.875rem;
   cursor: pointer;
@@ -297,8 +303,8 @@ body {
 
 .form-preview-area [data-radix-select-item]:hover,
 .form-preview-area [data-radix-select-item][data-highlighted],
-.form-preview-area [role="option"]:hover,
-.form-preview-area [role="option"][data-highlighted] {
+.form-preview-area [role='option']:hover,
+.form-preview-area [role='option'][data-highlighted] {
   background: var(--accent-violet-muted);
   color: var(--text-primary);
 }
@@ -336,7 +342,7 @@ body {
 }
 
 .form-preview-area [data-radix-checkbox-root],
-.form-preview-area button[role="checkbox"] {
+.form-preview-area button[role='checkbox'] {
   width: 1rem;
   height: 1rem;
   border: 1px solid var(--border-default);
@@ -350,14 +356,14 @@ body {
   flex-shrink: 0;
 }
 
-.form-preview-area [data-radix-checkbox-root][data-state="checked"],
-.form-preview-area button[role="checkbox"][data-state="checked"] {
+.form-preview-area [data-radix-checkbox-root][data-state='checked'],
+.form-preview-area button[role='checkbox'][data-state='checked'] {
   background: var(--accent-violet);
   border-color: var(--accent-violet);
 }
 
 .form-preview-area [data-radix-switch-root],
-.form-preview-area button[role="switch"] {
+.form-preview-area button[role='switch'] {
   width: 2.75rem;
   height: 1.5rem;
   border-radius: 9999px;
@@ -369,14 +375,14 @@ body {
   padding: 2px;
 }
 
-.form-preview-area [data-radix-switch-root][data-state="checked"],
-.form-preview-area button[role="switch"][data-state="checked"] {
+.form-preview-area [data-radix-switch-root][data-state='checked'],
+.form-preview-area button[role='switch'][data-state='checked'] {
   background: var(--accent-violet);
   border-color: var(--accent-violet);
 }
 
 .form-preview-area [data-radix-switch-thumb],
-.form-preview-area button[role="switch"] span {
+.form-preview-area button[role='switch'] span {
   display: block;
   width: 1.125rem;
   height: 1.125rem;
@@ -385,8 +391,8 @@ body {
   transition: transform var(--transition);
 }
 
-.form-preview-area [data-radix-switch-root][data-state="checked"] [data-radix-switch-thumb],
-.form-preview-area button[role="switch"][data-state="checked"] span {
+.form-preview-area [data-radix-switch-root][data-state='checked'] [data-radix-switch-thumb],
+.form-preview-area button[role='switch'][data-state='checked'] span {
   transform: translateX(1.25rem);
 }
 
@@ -432,8 +438,8 @@ body {
   padding: 0 0.375rem;
 }
 
-.config-form-area input[type="text"],
-.config-form-area input[type="number"],
+.config-form-area input[type='text'],
+.config-form-area input[type='number'],
 .config-form-area select,
 .config-form-area textarea {
   background: rgba(15, 20, 32, 0.6);
@@ -449,8 +455,8 @@ body {
   box-sizing: border-box;
 }
 
-.config-form-area input[type="text"]:focus,
-.config-form-area input[type="number"]:focus,
+.config-form-area input[type='text']:focus,
+.config-form-area input[type='number']:focus,
 .config-form-area select:focus,
 .config-form-area textarea:focus {
   border-color: rgba(249, 115, 22, 0.4);
@@ -467,12 +473,12 @@ body {
   color: var(--text-primary);
 }
 
-.config-form-area input[type="checkbox"] {
+.config-form-area input[type='checkbox'] {
   accent-color: var(--accent-violet);
   width: auto;
 }
 
-.config-form-area button[type="submit"] {
+.config-form-area button[type='submit'] {
   display: none;
 }
 

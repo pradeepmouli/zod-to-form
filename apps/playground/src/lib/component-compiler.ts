@@ -1,33 +1,33 @@
-import * as React from "react";
-import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
-import * as SwitchPrimitives from "@radix-ui/react-switch";
-import * as SelectPrimitive from "@radix-ui/react-select";
-import * as LabelPrimitive from "@radix-ui/react-label";
-import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
-import { Slot } from "@radix-ui/react-slot";
-import { cva } from "class-variance-authority";
-import { clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-import * as LucideIcons from "lucide-react";
-import { transform } from "sucrase";
+import * as React from 'react';
+import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
+import * as SwitchPrimitives from '@radix-ui/react-switch';
+import * as SelectPrimitive from '@radix-ui/react-select';
+import * as LabelPrimitive from '@radix-ui/react-label';
+import * as RadioGroupPrimitive from '@radix-ui/react-radio-group';
+import { Slot } from '@radix-ui/react-slot';
+import { cva } from 'class-variance-authority';
+import { clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+import * as LucideIcons from 'lucide-react';
+import { transform } from 'sucrase';
 
 function cn(...inputs: (string | undefined | null | false | Record<string, boolean>)[]) {
   return twMerge(clsx(inputs));
 }
 
 const MODULE_MAP: Record<string, unknown> = {
-  "react": React,
-  "@radix-ui/react-checkbox": CheckboxPrimitive,
-  "@radix-ui/react-switch": SwitchPrimitives,
-  "@radix-ui/react-select": SelectPrimitive,
-  "@radix-ui/react-label": LabelPrimitive,
-  "@radix-ui/react-radio-group": RadioGroupPrimitive,
-  "@radix-ui/react-slot": { Slot, __esModule: true },
-  "class-variance-authority": { cva, __esModule: true },
-  "clsx": { clsx, __esModule: true },
-  "tailwind-merge": { twMerge, __esModule: true },
-  "lucide-react": LucideIcons,
-  "@/lib/utils": { cn, __esModule: true },
+  react: React,
+  '@radix-ui/react-checkbox': CheckboxPrimitive,
+  '@radix-ui/react-switch': SwitchPrimitives,
+  '@radix-ui/react-select': SelectPrimitive,
+  '@radix-ui/react-label': LabelPrimitive,
+  '@radix-ui/react-radio-group': RadioGroupPrimitive,
+  '@radix-ui/react-slot': { Slot, __esModule: true },
+  'class-variance-authority': { cva, __esModule: true },
+  clsx: { clsx, __esModule: true },
+  'tailwind-merge': { twMerge, __esModule: true },
+  'lucide-react': LucideIcons,
+  '@/lib/utils': { cn, __esModule: true }
 };
 
 export interface CompileResult {
@@ -43,9 +43,19 @@ export interface CompileError {
 }
 
 const COMPONENT_MAP_SLOTS = [
-  "Input", "Textarea", "Select", "Checkbox", "Switch",
-  "DatePicker", "FileInput", "RadioGroup", "Combobox",
-  "Field", "FieldLabel", "FieldDescription", "FieldMessage",
+  'Input',
+  'Textarea',
+  'Select',
+  'Checkbox',
+  'Switch',
+  'DatePicker',
+  'FileInput',
+  'RadioGroup',
+  'Combobox',
+  'Field',
+  'FieldLabel',
+  'FieldDescription',
+  'FieldMessage'
 ];
 
 const NAME_TO_SLOT: Record<string, string> = {};
@@ -55,27 +65,27 @@ for (const slot of COMPONENT_MAP_SLOTS) {
 
 function resolveComponentSlotName(registryName: string): string {
   const normalized = registryName
-    .replace(/^8bit-/, "")
-    .replace(/^retro-/, "")
-    .replace(/^brutal-/, "")
-    .replace(/^neo-/, "")
-    .replace(/-/g, "");
+    .replace(/^8bit-/, '')
+    .replace(/^retro-/, '')
+    .replace(/^brutal-/, '')
+    .replace(/^neo-/, '')
+    .replace(/-/g, '');
   if (NAME_TO_SLOT[normalized]) {
     return NAME_TO_SLOT[normalized];
   }
   return registryName
-    .split("-")
+    .split('-')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join("");
+    .join('');
 }
 
 const CSS_STUB = { __esModule: true };
 
 function resolveModule(
   specifier: string,
-  runtimeModules?: Record<string, Record<string, unknown>>,
+  runtimeModules?: Record<string, Record<string, unknown>>
 ): unknown {
-  if (specifier.endsWith(".css")) {
+  if (specifier.endsWith('.css')) {
     return CSS_STUB;
   }
 
@@ -84,7 +94,7 @@ function resolveModule(
   }
 
   for (const [key, mod] of Object.entries(MODULE_MAP)) {
-    if (specifier.startsWith(key + "/")) {
+    if (specifier.startsWith(key + '/')) {
       return mod;
     }
   }
@@ -95,24 +105,24 @@ function resolveModule(
     }
 
     const aliased = specifier
-      .replace(/^@\/components\//, "")
-      .replace(/^@\//, "")
-      .replace(/^\.\//, "");
+      .replace(/^@\/components\//, '')
+      .replace(/^@\//, '')
+      .replace(/^\.\//, '');
     if (runtimeModules[aliased]) {
       return runtimeModules[aliased];
     }
 
-    if (specifier.startsWith("@/components/ui/")) {
-      const uiPath = "ui/" + specifier.slice("@/components/ui/".length);
+    if (specifier.startsWith('@/components/ui/')) {
+      const uiPath = 'ui/' + specifier.slice('@/components/ui/'.length);
       if (runtimeModules[uiPath]) {
         return runtimeModules[uiPath];
       }
     }
 
     for (const [key, mod] of Object.entries(runtimeModules)) {
-      const keyBase = key.split("/").pop()!;
-      const specBase = specifier.split("/").pop()!;
-      if (keyBase === specBase && key.includes("ui/")) {
+      const keyBase = key.split('/').pop()!;
+      const specBase = specifier.split('/').pop()!;
+      if (keyBase === specBase && key.includes('ui/')) {
         return mod;
       }
     }
@@ -124,15 +134,15 @@ function resolveModule(
 export function compileComponent(
   name: string,
   source: string,
-  runtimeModules?: Record<string, Record<string, unknown>>,
+  runtimeModules?: Record<string, Record<string, unknown>>
 ): CompileResult | CompileError {
   try {
     const jsCode = transform(source, {
-      transforms: ["typescript", "jsx", "imports"],
-      jsxRuntime: "classic",
-      jsxPragma: "React.createElement",
-      jsxFragmentPragma: "React.Fragment",
-      production: true,
+      transforms: ['typescript', 'jsx', 'imports'],
+      jsxRuntime: 'classic',
+      jsxPragma: 'React.createElement',
+      jsxFragmentPragma: 'React.Fragment',
+      production: true
     }).code;
 
     const importRegex = /require\(["']([^"']+)["']\)/g;
@@ -149,7 +159,7 @@ export function compileComponent(
     if (missingDeps.length > 0) {
       return {
         ok: false,
-        error: `Missing dependencies: ${missingDeps.join(", ")}. These packages are not available in the playground runtime.`,
+        error: `Missing dependencies: ${missingDeps.join(', ')}. These packages are not available in the playground runtime.`
       };
     }
 
@@ -172,26 +182,43 @@ if (module.exports !== __exports__) {
 }`;
 
     const SHADOWED_GLOBALS = [
-      "window", "globalThis", "self",
-      "document", "fetch", "XMLHttpRequest", "WebSocket", "EventSource",
-      "localStorage", "sessionStorage", "indexedDB",
-      "navigator", "location", "history",
-      "Worker", "SharedWorker", "ServiceWorker",
-      "importScripts",
+      'window',
+      'globalThis',
+      'self',
+      'document',
+      'fetch',
+      'XMLHttpRequest',
+      'WebSocket',
+      'EventSource',
+      'localStorage',
+      'sessionStorage',
+      'indexedDB',
+      'navigator',
+      'location',
+      'history',
+      'Worker',
+      'SharedWorker',
+      'ServiceWorker',
+      'importScripts'
     ];
-    const globalShadowParams = SHADOWED_GLOBALS.join(", ");
-    const globalShadowArgs = SHADOWED_GLOBALS.map(() => "undefined").join(", ");
+    const globalShadowParams = SHADOWED_GLOBALS.join(', ');
+    const globalShadowArgs = SHADOWED_GLOBALS.map(() => 'undefined').join(', ');
 
     const sandboxedCode = `(function(${globalShadowParams}) {
 ${wrappedCode}
 })(${globalShadowArgs});`;
 
-    const fn = new Function("require", "React", "__exports__", sandboxedCode);
+    const fn = new Function('require', 'React', '__exports__', sandboxedCode);
     fn(requireFn, React, moduleExports);
 
     const composed = tryComposeRadixComponent(name, moduleExports);
     if (composed) {
-      return { ok: true, component: composed.component, exportName: composed.exportName, moduleExports };
+      return {
+        ok: true,
+        component: composed.component,
+        exportName: composed.exportName,
+        moduleExports
+      };
     }
 
     const slotName = resolveComponentSlotName(name);
@@ -199,13 +226,16 @@ ${wrappedCode}
     let component: React.ComponentType<Record<string, unknown>> | null = null;
     let resolvedExportName = slotName;
 
-    if (slotName && (typeof moduleExports[slotName] === "function" || isForwardRef(moduleExports[slotName]))) {
+    if (
+      slotName &&
+      (typeof moduleExports[slotName] === 'function' || isForwardRef(moduleExports[slotName]))
+    ) {
       component = moduleExports[slotName] as React.ComponentType<Record<string, unknown>>;
       resolvedExportName = slotName;
     } else {
       for (const [key, val] of Object.entries(moduleExports)) {
-        if (key.startsWith("_")) continue;
-        if (typeof val === "function" || isForwardRef(val)) {
+        if (key.startsWith('_')) continue;
+        if (typeof val === 'function' || isForwardRef(val)) {
           component = val as React.ComponentType<Record<string, unknown>>;
           resolvedExportName = COMPONENT_MAP_SLOTS.includes(key) ? key : (slotName ?? key);
           break;
@@ -216,13 +246,13 @@ ${wrappedCode}
     if (!component) {
       return {
         ok: false,
-        error: `No React component export found in "${name}".`,
+        error: `No React component export found in "${name}".`
       };
     }
 
     return { ok: true, component, exportName: resolvedExportName, moduleExports };
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Unknown compilation error";
+    const message = err instanceof Error ? err.message : 'Unknown compilation error';
     return { ok: false, error: message };
   }
 }
@@ -235,33 +265,31 @@ interface ComposedResult {
 }
 
 function isComponent(value: unknown): boolean {
-  return typeof value === "function" || isForwardRef(value);
+  return typeof value === 'function' || isForwardRef(value);
 }
 
 function tryComposeRadixComponent(
   name: string,
-  exports: Record<string, unknown>,
+  exports: Record<string, unknown>
 ): ComposedResult | null {
-  if (name === "select") {
+  if (name === 'select') {
     return tryComposeSelect(exports);
   }
-  if (name === "checkbox") {
+  if (name === 'checkbox') {
     return tryComposeCheckbox(exports);
   }
-  if (name === "switch") {
+  if (name === 'switch') {
     return tryComposeSwitch(exports);
   }
   return null;
 }
 
-function tryComposeSelect(
-  exports: Record<string, unknown>,
-): ComposedResult | null {
-  const SelectRoot = exports["Select"];
-  const Trigger = exports["SelectTrigger"];
-  const Value = exports["SelectValue"];
-  const Content = exports["SelectContent"];
-  const Item = exports["SelectItem"];
+function tryComposeSelect(exports: Record<string, unknown>): ComposedResult | null {
+  const SelectRoot = exports['Select'];
+  const Trigger = exports['SelectTrigger'];
+  const Value = exports['SelectValue'];
+  const Content = exports['SelectContent'];
+  const Item = exports['SelectItem'];
 
   if (
     !isComponent(SelectRoot) ||
@@ -278,97 +306,90 @@ function tryComposeSelect(
   const C = Content as AnyComponent;
   const I = Item as AnyComponent;
 
-  const ComposedSelect = React.forwardRef<
-    unknown,
-    Record<string, unknown>
-  >(function ComposedSelect(props, ref) {
-    const {
-      options,
-      value,
-      onValueChange,
-      onChange,
-      onBlur,
-      placeholder,
-      disabled,
-      required,
-      id,
-      name: fieldName,
-      className,
-      ...rest
-    } = props as {
-      options?: { value: string | number; label: string; disabled?: boolean }[];
-      value?: string;
-      onValueChange?: (v: string) => void;
-      onChange?: (v: string) => void;
-      onBlur?: () => void;
-      placeholder?: string;
-      disabled?: boolean;
-      required?: boolean;
-      id?: string;
-      name?: string;
-      className?: string;
-      [k: string]: unknown;
-    };
+  const ComposedSelect = React.forwardRef<unknown, Record<string, unknown>>(
+    function ComposedSelect(props, ref) {
+      const {
+        options,
+        value,
+        onValueChange,
+        onChange,
+        onBlur,
+        placeholder,
+        disabled,
+        required,
+        id,
+        name: fieldName,
+        className,
+        ...rest
+      } = props as {
+        options?: { value: string | number; label: string; disabled?: boolean }[];
+        value?: string;
+        onValueChange?: (v: string) => void;
+        onChange?: (v: string) => void;
+        onBlur?: () => void;
+        placeholder?: string;
+        disabled?: boolean;
+        required?: boolean;
+        id?: string;
+        name?: string;
+        className?: string;
+        [k: string]: unknown;
+      };
 
-    const handleChange = onValueChange ?? onChange;
+      const handleChange = onValueChange ?? onChange;
 
-    return React.createElement(
-      S,
-      { value: value ?? "", onValueChange: handleChange, ...rest },
-      React.createElement(
-        T,
-        { ref, className, id, disabled, onBlur, "aria-required": required },
-        React.createElement(V, { placeholder: placeholder ?? "Select..." }),
-      ),
-      React.createElement(
-        C,
-        null,
-        ...(options ?? []).map((opt) =>
-          React.createElement(
-            I,
-            {
-              key: `${opt.value}`,
-              value: `${opt.value}`,
-              disabled: opt.disabled,
-            },
-            opt.label,
-          ),
+      return React.createElement(
+        S,
+        { value: value ?? '', onValueChange: handleChange, ...rest },
+        React.createElement(
+          T,
+          { ref, className, id, disabled, onBlur, 'aria-required': required },
+          React.createElement(V, { placeholder: placeholder ?? 'Select...' })
         ),
-      ),
-    );
-  });
+        React.createElement(
+          C,
+          null,
+          ...(options ?? []).map((opt) =>
+            React.createElement(
+              I,
+              {
+                key: `${opt.value}`,
+                value: `${opt.value}`,
+                disabled: opt.disabled
+              },
+              opt.label
+            )
+          )
+        )
+      );
+    }
+  );
 
-  return { component: ComposedSelect as AnyComponent, exportName: "Select" };
+  return { component: ComposedSelect as AnyComponent, exportName: 'Select' };
 }
 
-function tryComposeCheckbox(
-  exports: Record<string, unknown>,
-): ComposedResult | null {
-  const Checkbox = exports["Checkbox"];
+function tryComposeCheckbox(exports: Record<string, unknown>): ComposedResult | null {
+  const Checkbox = exports['Checkbox'];
   if (!isComponent(Checkbox)) return null;
-  return { component: Checkbox as AnyComponent, exportName: "Checkbox" };
+  return { component: Checkbox as AnyComponent, exportName: 'Checkbox' };
 }
 
-function tryComposeSwitch(
-  exports: Record<string, unknown>,
-): ComposedResult | null {
-  const Switch = exports["Switch"];
+function tryComposeSwitch(exports: Record<string, unknown>): ComposedResult | null {
+  const Switch = exports['Switch'];
   if (!isComponent(Switch)) return null;
-  return { component: Switch as AnyComponent, exportName: "Switch" };
+  return { component: Switch as AnyComponent, exportName: 'Switch' };
 }
 
 function isForwardRef(value: unknown): boolean {
   return (
     !!value &&
-    typeof value === "object" &&
-    "$$typeof" in value &&
-    typeof (value as Record<string, unknown>).$$typeof === "symbol"
+    typeof value === 'object' &&
+    '$$typeof' in value &&
+    typeof (value as Record<string, unknown>).$$typeof === 'symbol'
   );
 }
 
-export function compileComponents(
-  sources: Record<string, string>,
-): {
+export function compileComponents(sources: Record<string, string>): {
   components: Record<string, React.ComponentType<Record<string, unknown>>>;
   errors: Record<string, string>;
 } {
@@ -387,10 +408,13 @@ export function compileComponents(
       const result = compileComponent(name, source, compiledModules);
       if (result.ok) {
         components[result.exportName] = result.component;
-        const mod = result.moduleExports ?? { [result.exportName]: result.component, __esModule: true };
+        const mod = result.moduleExports ?? {
+          [result.exportName]: result.component,
+          __esModule: true
+        };
         compiledModules[name] = mod;
 
-        const baseName = name.split("/").pop()!;
+        const baseName = name.split('/').pop()!;
         if (baseName !== name && !compiledModules[baseName]) {
           compiledModules[baseName] = mod;
         }
@@ -398,7 +422,7 @@ export function compileComponents(
         compiled.add(name);
         remaining.delete(name);
         progress = true;
-      } else if (!result.error.startsWith("Missing dependencies:")) {
+      } else if (!result.error.startsWith('Missing dependencies:')) {
         errors[name] = result.error;
         remaining.delete(name);
         progress = true;
