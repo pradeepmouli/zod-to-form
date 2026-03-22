@@ -216,7 +216,8 @@ export function resolveFieldMapping<TComponents extends Record<string, unknown>>
 }
 
 function toVarName(key: string): string {
-  return key.replace(/[^a-zA-Z0-9]+([a-zA-Z0-9])/g, (_, c: string) => c.toUpperCase());
+  const parts = key.split(/[^a-zA-Z0-9]+/).filter(p => p.length > 0);
+  return parts.map((part, i) => (i === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1))).join('');
 }
 
 function collectArrayFields(fields: FormField[]): FormField[] {
