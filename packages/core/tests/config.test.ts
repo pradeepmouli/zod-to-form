@@ -342,11 +342,11 @@ describe('defineConfig preset', () => {
     expect(config.components.overrides?.['RichText']).toEqual({ controlled: true });
   });
 
-  it('merges unstyled preset into overrides when preset is unstyled', () => {
+  it('merges html preset into overrides when preset is html', () => {
     const config = defineConfig({
       components: {
         source: '@/ui',
-        preset: 'unstyled',
+        preset: 'html',
         overrides: {
           CustomSelect: { controlled: true }
         }

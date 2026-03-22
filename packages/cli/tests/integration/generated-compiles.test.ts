@@ -31,7 +31,7 @@ describe('generated component compilation', () => {
       outputPath: '/tmp/EntityForm.tsx',
       componentName: 'EntityForm',
       mode: 'submit',
-      ui: 'unstyled',
+      ui: 'html',
       serverAction: false
     });
 
@@ -66,7 +66,7 @@ describe('generated component compilation', () => {
       outputPath,
       componentName: 'UserForm',
       mode: 'submit',
-      ui: 'unstyled',
+      ui: 'html',
       serverAction: false
     });
 
@@ -79,7 +79,7 @@ describe('generated component compilation', () => {
         `  export function useForm<T>(options?: unknown): { register: (name: string, options?: unknown) => Record<string, unknown>; handleSubmit: (fn: (data: T) => void) => (event?: unknown) => void };`,
         `}`,
         `declare module '@hookform/resolvers/zod' {`,
-        `  export function zodResolver(schema: unknown): unknown;`,
+        `  export function zodResolver(schema: unknown): (values: unknown, context: unknown, options: unknown) => unknown;`,
         `}`,
         `declare module 'zod' {`,
         `  export namespace z {`,
@@ -94,6 +94,7 @@ describe('generated component compilation', () => {
         `}`,
         `declare module '@zod-to-form/core' {`,
         `  export type StripIndexSignature<T> = T;`,
+        `  export function normalizeFormValues(value: unknown): unknown;`,
         `}`,
         `declare namespace JSX { interface IntrinsicElements { form: any; div: any; label: any; input: any; select: any; option: any; textarea: any; button: any; } }`
       ].join('\n'),

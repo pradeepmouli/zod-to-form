@@ -12,6 +12,7 @@ import { useZodForm } from './useZodForm.js';
 type ZodFormProps<TSchema extends ZodObject> = {
   schema: TSchema;
   onSubmit?: (data: output<TSchema>) => unknown;
+  onInvalid?: (errors: Record<string, unknown>) => void;
   onValueChange?: (data: output<TSchema>) => void;
   mode?: 'onSubmit' | 'onChange' | 'onBlur';
   defaultValues?: Partial<output<TSchema>>;
@@ -27,6 +28,7 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
   const {
     schema,
     onSubmit,
+    onInvalid,
     onValueChange,
     mode,
     defaultValues,
@@ -60,17 +62,28 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
     );
   }, [fields, componentConfig]);
 
+  // Fields assigned to a section are rendered by SectionRenderer instead
+  const sectionFieldKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const fieldKeys of sections.values()) {
+      for (const key of fieldKeys) keys.add(key);
+    }
+    return keys;
+  }, [sections]);
+
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(submitHandler)} className={className} noValidate>
-        {fields.map((field) => (
-          <FieldRenderer
-            key={field.key}
-            field={field}
-            components={mergedComponents}
-            componentConfig={componentConfig}
-          />
-        ))}
+      <form onSubmit={form.handleSubmit(submitHandler, onInvalid)} className={className} noValidate>
+        {fields
+          .filter((field) => !sectionFieldKeys.has(field.key))
+          .map((field) => (
+            <FieldRenderer
+              key={field.key}
+              field={field}
+              components={mergedComponents}
+              componentConfig={componentConfig}
+            />
+          ))}
         {sections.size > 0 && (
           <SectionRenderer sections={sections} componentConfig={componentConfig} />
         )}

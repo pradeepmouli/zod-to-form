@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="./attached_assets/banner.svg" alt="zod-to-form banner" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./attached_assets/banner-dark.svg" />
+    <source media="(prefers-color-scheme: light)" srcset="./attached_assets/banner-light.svg" />
+    <img src="./attached_assets/banner-light.svg" alt="zod-to-form banner" />
+  </picture>
 </p>
 
 <p align="center">

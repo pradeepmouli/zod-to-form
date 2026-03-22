@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "browser-use": {
+      "source": "browser-use/browser-use",
+      "sourceType": "github",
+      "computedHash": "409117e97ea4689e138a2080bfa94893e31ea216fbd0220d834dbdb791ecbe0e"
+    },
     "changelog-automation": {
       "source": "pradeepmouli/zod-to-form",
       "sourceType": "github",
@@ -180,6 +185,11 @@
       "source": "pradeepmouli/zod-to-form",
       "sourceType": "github",
       "computedHash": "a03a83996ae9d2f4dd6d4db08899d61761c7d5351bce4c695d20a21197742a36"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "computedHash": "0a413bf988d06481f69bb81df2070741c3ba12dd9f1be2706d57f259c905992d"
     },
     "visual-design-foundations": {
       "source": "pradeepmouli/zod-to-form",

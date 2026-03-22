@@ -6,7 +6,8 @@ import {
   processNullable,
   processDefault,
   processReadonly,
-  processPipe
+  processPipe,
+  processLazy
 } from '../../src/processors/wrappers.js';
 import { createBaseField } from '../../src/utils.js';
 import type {
@@ -91,6 +92,131 @@ describe('wrapper processors', () => {
     processPipe(schema, createContext(innerProcessor), field, {});
 
     expect(innerProcessor).toHaveBeenCalledTimes(1);
-    expect(field.zodType).toBe('pipe');
+    expect(field.zodType).toBe('string');
+  });
+
+  it('optional unwraps zodType to inner type', () => {
+    const schema = z.string().optional();
+    const field = createBaseField('name', 'optional');
+    const innerProcessor = vi.fn();
+
+    processOptional(schema, createContext(innerProcessor), field, {});
+
+    expect(field.zodType).toBe('string');
+    expect(field.required).toBe(false);
+  });
+
+  it('nullable unwraps zodType to inner type', () => {
+    const schema = z.number().nullable();
+    const field = createBaseField('age', 'nullable');
+    const innerProcessor = vi.fn();
+
+    processNullable(schema, createContext(innerProcessor), field, {});
+
+    expect(field.zodType).toBe('number');
+    expect(field.required).toBe(false);
+  });
+
+  it('default unwraps zodType to inner type', () => {
+    const schema = z.string().default('hello');
+    const field = createBaseField('greeting', 'default');
+    const innerProcessor = vi.fn();
+
+    processDefault(schema, createContext(innerProcessor), field, {});
+
+    expect(field.zodType).toBe('string');
+    expect(field.defaultValue).toBe('hello');
+  });
+
+  it('default with function default invokes the function', () => {
+    const schema = z.string().default(() => 'dynamic');
+    const field = createBaseField('val', 'default');
+    const innerProcessor = vi.fn();
+
+    processDefault(schema, createContext(innerProcessor), field, {});
+
+    expect(field.defaultValue).toBe('dynamic');
+    expect(innerProcessor).toHaveBeenCalledTimes(1);
+  });
+
+  it('lazy resolves inner type normally', () => {
+    const schema = z.lazy(() => z.string());
+    const field = createBaseField('name', 'lazy');
+    const innerProcessor = vi.fn(
+      (_schema: $ZodType, _ctx: FormProcessorContext, target: FormField) => {
+        target.component = 'Input';
+      }
+    );
+
+    processLazy(schema, createContext(innerProcessor), field, {});
+
+    expect(innerProcessor).toHaveBeenCalledTimes(1);
+  });
+
+  it('lazy bails out at max depth', () => {
+    const schema = z.lazy(() => z.string());
+    const field = createBaseField('deep', 'lazy');
+    const innerProcessor = vi.fn();
+
+    const ctx: FormProcessorContext = {
+      processors: { string: innerProcessor },
+      path: [],
+      seen: new WeakSet(),
+      maxDepth: 3,
+      currentDepth: 3
+    };
+
+    processLazy(schema, ctx, field, {});
+
+    expect(innerProcessor).not.toHaveBeenCalled();
+    expect(field.component).toBe('Input');
+    expect(field.props['type']).toBe('text');
+  });
+
+  it('lazy detects cyclic reference via seen set', () => {
+    const innerSchema = z.string();
+    const schema = z.lazy(() => innerSchema);
+    const field = createBaseField('cyclic', 'lazy');
+    const innerProcessor = vi.fn();
+
+    const seen = new WeakSet<$ZodType>();
+    seen.add(innerSchema);
+
+    const ctx: FormProcessorContext = {
+      processors: { string: innerProcessor },
+      path: [],
+      seen,
+      maxDepth: 5,
+      currentDepth: 0
+    };
+
+    processLazy(schema, ctx, field, {});
+
+    expect(innerProcessor).not.toHaveBeenCalled();
+    expect(field.component).toBe('Input');
+  });
+
+  it('chained wrappers unwrap to leaf type', () => {
+    const schema = z.string().optional().default('foo');
+    const field = createBaseField('val', 'default');
+    const innerProcessor = vi.fn();
+
+    const ctx: FormProcessorContext = {
+      processors: {
+        string: innerProcessor,
+        number: innerProcessor,
+        optional: processOptional
+      },
+      path: [],
+      seen: new WeakSet(),
+      maxDepth: 5,
+      currentDepth: 0
+    };
+
+    processDefault(schema, ctx, field, {});
+
+    expect(field.zodType).toBe('string');
+    expect(field.defaultValue).toBe('foo');
+    expect(field.required).toBe(false);
   });
 });

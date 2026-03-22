@@ -27,6 +27,7 @@
 
 import { createElement, type HTMLAttributes, type LabelHTMLAttributes } from 'react';
 import type { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
+import type { FormFieldOption } from '@zod-to-form/core';
 import { defaultComponentMap } from '../components/index.js';
 
 // ─── Shadcn-style Input stub ──────────────────────────────────────────────────
@@ -65,19 +66,37 @@ function ShadcnTextarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
 
 // ─── Shadcn-style Select stub ─────────────────────────────────────────────────
 
-function ShadcnSelect(props: SelectHTMLAttributes<HTMLSelectElement>) {
-  return createElement('select', {
-    ...props,
-    className: [
-      'flex h-9 w-full items-center justify-between rounded-md border border-input',
-      'bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background',
-      'focus:outline-none focus:ring-1 focus:ring-ring',
-      'disabled:cursor-not-allowed disabled:opacity-50',
-      props.className ?? ''
-    ]
-      .join(' ')
-      .trim()
-  });
+type ShadcnSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
+  options?: FormFieldOption[];
+};
+
+function ShadcnSelect({ options, ...props }: ShadcnSelectProps) {
+  return createElement(
+    'select',
+    {
+      ...props,
+      className: [
+        'flex h-9 w-full items-center justify-between rounded-md border border-input',
+        'bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background',
+        'focus:outline-none focus:ring-1 focus:ring-ring',
+        'disabled:cursor-not-allowed disabled:opacity-50',
+        props.className ?? ''
+      ]
+        .join(' ')
+        .trim()
+    },
+    ...(options ?? []).map((option) =>
+      createElement(
+        'option',
+        {
+          key: `${option.value}`,
+          value: option.value,
+          disabled: option.disabled
+        },
+        option.label
+      )
+    )
+  );
 }
 
 // ─── Shadcn-style Field wrapper ──────────────────────────────────────────────
