@@ -50,16 +50,16 @@ export function ConfigPane({
 
   const [tsSource, setTsSource] = useState(() => serializeConfigToTs(config, componentMap));
   const [parseError, setParseError] = useState<string | null>(null);
-  // Guards against re-serialization loops: when the .ts editor
-  // triggers a config change, this flag prevents the useEffect from
-  // re-serializing back to .ts source.
-  const isInternalUpdate = useRef(false);
+  // Guards against re-serialization loops: when the .ts editor triggers a config
+  // change, this counter prevents the useEffect from re-serializing back to .ts
+  // source. A counter (not boolean) handles concurrent rapid updates correctly.
+  const pendingInternalUpdates = useRef(0);
 
   // Re-serialize config to .ts source when config changes externally
   // (i.e., not from the .ts editor itself)
   useEffect(() => {
-    if (isInternalUpdate.current) {
-      isInternalUpdate.current = false;
+    if (pendingInternalUpdates.current > 0) {
+      pendingInternalUpdates.current--;
       return;
     }
     setTsSource(serializeConfigToTs(config, componentMap));
@@ -82,7 +82,7 @@ export function ConfigPane({
       const result = parseConfigFromTs(source);
       if (result.ok) {
         setParseError(null);
-        isInternalUpdate.current = true;
+        pendingInternalUpdates.current++;
         onConfigChange(result.config);
       } else {
         setParseError(result.error);
@@ -102,8 +102,10 @@ export function ConfigPane({
         {TABS.map((tab) => (
           <button
             key={tab.id}
+            id={`config-tab-${tab.id}`}
             role="tab"
             aria-selected={configTab === tab.id}
+            aria-controls="config-tabpanel"
             onClick={() => onConfigTabChange(tab.id)}
             className={`px-3 py-1.5 text-xs font-medium transition-all ${
               configTab === tab.id ? 'tab-active' : ''
@@ -117,7 +119,12 @@ export function ConfigPane({
           </button>
         ))}
       </div>
-      <div className="flex-1 min-h-0 overflow-auto">
+      <div
+        id="config-tabpanel"
+        className="flex-1 min-h-0 overflow-auto"
+        role="tabpanel"
+        aria-labelledby={`config-tab-${configTab}`}
+      >
         {configTab === 'form' ? (
           <div className="p-3">
             {parseError && (

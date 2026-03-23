@@ -3,11 +3,15 @@ import { useCallback, useRef } from 'react';
 interface ResizeHandleProps {
   orientation: 'horizontal' | 'vertical';
   onResize: (delta: number) => void;
+  value?: number;
 }
 
 const KEYBOARD_STEP = 20;
 
-export function ResizeHandle({ orientation, onResize }: ResizeHandleProps) {
+const MIN_PANE_PCT = 15;
+const MAX_PANE_PCT = 85;
+
+export function ResizeHandle({ orientation, onResize, value }: ResizeHandleProps) {
   const dragging = useRef(false);
   const lastPos = useRef(0);
 
@@ -70,6 +74,9 @@ export function ResizeHandle({ orientation, onResize }: ResizeHandleProps) {
       }}
       role="separator"
       aria-orientation={orientation}
+      aria-valuenow={value != null ? Math.round(value) : undefined}
+      aria-valuemin={MIN_PANE_PCT}
+      aria-valuemax={MAX_PANE_PCT}
       tabIndex={0}
       aria-label={`Resize ${orientation === 'vertical' ? 'columns' : 'rows'}`}
     >

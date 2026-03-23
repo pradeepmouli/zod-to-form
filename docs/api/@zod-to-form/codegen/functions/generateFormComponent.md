@@ -1,0 +1,25 @@
+[**Documentation v0.2.0**](../../../README.md)
+
+***
+
+[Documentation](../../../README.md) / [@zod-to-form/codegen](../README.md) / generateFormComponent
+
+# Function: generateFormComponent()
+
+> **generateFormComponent**(`fields`, `config`): `string`
+
+Defined in: [generate.ts:517](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/generate.ts#L517)
+
+## Parameters
+
+### fields
+
+[`FormField`](../../core/interfaces/FormField.md)[]
+
+### config
+
+[`CodegenConfig`](../type-aliases/CodegenConfig.md)
+
+## Returns
+
+`string`

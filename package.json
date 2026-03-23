@@ -30,7 +30,9 @@
     "changeset": "changeset",
     "changeset:version": "changeset version",
     "changeset:publish": "pnpm run build && changeset publish",
-    "prepare": "simple-git-hooks"
+    "prepare": "simple-git-hooks",
+    "docs": "typedoc --out docs/html --plugin typedoc-plugin-to-skills",
+    "docs:md": "typedoc"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged",
@@ -56,6 +58,9 @@
     "oxfmt": "^0.41.0",
     "oxlint": "^1.56.0",
     "simple-git-hooks": "^2.13.1",
+    "typedoc": "^0.28.17",
+    "typedoc-plugin-markdown": "^4.11.0",
+    "typedoc-plugin-to-skills": "^0.3.2",
     "typescript": "^5.9.3",
     "vitest": "^4.1.0"
   },
