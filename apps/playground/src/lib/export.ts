@@ -80,7 +80,7 @@ export function exportBundle(input: ExportInput): void {
     a.href = url;
     a.download = 'z2f-export.zip';
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 200);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error('[zod-to-form] Export failed:', err);

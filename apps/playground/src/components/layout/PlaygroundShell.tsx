@@ -1,5 +1,6 @@
-import { type ReactNode, useCallback, useRef } from 'react';
+import { type ReactNode, useCallback, useRef, useState } from 'react';
 import type { ActiveTab, ActivePane, PaneSizes } from '../../types/playground.ts';
+import { MIN_PANE_PCT, MAX_PANE_PCT } from '../../types/playground.ts';
 import { useMediaQuery } from '../../hooks/useMediaQuery.ts';
 import { ResizeHandle } from './ResizeHandle.tsx';
 
@@ -57,8 +58,10 @@ export function PlaygroundShell({
       {OUTPUT_TABS.map((tab) => (
         <button
           key={tab.id}
+          id={`output-tab-${tab.id}`}
           role="tab"
           aria-selected={activeTab === tab.id}
+          aria-controls={`output-tabpanel-${tab.id}`}
           onClick={() => onTabChange(tab.id)}
           className={`px-3 py-1.5 text-xs font-medium transition-all ${
             activeTab === tab.id ? 'tab-active' : ''
@@ -89,8 +92,7 @@ export function PlaygroundShell({
   const paneSizesRef = useRef(paneSizes);
   paneSizesRef.current = paneSizes;
 
-  // Prevent panes from being resized below 15% or above 85% to ensure all quadrants remain visible
-  const clamp = (v: number) => Math.max(15, Math.min(85, v));
+  const clamp = (v: number) => Math.max(MIN_PANE_PCT, Math.min(MAX_PANE_PCT, v));
 
   const makeResizeHandler = useCallback(
     (dimension: 'clientWidth' | 'clientHeight', sizeKey: keyof PaneSizes) => (delta: number) => {
@@ -124,7 +126,11 @@ export function PlaygroundShell({
           >
             {editor}
           </div>
-          <ResizeHandle orientation="horizontal" onResize={handleLeftHorizontalResize} />
+          <ResizeHandle
+            orientation="horizontal"
+            onResize={handleLeftHorizontalResize}
+            value={leftHorizontalSplit}
+          />
           {/* Bottom-left: Config Editor */}
           <div
             className="min-h-0 overflow-auto flex-1"
@@ -135,7 +141,11 @@ export function PlaygroundShell({
           </div>
         </div>
 
-        <ResizeHandle orientation="vertical" onResize={handleVerticalResize} />
+        <ResizeHandle
+          orientation="vertical"
+          onResize={handleVerticalResize}
+          value={verticalSplit}
+        />
 
         {/* Right column */}
         <div className="flex flex-col min-h-0 min-w-0 flex-1 glass-surface">
@@ -147,11 +157,20 @@ export function PlaygroundShell({
             aria-label="Preview and inspect"
           >
             {outputTabBar}
-            <div className="flex-1 min-h-0 overflow-auto" role="tabpanel">
+            <div
+              id={`output-tabpanel-${activeTab}`}
+              className="flex-1 min-h-0 overflow-auto"
+              role="tabpanel"
+              aria-labelledby={`output-tab-${activeTab}`}
+            >
               {getOutputContent()}
             </div>
           </div>
-          <ResizeHandle orientation="horizontal" onResize={handleRightHorizontalResize} />
+          <ResizeHandle
+            orientation="horizontal"
+            onResize={handleRightHorizontalResize}
+            value={rightHorizontalSplit}
+          />
           {/* Bottom-right: Code Output */}
           <div className="min-h-0 overflow-auto flex-1" role="region" aria-label="Code output">
             {codeOutput}
@@ -162,17 +181,24 @@ export function PlaygroundShell({
   }
 
   // Narrow layout: tabbed navigation with all sections
-  const mobileTab: MobileTab = activePane === 'editor' ? 'schema' : (activeTab as MobileTab);
+  // Track mobile-only tabs ('config', 'code') separately so they don't corrupt
+  // desktop's activeTab state when the viewport is resized to wide.
+  const [mobileOnlyTab, setMobileOnlyTab] = useState<'config' | 'code' | null>(null);
+
+  const mobileTab: MobileTab =
+    mobileOnlyTab ?? (activePane === 'editor' ? 'schema' : (activeTab as MobileTab));
 
   const handleMobileTabChange = (tab: MobileTab) => {
     if (tab === 'schema') {
+      setMobileOnlyTab(null);
       onPaneChange('editor');
       return;
     }
     onPaneChange('preview');
-    if (tab === 'config') {
-      onTabChange('preview');
+    if (tab === 'config' || tab === 'code') {
+      setMobileOnlyTab(tab);
     } else {
+      setMobileOnlyTab(null);
       onTabChange(tab);
     }
   };
@@ -203,8 +229,10 @@ export function PlaygroundShell({
         {MOBILE_TABS.map((tab) => (
           <button
             key={tab.id}
+            id={`mobile-tab-${tab.id}`}
             role="tab"
             aria-selected={mobileTab === tab.id}
+            aria-controls="mobile-tabpanel"
             onClick={() => handleMobileTabChange(tab.id)}
             className={`px-3 py-1.5 text-xs font-medium transition-all whitespace-nowrap ${
               mobileTab === tab.id ? 'tab-active' : ''
@@ -219,9 +247,10 @@ export function PlaygroundShell({
         ))}
       </div>
       <div
+        id="mobile-tabpanel"
         className="flex-1 min-h-0 overflow-auto"
         role="tabpanel"
-        aria-label={MOBILE_TABS.find((t) => t.id === mobileTab)?.label}
+        aria-labelledby={`mobile-tab-${mobileTab}`}
       >
         {getMobileContent()}
       </div>

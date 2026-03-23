@@ -6,10 +6,12 @@ const STORAGE_KEY = 'z2f-playground-state';
 const CURRENT_VERSION = 1;
 
 /** Zod schema for validating persisted state on load */
+import { MIN_PANE_PCT, MAX_PANE_PCT } from '../types/playground.ts';
+
 const PaneSizesSchema = z.object({
-  verticalSplit: z.number().min(10).max(90),
-  leftHorizontalSplit: z.number().min(10).max(90),
-  rightHorizontalSplit: z.number().min(10).max(90)
+  verticalSplit: z.number().min(MIN_PANE_PCT).max(MAX_PANE_PCT),
+  leftHorizontalSplit: z.number().min(MIN_PANE_PCT).max(MAX_PANE_PCT),
+  rightHorizontalSplit: z.number().min(MIN_PANE_PCT).max(MAX_PANE_PCT)
 });
 
 const PersistedStateSchema = z.object({
