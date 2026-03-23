@@ -21,7 +21,8 @@ const fieldConfigSchema = z.object({
   placeholder: z.string().optional(),
   order: z.coerce.number().optional(),
   hidden: z.boolean().optional(),
-  gridColumn: z.string().optional()
+  disabled: z.boolean().optional(),
+  helpText: z.string().optional()
 });
 
 type FieldConfigEntry = z.infer<typeof fieldConfigSchema>;

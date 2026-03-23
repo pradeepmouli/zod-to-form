@@ -46,21 +46,6 @@ describe('buildConfigSource', () => {
     expect(result).not.toContain('Input: { controlled: true }');
   });
 
-  it('renders formPrimitives block', () => {
-    const result = buildConfigSource({
-      componentSource: './components',
-      formPrimitives: {
-        field: 'FormField',
-        label: 'FormLabel',
-        control: 'FormControl'
-      }
-    });
-    expect(result).toContain('formPrimitives: {');
-    expect(result).toContain("field: 'FormField'");
-    expect(result).toContain("label: 'FormLabel'");
-    expect(result).toContain("control: 'FormControl'");
-  });
-
   it('renders fields block with per-field overrides', () => {
     const result = buildConfigSource({
       componentSource: './components',

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import { useMemo } from 'react';
 import { FormProvider } from 'react-hook-form';
 import type { output, ZodObject } from 'zod';
@@ -24,6 +24,8 @@ type ZodFormProps<TSchema extends ZodObject> = {
   children?: ReactNode;
 };
 
+let _warnedSectionComponents = false;
+
 export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>): ReactNode {
   const {
     schema,
@@ -39,6 +41,15 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
     className,
     children
   } = props;
+  // US6: Warn if the old sectionComponents key is detected in componentConfig
+  if (componentConfig && 'sectionComponents' in componentConfig && !_warnedSectionComponents) {
+    _warnedSectionComponents = true;
+    console.warn(
+      `[zod-to-form] "sectionComponents" in componentConfig has been removed. ` +
+        `Section components are now resolved from "componentConfig.componentModule" instead.`
+    );
+  }
+
   const mergedComponents = useMemo(() => ({ ...defaultComponentMap, ...components }), [components]);
 
   const { form, fields } = useZodForm(schema, {
@@ -97,7 +108,7 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
  * Renders section components that group multiple form fields.
  * Each section component receives a `fields` prop with the field names it manages,
  * and reads/writes its fields via useFormContext (FormProvider).
- * Components must be pre-imported and provided via `componentConfig.sectionComponents`.
+ * Section components are resolved by name from `componentConfig.componentModule`.
  */
 function SectionRenderer({
   sections,
@@ -107,9 +118,11 @@ function SectionRenderer({
   componentConfig: RuntimeComponentConfig | undefined;
 }) {
   const elements: ReactNode[] = [];
+  const mod = componentConfig?.componentModule;
   for (const [sectionName, fieldKeys] of sections) {
-    const SectionComponent = componentConfig?.sectionComponents?.[sectionName];
-    if (SectionComponent) {
+    const candidate = mod?.[sectionName];
+    if (typeof candidate === 'function') {
+      const SectionComponent = candidate as ComponentType<{ fields: string[] }>;
       elements.push(<SectionComponent key={sectionName} fields={fieldKeys} />);
     }
   }

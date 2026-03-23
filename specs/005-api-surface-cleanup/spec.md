@@ -119,11 +119,18 @@ A developer marks form fields as disabled (greyed out, non-interactive), adds he
 
 ### Edge Cases
 
-- What happens when a `props` value looks like a field expression string (e.g., `'field.value'`) but is intended as a literal string? The system should treat only the exact known set of field expressions as bindings. Any string not in the known set (`field.value`, `field.onChange`, `field.onBlur`, `field.ref`, `field.name`) passes through as a literal.
 - What happens when a custom field template component is missing from the component module? The system should fall back to the preset default template and emit a console warning.
 - What happens when `disabled: true` and `readOnly: true` are both set? Both attributes apply to the rendered element — the browser handles the combined semantics (disabled takes precedence visually).
 - What happens when an object field has a `component` override but the component is not found in the module? The system should fall back to the default `<fieldset>` rendering and emit a warning.
 - What happens when a field has both `description` and `helpText`? Both render — description below the label, help text below the input.
+- What happens when both a preset override and a per-field config specify the same `props` key? The system performs a shallow merge with field config winning on conflict (spread preset props first, then field config props). No deep merging of nested objects like `style`.
+
+## Clarifications
+
+### Session 2026-03-23
+
+- Q: When both a preset override and a per-field config specify `props` for the same component, how should conflicting keys resolve? → A: Shallow merge, field config wins on conflict (spread preset, then field).
+- Q: What is the field template component's contract (what props does it receive)? → A: Named props as a standard React wrapper component: `children` (rendered input), `label`, `description`, `helpText`, `error`, `name`, `deprecated`.
 
 ## Requirements *(mandatory)*
 
@@ -131,10 +138,10 @@ A developer marks form fields as disabled (greyed out, non-interactive), adds he
 
 - **FR-001**: The system MUST accept field-binding expressions (the exact strings `field.value`, `field.onChange`, `field.onBlur`, `field.ref`, `field.name`) as values within the `props` object and resolve them from the form controller at render time.
 - **FR-002**: The system MUST treat all `props` values that are not recognized field expressions as literal pass-through values.
-- **FR-003**: The system MUST remove the `propMap` key from `FieldConfigBase` and `ComponentOverride`. Configurations using `propMap` MUST produce a clear error message.
+- **FR-003**: The system MUST remove the `propMap` key from `FieldConfigBase` and `ComponentOverride`. Configurations using `propMap` MUST produce a clear console warning at runtime.
 - **FR-004**: The system MUST remove the `gridColumn` key from `FieldConfigBase` and `FormField`. Layout hints MUST be expressible through `props`.
 - **FR-005**: The system MUST remove the `sectionComponents` key from `RuntimeComponentConfig`. Section components MUST resolve through the same component module as all other components.
-- **FR-006**: The system MUST support a `fieldTemplate` key on `ComponentsConfig` that specifies a component controlling field composition (label + input + description + error layout).
+- **FR-006**: The system MUST support a `fieldTemplate` key on `ComponentsConfig` that specifies a standard React wrapper component receiving named props: `children` (the rendered input element), `label`, `description`, `helpText`, `error`, `name`, and `deprecated`.
 - **FR-007**: Each preset MUST provide a default field template. The shadcn preset MUST use shadcn form primitives. The html preset MUST use plain semantic HTML elements.
 - **FR-008**: An explicit `components.fieldTemplate` value MUST override the preset's default field template.
 - **FR-009**: Object-type fields MUST resolve their wrapper component from `FieldConfig.component` via the component module when specified.
@@ -147,6 +154,8 @@ A developer marks form fields as disabled (greyed out, non-interactive), adds he
 - **FR-016**: The system MUST surface a `deprecated` flag on the `FormField` intermediate representation, populated from resolved metadata.
 - **FR-017**: The field template MUST render a visual indicator when `deprecated` is true.
 - **FR-018**: The CLI MUST emit the preset's default field template as a concrete file alongside the generated form when generating code.
+- **FR-019**: When both preset override `props` and per-field config `props` are present, the system MUST shallow-merge them with field config winning on key conflict (no deep merge of nested objects).
+- **FR-020**: The system MUST remove `FormPrimitivesConfig` and all references. Field composition is now controlled entirely by the field template component (`fieldTemplate`), making the separate `formPrimitives` config redundant.
 
 ### Key Entities
 

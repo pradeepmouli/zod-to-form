@@ -145,6 +145,13 @@ describe('generateFormComponent', () => {
     expect(result).toContain("register('name')");
     expect(result).toContain("register('email')");
     expect(result).toContain('<button type="submit">Submit</button>');
+    // Zero-dep: no @zod-to-form/core or @zod-to-form/react imports
+    expect(result).not.toContain('@zod-to-form/core');
+    expect(result).not.toContain('@zod-to-form/react');
+    // StripIndexSignature is inlined
+    expect(result).toContain('type StripIndexSignature<T>');
+    // normalizeFormValues is inlined for html preset
+    expect(result).toContain('function normalizeFormValues');
   });
 
   it('generates auto-save mode with watch and FormProvider', () => {

@@ -41,8 +41,12 @@ export interface FormField {
   hidden: boolean;
   /** Display order override from form registry */
   order?: number;
-  /** CSS grid-column hint from form registry */
-  gridColumn?: string;
+  /** Non-interactive state (greyed out) */
+  disabled?: boolean;
+  /** Help text rendered below the input, distinct from description (below label) */
+  helpText?: string;
+  /** Whether the field is marked as deprecated in the schema registry */
+  deprecated?: boolean;
   /** Options for enum/union select fields */
   options?: FormFieldOption[];
   /** Children for nested objects */
@@ -68,19 +72,27 @@ type FieldConfigBase = {
   order?: number;
   /** Hide field from UI (remains in form state) */
   hidden?: boolean;
-  /** CSS grid column hint */
-  gridColumn?: string;
-  /** Arbitrary field metadata props forwarded by processors */
-  props?: Record<string, unknown>;
-  /** Per-field prop mapping override (merges over ComponentOverride.propMap) */
-  propMap?: Record<string, string>;
+  /** Render as non-interactive (greyed out). Boolean only. */
+  disabled?: boolean;
   /**
    * Group this field into a named section component.
    * Fields sharing the same section value are suppressed individually
-   * and rendered once via `<SectionComponent fields={[...fieldNames]} />`.
-   * The section component reads its fields from FormProvider context.
+   * and rendered once via the section component resolved from componentModule.
    */
   section?: string;
+  /** Help text rendered below the input, distinct from description (below label) */
+  helpText?: string;
+  /**
+   * Props passed to the rendered component.
+   *
+   * Values matching a known field expression string (`field.value`, `field.onChange`,
+   * `field.onBlur`, `field.ref`, `field.name`) are resolved from the RHF controller
+   * at render time. All other values pass through as literals.
+   *
+   * When both preset override props and per-field config props are present,
+   * they are shallow-merged with field config winning on key conflict.
+   */
+  props?: Record<string, unknown>;
 };
 
 type FieldConfigExtras<T extends $ZodType> =

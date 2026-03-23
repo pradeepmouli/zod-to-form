@@ -8,8 +8,12 @@ import type { FieldConfig } from './types.js';
 export type ComponentOverride = {
   /** When true, use Controller/useController instead of register() spread */
   controlled?: boolean;
-  /** Map RHF field props to component-specific prop names (e.g. { onSelect: 'field.onChange' }) */
-  propMap?: Record<string, string>;
+  /**
+   * Default props for this component type.
+   * Values matching a known field expression string are resolved from the RHF controller.
+   * Per-field props override these via shallow merge (field config wins).
+   */
+  props?: Record<string, unknown>;
 };
 
 // ─── Components Config ────────────────────────────────────────────────
@@ -19,18 +23,16 @@ export type ComponentPreset = 'shadcn' | 'html';
 export type ComponentsConfig<T extends Record<string, unknown> = Record<string, unknown>> = {
   /** Import path for the components module */
   source: string;
-  /** Preset that provides base overrides */
+  /** Preset that provides base overrides and default field template */
   preset?: ComponentPreset;
+  /**
+   * Custom field template component path.
+   * Controls the composition of label + input + description + helpText + error.
+   * Overrides the preset's default template.
+   */
+  fieldTemplate?: string;
   /** Per-component overrides, strongly typed to module export keys */
   overrides?: { [K in keyof T & string]?: ComponentOverride };
-};
-
-// ─── Shared Types ─────────────────────────────────────────────────────
-
-export type FormPrimitivesConfig<T extends Record<string, unknown> = Record<string, unknown>> = {
-  field?: keyof T & string;
-  label?: keyof T & string;
-  control?: keyof T & string;
 };
 
 // ─── Typed Field Config ──────────────────────────────────────────────
@@ -43,14 +45,13 @@ type TypedFieldConfigForComponent<
   component: K;
   order?: number;
   hidden?: boolean;
-  gridColumn?: string;
+  disabled?: boolean;
   props?: TComponents[K] extends Record<string, unknown>
     ? Partial<TComponents[K]>
     : Record<string, unknown>;
-  /** Per-field prop mapping override (merges over ComponentOverride.propMap) */
-  propMap?: Record<string, string>;
   /** Group into a named section component */
   section?: string;
+  helpText?: string;
 };
 
 /** Field config with no component specified (untyped props) */
@@ -58,12 +59,11 @@ type UntypedFieldConfig = {
   component?: undefined;
   order?: number;
   hidden?: boolean;
-  gridColumn?: string;
+  disabled?: boolean;
   props?: Record<string, unknown>;
-  /** Per-field prop mapping override (merges over ComponentOverride.propMap) */
-  propMap?: Record<string, string>;
   /** Group into a named section component */
   section?: string;
+  helpText?: string;
 };
 
 /**
@@ -108,7 +108,6 @@ export type ZodFormsConfig<
   TSchemas extends Record<string, unknown> = Record<string, unknown>
 > = {
   components: ComponentsConfig<TComponents>;
-  formPrimitives?: FormPrimitivesConfig<TComponents>;
   defaults?: ConfigDefaults;
   types?: string[];
   include?: string[];
@@ -181,7 +180,7 @@ const nonEmptyStringSchema = z.string().trim().min(1);
 const componentOverrideSchema = z
   .object({
     controlled: z.boolean().optional(),
-    propMap: z.record(z.string(), z.string()).optional()
+    props: z.record(z.string(), z.unknown()).optional()
   })
   .loose();
 
@@ -189,6 +188,7 @@ const componentsConfigSchema = z
   .object({
     source: nonEmptyStringSchema,
     preset: z.enum(['shadcn', 'html']).optional(),
+    fieldTemplate: z.string().optional(),
     overrides: z.record(z.string(), componentOverrideSchema).optional()
   })
   .loose();
@@ -198,10 +198,10 @@ const fieldConfigSchema = z
     component: nonEmptyStringSchema.optional(),
     order: z.number().optional(),
     hidden: z.boolean().optional(),
-    gridColumn: z.string().optional(),
+    disabled: z.boolean().optional(),
     props: z.record(z.string(), z.unknown()).optional(),
-    propMap: z.record(z.string(), z.string()).optional(),
-    section: z.string().optional()
+    section: z.string().optional(),
+    helpText: z.string().optional()
   })
   .loose();
 
@@ -241,7 +241,6 @@ const configSchema = z
     include: z.array(z.string()).optional(),
     exclude: z.array(z.string()).optional(),
     types: z.array(z.string()).optional(),
-    formPrimitives: z.record(z.string(), nonEmptyStringSchema).optional(),
     fields: z.record(z.string(), fieldOverrideSchema.or(fieldConfigSchema)).optional(),
     defaults: defaultsSchema,
     schemas: z.record(z.string(), zodTypeConfigSchema).optional()
@@ -280,14 +279,6 @@ function formatValidationError(error: z.ZodError, source: string): Error {
     }
 
     return new Error(`${source}.components.${entry} is invalid.`);
-  }
-
-  if (root === 'formPrimitives') {
-    if (!entry) {
-      return new Error(`${source}.formPrimitives must be an object when provided.`);
-    }
-
-    return new Error(`${source}.formPrimitives.${entry} must be a non-empty string when provided.`);
   }
 
   if (root === 'fields') {
@@ -363,19 +354,19 @@ function formatValidationError(error: z.ZodError, source: string): Error {
 
 // ─── Preset Override Maps ─────────────────────────────────────────────
 
-/** shadcn preset — Radix-based components need controlled mode + prop mapping */
+/** shadcn preset — Radix-based components need controlled mode + field expression props */
 export const SHADCN_OVERRIDES: Record<string, ComponentOverride> = {
   Select: {
     controlled: true,
-    propMap: { onValueChange: 'field.onChange' }
+    props: { onValueChange: 'field.onChange' }
   },
   Checkbox: {
     controlled: true,
-    propMap: { checked: 'field.value', onCheckedChange: 'field.onChange' }
+    props: { checked: 'field.value', onCheckedChange: 'field.onChange' }
   },
   Switch: {
     controlled: true,
-    propMap: { checked: 'field.value', onCheckedChange: 'field.onChange' }
+    props: { checked: 'field.value', onCheckedChange: 'field.onChange' }
   }
 };
 

@@ -20,17 +20,6 @@ type ShadcnConfigSnapshot = {
   sourcePath?: string;
 };
 
-type FormPrimitivesConfig = {
-  field: string;
-  label: string;
-  control: string;
-};
-
-type DiscoveredFormPrimitives = {
-  primitives: FormPrimitivesConfig;
-  sources: string[];
-};
-
 export type InitResult = {
   outputPath: string;
   code: string;
@@ -170,90 +159,6 @@ function extractExportedNames(code: string): Set<string> {
   return names;
 }
 
-async function discoverFormPrimitives(
-  cwd: string,
-  modulePath: string,
-  snapshot: ShadcnConfigSnapshot,
-  verbose: boolean
-): Promise<DiscoveredFormPrimitives> {
-  const defaults: FormPrimitivesConfig = {
-    field: 'Field',
-    label: 'FieldLabel',
-    control: 'FieldControl'
-  };
-
-  const candidateModules: string[] = [modulePath];
-  if (snapshot.aliases['ui']) {
-    candidateModules.push(`${snapshot.aliases['ui']}/field`);
-  }
-
-  const exportedNames = new Set<string>();
-  const sourceByExport = new Map<string, string>();
-
-  for (const candidateModule of candidateModules) {
-    const basePath = resolveModuleBasePath(cwd, candidateModule, snapshot);
-    if (!basePath) {
-      continue;
-    }
-
-    for (const filePath of getCandidateFiles(basePath)) {
-      if (!(await exists(filePath))) {
-        continue;
-      }
-
-      try {
-        const code = await readFile(filePath, 'utf8');
-        const fileExports = extractExportedNames(code);
-        for (const name of fileExports) {
-          exportedNames.add(name);
-          if (!sourceByExport.has(name)) {
-            sourceByExport.set(name, toPosixPath(path.relative(cwd, filePath)));
-          }
-        }
-        logVerbose(verbose, `scanned exports from ${toPosixPath(path.relative(cwd, filePath))}`);
-      } catch (err) {
-        logVerbose(
-          verbose,
-          `skipping unreadable candidate ${toPosixPath(path.relative(cwd, filePath))}: ${err instanceof Error ? err.message : String(err)}`
-        );
-      }
-    }
-  }
-
-  const field = exportedNames.has('Field')
-    ? 'Field'
-    : exportedNames.has('FormField')
-      ? 'FormField'
-      : defaults.field;
-
-  const label = exportedNames.has('FieldLabel')
-    ? 'FieldLabel'
-    : exportedNames.has('FormLabel')
-      ? 'FormLabel'
-      : exportedNames.has('Label')
-        ? 'Label'
-        : defaults.label;
-
-  const control = exportedNames.has('FieldControl')
-    ? 'FieldControl'
-    : exportedNames.has('FormControl')
-      ? 'FormControl'
-      : defaults.control;
-
-  const sources = Array.from(
-    new Set([
-      sourceByExport.get(field),
-      sourceByExport.get(label),
-      sourceByExport.get(control)
-    ]).values()
-  ).filter((value): value is string => typeof value === 'string');
-
-  return {
-    primitives: { field, label, control },
-    sources
-  };
-}
-
 type DiscoveredComponent = {
   name: string;
   controlled: boolean;
@@ -339,7 +244,6 @@ async function discoverComponents(
   cwd: string,
   modulePath: string,
   snapshot: ShadcnConfigSnapshot,
-  formPrimitives: FormPrimitivesConfig,
   verbose: boolean
 ): Promise<DiscoveredComponents> {
   const basePath = resolveModuleBasePath(cwd, modulePath, snapshot);
@@ -348,11 +252,7 @@ async function discoverComponents(
     return { components: [] };
   }
 
-  const primitiveNames = new Set([
-    formPrimitives.field,
-    formPrimitives.label,
-    formPrimitives.control
-  ]);
+  const primitiveNames = new Set<string>();
 
   const componentMap = new Map<string, boolean>();
   let source: string | undefined;
@@ -532,7 +432,6 @@ function buildConfigTemplate(
   outputPath: string,
   modulePath: string,
   explicitModulePath: string | undefined,
-  formPrimitives: FormPrimitivesConfig,
   componentEntries: DiscoveredComponent[],
   discoveredSchemas: DiscoveredSchemas,
   explicitSchemaPath: string | undefined,
@@ -565,7 +464,6 @@ function buildConfigTemplate(
     schemaExports: discoveredSchemas.exports,
     preset,
     overrides,
-    formPrimitives,
     defaults: {
       mode: 'submit',
       ui: 'shadcn',
@@ -650,28 +548,10 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
 
   logStep('[2/5] Discovering components');
   const modulePath = resolveComponentModulePath(options, shadcn);
-  const discoveredPrimitives = await discoverFormPrimitives(cwd, modulePath, shadcn, verbose);
-  const discoveredComponents = await discoverComponents(
-    cwd,
-    modulePath,
-    shadcn,
-    discoveredPrimitives.primitives,
-    verbose
-  );
+  const discoveredComponents = await discoverComponents(cwd, modulePath, shadcn, verbose);
   logVerbose(verbose, `components import path: ${modulePath}`);
-  logVerbose(verbose, `formPrimitives: ${JSON.stringify(discoveredPrimitives.primitives)}`);
-  if (discoveredPrimitives.sources.length > 0) {
-    logVerbose(verbose, `formPrimitives source: ${discoveredPrimitives.sources.join(', ')}`);
-  } else {
-    logVerbose(verbose, `formPrimitives source: defaults`);
-  }
 
-  // Styled autodiscovery output
-  const p = discoveredPrimitives.primitives;
   console.log('\nDetected components:');
-  console.log(`  \u2713 Field \u2192 ${p.field}`);
-  console.log(`  \u2713 Label \u2192 ${p.label}`);
-  console.log(`  \u2713 Control \u2192 ${p.control}`);
 
   if (discoveredComponents.components.length > 0) {
     console.log('\nDiscovered field types:');
@@ -708,7 +588,6 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
     outputPath,
     modulePath,
     options.components,
-    discoveredPrimitives.primitives,
     componentEntries,
     discoveredSchemas,
     options.schemas,

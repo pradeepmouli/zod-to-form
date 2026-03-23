@@ -73,8 +73,14 @@ function processField(
   if (metadata.order !== undefined) {
     field.order = metadata.order;
   }
-  if (metadata.gridColumn !== undefined) {
-    field.gridColumn = metadata.gridColumn;
+  if (metadata.deprecated !== undefined) {
+    field.deprecated = metadata.deprecated;
+  }
+  if (metadata.disabled !== undefined) {
+    field.disabled = metadata.disabled;
+  }
+  if (metadata.helpText !== undefined) {
+    field.helpText = metadata.helpText;
   }
   if (typeof metadata.render === 'function') {
     field.render = metadata.render as (field: FormField, props: Record<string, unknown>) => unknown;

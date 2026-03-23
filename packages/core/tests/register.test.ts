@@ -153,7 +153,7 @@ describe('registerDeep', () => {
     registerDeep(reg, schema, {
       fields: {
         name: { component: 'Input', order: 0 },
-        bio: { component: 'Textarea', order: 1, gridColumn: '1 / -1' }
+        bio: { component: 'Textarea', order: 1, helpText: 'Tell us about yourself' }
       }
     });
 
@@ -162,7 +162,7 @@ describe('registerDeep', () => {
     expect(fields.map((f) => f.key)).toEqual(['name', 'bio']);
     expect(fields[0]?.component).toBe('Input');
     expect(fields[1]?.component).toBe('Textarea');
-    expect(fields[1]?.gridColumn).toBe('1 / -1');
+    expect(fields[1]?.helpText).toBe('Tell us about yourself');
   });
 
   it('registers metadata on optional wrapper schemas', () => {
@@ -382,7 +382,7 @@ describe('registerFlat', () => {
 
     registerFlat(reg, schema, {
       name: { component: 'Input', order: 0 },
-      bio: { component: 'Textarea', order: 1, gridColumn: '1 / -1' }
+      bio: { component: 'Textarea', order: 1, disabled: true }
     });
 
     const fields = walkSchema(schema, { formRegistry: reg });
@@ -390,6 +390,6 @@ describe('registerFlat', () => {
     expect(fields.map((f) => f.key)).toEqual(['name', 'bio']);
     expect(fields[0]?.component).toBe('Input');
     expect(fields[1]?.component).toBe('Textarea');
-    expect(fields[1]?.gridColumn).toBe('1 / -1');
+    expect(fields[1]?.disabled).toBe(true);
   });
 });

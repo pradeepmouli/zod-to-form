@@ -34,15 +34,15 @@ export function configCompletionSource(
           { label: 'defaults', type: 'property', detail: '{ mode, ui, ... }' },
           { label: 'fields', type: 'property', detail: 'Per-field overrides' },
           { label: 'include', type: 'property', detail: 'string[]' },
-          { label: 'exclude', type: 'property', detail: 'string[]' },
-          { label: 'formPrimitives', type: 'property', detail: '{ field, label, control }' }
+          { label: 'exclude', type: 'property', detail: 'string[]' }
         ]);
 
       case 'components':
         return complete(word.from, [
           { label: 'source', type: 'property', detail: 'Component import path' },
           { label: 'preset', type: 'property', detail: "'shadcn' | 'html'" },
-          { label: 'overrides', type: 'property', detail: 'Per-component overrides' }
+          { label: 'overrides', type: 'property', detail: 'Per-component overrides' },
+          { label: 'fieldTemplate', type: 'property', detail: 'Field wrapper template' }
         ]);
 
       case 'components.preset':
@@ -82,7 +82,8 @@ export function configCompletionSource(
           { label: 'placeholder', type: 'property', detail: 'string' },
           { label: 'order', type: 'property', detail: 'number' },
           { label: 'hidden', type: 'property', detail: 'boolean' },
-          { label: 'gridColumn', type: 'property', detail: 'CSS grid-column' },
+          { label: 'disabled', type: 'property', detail: 'boolean' },
+          { label: 'helpText', type: 'property', detail: 'string' },
           { label: 'props', type: 'property', detail: 'Extra props' }
         ]);
 
@@ -95,7 +96,7 @@ export function configCompletionSource(
       case 'override-config':
         return complete(word.from, [
           { label: 'controlled', type: 'property', detail: 'boolean' },
-          { label: 'propMap', type: 'property', detail: 'Record<string, string>' }
+          { label: 'props', type: 'property', detail: 'Record<string, string>' }
         ]);
 
       default:

@@ -18,7 +18,6 @@ export type {
   ComponentOverride,
   ComponentPreset,
   ComponentsConfig,
-  FormPrimitivesConfig,
   TypedFieldConfig,
   ZodFormsConfig,
   ZodTypeConfig,

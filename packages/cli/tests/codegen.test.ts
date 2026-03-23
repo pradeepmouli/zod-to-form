@@ -53,8 +53,11 @@ describe('generateFormComponent', () => {
     expect(output).toContain(`register('role')`);
     expect(output).toContain('Name');
     expect(output).toContain('Role');
-    expect(output).toContain("import type { StripIndexSignature } from '@zod-to-form/core';");
+    // Zero-dep: no @zod-to-form/core or @zod-to-form/react imports
+    expect(output).not.toContain('@zod-to-form/core');
     expect(output).not.toContain('@zod-to-form/react');
+    // StripIndexSignature is inlined as a local type
+    expect(output).toContain('type StripIndexSignature<T>');
   });
 
   it('emits TODO comment when field has a custom render function', async () => {
@@ -196,46 +199,6 @@ describe('generateFormComponent', () => {
     expect(output).not.toContain(`<input id="DataForm.superType"`);
   });
 
-  it('uses configured formPrimitives wrappers for generated fields', async () => {
-    const fields: FormField[] = [
-      {
-        key: 'name',
-        component: 'Input',
-        props: { type: 'text' },
-        label: 'Name',
-        required: true,
-        readOnly: false,
-        hidden: false,
-        constraints: {},
-        zodType: 'string'
-      }
-    ];
-
-    const output = await generateFormComponent(fields, {
-      schemaPath: '/tmp/schema.ts',
-      exportName: 'userSchema',
-      outputPath: '/tmp/UserForm.tsx',
-      componentName: 'UserForm',
-      mode: 'submit',
-      ui: 'shadcn',
-      serverAction: false,
-      componentConfig: {
-        components: { source: '@app/components' },
-        formPrimitives: {
-          field: 'Field',
-          label: 'FieldLabel',
-          control: 'FieldControl'
-        }
-      }
-    });
-
-    expect(output).toContain(`import { Field, FieldControl, FieldLabel } from '@app/components';`);
-    expect(output).toContain('<Field>');
-    expect(output).toContain('<FieldLabel htmlFor="name">Name</FieldLabel>');
-    expect(output).toContain('<FieldControl>');
-    expect(output).toContain(`<input id="name" type="text" {...register('name')} />`);
-  });
-
   it('normalizes schema import extension from .mts to .mjs', async () => {
     const fields: FormField[] = [
       {
@@ -289,7 +252,9 @@ describe('generateFormComponent', () => {
       serverAction: false
     });
 
-    expect(output).toContain("import type { StripIndexSignature } from '@zod-to-form/core';");
+    // Zero-dep: StripIndexSignature inlined, not imported
+    expect(output).not.toContain('@zod-to-form/core');
+    expect(output).toContain('type StripIndexSignature<T>');
     expect(output).toContain('type FormData = StripIndexSignature<z.output<typeof userSchema>>;');
   });
 
@@ -770,7 +735,7 @@ describe('generateFormComponent', () => {
     expect(output).not.toContain(`register('kind')`);
   });
 
-  it('generates Controller with propMap remapping', async () => {
+  it('generates Controller with props remapping', async () => {
     const fields: FormField[] = [
       {
         key: 'type',
@@ -799,7 +764,7 @@ describe('generateFormComponent', () => {
           overrides: {
             TypeSelector: {
               controlled: true,
-              propMap: { onSelect: 'field.onChange', value: 'field.value' }
+              props: { onSelect: 'field.onChange', value: 'field.value' }
             }
           }
         },

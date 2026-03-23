@@ -31,10 +31,6 @@ describe('runInit', () => {
     );
     expect(content).toContain(`export default defineConfig<typeof Components>({`);
     expect(content).toContain(`source: '@/components/zod-form-components'`);
-    expect(content).toContain(`formPrimitives: {`);
-    expect(content).toContain(`field: 'Field'`);
-    expect(content).toContain(`label: 'FieldLabel'`);
-    expect(content).toContain(`control: 'FieldControl'`);
     // T050: Verify defaults section is present
     expect(content).toContain(`defaults: {`);
     expect(content).toContain(`mode: 'submit'`);
@@ -108,45 +104,6 @@ describe('runInit', () => {
     process.chdir(originalCwd);
   });
 
-  it('discovers formPrimitives from local exported field components', async () => {
-    const dir = await createTempDir();
-    process.chdir(dir);
-
-    await mkdir(path.join(dir, 'src', 'components', 'ui'), { recursive: true });
-    await writeFile(
-      path.join(dir, 'components.json'),
-      JSON.stringify(
-        {
-          aliases: {
-            ui: '@/components/ui'
-          }
-        },
-        null,
-        2
-      ),
-      'utf8'
-    );
-
-    await writeFile(
-      path.join(dir, 'src', 'components', 'ui', 'field.tsx'),
-      [
-        'export const Field = () => null;',
-        'export const FieldLabel = () => null;',
-        'export const FieldControl = () => null;'
-      ].join('\n'),
-      'utf8'
-    );
-
-    const result = await runInit({});
-    const content = await readFile(result.outputPath, 'utf8');
-
-    expect(content).toContain(`field: 'Field'`);
-    expect(content).toContain(`label: 'FieldLabel'`);
-    expect(content).toContain(`control: 'FieldControl'`);
-
-    process.chdir(originalCwd);
-  });
-
   it('does not overwrite existing file without force', async () => {
     const dir = await createTempDir();
     process.chdir(dir);
@@ -202,9 +159,6 @@ describe('runInit', () => {
 
     const output = logSpy.mock.calls.flat().join('\n');
     expect(output).toContain('Detected components:');
-    expect(output).toContain('Field');
-    expect(output).toContain('Label');
-    expect(output).toContain('Control');
     expect(output).toContain('Using components from:');
 
     logSpy.mockRestore();
@@ -219,9 +173,6 @@ describe('runInit', () => {
     await writeFile(
       path.join(dir, 'src', 'components', 'zod-form-components', 'index.ts'),
       [
-        'export const Field = () => null;',
-        'export const FieldLabel = () => null;',
-        'export const FieldControl = () => null;',
         'export const TextInput = () => null;',
         'export const EmailInput = () => null;',
         'export const SelectField = () => null;',
@@ -239,10 +190,6 @@ describe('runInit', () => {
     expect(content).not.toContain(`TextInput:`);
     expect(content).not.toContain(`EmailInput:`);
     expect(content).not.toContain(`SelectField:`);
-
-    // Form primitives should NOT be in overrides
-    expect(content).not.toContain(`FieldLabel:`);
-    expect(content).not.toContain(`FieldControl:`);
 
     // Hooks and non-PascalCase should NOT be in overrides
     expect(content).not.toContain('useFormContext');
@@ -289,13 +236,9 @@ describe('runInit', () => {
     });
     await writeFile(
       path.join(dir, 'src', 'components', 'ui', 'zod-form-components', 'index.ts'),
-      [
-        'export const Field = () => null;',
-        'export const FieldLabel = () => null;',
-        'export const FieldControl = () => null;',
-        'export const RichTextEditor = () => null;',
-        'export const ColorPicker = () => null;'
-      ].join('\n'),
+      ['export const RichTextEditor = () => null;', 'export const ColorPicker = () => null;'].join(
+        '\n'
+      ),
       'utf8'
     );
 
@@ -449,7 +392,6 @@ describe('runInit', () => {
 
     const output = logSpy.mock.calls.flat().join('\n');
     expect(output).toContain('shadcn components.json found');
-    expect(output).toContain('formPrimitives source:');
     expect(output).toContain('[summary]');
 
     logSpy.mockRestore();
@@ -464,9 +406,6 @@ describe('runInit', () => {
     await writeFile(
       path.join(dir, 'src', 'components', 'zod-form-components', 'index.ts'),
       [
-        'export const Field = () => null;',
-        'export const FieldLabel = () => null;',
-        'export const FieldControl = () => null;',
         'export const TextInput = () => null;',
         'export const Select = () => null;',
         'export const Switch = () => null;'
@@ -494,10 +433,6 @@ describe('runInit', () => {
     await writeFile(
       path.join(dir, 'src', 'components', 'zod-form-components', 'index.ts'),
       [
-        'export const Field = () => null;',
-        'export const FieldLabel = () => null;',
-        'export const FieldControl = () => null;',
-        '',
         '// Controlled: has value + onChange in props, no forwardRef',
         'type TypeSelectorProps = { value: string; onChange: (v: string) => void; };',
         'export function TypeSelector({ value, onChange }: TypeSelectorProps) { return null; }',
@@ -526,13 +461,7 @@ describe('runInit', () => {
     await mkdir(path.join(dir, 'src', 'components', 'zod-form-components'), { recursive: true });
     await writeFile(
       path.join(dir, 'src', 'components', 'zod-form-components', 'index.ts'),
-      [
-        'export const Field = () => null;',
-        'export const FieldLabel = () => null;',
-        'export const FieldControl = () => null;',
-        'export const Select = () => null;',
-        'export const TextInput = () => null;'
-      ].join('\n'),
+      ['export const Select = () => null;', 'export const TextInput = () => null;'].join('\n'),
       'utf8'
     );
 

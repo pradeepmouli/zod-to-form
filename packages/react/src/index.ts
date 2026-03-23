@@ -20,4 +20,4 @@ export { shadcnComponentMap } from './shadcn/index.js';
 
 // User-facing component names (excludes internal Field wrappers)
 export { FIELD_COMPONENT_NAMES } from './components/index.js';
-export type { RuntimeComponentConfig } from './FieldRenderer.js';
+export type { RuntimeComponentConfig, FieldTemplateProps } from './FieldRenderer.js';

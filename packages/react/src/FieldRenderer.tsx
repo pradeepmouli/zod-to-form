@@ -11,7 +11,7 @@ export type RuntimeComponentConfig = {
   /**
    * Component source and optional per-component overrides.
    * `source` is used by CLI codegen to emit a static import statement (not used at runtime).
-   * `overrides` maps component names to `ComponentOverride` metadata (controlled, propMap, etc.).
+   * `overrides` maps component names to `ComponentOverride` metadata (controlled, props, etc.).
    */
   components: {
     source: string;
@@ -20,15 +20,13 @@ export type RuntimeComponentConfig = {
   /**
    * The pre-imported components module object, e.g. `import * as myComponents from './components'`.
    * Used to resolve component functions by name at runtime.
+   * Section components are also resolved from this module.
    */
   componentModule?: Record<string, unknown>;
   fields?: Record<string, FieldConfig>;
-  /**
-   * Pre-imported section components, keyed by the section name used in `fields[key].section`.
-   * Required when using section field grouping at runtime.
-   */
-  sectionComponents?: Record<string, ComponentType<{ fields: string[] }>>;
 };
+
+const _warnedPropMap = new Set<string>();
 
 function resolveFieldOverride(
   field: FormField,
@@ -38,7 +36,39 @@ function resolveFieldOverride(
     return {};
   }
 
+  // Warn about removed propMap key on field config
   const override = componentConfig.fields?.[field.key];
+  if (override && 'propMap' in override && !_warnedPropMap.has(field.key)) {
+    _warnedPropMap.add(field.key);
+    console.warn(
+      `[zod-to-form] Field "${field.key}" uses "propMap" which has been removed. ` +
+        `Move field expression values into "props" instead. ` +
+        `Example: props: { onValueChange: 'field.onChange' }`
+    );
+  }
+
+  // US5: Warn about removed gridColumn key on field config
+  if (override && 'gridColumn' in override && !_warnedPropMap.has(`__gridColumn__${field.key}`)) {
+    _warnedPropMap.add(`__gridColumn__${field.key}`);
+    console.warn(
+      `[zod-to-form] Field "${field.key}" uses "gridColumn" which has been removed. ` +
+        `Use "props.style" or "props.className" for layout instead.`
+    );
+  }
+
+  // Warn about removed propMap key on component overrides
+  if (componentConfig.components.overrides) {
+    for (const [name, entry] of Object.entries(componentConfig.components.overrides)) {
+      if (entry && 'propMap' in entry && !_warnedPropMap.has(`__override__${name}`)) {
+        _warnedPropMap.add(`__override__${name}`);
+        console.warn(
+          `[zod-to-form] Component override "${name}" uses "propMap" which has been removed. ` +
+            `Move field expression values into "props" instead.`
+        );
+      }
+    }
+  }
+
   if (override) {
     return {
       componentOverride:
@@ -123,6 +153,38 @@ function getRegisterOptions(field: FormField): Record<string, unknown> {
   return {};
 }
 
+export interface FieldTemplateProps {
+  children: ReactNode;
+  label: string;
+  description?: string;
+  helpText?: string;
+  error?: string;
+  name: string;
+  deprecated?: boolean;
+}
+
+function DefaultFieldTemplate({
+  children,
+  label,
+  description,
+  helpText,
+  error,
+  name
+}: FieldTemplateProps) {
+  const { FieldLabel, FieldDescription, FieldMessage } = defaultComponentMap;
+  return (
+    <>
+      <FieldLabel htmlFor={name}>{label}</FieldLabel>
+      {children}
+      {description ? <FieldDescription>{description}</FieldDescription> : null}
+      {helpText ? (
+        <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>{helpText}</p>
+      ) : null}
+      {error ? <FieldMessage>{error}</FieldMessage> : null}
+    </>
+  );
+}
+
 type FieldRendererProps = {
   field: FormField;
   components?: Partial<ComponentMap>;
@@ -130,6 +192,8 @@ type FieldRendererProps = {
 };
 
 // ─── T088: Fieldset block for nested object fields ────────────────────
+
+const _warnedFieldsetComponent = new Set<string>();
 
 const FieldsetBlock = memo(function FieldsetBlock({
   field,
@@ -139,13 +203,39 @@ const FieldsetBlock = memo(function FieldsetBlock({
   const componentMap = { ...defaultComponentMap, ...components };
   const FieldComponent = componentMap.Field;
 
-  const wrapperProps: Record<string, unknown> = {};
-  if (field.gridColumn) {
-    wrapperProps['style'] = { gridColumn: field.gridColumn };
+  // US4: Check for component override on object fields
+  const overrideComponentName = componentConfig?.fields?.[field.key]?.component;
+  if (overrideComponentName && componentConfig?.componentModule) {
+    const candidate = componentConfig.componentModule[overrideComponentName];
+    if (typeof candidate === 'function') {
+      const OverrideComponent = candidate as ComponentType<{ children?: ReactNode }>;
+      return (
+        <FieldComponent>
+          <OverrideComponent>
+            {field.children?.map((child) => (
+              <FieldRenderer
+                key={child.key}
+                field={child}
+                components={componentMap}
+                componentConfig={componentConfig}
+              />
+            ))}
+          </OverrideComponent>
+        </FieldComponent>
+      );
+    }
+    // Warn if component not found, fall back to fieldset
+    if (!_warnedFieldsetComponent.has(field.key)) {
+      _warnedFieldsetComponent.add(field.key);
+      console.warn(
+        `[zod-to-form] Field "${field.key}" specifies component "${overrideComponentName}" ` +
+          `but it was not found in componentModule. Falling back to <fieldset>.`
+      );
+    }
   }
 
   return (
-    <FieldComponent {...wrapperProps}>
+    <FieldComponent>
       <fieldset>
         <legend>{field.label}</legend>
         {field.children?.map((child) => (
@@ -178,13 +268,8 @@ const ArrayBlock = memo(function ArrayBlock({
   const { fields: items, append, remove } = useFieldArray({ control, name: field.key });
   const minLength = field.constraints.minLength ?? 0;
 
-  const wrapperProps: Record<string, unknown> = {};
-  if (field.gridColumn) {
-    wrapperProps['style'] = { gridColumn: field.gridColumn };
-  }
-
   return (
-    <fieldset {...wrapperProps}>
+    <fieldset>
       <legend>{field.label}</legend>
       {items.map((item, index) => {
         if (!field.arrayItem) return null;
@@ -230,13 +315,9 @@ const DiscriminatedUnionBlock = memo(function DiscriminatedUnionBlock({
 
   const FieldComponent = componentMap.Field;
   const FieldLabelComponent = componentMap.FieldLabel;
-  const wrapperProps: Record<string, unknown> = {};
-  if (field.gridColumn) {
-    wrapperProps['style'] = { gridColumn: field.gridColumn };
-  }
 
   return (
-    <FieldComponent {...wrapperProps}>
+    <FieldComponent>
       <FieldLabelComponent htmlFor={discKey}>{field.label}</FieldLabelComponent>
       <select id={discKey} {...register(discKey)}>
         <option value="">Select…</option>
@@ -258,59 +339,86 @@ const DiscriminatedUnionBlock = memo(function DiscriminatedUnionBlock({
   );
 });
 
+/** Known RHF field expression strings that indicate a prop should be resolved from the controller */
+const FIELD_EXPRESSIONS = new Set([
+  'field.value',
+  'field.onChange',
+  'field.onBlur',
+  'field.ref',
+  'field.name'
+]);
+
+/** Maps field expression strings to their corresponding RHF controller field property names */
+const EXPRESSION_TO_FIELD_PROP: Record<string, string> = {
+  'field.value': 'value',
+  'field.onChange': 'onChange',
+  'field.onBlur': 'onBlur',
+  'field.ref': 'ref',
+  'field.name': 'name'
+};
+
 /**
- * Apply propMap to remap RHF controller field props to component-specific prop names.
- * Default RHF field props: value, onChange, onBlur, ref, name.
- * propMap entries like { onSelect: 'field.onChange' } replace the default mapping.
+ * Resolve props for a controlled component by merging preset override props,
+ * per-field config props, and the RHF controller field.
+ *
+ * - Props whose values match a known field expression string (e.g., `'field.onChange'`)
+ *   are resolved from the RHF controller field.
+ * - All other props pass through as literal values.
+ * - Merge order: preset override props → field config props (field wins on conflict).
+ * - RHF default props (value, onChange, onBlur, ref, name) are included unless
+ *   a field expression explicitly remaps that controller property to a different prop name.
  */
-function applyPropMap(
+function resolveProps(
   controllerField: Record<string, unknown>,
-  propMap: Record<string, string> | undefined
+  presetProps: Record<string, unknown> | undefined,
+  fieldProps: Record<string, unknown> | undefined
 ): Record<string, unknown> {
-  if (!propMap) return controllerField;
+  // Shallow merge: preset first, field config wins on conflict (FR-019)
+  const merged: Record<string, unknown> = { ...presetProps, ...fieldProps };
 
-  const result: Record<string, unknown> = {};
-  const rhfFieldProps: Record<string, string> = {
-    'field.value': 'value',
-    'field.onChange': 'onChange',
-    'field.onBlur': 'onBlur',
-    'field.ref': 'ref',
-    'field.name': 'name'
-  };
+  // Separate field expressions from literal props
+  const fieldExpressionEntries: Array<[string, string]> = [];
+  const literalEntries: Array<[string, unknown]> = [];
 
-  // Track which RHF expressions are remapped
-  const remappedExprs = new Set(Object.values(propMap));
-
-  // Copy defaults that aren't being remapped away
-  for (const [expr, defaultProp] of Object.entries(rhfFieldProps)) {
-    if (!remappedExprs.has(expr)) {
-      result[defaultProp] = controllerField[defaultProp];
+  for (const [key, value] of Object.entries(merged)) {
+    if (typeof value === 'string' && FIELD_EXPRESSIONS.has(value)) {
+      fieldExpressionEntries.push([key, value]);
+    } else {
+      literalEntries.push([key, value]);
     }
   }
 
-  // Apply remapped props
-  for (const [componentProp, rhfExpr] of Object.entries(propMap)) {
-    const defaultProp = rhfFieldProps[rhfExpr];
-    if (defaultProp) {
-      result[componentProp] = controllerField[defaultProp];
+  // Start with default RHF controller field props
+  const result: Record<string, unknown> = { ...controllerField };
+
+  // Track which RHF expressions are remapped to custom prop names
+  const remappedExprs = new Set(fieldExpressionEntries.map(([, expr]) => expr));
+
+  // Remove default props whose RHF expression is being remapped to a different name
+  for (const [expr, defaultProp] of Object.entries(EXPRESSION_TO_FIELD_PROP)) {
+    if (remappedExprs.has(expr)) {
+      // Only remove if the remapped prop name differs from the default
+      const remappedPropName = fieldExpressionEntries.find(([, e]) => e === expr)?.[0];
+      if (remappedPropName !== defaultProp) {
+        delete result[defaultProp];
+      }
     }
+  }
+
+  // Apply field expression mappings — resolve from controller field
+  for (const [propName, expr] of fieldExpressionEntries) {
+    const controllerProp = EXPRESSION_TO_FIELD_PROP[expr];
+    if (controllerProp) {
+      result[propName] = controllerField[controllerProp];
+    }
+  }
+
+  // Apply literal props (override any controller defaults)
+  for (const [key, value] of literalEntries) {
+    result[key] = value;
   }
 
   return result;
-}
-
-/**
- * Merge component-level propMap with per-field propMap override.
- * Per-field entries win when keys overlap.
- */
-function resolvePropMap(
-  componentOverride?: ComponentOverride,
-  fieldOverride?: FieldConfig
-): Record<string, string> | undefined {
-  const entryMap = componentOverride?.propMap;
-  const fieldMap = fieldOverride?.propMap;
-  if (!entryMap && !fieldMap) return undefined;
-  return { ...entryMap, ...fieldMap };
 }
 
 // ─── Controlled field wrapper ──────────────────────────────────────────
@@ -320,34 +428,34 @@ function resolvePropMap(
 type ControlledFieldProps = {
   field: FormField;
   Component: ComponentType<Record<string, unknown>>;
-  propMap: Record<string, string> | undefined;
-  overrideProps?: Record<string, unknown>;
+  presetProps: Record<string, unknown> | undefined;
+  fieldConfigProps: Record<string, unknown> | undefined;
   errorMessage?: string;
 };
 
 const ControlledFieldInner = memo(function ControlledFieldInner({
   field,
   Component,
-  propMap,
-  overrideProps,
+  presetProps,
+  fieldConfigProps,
   errorMessage
 }: ControlledFieldProps) {
   const { control } = useFormContext();
-  // Note: useController does not use register() options like valueAsNumber/valueAsDate.
-  // Controlled components manage their own value types via onChange — the component
-  // is responsible for passing the correct value type back to RHF.
   const { field: controllerField } = useController({ name: field.key, control });
 
-  const mappedProps = applyPropMap(controllerField as unknown as Record<string, unknown>, propMap);
+  const resolved = resolveProps(
+    controllerField as unknown as Record<string, unknown>,
+    presetProps,
+    fieldConfigProps
+  );
 
   const componentProps: Record<string, unknown> = {
     id: field.key,
     'aria-invalid': errorMessage ? 'true' : 'false',
     required: field.required,
     readOnly: field.readOnly,
-    ...field.props,
-    ...overrideProps,
-    ...mappedProps
+    disabled: field.disabled ?? false,
+    ...resolved
   };
 
   if ('options' in field && field['options']) {
@@ -403,10 +511,8 @@ export const FieldRenderer = memo(function FieldRenderer({
     componentMap[field.component as keyof ComponentMap] ??
     componentMap.Input) as ComponentType<Record<string, unknown>>;
   const FieldComponent = componentMap.Field;
-  const FieldLabelComponent = componentMap.FieldLabel;
-  const FieldDescriptionComponent = componentMap.FieldDescription;
-  const FieldMessageComponent = componentMap.FieldMessage;
   const errorMessage = getErrorAtPath(formState.errors, field.key);
+  const FieldTemplate = DefaultFieldTemplate;
 
   if (field.hidden) {
     return null;
@@ -419,11 +525,6 @@ export const FieldRenderer = memo(function FieldRenderer({
 
   const isControlled = mapping.componentOverride?.controlled === true;
 
-  const wrapperProps: Record<string, unknown> = {};
-  if (field.gridColumn) {
-    wrapperProps['style'] = { gridColumn: field.gridColumn };
-  }
-
   let fieldContent: ReactNode;
 
   if (field.render) {
@@ -433,19 +534,19 @@ export const FieldRenderer = memo(function FieldRenderer({
       'aria-invalid': errorMessage ? 'true' : 'false',
       required: field.required,
       readOnly: field.readOnly,
+      disabled: field.disabled ?? false,
       ...field.props,
       ...mapping.override?.props,
       ...registration
     };
     fieldContent = field.render(field, componentProps) as ReactNode;
   } else if (isControlled) {
-    const propMap = resolvePropMap(mapping.componentOverride, mapping.override);
     fieldContent = (
       <ControlledFieldInner
         field={field}
         Component={Component}
-        propMap={propMap}
-        overrideProps={mapping.override?.props}
+        presetProps={mapping.componentOverride?.props}
+        fieldConfigProps={mapping.override?.props}
         errorMessage={errorMessage}
       />
     );
@@ -456,6 +557,7 @@ export const FieldRenderer = memo(function FieldRenderer({
       'aria-invalid': errorMessage ? 'true' : 'false',
       required: field.required,
       readOnly: field.readOnly,
+      disabled: field.disabled ?? false,
       ...field.props,
       ...mapping.override?.props,
       ...registration
@@ -466,14 +568,28 @@ export const FieldRenderer = memo(function FieldRenderer({
     fieldContent = <Component {...componentProps} />;
   }
 
+  // US5: Forward style and className from field/override props to the wrapper element
+  const wrapperProps: Record<string, unknown> = {};
+  const mergedFieldProps = { ...field.props, ...mapping.override?.props };
+  if (mergedFieldProps['style']) {
+    wrapperProps['style'] = mergedFieldProps['style'];
+  }
+  if (mergedFieldProps['className']) {
+    wrapperProps['className'] = mergedFieldProps['className'];
+  }
+
   return (
     <FieldComponent {...wrapperProps}>
-      <FieldLabelComponent htmlFor={field.key}>{field.label}</FieldLabelComponent>
-      {fieldContent}
-      {field.description ? (
-        <FieldDescriptionComponent>{field.description}</FieldDescriptionComponent>
-      ) : null}
-      {errorMessage ? <FieldMessageComponent>{errorMessage}</FieldMessageComponent> : null}
+      <FieldTemplate
+        name={field.key}
+        label={field.label}
+        description={field.description}
+        helpText={field.helpText}
+        error={errorMessage}
+        deprecated={field.deprecated}
+      >
+        {fieldContent}
+      </FieldTemplate>
     </FieldComponent>
   );
 });
