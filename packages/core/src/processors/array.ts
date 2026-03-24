@@ -1,17 +1,15 @@
-import type { $ZodType as ZodType } from 'zod/v4/core';
+import type { $ZodArray, $ZodTuple, $ZodType as ZodType } from 'zod/v4/core';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
-import { getDef, getBag } from './_utils.js';
 
 export function processArray(
-  schema: ZodType,
+  schema: $ZodArray,
   ctx: FormProcessorContext,
   field: FormField,
   params: ProcessParams
 ): void {
   field.component = 'ArrayField';
 
-  const def = getDef(schema);
-  const bag = getBag(schema);
+  const bag = schema._zod.bag;
 
   const minimum = typeof bag['minimum'] === 'number' ? bag['minimum'] : undefined;
   const maximum = typeof bag['maximum'] === 'number' ? bag['maximum'] : undefined;
@@ -23,7 +21,7 @@ export function processArray(
     field.constraints.maxLength = maximum;
   }
 
-  const elementSchema = def['element'] as ZodType | undefined;
+  const elementSchema = schema._zod.def.element;
 
   if (elementSchema && ctx.processChild) {
     const itemKey = params.parentKey ? `${params.parentKey}.0` : '0';
@@ -32,22 +30,21 @@ export function processArray(
 }
 
 export function processTuple(
-  schema: ZodType,
+  schema: $ZodTuple,
   ctx: FormProcessorContext,
   field: FormField,
   params: ProcessParams
 ): void {
   field.component = 'Fieldset';
 
-  const def = getDef(schema);
-  const items = def['items'] as ZodType[] | undefined;
+  const items = schema._zod.def.items;
 
   if (!items || !ctx.processChild) {
     field.children = [];
     return;
   }
 
-  field.children = items.map((itemSchema, index) => {
+  field.children = (items as readonly ZodType[]).map((itemSchema, index) => {
     const itemKey = params.parentKey ? `${params.parentKey}.${index}` : `${index}`;
     return ctx.processChild!(itemSchema, itemKey);
   });

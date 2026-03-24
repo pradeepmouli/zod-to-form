@@ -293,6 +293,8 @@ export function createBaseField(key: string, zodType: string): FormField {
     required: true,
     readOnly: false,
     hidden: false,
+    disabled: false,
+    deprecated: false,
     constraints: {},
     zodType
   };

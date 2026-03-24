@@ -15,6 +15,8 @@ function makeField(overrides: Partial<FormField> & { key: string }): FormField {
     required: false,
     readOnly: false,
     hidden: false,
+    disabled: false,
+    deprecated: false,
     constraints: {},
     zodType: 'string',
     ...overrides

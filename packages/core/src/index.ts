@@ -9,6 +9,7 @@ export type {
   FormProcessorContext,
   FormMeta,
   FieldConfig,
+  FieldExpression,
   ProcessParams,
   WalkOptions,
   ZodFormRegistry

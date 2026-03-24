@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { processFallback } from '../../src/processors/fallback.js';
+import { processRecord } from '../../src/processors/record.js';
 import { createBaseField } from '../../src/utils.js';
 import type { FormProcessorContext } from '../../src/types.js';
 
@@ -53,9 +54,8 @@ describe('processFallback', () => {
     const schema = z.record(z.string(), z.number());
     const field = createBaseField('scores', 'record');
 
-    processFallback(schema, createContext(), field, {});
+    processRecord(schema, createContext(), field, {});
 
-    expect(field.zodType).toBe('record');
     expect(field.component).toBe('Input');
     expect(field.arrayItem).toBeDefined();
   });

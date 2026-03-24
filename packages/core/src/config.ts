@@ -41,29 +41,16 @@ export type ComponentsConfig<T extends Record<string, unknown> = Record<string, 
 type TypedFieldConfigForComponent<
   TComponents extends Record<string, unknown>,
   K extends keyof TComponents & string
-> = {
+> = Omit<FieldConfig, 'component' | 'props'> & {
   component: K;
-  order?: number;
-  hidden?: boolean;
-  disabled?: boolean;
   props?: TComponents[K] extends Record<string, unknown>
     ? Partial<TComponents[K]>
     : Record<string, unknown>;
-  /** Group into a named section component */
-  section?: string;
-  helpText?: string;
 };
 
 /** Field config with no component specified (untyped props) */
-type UntypedFieldConfig = {
+type UntypedFieldConfig = Omit<FieldConfig, 'component'> & {
   component?: undefined;
-  order?: number;
-  hidden?: boolean;
-  disabled?: boolean;
-  props?: Record<string, unknown>;
-  /** Group into a named section component */
-  section?: string;
-  helpText?: string;
 };
 
 /**
@@ -188,7 +175,7 @@ const componentsConfigSchema = z
   .object({
     source: nonEmptyStringSchema,
     preset: z.enum(['shadcn', 'html']).optional(),
-    fieldTemplate: z.string().optional(),
+    fieldTemplate: nonEmptyStringSchema.optional(),
     overrides: z.record(z.string(), componentOverrideSchema).optional()
   })
   .loose();

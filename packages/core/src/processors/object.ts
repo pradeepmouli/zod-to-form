@@ -1,7 +1,6 @@
-import type { $ZodType as ZodType } from 'zod/v4/core';
+import type { $ZodObject, $ZodIntersection, $ZodType as ZodType } from 'zod/v4/core';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
 import { inferLabel, joinPath } from '../utils.js';
-import { getDef, getShape } from './_utils.js';
 
 function processShapeEntries(
   shape: Record<string, ZodType>,
@@ -19,7 +18,7 @@ function processShapeEntries(
 }
 
 export function processObject(
-  schema: ZodType,
+  schema: $ZodObject,
   ctx: FormProcessorContext,
   field: FormField,
   params: ProcessParams
@@ -27,35 +26,36 @@ export function processObject(
   field.component = 'Fieldset';
   field.label = field.label || inferLabel(params.parentKey ?? field.key);
 
-  const def = getDef(schema);
-  const shape = getShape(def);
+  const shape = schema._zod.def.shape as Record<string, ZodType>;
   field.children = processShapeEntries(shape, params.parentKey, ctx);
 }
 
 export function processIntersection(
-  schema: ZodType,
+  schema: $ZodIntersection,
   ctx: FormProcessorContext,
   field: FormField,
   params: ProcessParams
 ): void {
   field.component = 'Fieldset';
 
-  const def = getDef(schema);
-  const left = def['left'] as ZodType | undefined;
-  const right = def['right'] as ZodType | undefined;
+  const def = schema._zod.def;
+  const left = def.left as ZodType | undefined;
+  const right = def.right as ZodType | undefined;
 
   const children: FormField[] = [];
 
   if (left) {
-    const leftDef = getDef(left);
-    const leftShape = getShape(leftDef);
-    children.push(...processShapeEntries(leftShape, params.parentKey, ctx));
+    const leftShape = (left._zod.def as { shape?: Record<string, ZodType> }).shape;
+    if (leftShape) {
+      children.push(...processShapeEntries(leftShape, params.parentKey, ctx));
+    }
   }
 
   if (right) {
-    const rightDef = getDef(right);
-    const rightShape = getShape(rightDef);
-    children.push(...processShapeEntries(rightShape, params.parentKey, ctx));
+    const rightShape = (right._zod.def as { shape?: Record<string, ZodType> }).shape;
+    if (rightShape) {
+      children.push(...processShapeEntries(rightShape, params.parentKey, ctx));
+    }
   }
 
   field.children = children;

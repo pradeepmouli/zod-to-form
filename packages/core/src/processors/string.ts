@@ -1,15 +1,14 @@
-import type { $ZodType as ZodType } from 'zod/v4/core';
+import type { $ZodString, $ZodTemplateLiteral } from 'zod/v4/core';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
 import { regexToMask } from '../utils.js';
-import { getDef, getBag } from './_utils.js';
 
 export function processString(
-  schema: ZodType,
+  schema: $ZodString,
   ctx: FormProcessorContext,
   field: FormField,
   _params: ProcessParams
 ): void {
-  const bag = getBag(schema);
+  const bag = schema._zod.bag;
   const meta = ctx.formRegistry?.get(schema);
   const format = typeof bag['format'] === 'string' ? bag['format'] : undefined;
   const minimum = typeof bag['minimum'] === 'number' ? bag['minimum'] : undefined;
@@ -49,16 +48,15 @@ export function processString(
 }
 
 export function processTemplateLiteral(
-  schema: ZodType,
+  schema: $ZodTemplateLiteral,
   _ctx: FormProcessorContext,
   field: FormField,
   _params: ProcessParams
 ): void {
-  const def = getDef(schema);
   field.component = 'Input';
   field.props = {
     ...field.props,
     type: 'text'
   };
-  field.zodType = typeof def['type'] === 'string' ? (def['type'] as string) : 'template_literal';
+  field.zodType = schema._zod.def.type;
 }

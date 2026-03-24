@@ -4,7 +4,7 @@ import { FormProvider } from 'react-hook-form';
 import type { output, ZodObject } from 'zod';
 import type { FormField, FormProcessor, ZodFormRegistry } from '@zod-to-form/core';
 import { normalizeFieldKey, collectFieldSections } from '@zod-to-form/core';
-import { FieldRenderer } from './FieldRenderer.js';
+import { FieldRenderer, warnRemovedConfigKeys } from './FieldRenderer.js';
 import { defaultComponentMap } from './components/index.js';
 import type { RuntimeComponentConfig } from './FieldRenderer.js';
 import { useZodForm } from './useZodForm.js';
@@ -49,6 +49,9 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
         `Section components are now resolved from "componentConfig.componentModule" instead.`
     );
   }
+
+  // One-time validation of removed config keys (propMap, gridColumn, controlled+expressions)
+  warnRemovedConfigKeys(componentConfig);
 
   const mergedComponents = useMemo(() => ({ ...defaultComponentMap, ...components }), [components]);
 
@@ -110,6 +113,8 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
  * and reads/writes its fields via useFormContext (FormProvider).
  * Section components are resolved by name from `componentConfig.componentModule`.
  */
+const _warnedMissingSections = new Set<string>();
+
 function SectionRenderer({
   sections,
   componentConfig
@@ -119,11 +124,30 @@ function SectionRenderer({
 }) {
   const elements: ReactNode[] = [];
   const mod = componentConfig?.componentModule;
+
+  if (!mod && sections.size > 0 && !_warnedMissingSections.has('__no_module__')) {
+    _warnedMissingSections.add('__no_module__');
+    console.warn(
+      `[zod-to-form] ${sections.size} section(s) configured but componentModule is not provided. ` +
+        `Section fields will not be rendered. Pass componentConfig.componentModule.`
+    );
+  }
+
   for (const [sectionName, fieldKeys] of sections) {
     const candidate = mod?.[sectionName];
     if (typeof candidate === 'function') {
       const SectionComponent = candidate as ComponentType<{ fields: string[] }>;
       elements.push(<SectionComponent key={sectionName} fields={fieldKeys} />);
+    } else if (!_warnedMissingSections.has(sectionName)) {
+      _warnedMissingSections.add(sectionName);
+      const reason =
+        candidate === undefined
+          ? 'was not found in componentModule'
+          : `was found but is not a function (got ${typeof candidate})`;
+      console.warn(
+        `[zod-to-form] Section "${sectionName}" (grouping fields: ${fieldKeys.join(', ')}) ` +
+          `${reason}. Those fields will not be rendered.`
+      );
     }
   }
   return <>{elements}</>;

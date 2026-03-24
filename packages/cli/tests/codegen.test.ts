@@ -15,6 +15,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       },
@@ -26,6 +28,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         options: [
           { value: 'user', label: 'User' },
           { value: 'admin', label: 'Admin' }
@@ -70,6 +74,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string',
         hasCustomRender: true
@@ -136,6 +142,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }
@@ -171,6 +179,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }
@@ -209,6 +219,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }
@@ -237,6 +249,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }
@@ -268,6 +282,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'array',
         arrayItem: {
@@ -278,6 +294,8 @@ describe('generateFormComponent', () => {
           required: true,
           readOnly: false,
           hidden: false,
+          disabled: false,
+          deprecated: false,
           constraints: {},
           zodType: 'object',
           children: [
@@ -289,6 +307,8 @@ describe('generateFormComponent', () => {
               required: true,
               readOnly: false,
               hidden: false,
+              disabled: false,
+              deprecated: false,
               constraints: {},
               zodType: 'string'
             },
@@ -300,6 +320,8 @@ describe('generateFormComponent', () => {
               required: false,
               readOnly: false,
               hidden: false,
+              disabled: false,
+              deprecated: false,
               constraints: {},
               zodType: 'string'
             }
@@ -336,6 +358,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'array',
         arrayItem: {
@@ -346,6 +370,8 @@ describe('generateFormComponent', () => {
           required: true,
           readOnly: false,
           hidden: false,
+          disabled: false,
+          deprecated: false,
           constraints: {},
           zodType: 'object',
           children: [
@@ -357,6 +383,8 @@ describe('generateFormComponent', () => {
               required: true,
               readOnly: true,
               hidden: false,
+              disabled: false,
+              deprecated: false,
               constraints: {},
               zodType: 'literal',
               options: [{ value: 'Item', label: 'Item' }]
@@ -389,6 +417,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'array',
         arrayItem: {
@@ -399,6 +429,8 @@ describe('generateFormComponent', () => {
           required: true,
           readOnly: false,
           hidden: false,
+          disabled: false,
+          deprecated: false,
           constraints: {},
           zodType: 'object',
           children: [
@@ -410,6 +442,8 @@ describe('generateFormComponent', () => {
               required: false,
               readOnly: false,
               hidden: false,
+              disabled: false,
+              deprecated: false,
               constraints: {},
               zodType: 'array',
               arrayItem: {
@@ -420,6 +454,8 @@ describe('generateFormComponent', () => {
                 required: false,
                 readOnly: false,
                 hidden: false,
+                disabled: false,
+                deprecated: false,
                 constraints: {},
                 zodType: 'string'
               }
@@ -506,6 +542,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'object',
         children: [
@@ -517,6 +555,8 @@ describe('generateFormComponent', () => {
             required: true,
             readOnly: false,
             hidden: false,
+            disabled: false,
+            deprecated: false,
             constraints: {},
             zodType: 'string'
           },
@@ -528,6 +568,8 @@ describe('generateFormComponent', () => {
             required: true,
             readOnly: false,
             hidden: false,
+            disabled: false,
+            deprecated: false,
             constraints: {},
             zodType: 'string'
           }
@@ -568,6 +610,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'array',
         arrayItem: {
@@ -578,6 +622,8 @@ describe('generateFormComponent', () => {
           required: true,
           readOnly: false,
           hidden: false,
+          disabled: false,
+          deprecated: false,
           constraints: {},
           zodType: 'object',
           children: [
@@ -589,6 +635,8 @@ describe('generateFormComponent', () => {
               required: true,
               readOnly: false,
               hidden: false,
+              disabled: false,
+              deprecated: false,
               constraints: {},
               zodType: 'string'
             },
@@ -600,6 +648,8 @@ describe('generateFormComponent', () => {
               required: true,
               readOnly: false,
               hidden: false,
+              disabled: false,
+              deprecated: false,
               constraints: {},
               zodType: 'object',
               children: [
@@ -611,6 +661,8 @@ describe('generateFormComponent', () => {
                   required: true,
                   readOnly: false,
                   hidden: false,
+                  disabled: false,
+                  deprecated: false,
                   constraints: {},
                   zodType: 'object',
                   children: [
@@ -622,6 +674,8 @@ describe('generateFormComponent', () => {
                       required: true,
                       readOnly: false,
                       hidden: false,
+                      disabled: false,
+                      deprecated: false,
                       constraints: {},
                       zodType: 'string'
                     }
@@ -637,6 +691,8 @@ describe('generateFormComponent', () => {
               required: true,
               readOnly: false,
               hidden: false,
+              disabled: false,
+              deprecated: false,
               constraints: {},
               zodType: 'object',
               children: [
@@ -648,6 +704,8 @@ describe('generateFormComponent', () => {
                   required: true,
                   readOnly: false,
                   hidden: false,
+                  disabled: false,
+                  deprecated: false,
                   constraints: {},
                   zodType: 'number'
                 }
@@ -698,6 +756,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string',
         options: [
@@ -745,6 +805,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }
@@ -789,6 +851,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }
@@ -820,6 +884,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }
@@ -851,6 +917,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       },
@@ -862,6 +930,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       },
@@ -873,6 +943,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       },
@@ -884,6 +956,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'array'
       }
@@ -923,6 +997,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }

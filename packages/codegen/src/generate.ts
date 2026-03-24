@@ -50,6 +50,11 @@ function renderOverrideProps(props: Record<string, unknown> | undefined): string
         return '';
       }
       const rendered = renderLiteralProp(value);
+      if (!rendered && value !== undefined && value !== null) {
+        console.warn(
+          `[zod-to-form codegen] Prop "${key}" has unsupported type "${typeof value}" and will be omitted from generated code.`
+        );
+      }
       return rendered ? ` ${key}=${rendered}` : '';
     })
     .join('');
@@ -337,10 +342,10 @@ function resolvePropMap(
   componentOverride?: ComponentOverride,
   override?: FieldConfig
 ): Record<string, string> | undefined {
-  const entryMap = componentOverride?.props as Record<string, string> | undefined;
-  const fieldMap = override?.props as Record<string, string> | undefined;
+  const entryMap = componentOverride?.props;
+  const fieldMap = override?.props;
   function filterRhfProps(
-    map: Record<string, string> | undefined
+    map: Record<string, unknown> | undefined
   ): Record<string, string> | undefined {
     if (!map) return undefined;
     const filtered: Record<string, string> = {};

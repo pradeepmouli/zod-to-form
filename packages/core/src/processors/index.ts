@@ -7,8 +7,9 @@ export { processFallback } from './fallback.js';
 export { processFile } from './file.js';
 export { processNumber } from './number.js';
 export { processObject, processIntersection } from './object.js';
+export { processRecord } from './record.js';
 export { processString, processTemplateLiteral } from './string.js';
-export { processUnion } from './union.js';
+export { processUnion, processDiscriminatedUnion } from './union.js';
 export {
   processDefault,
   processLazy,

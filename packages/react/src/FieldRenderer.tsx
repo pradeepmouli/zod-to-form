@@ -28,33 +28,12 @@ export type RuntimeComponentConfig = {
 
 const _warnedPropMap = new Set<string>();
 
-function resolveFieldOverride(
-  field: FormField,
-  componentConfig: RuntimeComponentConfig | undefined
-): { override?: FieldConfig; componentOverride?: ComponentOverride } {
-  if (!componentConfig) {
-    return {};
-  }
-
-  // Warn about removed propMap key on field config
-  const override = componentConfig.fields?.[field.key];
-  if (override && 'propMap' in override && !_warnedPropMap.has(field.key)) {
-    _warnedPropMap.add(field.key);
-    console.warn(
-      `[zod-to-form] Field "${field.key}" uses "propMap" which has been removed. ` +
-        `Move field expression values into "props" instead. ` +
-        `Example: props: { onValueChange: 'field.onChange' }`
-    );
-  }
-
-  // US5: Warn about removed gridColumn key on field config
-  if (override && 'gridColumn' in override && !_warnedPropMap.has(`__gridColumn__${field.key}`)) {
-    _warnedPropMap.add(`__gridColumn__${field.key}`);
-    console.warn(
-      `[zod-to-form] Field "${field.key}" uses "gridColumn" which has been removed. ` +
-        `Use "props.style" or "props.className" for layout instead.`
-    );
-  }
+/**
+ * One-time validation of component config for removed keys.
+ * Called once per form render (from ZodForm), not per field.
+ */
+export function warnRemovedConfigKeys(componentConfig: RuntimeComponentConfig | undefined): void {
+  if (!componentConfig) return;
 
   // Warn about removed propMap key on component overrides
   if (componentConfig.components.overrides) {
@@ -69,6 +48,58 @@ function resolveFieldOverride(
     }
   }
 
+  // Warn about removed keys on field configs
+  if (componentConfig.fields) {
+    for (const [key, fieldConfig] of Object.entries(componentConfig.fields)) {
+      if (fieldConfig && 'propMap' in fieldConfig && !_warnedPropMap.has(key)) {
+        _warnedPropMap.add(key);
+        console.warn(
+          `[zod-to-form] Field "${key}" uses "propMap" which has been removed. ` +
+            `Move field expression values into "props" instead. ` +
+            `Example: props: { onValueChange: 'field.onChange' }`
+        );
+      }
+      if (
+        fieldConfig &&
+        'gridColumn' in fieldConfig &&
+        !_warnedPropMap.has(`__gridColumn__${key}`)
+      ) {
+        _warnedPropMap.add(`__gridColumn__${key}`);
+        console.warn(
+          `[zod-to-form] Field "${key}" uses "gridColumn" which has been removed. ` +
+            `Use "props.style" or "props.className" for layout instead.`
+        );
+      }
+    }
+  }
+
+  // Warn about field expressions in props without controlled: true
+  if (componentConfig.components.overrides) {
+    for (const [name, entry] of Object.entries(componentConfig.components.overrides)) {
+      if (!entry?.props || entry.controlled) continue;
+      const hasFieldExpr = Object.values(entry.props).some(
+        (v) => typeof v === 'string' && FIELD_EXPRESSIONS.has(v)
+      );
+      if (hasFieldExpr && !_warnedPropMap.has(`__no_controlled__${name}`)) {
+        _warnedPropMap.add(`__no_controlled__${name}`);
+        console.warn(
+          `[zod-to-form] Component override "${name}" has field expression values in "props" ` +
+            `but "controlled" is not set to true. Field expressions are only resolved for controlled components.`
+        );
+      }
+    }
+  }
+}
+
+function resolveFieldOverride(
+  field: FormField,
+  componentConfig: RuntimeComponentConfig | undefined
+): { override?: FieldConfig; componentOverride?: ComponentOverride } {
+  if (!componentConfig) {
+    return {};
+  }
+
+  const override = componentConfig.fields?.[field.key];
   if (override) {
     return {
       componentOverride:
@@ -160,6 +191,8 @@ export interface FieldTemplateProps {
   helpText?: string;
   error?: string;
   name: string;
+  required?: boolean;
+  disabled?: boolean;
   deprecated?: boolean;
 }
 
@@ -169,12 +202,16 @@ function DefaultFieldTemplate({
   description,
   helpText,
   error,
-  name
+  name,
+  deprecated
 }: FieldTemplateProps) {
   const { FieldLabel, FieldDescription, FieldMessage } = defaultComponentMap;
   return (
     <>
-      <FieldLabel htmlFor={name}>{label}</FieldLabel>
+      <FieldLabel htmlFor={name}>
+        {deprecated ? <s>{label}</s> : label}
+        {deprecated ? <span title="Deprecated"> ⚠</span> : null}
+      </FieldLabel>
       {children}
       {description ? <FieldDescription>{description}</FieldDescription> : null}
       {helpText ? (
@@ -339,15 +376,6 @@ const DiscriminatedUnionBlock = memo(function DiscriminatedUnionBlock({
   );
 });
 
-/** Known RHF field expression strings that indicate a prop should be resolved from the controller */
-const FIELD_EXPRESSIONS = new Set([
-  'field.value',
-  'field.onChange',
-  'field.onBlur',
-  'field.ref',
-  'field.name'
-]);
-
 /** Maps field expression strings to their corresponding RHF controller field property names */
 const EXPRESSION_TO_FIELD_PROP: Record<string, string> = {
   'field.value': 'value',
@@ -356,6 +384,9 @@ const EXPRESSION_TO_FIELD_PROP: Record<string, string> = {
   'field.ref': 'ref',
   'field.name': 'name'
 };
+
+/** Derived from EXPRESSION_TO_FIELD_PROP — guaranteed to stay in sync */
+const FIELD_EXPRESSIONS = new Set(Object.keys(EXPRESSION_TO_FIELD_PROP));
 
 /**
  * Resolve props for a controlled component by merging preset override props,
@@ -454,7 +485,8 @@ const ControlledFieldInner = memo(function ControlledFieldInner({
     'aria-invalid': errorMessage ? 'true' : 'false',
     required: field.required,
     readOnly: field.readOnly,
-    disabled: field.disabled ?? false,
+    disabled: field.disabled,
+    ...field.props,
     ...resolved
   };
 
@@ -534,7 +566,7 @@ export const FieldRenderer = memo(function FieldRenderer({
       'aria-invalid': errorMessage ? 'true' : 'false',
       required: field.required,
       readOnly: field.readOnly,
-      disabled: field.disabled ?? false,
+      disabled: field.disabled,
       ...field.props,
       ...mapping.override?.props,
       ...registration
@@ -557,7 +589,7 @@ export const FieldRenderer = memo(function FieldRenderer({
       'aria-invalid': errorMessage ? 'true' : 'false',
       required: field.required,
       readOnly: field.readOnly,
-      disabled: field.disabled ?? false,
+      disabled: field.disabled,
       ...field.props,
       ...mapping.override?.props,
       ...registration
@@ -586,6 +618,8 @@ export const FieldRenderer = memo(function FieldRenderer({
         description={field.description}
         helpText={field.helpText}
         error={errorMessage}
+        required={field.required}
+        disabled={field.disabled}
         deprecated={field.deprecated}
       >
         {fieldContent}

@@ -20,6 +20,8 @@ describe('generated component compilation', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }
@@ -55,6 +57,8 @@ describe('generated component compilation', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }

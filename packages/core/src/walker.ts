@@ -1,7 +1,6 @@
 import type { $ZodType as ZodType } from 'zod/v4/core';
 import { resolveMetadata } from './metadata.js';
 import { processFallback } from './processors/fallback.js';
-import { getDef, getShape } from './processors/_utils.js';
 import { createProcessors } from './registry.js';
 import { createBaseField } from './utils.js';
 import type { FormField, WalkOptions } from './types.js';
@@ -15,8 +14,7 @@ function processField(
   maxDepth: number,
   currentDepth: number
 ): FormField {
-  const def = getDef(schema);
-  const zodType = typeof def['type'] === 'string' ? (def['type'] as string) : 'unknown';
+  const zodType = schema._zod.def.type;
   const field = createBaseField(key, zodType);
 
   if (seen.has(schema) || currentDepth >= maxDepth) {
@@ -98,8 +96,7 @@ function processField(
  * @returns FormField[] - Ordered array of field descriptors
  */
 export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] {
-  const def = getDef(schema);
-  const topLevelType = def['type'];
+  const topLevelType = schema._zod.def.type;
 
   if (topLevelType !== 'object') {
     throw new Error('walkSchema expects a top-level z.object() schema.');
@@ -107,7 +104,7 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
 
   const maxDepth = options?.maxDepth ?? 5;
   const processors = createProcessors(options?.processors ?? {});
-  const shape = getShape(def);
+  const shape = (schema._zod.def as unknown as { shape: Record<string, ZodType> }).shape;
 
   // Each top-level field gets its own `seen` set so that reused schema instances
   // (e.g. `const name = z.string(); z.object({ a: name, b: name })`) are handled

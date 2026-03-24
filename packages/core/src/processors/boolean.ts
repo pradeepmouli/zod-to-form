@@ -1,8 +1,8 @@
-import type { $ZodType as ZodType } from 'zod/v4/core';
+import type { $ZodBoolean, $ZodType as ZodType } from 'zod/v4/core';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
 
 export function processBoolean(
-  schema: ZodType,
+  schema: $ZodBoolean,
   ctx: FormProcessorContext,
   field: FormField,
   _params: ProcessParams

@@ -13,7 +13,8 @@
       "Bash(pnpm --filter @zod-to-form/cli test --run -- tests/codegen.test.ts -t \"Controller with props\")",
       "Bash(pnpm --filter @zod-to-form/react test --run)",
       "Bash(pnpm --filter @zod-to-form/codegen test --run)",
-      "Bash(pnpm --filter @zod-to-form/cli test --run)"
+      "Bash(pnpm --filter @zod-to-form/cli test --run)",
+      "Bash(.specify/extensions/review/scripts/bash/detect-changed-files.sh --json)"
     ]
   }
 }

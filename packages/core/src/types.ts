@@ -42,11 +42,11 @@ export interface FormField {
   /** Display order override from form registry */
   order?: number;
   /** Non-interactive state (greyed out) */
-  disabled?: boolean;
+  disabled: boolean;
   /** Help text rendered below the input, distinct from description (below label) */
   helpText?: string;
   /** Whether the field is marked as deprecated in the schema registry */
-  deprecated?: boolean;
+  deprecated: boolean;
   /** Options for enum/union select fields */
   options?: FormFieldOption[];
   /** Children for nested objects */
@@ -64,6 +64,18 @@ export interface FormField {
 }
 
 // ─── FieldConfig: Serializable field configuration ────────────────────
+
+/**
+ * Known RHF field expression strings that can be used as values in `props`.
+ * When a prop value matches one of these strings, it is resolved from the
+ * RHF controller field at render time instead of being passed as a literal.
+ */
+export type FieldExpression =
+  | 'field.value'
+  | 'field.onChange'
+  | 'field.onBlur'
+  | 'field.ref'
+  | 'field.name';
 
 type FieldConfigBase = {
   /** Component name override, e.g. "Textarea", "Switch", "Combobox" */
@@ -111,10 +123,10 @@ export type FieldConfig<T extends $ZodType = $ZodType> = FieldConfigBase & Field
 
 // ─── FormMeta: Registry Annotation ────────────────────────────────────
 
-export interface FormMeta extends FieldConfig {
+export type FormMeta<T extends $ZodType = $ZodType> = FieldConfig<T> & {
   /** Custom render function (runtime only, ignored in codegen) */
   render?: (field: FormField, props: unknown) => unknown;
-}
+};
 
 // ─── Processor Types ──────────────────────────────────────────────────
 
@@ -148,8 +160,8 @@ export interface FormProcessorContext {
   processChild?: (schema: $ZodType, key: string) => FormField;
 }
 
-export type FormProcessor = (
-  schema: $ZodType,
+export type FormProcessor<T extends $ZodType = $ZodType> = (
+  schema: T,
   ctx: FormProcessorContext,
   field: FormField,
   params: ProcessParams
