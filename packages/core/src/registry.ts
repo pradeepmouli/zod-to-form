@@ -1,6 +1,7 @@
 import type { FormProcessor } from './types.js';
 import { processArray, processTuple } from './processors/array.js';
 import { processBoolean } from './processors/boolean.js';
+import { processMap, processSet } from './processors/collections.js';
 import { processDate } from './processors/date.js';
 import { processEnum, processLiteral } from './processors/enum.js';
 import { processFallback } from './processors/fallback.js';
@@ -57,8 +58,8 @@ const typedProcessors: { [K in $ZodTypes as K['_zod']['def']['type']]: FormProce
   null: processFallback,
   undefined: processFallback,
   symbol: processFallback,
-  map: processFallback,
-  set: processFallback,
+  map: processMap,
+  set: processSet,
   function: processFallback,
   promise: processFallback,
   catch: processFallback,

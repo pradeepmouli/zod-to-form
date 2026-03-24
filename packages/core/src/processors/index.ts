@@ -1,5 +1,6 @@
 export { processArray, processTuple } from './array.js';
 export { processBoolean } from './boolean.js';
+export { processMap, processSet } from './collections.js';
 export { processCrossRef } from './cross-ref.js';
 export { processDate } from './date.js';
 export { processEnum, processLiteral } from './enum.js';
