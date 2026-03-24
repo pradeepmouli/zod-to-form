@@ -75,7 +75,6 @@ describe('ZodForm', () => {
       component?: string;
       order?: number;
       hidden?: boolean;
-      gridColumn?: string;
     }>();
     const onSubmit = vi.fn();
 
@@ -86,7 +85,7 @@ describe('ZodForm', () => {
     const isActive = z.boolean().meta({ title: 'Active User' });
     const hiddenToken = z.string();
 
-    formRegistry.add(bio, { component: 'Textarea', order: 2, gridColumn: '1 / -1' });
+    formRegistry.add(bio, { component: 'Textarea', order: 2 });
     formRegistry.add(isActive, { component: 'Switch', order: 1 });
     formRegistry.add(hiddenToken, { hidden: true });
 
@@ -113,9 +112,6 @@ describe('ZodForm', () => {
       label.textContent?.trim()
     );
     expect(labels[0]).toBe('Active User');
-
-    const bioWrapper = screen.getByLabelText('Biography').closest('div');
-    expect(bioWrapper).toHaveStyle({ gridColumn: '1 / -1' });
 
     fireEvent.change(screen.getByLabelText('Biography'), {
       target: { value: 'Hello world' }

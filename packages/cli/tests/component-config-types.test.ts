@@ -4,13 +4,10 @@ import { defineConfig } from '../src/index.js';
 type Components = {
   Input: unknown;
   Textarea: unknown;
-  Field: unknown;
-  FieldLabel: unknown;
-  FieldControl: unknown;
 };
 
 describe('CLI defineConfig typing', () => {
-  it('accepts valid components overrides, formPrimitives and fields', () => {
+  it('accepts valid components overrides and fields', () => {
     const config = defineConfig<Components>({
       components: {
         source: '@app/components',
@@ -21,11 +18,6 @@ describe('CLI defineConfig typing', () => {
       include: ['*Schema'],
       exclude: ['Internal*'],
       types: ['profileSchema'],
-      formPrimitives: {
-        field: 'Field',
-        label: 'FieldLabel',
-        control: 'FieldControl'
-      },
       fields: {
         'profile.bio': { component: 'Textarea' },
         'tags[].label': { component: 'Input' }
@@ -33,7 +25,6 @@ describe('CLI defineConfig typing', () => {
     });
 
     expect(config.fields?.['profile.bio']?.component).toBe('Textarea');
-    expect(config.formPrimitives?.control).toBe('FieldControl');
   });
 
   it('accepts any string field keys', () => {

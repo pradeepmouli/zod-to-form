@@ -1,7 +1,20 @@
 {
   "permissions": {
     "allow": [
-      "Bash(/Users/pmouli/GitHub.nosync/zodforms/.specify/scripts/bash/create-new-feature.sh \"adjust layout of z2f studio - add z2f.config pane below schema pane, move code pane below preview/inspector panes and allow toggle of code pane between react \\(runtime\\) and cli \\(actual codegen\\). z2f.config pane should have form and .ts panes, form for z2f.config should use z2f itself\" --json --short-name \"studio-layout-redesign\" \"Studio Layout Redesign\")"
+      "Bash(/Users/pmouli/GitHub.nosync/zodforms/.specify/scripts/bash/create-new-feature.sh \"adjust layout of z2f studio - add z2f.config pane below schema pane, move code pane below preview/inspector panes and allow toggle of code pane between react \\(runtime\\) and cli \\(actual codegen\\). z2f.config pane should have form and .ts panes, form for z2f.config should use z2f itself\" --json --short-name \"studio-layout-redesign\" \"Studio Layout Redesign\")",
+      "Bash(.specify/scripts/bash/create-new-feature.sh \"z2f API surface cleanup: merge propMap into props, remove gridColumn, add fieldTemplate, zero-dep codegen eject, add disabled/helpText/deprecated, remove sectionComponents, fieldset component dispatch\" --json --short-name \"api-surface-cleanup\")",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh --json --paths-only)",
+      "Bash(.specify/scripts/bash/setup-plan.sh --json)",
+      "Bash(.specify/scripts/bash/update-agent-context.sh claude:*)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh --json)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks)",
+      "Bash(wc -l /private/tmp/claude-501/-Users-pmouli-GitHub-nosync-active-ts-zod-to-form/1d0a6706-48b0-41e3-acff-c54d7dd04841/tasks/*.output)",
+      "Bash(pnpm --filter @zod-to-form/cli test --run -- tests/codegen.test.ts -t \"propMap\")",
+      "Bash(pnpm --filter @zod-to-form/cli test --run -- tests/codegen.test.ts -t \"Controller with props\")",
+      "Bash(pnpm --filter @zod-to-form/react test --run)",
+      "Bash(pnpm --filter @zod-to-form/codegen test --run)",
+      "Bash(pnpm --filter @zod-to-form/cli test --run)",
+      "Bash(.specify/extensions/review/scripts/bash/detect-changed-files.sh --json)"
     ]
   }
 }

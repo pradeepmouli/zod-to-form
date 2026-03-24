@@ -17,7 +17,6 @@ import {
   type ComponentOverride,
   type FieldConfig,
   type FormMeta,
-  type FormPrimitivesConfig,
   type ZodFormsConfig,
   walkSchema
 } from '@zod-to-form/core';
@@ -30,7 +29,7 @@ import { startWatch } from './watcher.js';
 
 export { defineConfig, validateConfig };
 
-export type { ComponentOverride, FieldConfig, FormPrimitivesConfig, ZodFormsConfig };
+export type { ComponentOverride, FieldConfig, ZodFormsConfig };
 
 type GenerateOptions = {
   config: string;

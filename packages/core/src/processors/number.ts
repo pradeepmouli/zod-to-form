@@ -1,20 +1,19 @@
-import type { $ZodType as ZodType } from 'zod/v4/core';
+import type { $ZodNumber, $ZodBigInt } from 'zod/v4/core';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
-import { getDef, getBag } from './_utils.js';
 
 export function processNumber(
-  schema: ZodType,
+  schema: $ZodNumber | $ZodBigInt,
   _ctx: FormProcessorContext,
   field: FormField,
   _params: ProcessParams
 ): void {
-  const def = getDef(schema);
-  const bag = getBag(schema);
+  const bag = schema._zod.bag;
   const minimum = typeof bag['minimum'] === 'number' ? bag['minimum'] : undefined;
   const maximum = typeof bag['maximum'] === 'number' ? bag['maximum'] : undefined;
 
-  const checks = Array.isArray(def['checks']) ? def['checks'] : [];
-  const hasIntegerConstraint = checks.some((check) => {
+  const def = schema._zod.def;
+  const checks = def.checks ?? [];
+  const hasIntegerConstraint = checks.some((check: unknown) => {
     const value = check as Record<string, unknown>;
     const nested =
       (value['def'] as Record<string, unknown> | undefined) ??

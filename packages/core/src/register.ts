@@ -1,5 +1,4 @@
 import type { $ZodRegistry, $ZodType, $replace } from 'zod/v4/core';
-import { getDef, getShape } from './processors/_utils.js';
 import type { FieldConfig } from './types.js';
 
 // Structural keys used to drive recursive traversal in registerDeep.
@@ -76,7 +75,7 @@ export function registerDeep<S extends $ZodType, Meta extends object>(
   // ── Object shape ───────────────────────────────────────────────────
   const fields = raw['fields'];
   if (fields && typeof fields === 'object') {
-    const shape = getShape(getDef(schema));
+    const shape = (schema._zod.def as { shape?: Record<string, $ZodType> }).shape ?? {};
     const shapeKeys = new Set(Object.keys(shape));
 
     for (const [key, childSchema] of Object.entries(shape)) {
@@ -104,7 +103,7 @@ export function registerDeep<S extends $ZodType, Meta extends object>(
   const arrayItems = raw['arrayItems'];
   if (arrayItems) {
     // SAFETY: element is $ZodType when schema is a ZodArray — undefined otherwise (safely guarded)
-    const element = getDef(schema)['element'] as $ZodType | undefined;
+    const element = (schema._zod.def as { element?: $ZodType }).element;
     if (element) {
       // SAFETY: recursive generic requires cast — element is $ZodType at runtime
       registerDeep(registry, element, arrayItems as FieldConfig<typeof element>);
@@ -133,7 +132,7 @@ function resolveSchemaPath(schema: $ZodType, path: string): $ZodType | undefined
     // Numeric segment → descend into the array element of the current schema
     if (/^\d+$/.test(key)) {
       // SAFETY: element is $ZodType when current is a ZodArray — undefined otherwise
-      const element = getDef(current)['element'] as $ZodType | undefined;
+      const element = (current._zod.def as { element?: $ZodType }).element;
       if (!element) return undefined;
       current = element;
       continue;
@@ -141,7 +140,7 @@ function resolveSchemaPath(schema: $ZodType, path: string): $ZodType | undefined
 
     // Named key → object shape lookup
     if (key) {
-      const shape = getShape(getDef(current));
+      const shape = (current._zod.def as { shape?: Record<string, $ZodType> }).shape ?? {};
       const child = shape[key];
       if (!child) return undefined;
       current = child;
@@ -150,7 +149,7 @@ function resolveSchemaPath(schema: $ZodType, path: string): $ZodType | undefined
     // If the segment had `[]`, descend into the array element
     if (arrayBracket) {
       // SAFETY: element is $ZodType when current is a ZodArray — undefined otherwise
-      const element = getDef(current)['element'] as $ZodType | undefined;
+      const element = (current._zod.def as { element?: $ZodType }).element;
       if (!element) return undefined;
       current = element;
     }

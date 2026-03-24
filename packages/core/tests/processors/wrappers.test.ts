@@ -205,7 +205,7 @@ describe('wrapper processors', () => {
       processors: {
         string: innerProcessor,
         number: innerProcessor,
-        optional: processOptional
+        optional: processOptional as FormProcessor
       },
       path: [],
       seen: new WeakSet(),

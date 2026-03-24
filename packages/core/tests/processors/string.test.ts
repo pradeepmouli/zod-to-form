@@ -105,6 +105,53 @@ describe('processString', () => {
     // pattern constraint still set for validation
     expect(field.constraints.pattern).toBeDefined();
   });
+
+  it('maps z.string().date() (ISO date) to DatePicker with type=date', () => {
+    const schema = z.string().date();
+    const field = createBaseField('birthday', 'string');
+
+    processString(schema, createContext(), field, {});
+
+    expect(field.component).toBe('DatePicker');
+    expect(field.props['type']).toBe('date');
+    expect(field.constraints.format).toBe('date');
+  });
+
+  it('maps z.string().time() (ISO time) to DatePicker with type=time', () => {
+    const schema = z.string().time();
+    const field = createBaseField('startTime', 'string');
+
+    processString(schema, createContext(), field, {});
+
+    expect(field.component).toBe('DatePicker');
+    expect(field.props['type']).toBe('time');
+    expect(field.constraints.format).toBe('time');
+  });
+
+  it('maps z.string().datetime() (ISO datetime) to DatePicker with type=datetime-local', () => {
+    const schema = z.string().datetime();
+    const field = createBaseField('createdAt', 'string');
+
+    processString(schema, createContext(), field, {});
+
+    expect(field.component).toBe('DatePicker');
+    expect(field.props['type']).toBe('datetime-local');
+    expect(field.constraints.format).toBe('datetime');
+  });
+
+  it('respects meta component override for date format', () => {
+    const reg = z.registry<{ component?: string }>();
+    const schema = z.string().date();
+    reg.add(schema, { component: 'CustomDateInput' });
+
+    const field = createBaseField('dob', 'string');
+    const ctx = { ...createContext(), formRegistry: reg };
+
+    processString(schema, ctx, field, {});
+
+    expect(field.component).toBe('CustomDateInput');
+    expect(field.props['type']).toBe('date');
+  });
 });
 
 describe('processTemplateLiteral', () => {

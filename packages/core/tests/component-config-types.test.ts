@@ -102,8 +102,8 @@ describe('ZodFormsConfig generics', () => {
           component: 'Input',
           order: 1,
           hidden: false,
-          gridColumn: 'span 2',
-          props: { placeholder: 'test' }
+          disabled: false,
+          props: { placeholder: 'test', className: 'col-span-2' }
         }
       }
     };

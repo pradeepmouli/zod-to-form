@@ -1,7 +1,15 @@
-import type { $ZodType as ZodType } from 'zod/v4/core';
+import type {
+  $ZodType as ZodType,
+  $ZodOptional,
+  $ZodNullable,
+  $ZodDefault,
+  $ZodPrefault,
+  $ZodReadonly,
+  $ZodPipe,
+  $ZodLazy
+} from 'zod/v4/core';
 import { processFallback } from './fallback.js';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
-import { getDef } from './_utils.js';
 
 function runInner(
   innerSchema: ZodType,
@@ -9,8 +17,7 @@ function runInner(
   field: FormField,
   params: ProcessParams
 ): void {
-  const innerDef = getDef(innerSchema);
-  const innerType = typeof innerDef['type'] === 'string' ? (innerDef['type'] as string) : 'unknown';
+  const innerType = innerSchema._zod.def.type;
   const processor = ctx.processors[innerType];
 
   field.zodType = innerType;
@@ -24,13 +31,12 @@ function runInner(
 }
 
 export function processOptional(
-  schema: ZodType,
+  schema: $ZodOptional,
   ctx: FormProcessorContext,
   field: FormField,
   params: ProcessParams
 ): void {
-  const def = getDef(schema);
-  const innerType = def['innerType'] as ZodType | undefined;
+  const innerType = schema._zod.def.innerType;
 
   field.required = false;
   if (innerType) {
@@ -39,13 +45,12 @@ export function processOptional(
 }
 
 export function processNullable(
-  schema: ZodType,
+  schema: $ZodNullable,
   ctx: FormProcessorContext,
   field: FormField,
   params: ProcessParams
 ): void {
-  const def = getDef(schema);
-  const innerType = def['innerType'] as ZodType | undefined;
+  const innerType = schema._zod.def.innerType;
 
   field.required = false;
   if (innerType) {
@@ -54,14 +59,14 @@ export function processNullable(
 }
 
 export function processDefault(
-  schema: ZodType,
+  schema: $ZodDefault | $ZodPrefault,
   ctx: FormProcessorContext,
   field: FormField,
   params: ProcessParams
 ): void {
-  const def = getDef(schema);
-  const innerType = def['innerType'] as ZodType | undefined;
-  const defaultValue = def['defaultValue'];
+  const def = schema._zod.def;
+  const innerType = def.innerType;
+  const defaultValue = def.defaultValue;
 
   if (typeof defaultValue === 'function') {
     field.defaultValue = (defaultValue as () => unknown)();
@@ -75,13 +80,12 @@ export function processDefault(
 }
 
 export function processReadonly(
-  schema: ZodType,
+  schema: $ZodReadonly,
   ctx: FormProcessorContext,
   field: FormField,
   params: ProcessParams
 ): void {
-  const def = getDef(schema);
-  const innerType = def['innerType'] as ZodType | undefined;
+  const innerType = schema._zod.def.innerType;
 
   field.readOnly = true;
   if (innerType) {
@@ -90,13 +94,12 @@ export function processReadonly(
 }
 
 export function processPipe(
-  schema: ZodType,
+  schema: $ZodPipe,
   ctx: FormProcessorContext,
   field: FormField,
   params: ProcessParams
 ): void {
-  const def = getDef(schema);
-  const inputType = def['in'] as ZodType | undefined;
+  const inputType = schema._zod.def.in;
 
   if (inputType) {
     runInner(inputType, ctx, field, params);
@@ -104,7 +107,7 @@ export function processPipe(
 }
 
 export function processLazy(
-  schema: ZodType,
+  schema: $ZodLazy,
   ctx: FormProcessorContext,
   field: FormField,
   params: ProcessParams
@@ -115,8 +118,7 @@ export function processLazy(
     return;
   }
 
-  const def = getDef(schema);
-  const getter = def['getter'] as (() => ZodType) | undefined;
+  const getter = schema._zod.def.getter;
 
   if (!getter) {
     field.component = 'Input';

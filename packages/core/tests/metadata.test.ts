@@ -8,7 +8,8 @@ describe('metadata resolution', () => {
       component?: string;
       order?: number;
       hidden?: boolean;
-      gridColumn?: string;
+      disabled?: boolean;
+      helpText?: string;
     }>();
 
     const bio = z
@@ -18,7 +19,7 @@ describe('metadata resolution', () => {
     const role = z.enum(['user', 'admin']).meta({ title: 'Account Role' });
     const secret = z.string();
 
-    formRegistry.add(bio, { component: 'Textarea', order: 2, gridColumn: '1 / -1' });
+    formRegistry.add(bio, { component: 'Textarea', order: 2, helpText: 'Markdown supported' });
     formRegistry.add(role, { order: 1 });
     formRegistry.add(secret, { hidden: true });
 
@@ -36,7 +37,7 @@ describe('metadata resolution', () => {
       placeholder: 'Tell us about yourself',
       description: 'Public profile text',
       order: 2,
-      gridColumn: '1 / -1'
+      helpText: 'Markdown supported'
     });
     expect(roleField).toMatchObject({ label: 'Account Role', order: 1 });
     expect(secretField?.hidden).toBe(true);

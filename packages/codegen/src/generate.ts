@@ -1,11 +1,6 @@
 import type { FormField } from '@zod-to-form/core';
 import { getEmptyDefault } from '@zod-to-form/core';
-import type {
-  ComponentOverride,
-  FieldConfig,
-  FormPrimitivesConfig,
-  ZodFormsConfig
-} from '@zod-to-form/core';
+import type { ComponentOverride, FieldConfig, ZodFormsConfig } from '@zod-to-form/core';
 import { getFileHeader, renderField, registerPathExpr } from './templates.js';
 
 export type CodegenConfig = {
@@ -34,6 +29,15 @@ function renderLiteralProp(value: unknown): string | undefined {
   return undefined;
 }
 
+/** Known RHF field expressions that should be resolved, not rendered as literal props */
+const RHF_FIELD_EXPRESSIONS = new Set([
+  'field.value',
+  'field.onChange',
+  'field.onBlur',
+  'field.ref',
+  'field.name'
+]);
+
 function renderOverrideProps(props: Record<string, unknown> | undefined): string {
   if (!props) {
     return '';
@@ -41,7 +45,16 @@ function renderOverrideProps(props: Record<string, unknown> | undefined): string
 
   const attrs = Object.entries(props)
     .map(([key, value]) => {
+      // Skip RHF field expressions — they are resolved by resolvePropMap/renderControlledComponent
+      if (typeof value === 'string' && RHF_FIELD_EXPRESSIONS.has(value)) {
+        return '';
+      }
       const rendered = renderLiteralProp(value);
+      if (!rendered && value !== undefined && value !== null) {
+        console.warn(
+          `[zod-to-form codegen] Prop "${key}" has unsupported type "${typeof value}" and will be omitted from generated code.`
+        );
+      }
       return rendered ? ` ${key}=${rendered}` : '';
     })
     .join('');
@@ -95,73 +108,20 @@ function collectMappedComponentNames(
   return out;
 }
 
-function collectFormPrimitiveNames(
-  primitives: FormPrimitivesConfig<Record<string, unknown>> | undefined
-): Set<string> {
-  const names = new Set<string>();
-  if (!primitives) {
-    return names;
+function renderFieldContainer(field: FormField, content: string, indent: string): string {
+  const labelContent = field.deprecated
+    ? `<s>${field.label}</s> <span title="Deprecated">⚠</span>`
+    : field.label;
+  const lines = [
+    `${indent}<div>`,
+    `${indent}  <label htmlFor="${field.key}">${labelContent}</label>`,
+    `${indent}  ${content}`
+  ];
+  if (field.helpText) {
+    lines.push(`${indent}  <p>${field.helpText}</p>`);
   }
-
-  if (primitives.field) {
-    names.add(primitives.field);
-  }
-
-  if (primitives.label) {
-    names.add(primitives.label);
-  }
-
-  if (primitives.control) {
-    names.add(primitives.control);
-  }
-
-  return names;
-}
-
-function renderFieldContainer(
-  field: FormField,
-  content: string,
-  indent: string,
-  primitives: FormPrimitivesConfig<Record<string, unknown>> | undefined
-): string {
-  const styleAttr = field.gridColumn ? ` style={{ gridColumn: '${field.gridColumn}' }}` : '';
-  const fieldTag = primitives?.field;
-  const labelTag = primitives?.label;
-  const controlTag = primitives?.control;
-
-  if (!fieldTag && !labelTag && !controlTag) {
-    return [
-      `${indent}<div${styleAttr}>`,
-      `${indent}  <label htmlFor="${field.key}">${field.label}</label>`,
-      `${indent}  ${content}`,
-      `${indent}</div>`
-    ].join('\n');
-  }
-
-  const openField = fieldTag ? `<${fieldTag}${styleAttr}>` : `<div${styleAttr}>`;
-  const closeField = fieldTag ? `</${fieldTag}>` : `</div>`;
-  const openLabel = labelTag
-    ? `<${labelTag} htmlFor="${field.key}">`
-    : `<label htmlFor="${field.key}">`;
-  const closeLabel = labelTag ? `</${labelTag}>` : `</label>`;
-
-  if (!controlTag) {
-    return [
-      `${indent}${openField}`,
-      `${indent}  ${openLabel}${field.label}${closeLabel}`,
-      `${indent}  ${content}`,
-      `${indent}${closeField}`
-    ].join('\n');
-  }
-
-  return [
-    `${indent}${openField}`,
-    `${indent}  ${openLabel}${field.label}${closeLabel}`,
-    `${indent}  <${controlTag}>`,
-    `${indent}    ${content}`,
-    `${indent}  </${controlTag}>`,
-    `${indent}${closeField}`
-  ].join('\n');
+  lines.push(`${indent}</div>`);
+  return lines.join('\n');
 }
 
 function normalizeFieldKey(key: string): string {
@@ -216,8 +176,10 @@ export function resolveFieldMapping<TComponents extends Record<string, unknown>>
 }
 
 function toVarName(key: string): string {
-  const parts = key.split(/[^a-zA-Z0-9]+/).filter(p => p.length > 0);
-  return parts.map((part, i) => (i === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1))).join('');
+  const parts = key.split(/[^a-zA-Z0-9]+/).filter((p) => p.length > 0);
+  return parts
+    .map((part, i) => (i === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1)))
+    .join('');
 }
 
 function collectArrayFields(fields: FormField[]): FormField[] {
@@ -299,11 +261,10 @@ function serializeDefaultValue(value: unknown): string {
 function renderNestedBlock(
   field: FormField,
   componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
-  primitives: FormPrimitivesConfig<Record<string, unknown>> | undefined,
   indent: string
 ): string {
   const children = (field.children ?? [])
-    .map((child) => renderFieldBlockWithConfig(child, componentConfig, primitives, `${indent}  `))
+    .map((child) => renderFieldBlockWithConfig(child, componentConfig, `${indent}  `))
     .join('\n');
 
   return [
@@ -320,7 +281,6 @@ function renderNestedBlock(
 function renderArrayBlock(
   field: FormField,
   componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
-  primitives: FormPrimitivesConfig<Record<string, unknown>> | undefined,
   indent: string
 ): string {
   if (field.key.includes('${')) {
@@ -357,12 +317,7 @@ function renderArrayBlock(
   } else if (mappedItem.source === 'fields' && mappedItem.componentName) {
     itemJsx = `<${mappedItem.componentName} {...${registerPathExpr(indexedItemField.key)}}${renderOverrideProps(mappedItem.override?.props)} />`;
   } else {
-    itemJsx = renderFieldBlockWithConfig(
-      indexedItemField,
-      componentConfig,
-      primitives,
-      `${indent}      `
-    );
+    itemJsx = renderFieldBlockWithConfig(indexedItemField, componentConfig, `${indent}      `);
   }
 
   return [
@@ -387,10 +342,26 @@ function resolvePropMap(
   componentOverride?: ComponentOverride,
   override?: FieldConfig
 ): Record<string, string> | undefined {
-  const entryMap = componentOverride?.propMap;
-  const fieldMap = override?.propMap;
-  if (!entryMap && !fieldMap) return undefined;
-  return { ...entryMap, ...fieldMap };
+  const entryMap = componentOverride?.props;
+  const fieldMap = override?.props;
+  function filterRhfProps(
+    map: Record<string, unknown> | undefined
+  ): Record<string, string> | undefined {
+    if (!map) return undefined;
+    const filtered: Record<string, string> = {};
+    let hasAny = false;
+    for (const [k, v] of Object.entries(map)) {
+      if (typeof v === 'string' && RHF_FIELD_EXPRESSIONS.has(v)) {
+        filtered[k] = v;
+        hasAny = true;
+      }
+    }
+    return hasAny ? filtered : undefined;
+  }
+  const filteredEntry = filterRhfProps(entryMap);
+  const filteredField = filterRhfProps(fieldMap);
+  if (!filteredEntry && !filteredField) return undefined;
+  return { ...filteredEntry, ...filteredField };
 }
 
 function renderControlledComponent(
@@ -451,14 +422,12 @@ function renderMappedComponent(
 function renderFieldBlockWithConfig(
   field: FormField,
   componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
-  primitives: FormPrimitivesConfig<Record<string, unknown>> | undefined,
   indent = '      '
 ): string {
   const mapping = getMappedFieldComponent(field, componentConfig);
   if (field.hasCustomRender) {
-    const styleAttr = field.gridColumn ? ` style={{ gridColumn: '${field.gridColumn}' }}` : '';
     return [
-      `${indent}<div${styleAttr}>`,
+      `${indent}<div>`,
       `${indent}  <label htmlFor="${field.key}">${field.label}</label>`,
       `${indent}  {/* TODO: custom renderer for ${field.key} — replace with your component */}`,
       `${indent}</div>`
@@ -475,15 +444,15 @@ function renderFieldBlockWithConfig(
       mapping.override,
       overrideProps
     );
-    return renderFieldContainer(field, content, indent, primitives);
+    return renderFieldContainer(field, content, indent);
   }
 
   if (field.component === 'Fieldset') {
-    return renderNestedBlock(field, componentConfig, primitives, indent);
+    return renderNestedBlock(field, componentConfig, indent);
   }
 
   if (field.component === 'ArrayField') {
-    return renderArrayBlock(field, componentConfig, primitives, indent);
+    return renderArrayBlock(field, componentConfig, indent);
   }
 
   if (mapping.componentName && (mapping.componentOverride || mapping.override)) {
@@ -495,10 +464,10 @@ function renderFieldBlockWithConfig(
       mapping.override,
       overrideProps
     );
-    return renderFieldContainer(field, content, indent, primitives);
+    return renderFieldContainer(field, content, indent);
   }
 
-  return renderFieldContainer(field, renderField(field), indent, primitives);
+  return renderFieldContainer(field, renderField(field), indent);
 }
 
 function hasControlledFields(
@@ -519,18 +488,19 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
   const schemaImportPath = config.schemaImportPath ?? './schema';
   const arrayFields = collectArrayFields(fields);
   const hasArrays = arrayFields.length > 0;
-  const formPrimitives = config.componentConfig?.formPrimitives;
   const useFormProvider = config.formProvider || config.mode === 'auto-save';
   const hasControlled = hasControlledFields(fields, config.componentConfig);
 
   const mappedComponents = collectMappedComponentNames(fields, config.componentConfig);
-  const primitiveComponents = collectFormPrimitiveNames(formPrimitives);
-  const importNames = new Set<string>([...mappedComponents, ...primitiveComponents]);
+  const importNames = new Set<string>(mappedComponents);
 
   const componentImportLine =
     config.componentConfig && importNames.size > 0
       ? `import { ${Array.from(importNames).sort().join(', ')} } from '${config.componentConfig.components.source}';`
       : undefined;
+
+  const preset =
+    config.componentConfig?.components?.preset ?? (config.ui === 'shadcn' ? 'shadcn' : 'html');
 
   const header = getFileHeader(
     schemaImportPath,
@@ -538,12 +508,10 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
     hasArrays,
     config.mode,
     componentImportLine,
-    { hasControlled, formProvider: useFormProvider }
+    { hasControlled, formProvider: useFormProvider, preset }
   );
   const body = fields
-    .map((field) =>
-      renderFieldBlockWithConfig(field, config.componentConfig, formPrimitives, '      ')
-    )
+    .map((field) => renderFieldBlockWithConfig(field, config.componentConfig, '      '))
     .join('\n');
 
   const arrayHooks = arrayFields
@@ -612,9 +580,13 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
     `export function ${config.componentName}(props: {`,
     ...propsLines,
     `}) {`,
-    `  const baseResolver = zodResolver(${config.exportName});`,
-    `  const form = useForm<FormData>({`,
-    `    resolver: (values: unknown, ctx: unknown, opts: unknown) => baseResolver(normalizeFormValues(values) as FormData, ctx, opts),`,
+    ...(preset === 'shadcn'
+      ? [`  const form = useForm<FormData>({`, `    resolver: zodResolver(${config.exportName}),`]
+      : [
+          `  const baseResolver = zodResolver(${config.exportName});`,
+          `  const form = useForm<FormData>({`,
+          `    resolver: (values: unknown, ctx: unknown, opts: unknown) => baseResolver(normalizeFormValues(values) as FormData, ctx, opts),`
+        ]),
     ...(config.mode === 'auto-save' ? [`    mode: 'onChange',`] : []),
     `    defaultValues: props.defaultValues,`,
     `    values: props.values,`,

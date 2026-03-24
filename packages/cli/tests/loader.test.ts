@@ -116,32 +116,6 @@ describe('loadConfig', () => {
     await expect(loadConfig(configPath)).rejects.toThrow(/include must be an array of strings/);
   });
 
-  it('throws clear error for invalid formPrimitives values', async () => {
-    const dir = await createTempDir();
-    const configPath = path.join(dir, 'bad-primitives.json');
-
-    await writeFile(
-      configPath,
-      JSON.stringify(
-        {
-          components: {
-            source: '@app/components'
-          },
-          formPrimitives: {
-            control: ''
-          }
-        },
-        null,
-        2
-      ),
-      'utf8'
-    );
-
-    await expect(loadConfig(configPath)).rejects.toThrow(
-      /formPrimitives\.control must be a non-empty string/
-    );
-  });
-
   it('loads a valid ts config via jiti', async () => {
     const dir = await createTempDir();
     const configPath = path.join(dir, 'component-config.ts');

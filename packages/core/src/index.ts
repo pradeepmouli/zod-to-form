@@ -9,6 +9,7 @@ export type {
   FormProcessorContext,
   FormMeta,
   FieldConfig,
+  FieldExpression,
   ProcessParams,
   WalkOptions,
   ZodFormRegistry
@@ -18,7 +19,6 @@ export type {
   ComponentOverride,
   ComponentPreset,
   ComponentsConfig,
-  FormPrimitivesConfig,
   TypedFieldConfig,
   ZodFormsConfig,
   ZodTypeConfig,

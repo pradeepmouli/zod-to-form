@@ -64,6 +64,8 @@ describe('FieldRenderer', () => {
       required: true,
       readOnly: false,
       hidden: false,
+      disabled: false,
+      deprecated: false,
       constraints: {},
       zodType: 'string'
     };
@@ -82,6 +84,8 @@ describe('FieldRenderer', () => {
       required: true,
       readOnly: false,
       hidden: false,
+      disabled: false,
+      deprecated: false,
       constraints: {},
       zodType: 'string'
     };
@@ -102,6 +106,8 @@ describe('FieldRenderer', () => {
       required: true,
       readOnly: false,
       hidden: false,
+      disabled: false,
+      deprecated: false,
       constraints: {},
       zodType: 'string'
     };
@@ -125,6 +131,8 @@ describe('FieldRenderer', () => {
       required: false,
       readOnly: false,
       hidden: false,
+      disabled: false,
+      deprecated: false,
       constraints: {},
       zodType: 'string',
       render: renderFn
@@ -149,6 +157,8 @@ describe('FieldRenderer', () => {
       required: true,
       readOnly: false,
       hidden: false,
+      disabled: false,
+      deprecated: false,
       options: [
         { value: 'us', label: 'United States' },
         { value: 'uk', label: 'United Kingdom' }
@@ -190,6 +200,8 @@ describe('FieldRenderer', () => {
               required: true,
               readOnly: false,
               hidden: false,
+              disabled: false,
+              deprecated: false,
               constraints: {},
               zodType: 'string'
             }}
@@ -205,6 +217,8 @@ describe('FieldRenderer', () => {
               required: false,
               readOnly: false,
               hidden: false,
+              disabled: false,
+              deprecated: false,
               constraints: {},
               zodType: 'string'
             }}
@@ -229,6 +243,8 @@ describe('FieldRenderer', () => {
       required: true,
       readOnly: false,
       hidden: false,
+      disabled: false,
+      deprecated: false,
       constraints: {},
       zodType: 'string'
     };

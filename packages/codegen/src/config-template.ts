@@ -17,12 +17,6 @@ export type ConfigTemplateOptions = {
   preset?: 'shadcn' | 'html';
   /** Component overrides (name → { controlled?: boolean }) */
   overrides?: Record<string, { controlled?: boolean }>;
-  /** Form primitive component names */
-  formPrimitives?: {
-    field?: string;
-    label?: string;
-    control?: string;
-  };
   /** Defaults block */
   defaults?: {
     mode?: 'submit' | 'auto-save';
@@ -88,16 +82,6 @@ export function buildConfigSource(opts: ConfigTemplateOptions): string {
     lines.push(`    }`);
   }
   lines.push(`  },`);
-
-  // formPrimitives block
-  if (opts.formPrimitives) {
-    const fp = opts.formPrimitives;
-    lines.push(`  formPrimitives: {`);
-    if (fp.field) lines.push(`    field: '${fp.field}',`);
-    if (fp.label) lines.push(`    label: '${fp.label}',`);
-    if (fp.control) lines.push(`    control: '${fp.control}'`);
-    lines.push(`  },`);
-  }
 
   // defaults block
   const defaults = {
