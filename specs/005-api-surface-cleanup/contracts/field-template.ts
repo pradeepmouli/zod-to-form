@@ -28,6 +28,12 @@ interface FieldTemplateProps {
   /** Field path/name (for htmlFor, aria attributes) */
   name: string;
 
+  /** Whether the field is required */
+  required?: boolean;
+
+  /** Whether the field is disabled */
+  disabled?: boolean;
+
   /** Whether the field is marked as deprecated */
   deprecated?: boolean;
 }

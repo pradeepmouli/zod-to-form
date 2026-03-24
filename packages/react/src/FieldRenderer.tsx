@@ -113,11 +113,19 @@ function resolveFieldOverride(
   };
 }
 
+/** Check if a value is a valid React component (function, memo, forwardRef, lazy) */
+function isReactComponent(value: unknown): boolean {
+  if (typeof value === 'function') return true;
+  // React.memo, forwardRef, lazy produce objects with $$typeof
+  if (value !== null && typeof value === 'object' && '$$typeof' in value) return true;
+  return false;
+}
+
 function asComponentType(
   value: unknown,
   errorMessage: string
 ): ComponentType<Record<string, unknown>> {
-  if (typeof value !== 'function') {
+  if (!isReactComponent(value)) {
     throw new Error(errorMessage);
   }
 
@@ -203,14 +211,21 @@ function DefaultFieldTemplate({
   helpText,
   error,
   name,
-  deprecated
-}: FieldTemplateProps) {
-  const { FieldLabel, FieldDescription, FieldMessage } = defaultComponentMap;
+  deprecated,
+  components
+}: FieldTemplateProps & { components?: Partial<ComponentMap> }) {
+  const { FieldLabel, FieldDescription, FieldMessage } = { ...defaultComponentMap, ...components };
   return (
     <>
       <FieldLabel htmlFor={name}>
         {deprecated ? <s>{label}</s> : label}
-        {deprecated ? <span title="Deprecated"> ⚠</span> : null}
+        {deprecated ? (
+          <span aria-hidden="true" title="Deprecated">
+            {' '}
+            ⚠
+          </span>
+        ) : null}
+        {deprecated ? <span className="sr-only"> (Deprecated)</span> : null}
       </FieldLabel>
       {children}
       {description ? <FieldDescription>{description}</FieldDescription> : null}
@@ -244,7 +259,7 @@ const FieldsetBlock = memo(function FieldsetBlock({
   const overrideComponentName = componentConfig?.fields?.[field.key]?.component;
   if (overrideComponentName && componentConfig?.componentModule) {
     const candidate = componentConfig.componentModule[overrideComponentName];
-    if (typeof candidate === 'function') {
+    if (isReactComponent(candidate)) {
       const OverrideComponent = candidate as ComponentType<{ children?: ReactNode }>;
       return (
         <FieldComponent>
@@ -544,7 +559,12 @@ export const FieldRenderer = memo(function FieldRenderer({
     componentMap.Input) as ComponentType<Record<string, unknown>>;
   const FieldComponent = componentMap.Field;
   const errorMessage = getErrorAtPath(formState.errors, field.key);
-  const FieldTemplate = DefaultFieldTemplate;
+
+  // Resolve field template: componentModule['FieldTemplate'] → DefaultFieldTemplate fallback
+  const customTemplate = componentConfig?.componentModule?.['FieldTemplate'];
+  const FieldTemplate = (
+    isReactComponent(customTemplate) ? customTemplate : DefaultFieldTemplate
+  ) as typeof DefaultFieldTemplate;
 
   if (field.hidden) {
     return null;
@@ -621,6 +641,7 @@ export const FieldRenderer = memo(function FieldRenderer({
         required={field.required}
         disabled={field.disabled}
         deprecated={field.deprecated}
+        components={components}
       >
         {fieldContent}
       </FieldTemplate>

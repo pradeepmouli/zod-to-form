@@ -135,7 +135,11 @@ function SectionRenderer({
 
   for (const [sectionName, fieldKeys] of sections) {
     const candidate = mod?.[sectionName];
-    if (typeof candidate === 'function') {
+    // Accept functions and React.memo/forwardRef/lazy (objects with $$typeof)
+    if (
+      typeof candidate === 'function' ||
+      (candidate != null && typeof candidate === 'object' && '$$typeof' in candidate)
+    ) {
       const SectionComponent = candidate as ComponentType<{ fields: string[] }>;
       elements.push(<SectionComponent key={sectionName} fields={fieldKeys} />);
     } else if (!_warnedMissingSections.has(sectionName)) {

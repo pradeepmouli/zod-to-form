@@ -35,14 +35,14 @@ interface FormField {
   /** Hidden from UI (remains in form state) */
   hidden: boolean;
 
-  /** Non-interactive state (greyed out) */
-  disabled?: boolean;
+  /** Non-interactive state (greyed out). Always present, defaults to false. */
+  disabled: boolean;
 
   /** Help text below input (distinct from description) */
   helpText?: string;
 
-  /** Whether the field is marked as deprecated in the schema registry */
-  deprecated?: boolean;
+  /** Whether the field is marked as deprecated in the schema registry. Always present, defaults to false. */
+  deprecated: boolean;
 
   /** Display order override */
   order?: number;
