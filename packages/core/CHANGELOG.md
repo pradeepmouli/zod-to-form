@@ -1,5 +1,15 @@
 # @zod-to-form/core
 
+## 0.6.2
+
+### Patch Changes
+
+- [#51](https://github.com/pradeepmouli/zod-to-form/pull/51) [`59cf01b`](https://github.com/pradeepmouli/zod-to-form/commit/59cf01b34df3b168f44c2401d5e8413539cdb797) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - Update the application's accent color to orange
+  - Improve form fields to correctly display password inputs
+  - Update examples to use meta for schema descriptions
+  - Correctly report underlying data types within nested schema definitions
+  - Introduce a new code generation tab and apply a new visual theme
+
 ## 0.6.1
 
 ### Patch Changes
