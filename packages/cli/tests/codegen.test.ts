@@ -202,7 +202,8 @@ describe('generateFormComponent', () => {
       }
     });
 
-    expect(output).toContain(`import { TypeSelector } from '@app/components';`);
+    expect(output).toContain(`from '@app/components';`);
+    expect(output).toContain('TypeSelector');
     expect(output).toContain(
       `<TypeSelector id="DataForm.superType" {...register('DataForm.superType')} refType="Data" />`
     );

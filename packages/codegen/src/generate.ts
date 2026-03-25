@@ -2,6 +2,7 @@ import type { FormField } from '@zod-to-form/core';
 import { getEmptyDefault } from '@zod-to-form/core';
 import type { ComponentOverride, FieldConfig, ZodFormsConfig } from '@zod-to-form/core';
 import { getFileHeader, renderField, registerPathExpr } from './templates.js';
+import { getFieldTemplateSource, PRESET_TEMPLATE_IMPORTS } from './field-templates.js';
 
 export type CodegenConfig = {
   /** Optional pre-computed import path for the schema (e.g., './schema.js'). Defaults to './schema'. The CLI typically computes this from file paths; the browser playground can pass it explicitly. */
@@ -108,10 +109,35 @@ function collectMappedComponentNames(
   return out;
 }
 
-function renderFieldContainer(field: FormField, content: string, indent: string): string {
+function renderFieldContainer(
+  field: FormField,
+  content: string,
+  indent: string,
+  preset: 'shadcn' | 'html' = 'html'
+): string {
   const labelContent = field.deprecated
     ? `<s>${field.label}</s> <span title="Deprecated">⚠</span>`
     : field.label;
+
+  if (preset === 'shadcn') {
+    const lines = [
+      `${indent}<FormItem>`,
+      `${indent}  <FormLabel htmlFor="${field.key}">${labelContent}</FormLabel>`,
+      `${indent}  <FormControl>${content}</FormControl>`
+    ];
+    if (field.description) {
+      lines.push(`${indent}  <FormDescription>${field.description}</FormDescription>`);
+    }
+    if (field.helpText) {
+      lines.push(
+        `${indent}  <p className="text-sm text-muted-foreground mt-1">${field.helpText}</p>`
+      );
+    }
+    lines.push(`${indent}  <FormMessage />`);
+    lines.push(`${indent}</FormItem>`);
+    return lines.join('\n');
+  }
+
   const lines = [
     `${indent}<div>`,
     `${indent}  <label htmlFor="${field.key}">${labelContent}</label>`,
@@ -422,7 +448,8 @@ function renderMappedComponent(
 function renderFieldBlockWithConfig(
   field: FormField,
   componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
-  indent = '      '
+  indent = '      ',
+  preset: 'shadcn' | 'html' = 'html'
 ): string {
   const mapping = getMappedFieldComponent(field, componentConfig);
   if (field.hasCustomRender) {
@@ -436,15 +463,14 @@ function renderFieldBlockWithConfig(
 
   if (mapping.source === 'fields' && mapping.componentName) {
     const overrideProps = renderOverrideProps(mapping.override?.props);
-    let content: string;
-    content = renderMappedComponent(
+    const content = renderMappedComponent(
       field,
       mapping.componentName,
       mapping.componentOverride,
       mapping.override,
       overrideProps
     );
-    return renderFieldContainer(field, content, indent);
+    return renderFieldContainer(field, content, indent, preset);
   }
 
   if (field.component === 'Fieldset') {
@@ -464,10 +490,10 @@ function renderFieldBlockWithConfig(
       mapping.override,
       overrideProps
     );
-    return renderFieldContainer(field, content, indent);
+    return renderFieldContainer(field, content, indent, preset);
   }
 
-  return renderFieldContainer(field, renderField(field), indent);
+  return renderFieldContainer(field, renderField(field), indent, preset);
 }
 
 function hasControlledFields(
@@ -491,16 +517,22 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
   const useFormProvider = config.formProvider || config.mode === 'auto-save';
   const hasControlled = hasControlledFields(fields, config.componentConfig);
 
+  const preset =
+    config.componentConfig?.components?.preset ?? (config.ui === 'shadcn' ? 'shadcn' : 'html');
+
   const mappedComponents = collectMappedComponentNames(fields, config.componentConfig);
   const importNames = new Set<string>(mappedComponents);
+
+  // Add form primitive imports required by the preset's field template
+  const templateImports = PRESET_TEMPLATE_IMPORTS[preset] ?? [];
+  for (const name of templateImports) {
+    importNames.add(name);
+  }
 
   const componentImportLine =
     config.componentConfig && importNames.size > 0
       ? `import { ${Array.from(importNames).sort().join(', ')} } from '${config.componentConfig.components.source}';`
       : undefined;
-
-  const preset =
-    config.componentConfig?.components?.preset ?? (config.ui === 'shadcn' ? 'shadcn' : 'html');
 
   const header = getFileHeader(
     schemaImportPath,
@@ -511,7 +543,7 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
     { hasControlled, formProvider: useFormProvider, preset }
   );
   const body = fields
-    .map((field) => renderFieldBlockWithConfig(field, config.componentConfig, '      '))
+    .map((field) => renderFieldBlockWithConfig(field, config.componentConfig, '      ', preset))
     .join('\n');
 
   const arrayHooks = arrayFields
