@@ -26,7 +26,7 @@ export type RuntimeComponentConfig = {
   fields?: Record<string, FieldConfig>;
 };
 
-const _warnedPropMap = new Set<string>();
+const _warned = new Set<string>();
 
 /**
  * One-time validation of component config for removed keys.
@@ -40,8 +40,8 @@ export function warnRemovedConfigKeys(componentConfig: RuntimeComponentConfig | 
     for (const [name, entry] of Object.entries(componentConfig.components.overrides)) {
       if (!entry) continue;
 
-      if ('propMap' in entry && !_warnedPropMap.has(`__override__${name}`)) {
-        _warnedPropMap.add(`__override__${name}`);
+      if ('propMap' in entry && !_warned.has(`override:propMap:${name}`)) {
+        _warned.add(`override:propMap:${name}`);
         console.warn(
           `[zod-to-form] Component override "${name}" uses "propMap" which has been removed. ` +
             `Move field expression values into "props" instead.`
@@ -52,8 +52,8 @@ export function warnRemovedConfigKeys(componentConfig: RuntimeComponentConfig | 
         const hasFieldExpr = Object.values(entry.props).some(
           (v) => typeof v === 'string' && FIELD_EXPRESSIONS.has(v)
         );
-        if (hasFieldExpr && !_warnedPropMap.has(`__no_controlled__${name}`)) {
-          _warnedPropMap.add(`__no_controlled__${name}`);
+        if (hasFieldExpr && !_warned.has(`override:noControlled:${name}`)) {
+          _warned.add(`override:noControlled:${name}`);
           console.warn(
             `[zod-to-form] Component override "${name}" has field expression values in "props" ` +
               `but "controlled" is not set to true. Field expressions are only resolved for controlled components.`
@@ -68,16 +68,16 @@ export function warnRemovedConfigKeys(componentConfig: RuntimeComponentConfig | 
     for (const [key, fieldConfig] of Object.entries(componentConfig.fields)) {
       if (!fieldConfig) continue;
 
-      if ('propMap' in fieldConfig && !_warnedPropMap.has(key)) {
-        _warnedPropMap.add(key);
+      if ('propMap' in fieldConfig && !_warned.has(`field:propMap:${key}`)) {
+        _warned.add(`field:propMap:${key}`);
         console.warn(
           `[zod-to-form] Field "${key}" uses "propMap" which has been removed. ` +
             `Move field expression values into "props" instead. ` +
             `Example: props: { onValueChange: 'field.onChange' }`
         );
       }
-      if ('gridColumn' in fieldConfig && !_warnedPropMap.has(`__gridColumn__${key}`)) {
-        _warnedPropMap.add(`__gridColumn__${key}`);
+      if ('gridColumn' in fieldConfig && !_warned.has(`field:gridColumn:${key}`)) {
+        _warned.add(`field:gridColumn:${key}`);
         console.warn(
           `[zod-to-form] Field "${key}" uses "gridColumn" which has been removed. ` +
             `Use "props.style" or "props.className" for layout instead.`
@@ -254,8 +254,6 @@ function buildBaseComponentProps(
 
 // ─── Fieldset block for nested object fields ──────────────────────────
 
-const _warnedFieldsetComponent = new Set<string>();
-
 const FieldsetBlock = memo(function FieldsetBlock({
   field,
   components,
@@ -285,8 +283,8 @@ const FieldsetBlock = memo(function FieldsetBlock({
       );
     }
     // Warn if component not found, fall back to fieldset
-    if (!_warnedFieldsetComponent.has(field.key)) {
-      _warnedFieldsetComponent.add(field.key);
+    if (!_warned.has(`fieldset:${field.key}`)) {
+      _warned.add(`fieldset:${field.key}`);
       console.warn(
         `[zod-to-form] Field "${field.key}" specifies component "${overrideComponentName}" ` +
           `but it was not found in componentModule. Falling back to <fieldset>.`
@@ -497,8 +495,9 @@ const ControlledFieldInner = memo(function ControlledFieldInner({
   const { control } = useFormContext();
   const { field: controllerField } = useController({ name: field.key, control });
 
+  // controllerField is ControllerRenderProps which extends Record<string, unknown>
   const resolved = resolveProps(
-    controllerField as unknown as Record<string, unknown>,
+    controllerField as Record<string, unknown>,
     presetProps,
     fieldConfigProps
   );

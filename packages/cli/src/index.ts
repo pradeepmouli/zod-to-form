@@ -147,8 +147,7 @@ export async function runGenerate(options: GenerateOptions): Promise<{
     serverAction: effectiveServerAction
   };
 
-  const generated = await generateFormComponent(fields, config);
-  const code = generated;
+  const code = await generateFormComponent(fields, config);
 
   if (options.dryRun) {
     process.stdout.write(code);

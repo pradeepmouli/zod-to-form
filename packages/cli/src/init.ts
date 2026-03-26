@@ -41,10 +41,6 @@ async function exists(filePath: string): Promise<boolean> {
   }
 }
 
-function logStep(step: string): void {
-  console.log(step);
-}
-
 function logVerbose(verbose: boolean, message: string): void {
   if (verbose) {
     console.log(`  ${message}`);
@@ -536,7 +532,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   const verbose = options.verbose ?? false;
   const outputPath = resolveOutputPath(cwd, options.out);
 
-  logStep('[1/5] Detecting project configuration');
+  console.log('[1/5] Detecting project configuration');
   const shadcn = await detectShadcnConfig(cwd);
   logVerbose(verbose, `shadcn components.json found: ${String(shadcn.exists)}`);
   if (shadcn.sourcePath) {
@@ -546,7 +542,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
     logVerbose(verbose, `aliases: ${JSON.stringify(shadcn.aliases)}`);
   }
 
-  logStep('[2/5] Discovering components');
+  console.log('[2/5] Discovering components');
   const modulePath = resolveComponentModulePath(options, shadcn);
   const discoveredComponents = await discoverComponents(cwd, modulePath, shadcn, verbose);
   logVerbose(verbose, `components import path: ${modulePath}`);
@@ -565,7 +561,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
 
   console.log(`\nUsing components from: ${modulePath}`);
 
-  logStep('[3/5] Discovering schemas');
+  console.log('[3/5] Discovering schemas');
   const discoveredSchemas = await discoverSchemas(cwd, options.schemas, verbose);
 
   if (discoveredSchemas.exports.length > 0) {
@@ -580,7 +576,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
     console.log('\nNo schemas discovered (use --schemas <path> to specify)');
   }
 
-  logStep('[4/5] Building config template');
+  console.log('[4/5] Building config template');
   const preset = shadcn.exists ? ('shadcn' as const) : undefined;
   const componentEntries = resolveComponentEntries(discoveredComponents, preset);
   const code = buildConfigTemplate(
@@ -594,7 +590,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
     preset
   );
 
-  logStep('[5/5] Validating output target');
+  console.log('[5/5] Validating output target');
   const outputExists = await exists(outputPath);
   if (outputExists && !options.force) {
     const summary = `Skipped: ${toPosixPath(path.relative(cwd, outputPath))} already exists (use --force to overwrite).`;
@@ -609,7 +605,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   }
 
   if (options.dryRun) {
-    logStep('Dry run (no files written)');
+    console.log('Dry run (no files written)');
     process.stdout.write(code);
     const summary = `Dry run complete for ${toPosixPath(path.relative(cwd, outputPath))}.`;
     console.log(`\n[summary] ${summary}`);
@@ -622,7 +618,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
     };
   }
 
-  logStep('Writing component config');
+  console.log('Writing component config');
   await mkdir(path.dirname(outputPath), { recursive: true });
   await writeFile(outputPath, code, 'utf8');
   const summary = `Wrote ${toPosixPath(path.relative(cwd, outputPath))}${

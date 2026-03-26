@@ -24,8 +24,6 @@ type ZodFormProps<TSchema extends ZodObject> = {
   children?: ReactNode;
 };
 
-let _warnedSectionComponents = false;
-
 export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>): ReactNode {
   const {
     schema,
@@ -42,8 +40,12 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
     children
   } = props;
   // US6: Warn if the old sectionComponents key is detected in componentConfig
-  if (componentConfig && 'sectionComponents' in componentConfig && !_warnedSectionComponents) {
-    _warnedSectionComponents = true;
+  if (
+    componentConfig &&
+    'sectionComponents' in componentConfig &&
+    !_warnedKeys.has('sectionComponents')
+  ) {
+    _warnedKeys.add('sectionComponents');
     console.warn(
       `[zod-to-form] "sectionComponents" in componentConfig has been removed. ` +
         `Section components are now resolved from "componentConfig.componentModule" instead.`
@@ -113,7 +115,7 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
  * and reads/writes its fields via useFormContext (FormProvider).
  * Section components are resolved by name from `componentConfig.componentModule`.
  */
-const _warnedMissingSections = new Set<string>();
+const _warnedKeys = new Set<string>();
 
 function SectionRenderer({
   sections,
@@ -125,8 +127,8 @@ function SectionRenderer({
   const elements: ReactNode[] = [];
   const mod = componentConfig?.componentModule;
 
-  if (!mod && sections.size > 0 && !_warnedMissingSections.has('__no_module__')) {
-    _warnedMissingSections.add('__no_module__');
+  if (!mod && sections.size > 0 && !_warnedKeys.has('__no_module__')) {
+    _warnedKeys.add('__no_module__');
     console.warn(
       `[zod-to-form] ${sections.size} section(s) configured but componentModule is not provided. ` +
         `Section fields will not be rendered. Pass componentConfig.componentModule.`
@@ -142,8 +144,8 @@ function SectionRenderer({
     ) {
       const SectionComponent = candidate as ComponentType<{ fields: string[] }>;
       elements.push(<SectionComponent key={sectionName} fields={fieldKeys} />);
-    } else if (!_warnedMissingSections.has(sectionName)) {
-      _warnedMissingSections.add(sectionName);
+    } else if (!_warnedKeys.has(sectionName)) {
+      _warnedKeys.add(sectionName);
       const reason =
         candidate === undefined
           ? 'was not found in componentModule'

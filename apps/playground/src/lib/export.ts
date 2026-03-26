@@ -58,14 +58,15 @@ export interface ExportInput {
 export function exportBundle(input: ExportInput): void {
   try {
     const configTs = serializeConfigToTs(input.config, input.componentMap);
-    const hasCustom = input.customComponents && Object.keys(input.customComponents).length > 0;
+    const custom = input.customComponents;
+    const hasCustom = custom && Object.keys(custom).length > 0;
 
     const files: Record<string, Uint8Array> = {
       'z2f.config.ts': strToU8(configTs)
     };
 
-    if (hasCustom && input.customComponents) {
-      for (const [name, source] of Object.entries(input.customComponents)) {
+    if (hasCustom) {
+      for (const [name, source] of Object.entries(custom)) {
         files[`components/${name}.tsx`] = strToU8(source);
       }
     } else {

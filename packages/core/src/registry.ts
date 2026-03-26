@@ -71,8 +71,7 @@ const typedProcessors: { [K in $ZodTypes as K['_zod']['def']['type']]: FormProce
 // Runtime registry widens to FormProcessor since walker dispatches by def.type string.
 // Note: discriminated unions have def.type "union" (not "discriminated_union") —
 // processUnion detects the discriminator property and delegates to processDiscriminatedUnion.
-export const builtinProcessors: Record<string, FormProcessor> =
-  typedProcessors as unknown as Record<string, FormProcessor>;
+export const builtinProcessors = typedProcessors as unknown as Record<string, FormProcessor>;
 
 /**
  * Create a custom processor registry by merging with built-in processors.
