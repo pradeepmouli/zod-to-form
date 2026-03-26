@@ -40,26 +40,39 @@ export function useZodForm<TSchema extends ZodObject>(
     if (options?.formRegistry) return options.formRegistry;
     if (!options?.fields || Object.keys(options.fields).length === 0) return undefined;
     const reg = z.registry<FormMeta>();
-    registerFlat(reg, rhfCast(schema), options.fields);
+    try {
+      registerFlat(reg, rhfCast(schema), options.fields);
+    } catch (error) {
+      console.error('[zod-to-form] Failed to register field config into registry.', error);
+      return undefined;
+    }
     return reg;
   }, [schema, options?.formRegistry, options?.fields]);
 
-  const walkResult = useMemo(
-    () => ({
-      fields: walkSchema(schema, {
-        formRegistry: effectiveRegistry,
-        processors: options?.processors
-      }),
-      error: null as string | null
-    }),
-    [schema, effectiveRegistry, options?.processors]
-  );
+  const walkResult = useMemo(() => {
+    try {
+      return {
+        fields: walkSchema(schema, {
+          formRegistry: effectiveRegistry,
+          processors: options?.processors
+        }),
+        error: null as string | null
+      };
+    } catch (err) {
+      console.error('[zod-to-form] walkSchema failed:', err);
+      return {
+        fields: [] as import('@zod-to-form/core').FormField[],
+        error: err instanceof Error ? err.message : 'Schema processing failed'
+      };
+    }
+  }, [schema, effectiveRegistry, options?.processors]);
 
   const form = useForm<output<TSchema>>({
     resolver: rhfCast((values: unknown, context: unknown, resolverOptions: unknown) =>
       baseResolver(
         rhfCast(normalizeFormValues(values)),
         context,
+        // SAFETY: RHF's ResolverOptions type is not exported; narrow from unknown via parameter extraction
         resolverOptions as Parameters<typeof baseResolver>[2]
       )
     ),

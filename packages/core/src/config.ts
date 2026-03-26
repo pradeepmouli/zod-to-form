@@ -237,7 +237,10 @@ const configSchema = z
 // ─── Error Formatting ─────────────────────────────────────────────────
 
 function formatValidationError(error: z.ZodError, source: string): Error {
-  const issue = error.issues[0]!;
+  const issue = error.issues[0];
+  if (!issue) {
+    return new Error(`${source} is invalid.`);
+  }
   const path = issue.path.map((part) => String(part));
   const [root, entry, property] = path;
 

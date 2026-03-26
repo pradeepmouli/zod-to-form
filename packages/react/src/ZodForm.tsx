@@ -24,6 +24,8 @@ type ZodFormProps<TSchema extends ZodObject> = {
   children?: ReactNode;
 };
 
+const _warnedKeys = new Set<string>();
+
 export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>): ReactNode {
   const {
     schema,
@@ -115,8 +117,6 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
  * and reads/writes its fields via useFormContext (FormProvider).
  * Section components are resolved by name from `componentConfig.componentModule`.
  */
-const _warnedKeys = new Set<string>();
-
 function SectionRenderer({
   sections,
   componentConfig
