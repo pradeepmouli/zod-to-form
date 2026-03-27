@@ -197,11 +197,24 @@ function getRegisterOptions(field: FormField): Record<string, unknown> {
     };
   }
 
-  // AOT validation: per-field zodSchema validation via register({ validate })
-  const validate = zodSchemaValidate(field);
-  if (validate) {
-    opts['validate'] = validate;
+  // AOT validation: per-field validation
+  if (field.validation?.mode === 'native' && field.validation.rules) {
+    // L2: native RHF rules — spread directly into register options
+    const rules = field.validation.rules;
+    if (rules.required) opts['required'] = rules.required;
+    if (rules.min) opts['min'] = rules.min;
+    if (rules.max) opts['max'] = rules.max;
+    if (rules.minLength) opts['minLength'] = rules.minLength;
+    if (rules.maxLength) opts['maxLength'] = rules.maxLength;
+    if (rules.pattern) opts['pattern'] = rules.pattern;
+  } else if (field.validation?.mode === 'zodSchema') {
+    // L1: per-field zodSchema validation via register({ validate })
+    const validate = zodSchemaValidate(field);
+    if (validate) {
+      opts['validate'] = validate;
+    }
   }
+  // component-enforced: no validation emitted
 
   return opts;
 }
@@ -511,10 +524,19 @@ const ControlledFieldInner = memo(function ControlledFieldInner({
   errorMessage
 }: ControlledFieldProps) {
   const { control } = useFormContext();
-  // When AOT validation is enabled, pass per-field validate to controller rules
-  const validate = zodSchemaValidate(field);
-  const rules = validate ? { validate } : undefined;
-  const { field: controllerField } = useController({ name: field.key, control, rules });
+  // When AOT validation is enabled, pass per-field rules to controller
+  const controllerRules = (() => {
+    if (field.validation?.mode === 'native' && field.validation.rules) {
+      return field.validation.rules;
+    }
+    const validate = zodSchemaValidate(field);
+    return validate ? { validate } : undefined;
+  })();
+  const { field: controllerField } = useController({
+    name: field.key,
+    control,
+    rules: controllerRules
+  });
 
   // controllerField is ControllerRenderProps which extends Record<string, unknown>
   const resolved = resolveProps(

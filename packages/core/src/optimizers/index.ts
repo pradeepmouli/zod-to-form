@@ -10,12 +10,31 @@ export { createSchemaLiteCollector } from './schema-lite.js';
 
 import type { FormOptimizer } from './types.js';
 import { buildL1Optimizers } from './l1-decompose.js';
+import { buildL2Optimizers } from './l2-native-rules.js';
 
 /**
  * Built-in optimizers, populated by L1/L2/L3 registration.
- * Keyed by def.type, each entry is an ordered chain of optimizers.
+ * Keyed by def.type, each entry is an ordered chain of optimizers (L1 → L2 → L3).
  */
-export const builtinOptimizers: Record<string, FormOptimizer[]> = buildL1Optimizers();
+function buildBuiltinOptimizers(): Record<string, FormOptimizer[]> {
+  const l1 = buildL1Optimizers();
+  const l2 = buildL2Optimizers();
+
+  const combined: Record<string, FormOptimizer[]> = { ...l1 };
+
+  // Append L2 optimizers after L1 for types that have both
+  for (const [type, optimizers] of Object.entries(l2)) {
+    if (combined[type]) {
+      combined[type] = [...combined[type], ...optimizers];
+    } else {
+      combined[type] = optimizers;
+    }
+  }
+
+  return combined;
+}
+
+export const builtinOptimizers: Record<string, FormOptimizer[]> = buildBuiltinOptimizers();
 
 /**
  * Create an optimizer registry by merging custom optimizers with builtins.
