@@ -5,6 +5,13 @@
 **Status**: Draft
 **Input**: Progressive decomposition of composed Zod schemas into per-field validation, eliminating zodResolver overhead through three optimization levels (decompose tree, native rules, cross-field UX).
 
+## Clarifications
+
+### Session 2026-03-26
+
+- Q: Must optimized validation produce semantically identical accept/reject results to zodResolver for all inputs? → A: Strict equivalence — optimized must match zodResolver accept/reject for all inputs; if a native rule can't perfectly replicate a Zod validator, fall back to atomic Zod.
+- Q: How is runtime optimization configured — global, per-form, or both? → A: Global only — single optimization level configured in z2f.config.ts, read by both runtime and codegen.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Per-Field Validation Decomposition (Priority: P1)
@@ -99,9 +106,10 @@ As a developer with custom components that enforce constraints (e.g., a DateRang
 - **FR-011**: System MUST support an optimizer registry parallel to the existing processor registry, with chained (1:N) optimizers per schema type.
 - **FR-012**: System MUST support custom optimizer registration following the same extensibility pattern as custom processors.
 - **FR-013**: System MUST add validation strategy properties to the FormField intermediate representation.
-- **FR-014**: System MUST support configuration to enable optimization and control depth (three levels).
+- **FR-014**: System MUST support a global optimization setting in z2f.config.ts (read by both runtime and codegen) to enable optimization and control depth (three levels).
 - **FR-015**: System MUST default to the current zodResolver behavior when optimization is not enabled (backward compatible).
 - **FR-016**: System MUST preserve schemaLite container structure with `.loose()` when nested validation remains, pruning empty subtrees.
+- **FR-017**: System MUST guarantee strict validation equivalence — optimized validation (at any level) MUST produce identical accept/reject decisions to zodResolver for all inputs. If a native rule cannot perfectly replicate a Zod validator's behavior, the system MUST fall back to atomic Zod for that field.
 
 ### Key Entities
 
