@@ -3,6 +3,10 @@ import { z } from 'zod';
 import { walkSchema } from '../../src/walker.js';
 import type { WalkResult } from '../../src/optimizers/types.js';
 
+function safeParse(schema: any, data: unknown) {
+  return (schema as z.ZodType).safeParse(data);
+}
+
 describe('Validation equivalence (FR-017)', () => {
   function walkOptimized(schema: z.ZodType, level: 1 | 2 | 3 = 2): WalkResult {
     return walkSchema(schema, { validation: { level } }) as WalkResult;
@@ -40,10 +44,10 @@ describe('Validation equivalence (FR-017)', () => {
       expect(schemaLite).not.toBeNull();
 
       // Verify the schemaLite validates correctly
-      const fail = schemaLite!.safeParse({ a: 'same', b: 'same' });
+      const fail = safeParse(schemaLite, { a: 'same', b: 'same' });
       expect(fail.success).toBe(false);
 
-      const pass = schemaLite!.safeParse({ a: 'hello', b: 'world' });
+      const pass = safeParse(schemaLite, { a: 'hello', b: 'world' });
       expect(pass.success).toBe(true);
     });
 
@@ -57,9 +61,9 @@ describe('Validation equivalence (FR-017)', () => {
       expect(fields[0]!.zodSchema).toBeDefined();
 
       // Verify the zodSchema validates correctly
-      const pass = fields[0]!.zodSchema!.safeParse('Xhello');
+      const pass = safeParse(fields[0]!.zodSchema, 'Xhello');
       expect(pass.success).toBe(true);
-      const fail = fields[0]!.zodSchema!.safeParse('hello');
+      const fail = safeParse(fields[0]!.zodSchema, 'hello');
       expect(fail.success).toBe(false);
     });
   });

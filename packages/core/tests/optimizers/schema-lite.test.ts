@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { createSchemaLiteCollector } from '../../src/optimizers/schema-lite.js';
 
+function safeParse(schema: any, data: unknown) {
+  return (schema as z.ZodType).safeParse(data);
+}
+
 describe('SchemaLiteCollector', () => {
   it('isEmpty returns true when nothing has been collected', () => {
     const collector = createSchemaLiteCollector();
@@ -39,10 +43,10 @@ describe('SchemaLiteCollector', () => {
     expect(result).not.toBeNull();
 
     // The built schema should be a loose object that accepts extra keys
-    const parseResult = result!.safeParse({ name: 'ab', extraField: 123 });
+    const parseResult = safeParse(result, { name: 'ab', extraField: 123 });
     expect(parseResult.success).toBe(true);
 
-    const failResult = result!.safeParse({ name: 'a', extraField: 123 });
+    const failResult = safeParse(result, { name: 'a', extraField: 123 });
     expect(failResult.success).toBe(false);
   });
 
@@ -59,11 +63,11 @@ describe('SchemaLiteCollector', () => {
     expect(result).not.toBeNull();
 
     // Should fail when passwords don't match
-    const failResult = result!.safeParse({ password: 'abc', confirm: 'xyz' });
+    const failResult = safeParse(result, { password: 'abc', confirm: 'xyz' });
     expect(failResult.success).toBe(false);
 
     // Should pass when passwords match
-    const passResult = result!.safeParse({ password: 'abc', confirm: 'abc' });
+    const passResult = safeParse(result, { password: 'abc', confirm: 'abc' });
     expect(passResult.success).toBe(true);
   });
 
@@ -83,15 +87,15 @@ describe('SchemaLiteCollector', () => {
     expect(result).not.toBeNull();
 
     // Should fail min length
-    const tooShort = result!.safeParse({ name: 'a' });
+    const tooShort = safeParse(result, { name: 'a' });
     expect(tooShort.success).toBe(false);
 
     // Should fail banned name
-    const banned = result!.safeParse({ name: 'banned' });
+    const banned = safeParse(result, { name: 'banned' });
     expect(banned.success).toBe(false);
 
     // Should pass valid name
-    const valid = result!.safeParse({ name: 'hello' });
+    const valid = safeParse(result, { name: 'hello' });
     expect(valid.success).toBe(true);
   });
 
@@ -130,11 +134,11 @@ describe('SchemaLiteCollector', () => {
     expect(result).not.toBeNull();
 
     // Valid email passes
-    const valid = result!.safeParse({ email: 'test@example.com', other: 'ignored' });
+    const valid = safeParse(result, { email: 'test@example.com', other: 'ignored' });
     expect(valid.success).toBe(true);
 
     // Invalid email fails
-    const invalid = result!.safeParse({ email: 'not-an-email', other: 'ignored' });
+    const invalid = safeParse(result, { email: 'not-an-email', other: 'ignored' });
     expect(invalid.success).toBe(false);
   });
 });

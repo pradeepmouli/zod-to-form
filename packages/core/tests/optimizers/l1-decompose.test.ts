@@ -3,6 +3,10 @@ import { z } from 'zod';
 import { walkSchema } from '../../src/walker.js';
 import type { WalkResult } from '../../src/optimizers/types.js';
 
+function safeParse(schema: any, data: unknown) {
+  return (schema as z.ZodType).safeParse(data);
+}
+
 function walkOptimized(schema: z.ZodType, level: 1 | 2 | 3 = 1): WalkResult {
   return walkSchema(schema, { validation: { level } }) as WalkResult;
 }
@@ -16,9 +20,9 @@ describe('L1 decompose optimizer', () => {
       expect(field.validation?.mode).toBe('zodSchema');
       expect(field.zodSchema).toBeDefined();
       // The zodSchema should validate correctly
-      const pass = field.zodSchema!.safeParse('ab');
+      const pass = safeParse(field.zodSchema, 'ab');
       expect(pass.success).toBe(true);
-      const fail = field.zodSchema!.safeParse('a');
+      const fail = safeParse(field.zodSchema, 'a');
       expect(fail.success).toBe(false);
     });
 
@@ -27,23 +31,23 @@ describe('L1 decompose optimizer', () => {
       const { fields } = walkOptimized(schema);
       const field = fields[0]!;
       expect(field.validation?.mode).toBe('zodSchema');
-      expect(field.zodSchema!.safeParse(50).success).toBe(true);
-      expect(field.zodSchema!.safeParse(-1).success).toBe(false);
+      expect(safeParse(field.zodSchema, 50).success).toBe(true);
+      expect(safeParse(field.zodSchema, -1).success).toBe(false);
     });
 
     it('sets zodSchema for boolean fields', () => {
       const schema = z.object({ active: z.boolean() });
       const { fields } = walkOptimized(schema);
       expect(fields[0]!.validation?.mode).toBe('zodSchema');
-      expect(fields[0]!.zodSchema!.safeParse(true).success).toBe(true);
+      expect(safeParse(fields[0]!.zodSchema, true).success).toBe(true);
     });
 
     it('sets zodSchema for enum fields', () => {
       const schema = z.object({ color: z.enum(['red', 'blue']) });
       const { fields } = walkOptimized(schema);
       expect(fields[0]!.validation?.mode).toBe('zodSchema');
-      expect(fields[0]!.zodSchema!.safeParse('red').success).toBe(true);
-      expect(fields[0]!.zodSchema!.safeParse('green').success).toBe(false);
+      expect(safeParse(fields[0]!.zodSchema, 'red').success).toBe(true);
+      expect(safeParse(fields[0]!.zodSchema, 'green').success).toBe(false);
     });
 
     it('sets zodSchema for date fields', () => {

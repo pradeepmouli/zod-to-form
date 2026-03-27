@@ -4,6 +4,10 @@ import { walkSchema } from '../../src/walker.js';
 import type { WalkResult } from '../../src/optimizers/types.js';
 import type { FormOptimizer } from '../../src/optimizers/types.js';
 
+function safeParse(schema: any, data: unknown) {
+  return (schema as z.ZodType).safeParse(data);
+}
+
 describe('walkSchema with optimization', () => {
   it('returns FormField[] when no validation option is set', () => {
     const schema = z.object({ name: z.string() });
@@ -38,7 +42,7 @@ describe('walkSchema with optimization', () => {
         optimizers: {
           string: [testOptimizer],
           number: [testOptimizer]
-        }
+        } as any
       }
     }) as WalkResult;
 
@@ -58,7 +62,7 @@ describe('walkSchema with optimization', () => {
     const result = walkSchema(schema, {
       validation: {
         level: 1,
-        optimizers: { string: [customOptimizer] }
+        optimizers: { string: [customOptimizer] } as any
       }
     }) as WalkResult;
 
@@ -87,10 +91,10 @@ describe('walkSchema with optimization', () => {
     expect(result.schemaLite).not.toBeNull();
 
     // schemaLite should validate the superRefine
-    const fail = result.schemaLite!.safeParse({ password: 'abc', confirm: 'xyz' });
+    const fail = safeParse(result.schemaLite, { password: 'abc', confirm: 'xyz' });
     expect(fail.success).toBe(false);
 
-    const pass = result.schemaLite!.safeParse({ password: 'abc', confirm: 'abc' });
+    const pass = safeParse(result.schemaLite, { password: 'abc', confirm: 'abc' });
     expect(pass.success).toBe(true);
   });
 

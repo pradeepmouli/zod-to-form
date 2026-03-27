@@ -14,7 +14,7 @@ describe('Custom optimizer registration (US4)', () => {
     const result = walkSchema(schema, {
       validation: {
         level: 2,
-        optimizers: { string: [customOptimizer] }
+        optimizers: { string: [customOptimizer] } as any
       }
     }) as WalkResult;
 
@@ -35,7 +35,7 @@ describe('Custom optimizer registration (US4)', () => {
     const result = walkSchema(schema, {
       validation: {
         level: 2,
-        optimizers: { date: [dateRangeOptimizer] }
+        optimizers: { date: [dateRangeOptimizer] } as any
       }
     }) as WalkResult;
 
@@ -56,7 +56,7 @@ describe('Custom optimizer registration (US4)', () => {
       validation: {
         level: 2,
         // Only override string, number uses default chain
-        optimizers: { string: [customOptimizer] }
+        optimizers: { string: [customOptimizer] } as any
       }
     }) as WalkResult;
 
