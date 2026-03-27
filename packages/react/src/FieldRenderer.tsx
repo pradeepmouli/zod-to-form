@@ -165,27 +165,45 @@ function getErrorAtPath(errors: unknown, path: string): string | undefined {
   return undefined;
 }
 
+function zodSchemaValidate(field: FormField): ((value: unknown) => true | string) | undefined {
+  if (field.validation?.mode !== 'zodSchema' || !field.zodSchema) return undefined;
+  const schema = field.zodSchema as unknown as {
+    safeParse(v: unknown): { success: boolean; error?: { issues: Array<{ message: string }> } };
+  };
+  return (value: unknown) => {
+    const result = schema.safeParse(value);
+    if (result.success) return true;
+    return result.error?.issues[0]?.message ?? 'Validation failed';
+  };
+}
+
 function getRegisterOptions(field: FormField): Record<string, unknown> {
+  const opts: Record<string, unknown> = {};
+
   if (field.zodType === 'number' || field.zodType === 'bigint') {
-    return { valueAsNumber: true };
+    opts['valueAsNumber'] = true;
   }
 
   if (field.zodType === 'date') {
-    return { valueAsDate: true };
+    opts['valueAsDate'] = true;
   }
 
   if (field.zodType === 'file') {
-    return {
-      setValueAs: (value: unknown) => {
-        if (value instanceof FileList) {
-          return value.length > 0 ? value.item(0) : undefined;
-        }
-        return value;
+    opts['setValueAs'] = (value: unknown) => {
+      if (value instanceof FileList) {
+        return value.length > 0 ? value.item(0) : undefined;
       }
+      return value;
     };
   }
 
-  return {};
+  // AOT validation: per-field zodSchema validation via register({ validate })
+  const validate = zodSchemaValidate(field);
+  if (validate) {
+    opts['validate'] = validate;
+  }
+
+  return opts;
 }
 
 export interface FieldTemplateProps {
@@ -493,7 +511,10 @@ const ControlledFieldInner = memo(function ControlledFieldInner({
   errorMessage
 }: ControlledFieldProps) {
   const { control } = useFormContext();
-  const { field: controllerField } = useController({ name: field.key, control });
+  // When AOT validation is enabled, pass per-field validate to controller rules
+  const validate = zodSchemaValidate(field);
+  const rules = validate ? { validate } : undefined;
+  const { field: controllerField } = useController({ name: field.key, control, rules });
 
   // controllerField is ControllerRenderProps which extends Record<string, unknown>
   const resolved = resolveProps(
