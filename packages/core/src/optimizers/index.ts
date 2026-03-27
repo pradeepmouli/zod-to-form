@@ -9,6 +9,13 @@ export type {
 export { createSchemaLiteCollector } from './schema-lite.js';
 
 import type { FormOptimizer } from './types.js';
+import { buildL1Optimizers } from './l1-decompose.js';
+
+/**
+ * Built-in optimizers, populated by L1/L2/L3 registration.
+ * Keyed by def.type, each entry is an ordered chain of optimizers.
+ */
+export const builtinOptimizers: Record<string, FormOptimizer[]> = buildL1Optimizers();
 
 /**
  * Create an optimizer registry by merging custom optimizers with builtins.
@@ -19,9 +26,3 @@ export function createOptimizers(
 ): Record<string, FormOptimizer[]> {
   return { ...builtinOptimizers, ...custom };
 }
-
-/**
- * Built-in optimizers, populated by L1/L2/L3 registration.
- * Keyed by def.type, each entry is an ordered chain of optimizers.
- */
-export const builtinOptimizers: Record<string, FormOptimizer[]> = {};

@@ -122,15 +122,15 @@ function processField(
  * differ from its parent, indicating superRefine/refine was applied.
  */
 function hasTopLevelEffects(schema: ZodType): boolean {
-  const def = schema._zod.def as Record<string, unknown>;
-  const checks = def.checks as unknown[] | undefined;
+  const def = schema._zod.def as unknown as Record<string, unknown>;
+  const checks = def['checks'] as unknown[] | undefined;
   if (!checks || checks.length === 0) return false;
 
   // If there's a parent, compare check counts
   const parent = schema._zod.parent;
   if (parent) {
-    const parentDef = (parent as ZodType)._zod.def as Record<string, unknown>;
-    const parentChecks = parentDef.checks as unknown[] | undefined;
+    const parentDef = (parent as ZodType)._zod.def as unknown as Record<string, unknown>;
+    const parentChecks = parentDef['checks'] as unknown[] | undefined;
     return !parentChecks || checks.length > parentChecks.length;
   }
 
@@ -139,11 +139,13 @@ function hasTopLevelEffects(schema: ZodType): boolean {
 
 /**
  * Walk a Zod schema and produce a FormField[] tree.
- *
- * @param schema - A Zod object schema (top-level must be z.object())
- * @param options - Optional configuration for the walk
- * @returns FormField[] when no validation option is set, or WalkResult when optimization is enabled
+ * When validation option is set, returns WalkResult with fields + schemaLite.
  */
+export function walkSchema(
+  schema: ZodType,
+  options: WalkOptions & { validation: { level: 1 | 2 | 3 } }
+): WalkResult;
+export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[];
 export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] | WalkResult {
   // Unwrap top-level effects to get the actual object schema
   let objectSchema = schema;
@@ -152,9 +154,9 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
   // If the schema is wrapped in pipes/effects, find the underlying object
   if (topLevelType !== 'object') {
     // Try to find the inner object schema for pipe/effect wrappers
-    const def = schema._zod.def as Record<string, unknown>;
-    if (topLevelType === 'pipe' && def.in) {
-      objectSchema = def.in as ZodType;
+    const def = schema._zod.def as unknown as Record<string, unknown>;
+    if (topLevelType === 'pipe' && def['in']) {
+      objectSchema = def['in'] as ZodType;
     }
 
     if (objectSchema._zod.def.type !== 'object') {

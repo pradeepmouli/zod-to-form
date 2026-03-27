@@ -40,6 +40,8 @@ export interface SchemaLiteCollector {
   removeTopLevel(entry: SchemaLiteEntry): void;
   /** Add a field that couldn't be inlined (safety net fallback) */
   addField(path: string, schema: $ZodType): void;
+  /** Set the original schema with top-level effects for submit-time use */
+  setOriginalSchema(schema: $ZodType): void;
   /** True when nothing has been collected */
   isEmpty(): boolean;
   /** Build the final schemaLite or return null if empty */
