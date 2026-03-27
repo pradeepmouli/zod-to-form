@@ -132,16 +132,21 @@ export async function runGenerate(options: GenerateOptions): Promise<{
   }
 
   // SAFETY: same as above — loadSchema returns a ZodObject which is $ZodType at runtime
-  const walkOptions: Parameters<typeof walkSchema>[1] = { formRegistry };
-  if (effectiveValidation?.level) {
-    (walkOptions as any).validation = { level: effectiveValidation.level };
-  }
-  const walkResult = walkSchema(schema as never, walkOptions as any);
-
-  // When optimization is enabled, walkResult is WalkResult { fields, schemaLite }
+  let fields: import('@zod-to-form/core').FormField[];
+  let schemaLite: import('zod/v4/core').$ZodType | null | undefined;
   const isOptimized = effectiveValidation?.level != null;
-  const fields = isOptimized ? (walkResult as any).fields : walkResult;
-  const schemaLite = isOptimized ? (walkResult as any).schemaLite : undefined;
+
+  if (isOptimized) {
+    const result = walkSchema(schema as never, {
+      formRegistry,
+      validation: { level: effectiveValidation!.level as 1 | 2 | 3 }
+    });
+    fields = result.fields;
+    schemaLite = result.schemaLite;
+  } else {
+    fields = walkSchema(schema as never, { formRegistry });
+    schemaLite = undefined;
+  }
 
   const config = {
     schemaPath,

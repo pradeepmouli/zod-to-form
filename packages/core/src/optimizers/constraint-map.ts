@@ -79,19 +79,26 @@ export function extractNativeRules(schema: $ZodType): NativeRules | null {
 
       case 'greater_than': {
         const value = checkDef.value;
-        if (typeof value === 'number') {
+        // RHF min/max rules are always inclusive (>=, <=).
+        // If Zod uses exclusive bounds (> instead of >=), fall back to atomic Zod
+        // to maintain strict equivalence (FR-017).
+        if (typeof value === 'number' && checkDef.inclusive !== false) {
           rules.min = {
             value,
             message: extractErrorMessage(checkDef, `Must be at least ${value}`)
           };
+        } else {
+          hasRefine = true;
         }
         break;
       }
 
       case 'less_than': {
         const value = checkDef.value;
-        if (typeof value === 'number') {
+        if (typeof value === 'number' && checkDef.inclusive !== false) {
           rules.max = { value, message: extractErrorMessage(checkDef, `Must be at most ${value}`) };
+        } else {
+          hasRefine = true;
         }
         break;
       }
@@ -148,20 +155,4 @@ export function extractNativeRules(schema: $ZodType): NativeRules | null {
   }
 
   return rules;
-}
-
-/**
- * Check if a schema has any refine, transform, or pipe effects.
- * These prevent conversion to native rules.
- */
-export function hasEffects(schema: $ZodType): boolean {
-  const def = schema._zod.def as unknown as Record<string, unknown>;
-  const checks = def['checks'] as CheckDef[] | undefined;
-
-  if (!checks) return false;
-
-  return checks.some((check) => {
-    const checkDef = ('_zod' in check ? (check as any)._zod.def : check) as CheckDef;
-    return checkDef.check === 'custom' || checkDef.check === 'transform';
-  });
 }

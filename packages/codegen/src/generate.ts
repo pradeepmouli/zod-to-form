@@ -566,7 +566,9 @@ function needsZodResolver(
 }
 
 function generateHoistedValidators(fields: FormField[], exportName: string): string[] {
-  const zodFields = collectZodSchemaFields(fields);
+  // Only hoist validators for top-level fields — nested paths (e.g. "address.street")
+  // can't be accessed via simple .shape.key and would produce invalid code.
+  const zodFields = collectZodSchemaFields(fields).filter((f) => !f.key.includes('.'));
   return zodFields.map((field) => {
     const safeKey = field.key.replace(/[^a-zA-Z0-9_]/g, '_');
     return `const _validate_${safeKey} = (value: unknown) => { const r = ${exportName}.shape.${field.key}.safeParse(value); return r.success ? true : r.error.issues[0]?.message ?? 'Invalid'; };`;

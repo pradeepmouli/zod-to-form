@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { walkSchema, registerFlat, normalizeFormValues } from '@zod-to-form/core';
 import type { FormField, WalkResult, ValidationConfig } from '@zod-to-form/core';
@@ -90,10 +90,6 @@ export function useZodForm<TSchema extends ZodObject>(
       };
     }
   }, [schema, effectiveRegistry, options?.processors, validationLevel, isOptimized]);
-
-  // Store schemaLite in a ref for submit-time access
-  const schemaLiteRef = useRef<$ZodType | null>(null);
-  schemaLiteRef.current = walkResult.schemaLite;
 
   const form = useForm<output<TSchema>>({
     // When optimized, skip zodResolver — per-field validation is handled by register({ validate })
