@@ -79,7 +79,7 @@ packages/
 ├── react/src/
 │   ├── useZodForm.ts               # MODIFY — conditional zodResolver vs per-field validation
 │   ├── FieldRenderer.tsx            # MODIFY — consume field.validation for register() options
-│   ├── SchemaLiteSubmit.tsx         # NEW — submit-time schemaLite validation wrapper
+│   ├── SchemaLiteSubmit.ts          # NEW — submit-time schemaLite validation utility (pure function, no JSX)
 │   └── __tests__/
 │       └── optimized-validation.test.ts
 └── codegen/src/

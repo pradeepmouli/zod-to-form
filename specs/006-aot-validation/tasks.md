@@ -66,7 +66,7 @@
 - [ ] T017 [P] [US1] Implement L1 decompose optimizers in packages/core/src/optimizers/l1-decompose.ts — one optimizer per Zod type (string, number, boolean, enum, date, literal, array, object, union, intersection, record, tuple, file); each stores field.zodSchema = schema and sets field.validation = { mode: 'zodSchema' }; wrapper type optimizers (optional, nullable, default, readonly, pipe, lazy) delegate to inner type
 - [ ] T018 [US1] Register L1 optimizers as builtinOptimizers in packages/core/src/optimizers/index.ts — populate the Record<string, FormOptimizer[]> with L1 optimizer for each def.type
 - [ ] T019 [US1] Modify useZodForm in packages/react/src/useZodForm.ts — when config has validation.level set: call walkSchema with validation option to get WalkResult; skip zodResolver; store schemaLite in ref for submit-time use
-- [ ] T020 [US1] Implement SchemaLiteSubmit helper in packages/react/src/SchemaLiteSubmit.tsx — a function (not component) that wraps onSubmit: runs schemaLite.safeParse(data), maps r.error.issues to form.setError(path, message), calls original onSubmit only if valid
+- [ ] T020 [US1] Implement SchemaLiteSubmit helper in packages/react/src/SchemaLiteSubmit.ts — a function (not component) that wraps onSubmit: runs schemaLite.safeParse(data), maps r.error.issues to form.setError(path, message), calls original onSubmit only if valid
 - [ ] T021 [US1] Modify FieldRenderer in packages/react/src/FieldRenderer.tsx — when field.validation?.mode === 'zodSchema': add validate function to register() options (or useController rules) that calls field.zodSchema.safeParse(v) and returns success or first error message
 - [ ] T022 [US1] Modify codegen templates in packages/codegen/src/templates.ts — when field.validation?.mode === 'zodSchema': emit hoisted const at module scope, emit register({ validate }) referencing it; remove zodResolver import; emit schemaLite + submit handler when WalkResult.schemaLite is non-null
 - [ ] T023 [US1] Modify codegen generate in packages/codegen/src/generate.ts — accept WalkResult (fields + schemaLite) from walker when optimization enabled; pass schemaLite to template emitter; omit @hookform/resolvers import
@@ -148,9 +148,11 @@
 
 - [ ] T043 [P] Write equivalence test suite in packages/core/src/__tests__/optimizers/equivalence.test.ts — for a battery of schemas (simple, nested, arrays, unions, refines, transforms, superRefines), compare zodResolver output vs optimized output at each level; verify identical accept/reject for all inputs (FR-017)
 - [ ] T044 [P] Write backward compatibility tests — verify walkSchema returns FormField[] (not WalkResult) when no validation option; verify all existing tests pass unchanged; verify config without validation key produces zodResolver behavior
-- [ ] T045 Modify CLI generate command in packages/cli/src/commands/generate.ts — read validation config from z2f.config.ts; pass optimization level to walker and codegen; no new CLI flags (config-driven per clarification)
-- [ ] T046 Run full test suite (pnpm test) and type check (pnpm run type-check) — zero failures, zero type errors
-- [ ] T047 Run quickstart.md validation — follow quickstart steps end-to-end and verify expected outputs
+- [ ] T045 [P] Write nested schemaLite integration tests in packages/core/src/__tests__/optimizers/schema-lite.test.ts — test FR-016: given a nested z.object with some descendants having refines and others fully inlineable, verify schemaLite preserves container structure with .loose() for branches with un-inlined validation and prunes empty subtrees entirely
+- [ ] T046 [P] Write runtime config propagation tests in packages/react/src/__tests__/optimized-validation.test.ts — test that useZodForm reads validation.level from z2f.config.ts global config and passes it to walkSchema; verify level propagates correctly through context to optimizer chain
+- [ ] T047 Modify CLI generate command in packages/cli/src/commands/generate.ts — read validation config from z2f.config.ts; pass optimization level to walker and codegen; no new CLI flags (config-driven per clarification)
+- [ ] T048 Run full test suite (pnpm test) and type check (pnpm run type-check) — zero failures, zero type errors
+- [ ] T049 Run quickstart.md validation — follow quickstart steps end-to-end and verify expected outputs
 
 ---
 

@@ -86,7 +86,8 @@ As a developer with custom components that enforce constraints (e.g., a DateRang
 - What happens when schemaLite has nested object structure? Container structure is preserved with `.loose()` only if any descendant has un-inlined validation; empty subtrees are pruned.
 - What happens when a `transform()` exists on a field? It stays as a hoisted atomic Zod validator because the output type may differ from input.
 - What happens when the optimization level is set higher than what's needed (e.g., Level 3 but no cross-field dependencies)? Each level is a no-op when nothing matches — no errors, no unnecessary output.
-- What happens when a field uses `z.pipe()` chains? Pipes containing transforms stay as atomic Zod; pure refinement pipes may be decomposable at Level 2.
+- What happens when a field uses `z.pipe()` chains? Pipes containing transforms stay as atomic Zod. Pure refinement pipe decomposition is **out of scope** — all pipes are treated as atomic Zod validators for safety.
+- What happens when a field uses `z.lazy()`? The lazy wrapper is unwrapped to its inner schema and delegated to the appropriate L1 optimizer (same as other wrapper types like optional/nullable/default).
 - What happens when optimization is disabled? The system falls back to the current zodResolver behavior with zero changes to output.
 
 ## Requirements *(mandatory)*
