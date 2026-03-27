@@ -12,7 +12,9 @@ export type {
   FieldExpression,
   ProcessParams,
   WalkOptions,
-  ZodFormRegistry
+  ZodFormRegistry,
+  NativeRules,
+  ValidationStrategy
 } from './types.js';
 
 export type {
@@ -23,8 +25,23 @@ export type {
   ZodFormsConfig,
   ZodTypeConfig,
   ConfigDefaults,
+  ValidationConfig,
   StripIndexSignature
 } from './config.js';
+
+export type {
+  FormOptimizer,
+  FormOptimizerContext,
+  WalkResult,
+  SchemaLiteCollector,
+  SchemaLiteEntry
+} from './optimizers/index.js';
+
+export {
+  createOptimizers,
+  builtinOptimizers,
+  createSchemaLiteCollector
+} from './optimizers/index.js';
 
 export {
   defineConfig,

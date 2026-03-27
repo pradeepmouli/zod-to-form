@@ -4,6 +4,9 @@ import { processFallback } from './processors/fallback.js';
 import { createProcessors } from './registry.js';
 import { createBaseField } from './utils.js';
 import type { FormField, WalkOptions } from './types.js';
+import type { FormOptimizerContext, WalkResult } from './optimizers/types.js';
+import { createOptimizers } from './optimizers/index.js';
+import { createSchemaLiteCollector } from './optimizers/schema-lite.js';
 
 function processField(
   schema: ZodType,
@@ -12,7 +15,8 @@ function processField(
   processors: ReturnType<typeof createProcessors>,
   seen: WeakSet<ZodType>,
   maxDepth: number,
-  currentDepth: number
+  currentDepth: number,
+  optimizerCtx?: FormOptimizerContext
 ): FormField {
   const zodType = schema._zod.def.type;
   const field = createBaseField(key, zodType);
@@ -33,7 +37,16 @@ function processField(
     maxDepth,
     currentDepth,
     processChild: (childSchema, childKey) =>
-      processField(childSchema, childKey, options, processors, seen, maxDepth, currentDepth + 1)
+      processField(
+        childSchema,
+        childKey,
+        options,
+        processors,
+        seen,
+        maxDepth,
+        currentDepth + 1,
+        optimizerCtx
+      )
   };
 
   const processor = processors[zodType];
@@ -85,7 +98,43 @@ function processField(
     field.hasCustomRender = true;
   }
 
+  // Run optimizer chain after processor + metadata overlay
+  if (optimizerCtx) {
+    const optimizers = optimizerCtx.optimizers[zodType];
+    if (optimizers) {
+      for (const optimizer of optimizers) {
+        optimizer(schema, optimizerCtx, field, { parentKey: key });
+      }
+    }
+  }
+
   return field;
+}
+
+/**
+ * Detect top-level refines/transforms/superRefines on the schema.
+ *
+ * In Zod v4, `z.object({}).superRefine(fn)` creates a new object schema
+ * with the same def.type="object" but with additional checks in def.checks.
+ * The parent chain points to the original (check-free) schema.
+ *
+ * We detect top-level effects by checking if the schema has checks that
+ * differ from its parent, indicating superRefine/refine was applied.
+ */
+function hasTopLevelEffects(schema: ZodType): boolean {
+  const def = schema._zod.def as Record<string, unknown>;
+  const checks = def.checks as unknown[] | undefined;
+  if (!checks || checks.length === 0) return false;
+
+  // If there's a parent, compare check counts
+  const parent = schema._zod.parent;
+  if (parent) {
+    const parentDef = (parent as ZodType)._zod.def as Record<string, unknown>;
+    const parentChecks = parentDef.checks as unknown[] | undefined;
+    return !parentChecks || checks.length > parentChecks.length;
+  }
+
+  return checks.length > 0;
 }
 
 /**
@@ -93,28 +142,66 @@ function processField(
  *
  * @param schema - A Zod object schema (top-level must be z.object())
  * @param options - Optional configuration for the walk
- * @returns FormField[] - Ordered array of field descriptors
+ * @returns FormField[] when no validation option is set, or WalkResult when optimization is enabled
  */
-export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] {
+export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] | WalkResult {
+  // Unwrap top-level effects to get the actual object schema
+  let objectSchema = schema;
   const topLevelType = schema._zod.def.type;
 
+  // If the schema is wrapped in pipes/effects, find the underlying object
   if (topLevelType !== 'object') {
-    throw new Error('walkSchema expects a top-level z.object() schema.');
+    // Try to find the inner object schema for pipe/effect wrappers
+    const def = schema._zod.def as Record<string, unknown>;
+    if (topLevelType === 'pipe' && def.in) {
+      objectSchema = def.in as ZodType;
+    }
+
+    if (objectSchema._zod.def.type !== 'object') {
+      throw new Error('walkSchema expects a top-level z.object() schema.');
+    }
   }
 
   const maxDepth = options?.maxDepth ?? 5;
   const processors = createProcessors(options?.processors ?? {});
-  const shape = (schema._zod.def as unknown as { shape: Record<string, ZodType> }).shape;
+  const shape = (objectSchema._zod.def as unknown as { shape: Record<string, ZodType> }).shape;
+
+  const isOptimized = options?.validation?.level !== undefined;
+
+  // Set up optimizer context if optimization is enabled
+  let optimizerCtx: FormOptimizerContext | undefined;
+  let collector: ReturnType<typeof createSchemaLiteCollector> | undefined;
+
+  if (isOptimized) {
+    collector = createSchemaLiteCollector();
+    const optimizers = createOptimizers(
+      (options!.validation!.optimizers as Record<string, any>) ?? {}
+    );
+
+    optimizerCtx = {
+      optimizers,
+      schemaLite: collector,
+      level: options!.validation!.level
+    };
+
+    // Detect top-level effects (superRefine, refine, transform)
+    // When the schema has checks beyond its parent, it has top-level effects.
+    // In Zod v4, superRefine bakes the check into the schema — we can't easily
+    // extract the function. Instead, store the original schema for submit-time use.
+    if (hasTopLevelEffects(schema)) {
+      collector.setOriginalSchema(schema as any);
+    }
+  }
 
   // Each top-level field gets its own `seen` set so that reused schema instances
   // (e.g. `const name = z.string(); z.object({ a: name, b: name })`) are handled
   // correctly across siblings, while still detecting cycles within a single descent.
   const fields = Object.entries(shape).map(([key, childSchema]) => {
     const seen = new WeakSet<ZodType>();
-    return processField(childSchema, key, options, processors, seen, maxDepth, 0);
+    return processField(childSchema, key, options, processors, seen, maxDepth, 0, optimizerCtx);
   });
 
-  return fields.sort((left, right) => {
+  const sorted = fields.sort((left, right) => {
     if (left.order === undefined && right.order === undefined) {
       return 0;
     }
@@ -126,4 +213,13 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
     }
     return left.order - right.order;
   });
+
+  if (isOptimized && collector) {
+    return {
+      fields: sorted,
+      schemaLite: collector.build()
+    };
+  }
+
+  return sorted;
 }

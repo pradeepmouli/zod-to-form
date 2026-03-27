@@ -17,13 +17,13 @@
 
 **Purpose**: Create optimizer module structure and type definitions
 
-- [ ] T001 Create optimizers directory at packages/core/src/optimizers/
-- [ ] T002 [P] Define FormOptimizer, FormOptimizerContext, ValidationStrategy, NativeRules, and WalkResult types in packages/core/src/optimizers/types.ts
-- [ ] T003 [P] Define SchemaLiteCollector interface in packages/core/src/optimizers/types.ts (same file as T002)
-- [ ] T004 Add zodSchema and validation properties to FormField interface in packages/core/src/types.ts
-- [ ] T005 Add validation config option (`validation?: { level?: 1 | 2 | 3 }`) to ConfigDefaults in packages/core/src/config.ts
-- [ ] T006 Create barrel export in packages/core/src/optimizers/index.ts — export all types and createOptimizers factory
-- [ ] T007 Export optimizer types from packages/core/src/index.ts (FormOptimizer, FormOptimizerContext, ValidationStrategy, NativeRules, WalkResult)
+- [x] T001 Create optimizers directory at packages/core/src/optimizers/
+- [x] T002 [P] Define FormOptimizer, FormOptimizerContext, ValidationStrategy, NativeRules, and WalkResult types in packages/core/src/optimizers/types.ts
+- [x] T003 [P] Define SchemaLiteCollector interface in packages/core/src/optimizers/types.ts (same file as T002)
+- [x] T004 Add zodSchema and validation properties to FormField interface in packages/core/src/types.ts
+- [x] T005 Add validation config option (`validation?: { level?: 1 | 2 | 3 }`) to ConfigDefaults in packages/core/src/config.ts
+- [x] T006 Create barrel export in packages/core/src/optimizers/index.ts — export all types and createOptimizers factory
+- [x] T007 Export optimizer types from packages/core/src/index.ts (FormOptimizer, FormOptimizerContext, ValidationStrategy, NativeRules, WalkResult)
 
 ---
 
@@ -35,15 +35,15 @@
 
 ### Tests for Foundational
 
-- [ ] T008 [P] Write SchemaLiteCollector tests in packages/core/src/__tests__/optimizers/schema-lite.test.ts — test addTopLevel, addField, isEmpty, build (returns null when empty, constructs z.object({}).loose().superRefine() when non-empty), and pruning of empty subtrees
-- [ ] T009 [P] Write walker optimization integration tests in packages/core/src/__tests__/walker-optimization.test.ts — test that walkSchema returns FormField[] when no validation option, returns WalkResult when validation.level set, optimizer chain runs after processors, custom optimizers override builtins
+- [x] T008 [P] Write SchemaLiteCollector tests in packages/core/src/__tests__/optimizers/schema-lite.test.ts — test addTopLevel, addField, isEmpty, build (returns null when empty, constructs z.object({}).loose().superRefine() when non-empty), and pruning of empty subtrees
+- [x] T009 [P] Write walker optimization integration tests in packages/core/src/__tests__/walker-optimization.test.ts — test that walkSchema returns FormField[] when no validation option, returns WalkResult when validation.level set, optimizer chain runs after processors, custom optimizers override builtins
 
 ### Implementation for Foundational
 
-- [ ] T010 Implement SchemaLiteCollector class in packages/core/src/optimizers/schema-lite.ts — addTopLevel, addField, isEmpty, build methods per data-model.md lifecycle
-- [ ] T011 Implement createOptimizers factory in packages/core/src/optimizers/index.ts — merges builtin optimizers with custom optimizers (same pattern as createProcessors in packages/core/src/registry.ts)
-- [ ] T012 Integrate optimizer chain into walker in packages/core/src/walker.ts — after processor dispatch and metadata overlay, run optimizer chain for the field; create SchemaLiteCollector before walk, evaluate after walk; return WalkResult when validation option is set (overloaded return type)
-- [ ] T013 Add top-level refine/transform detection pre-pass in packages/core/src/walker.ts — before field iteration, inspect schema for top-level refines/transforms/superRefines/pipes via schema._zod.def and add them to SchemaLiteCollector
+- [x] T010 Implement SchemaLiteCollector class in packages/core/src/optimizers/schema-lite.ts — addTopLevel, addField, isEmpty, build methods per data-model.md lifecycle
+- [x] T011 Implement createOptimizers factory in packages/core/src/optimizers/index.ts — merges builtin optimizers with custom optimizers (same pattern as createProcessors in packages/core/src/registry.ts)
+- [x] T012 Integrate optimizer chain into walker in packages/core/src/walker.ts — after processor dispatch and metadata overlay, run optimizer chain for the field; create SchemaLiteCollector before walk, evaluate after walk; return WalkResult when validation option is set (overloaded return type)
+- [x] T013 Add top-level refine/transform detection pre-pass in packages/core/src/walker.ts — before field iteration, inspect schema for top-level refines/transforms/superRefines/pipes via schema._zod.def and add them to SchemaLiteCollector
 
 **Checkpoint**: Foundation ready — optimizer infrastructure tested and integrated into walker. User story implementation can now begin.
 
