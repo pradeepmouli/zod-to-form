@@ -83,16 +83,16 @@
 
 ### Tests for User Story 2
 
-- [ ] T024 [P] [US2] Write L2 native rules optimizer tests in packages/core/src/__tests__/optimizers/l2-native-rules.test.ts — test min/max/minLength/maxLength convert to native rules with error messages; test email/uuid/url extract exact Zod regex as pattern; test required derived from non-optional; test refine fields stay as zodSchema mode; test constraint+refine combo stays as zodSchema; test component-enforced for enum/boolean/literal
-- [ ] T025 [P] [US2] Write constraint-map tests in packages/core/src/__tests__/optimizers/l2-native-rules.test.ts (same file) — test each Zod bag entry maps to correct NativeRules property; test error message extraction from bag check entries
+- [x] T024 [P] [US2] Write L2 native rules optimizer tests in packages/core/src/__tests__/optimizers/l2-native-rules.test.ts — test min/max/minLength/maxLength convert to native rules with error messages; test email/uuid/url extract exact Zod regex as pattern; test required derived from non-optional; test refine fields stay as zodSchema mode; test constraint+refine combo stays as zodSchema; test component-enforced for enum/boolean/literal
+- [x] T025 [P] [US2] Write constraint-map tests in packages/core/src/__tests__/optimizers/l2-native-rules.test.ts (same file) — test each Zod bag entry maps to correct NativeRules property; test error message extraction from bag check entries
 - [ ] T026 [P] [US2] Extend codegen optimization tests in packages/codegen/src/__tests__/codegen-optimization.test.ts — test native rule props emitted for simple fields; test no hoisted const for native-mode fields; test zod import omitted when all fields are native/component-enforced and no schemaLite; test zod import retained when at least one zodSchema field exists
 
 ### Implementation for User Story 2
 
-- [ ] T027 [P] [US2] Implement constraint-map in packages/core/src/optimizers/constraint-map.ts — mapping table from Zod bag check types to NativeRules properties; error message extraction from bag check.message; format-to-regex extraction for email/uuid/url using exact Zod internal regex from schema._zod.bag
-- [ ] T028 [US2] Implement L2 native rules optimizer in packages/core/src/optimizers/l2-native-rules.ts — reads field.constraints + field.zodSchema; for fields without refine/transform: converts to field.validation = { mode: 'native', rules }; for enum/boolean/literal: sets mode = 'component-enforced'; for fields with refine/transform: leaves as 'zodSchema' (strict equivalence FR-017)
-- [ ] T029 [US2] Register L2 optimizers in packages/core/src/optimizers/index.ts — add L2 optimizer to chain (runs after L1) when level >= 2
-- [ ] T030 [US2] Modify FieldRenderer in packages/react/src/FieldRenderer.tsx — when field.validation?.mode === 'native': pass field.validation.rules to register() options (or useController rules); when 'component-enforced': emit no validation
+- [x] T027 [P] [US2] Implement constraint-map in packages/core/src/optimizers/constraint-map.ts — mapping table from Zod bag check types to NativeRules properties; error message extraction from bag check.message; format-to-regex extraction for email/uuid/url using exact Zod internal regex from schema._zod.bag
+- [x] T028 [US2] Implement L2 native rules optimizer in packages/core/src/optimizers/l2-native-rules.ts — reads field.constraints + field.zodSchema; for fields without refine/transform: converts to field.validation = { mode: 'native', rules }; for enum/boolean/literal: sets mode = 'component-enforced'; for fields with refine/transform: leaves as 'zodSchema' (strict equivalence FR-017)
+- [x] T029 [US2] Register L2 optimizers in packages/core/src/optimizers/index.ts — add L2 optimizer to chain (runs after L1) when level >= 2
+- [x] T030 [US2] Modify FieldRenderer in packages/react/src/FieldRenderer.tsx — when field.validation?.mode === 'native': pass field.validation.rules to register() options (or useController rules); when 'component-enforced': emit no validation
 - [ ] T031 [US2] Modify codegen templates in packages/codegen/src/templates.ts — when field.validation?.mode === 'native': emit native rule props in register() call; when 'component-enforced': omit validation; track needsZod flag across all fields
 - [ ] T032 [US2] Modify codegen generate in packages/codegen/src/generate.ts — conditionally emit zod import based on needsZod flag (true if any field has mode 'zodSchema' or schemaLite is non-null)
 
@@ -108,14 +108,14 @@
 
 ### Tests for User Story 3
 
-- [ ] T033 [P] [US3] Write L3 cross-field optimizer tests in packages/core/src/__tests__/optimizers/l3-cross-field.test.ts — test static ctx.addIssue({ path: ['literal'] }) patterns are extracted with correct watchFields and watchValidate; test dynamic path patterns stay in schemaLite; test schemaLite discarded when all superRefines converted; test opaque/async superRefines stay in schemaLite
+- [x] T033 [P] [US3] Write L3 cross-field optimizer tests in packages/core/src/__tests__/optimizers/l3-cross-field.test.ts — test static ctx.addIssue({ path: ['literal'] }) patterns are extracted with correct watchFields and watchValidate; test dynamic path patterns stay in schemaLite; test schemaLite discarded when all superRefines converted; test opaque/async superRefines stay in schemaLite
 - [ ] T034 [P] [US3] Extend runtime tests in packages/react/src/__tests__/optimized-validation.test.ts — test FieldRenderer uses useWatch for watch-mode fields; test validate function receives watched values; test cross-field error appears on dependent field change
 
 ### Implementation for User Story 3
 
-- [ ] T035 [US3] Implement L3 cross-field optimizer in packages/core/src/optimizers/l3-cross-field.ts — analyze superRefine function bodies for static patterns: ctx.addIssue with string literal path, data.fieldA/data.fieldB references; extract watchFields and construct watchValidate function; conservative — anything not provably correct stays in schemaLite
-- [ ] T036 [US3] Register L3 optimizers in packages/core/src/optimizers/index.ts — add L3 optimizer to chain (runs after L2) when level >= 3
-- [ ] T037 [US3] Update SchemaLiteCollector in packages/core/src/optimizers/schema-lite.ts — add removeTopLevel method for L3 to remove converted superRefines; re-evaluate isEmpty after removal
+- [x] T035 [US3] Implement L3 cross-field optimizer in packages/core/src/optimizers/l3-cross-field.ts — analyze superRefine function bodies for static patterns: ctx.addIssue with string literal path, data.fieldA/data.fieldB references; extract watchFields and construct watchValidate function; conservative — anything not provably correct stays in schemaLite
+- [x] T036 [US3] Register L3 optimizers in packages/core/src/optimizers/index.ts — add L3 optimizer to chain (runs after L2) when level >= 3
+- [x] T037 [US3] Update SchemaLiteCollector in packages/core/src/optimizers/schema-lite.ts — add removeTopLevel method for L3 to remove converted superRefines; re-evaluate isEmpty after removal
 - [ ] T038 [US3] Modify FieldRenderer in packages/react/src/FieldRenderer.tsx — when field.validation?.mode === 'watch': call useWatch with field.validation.watchFields; pass watched values to field.validation.watchValidate in register({ validate }) or useController rules
 - [ ] T039 [US3] Modify codegen templates in packages/codegen/src/templates.ts — when field.validation?.mode === 'watch': emit watch() call for watchFields; emit validate function using watchValidate logic
 
@@ -131,12 +131,12 @@
 
 ### Tests for User Story 4
 
-- [ ] T040 [P] [US4] Write custom optimizer tests in packages/core/src/__tests__/optimizers/l1-decompose.test.ts (extend) — test custom optimizer overrides builtin for a type; test custom optimizer sets component-enforced mode; test unregistered types use default chain
+- [x] T040 [P] [US4] Write custom optimizer tests in packages/core/src/__tests__/optimizers/l1-decompose.test.ts (extend) — test custom optimizer overrides builtin for a type; test custom optimizer sets component-enforced mode; test unregistered types use default chain
 
 ### Implementation for User Story 4
 
-- [ ] T041 [US4] Verify createOptimizers merges custom optimizers correctly in packages/core/src/optimizers/index.ts — custom optimizers for a type replace the entire chain for that type (same as createProcessors)
-- [ ] T042 [US4] Add custom optimizer example to walkSchema options validation in packages/core/src/walker.ts — ensure WalkOptions.validation.optimizers is passed through to createOptimizers
+- [x] T041 [US4] Verify createOptimizers merges custom optimizers correctly in packages/core/src/optimizers/index.ts — custom optimizers for a type replace the entire chain for that type (same as createProcessors)
+- [x] T042 [US4] Add custom optimizer example to walkSchema options validation in packages/core/src/walker.ts — ensure WalkOptions.validation.optimizers is passed through to createOptimizers
 
 **Checkpoint**: Custom optimizers work. Extensibility story verified.
 
@@ -146,12 +146,12 @@
 
 **Purpose**: Equivalence testing, backward compatibility verification, integration across all three packages
 
-- [ ] T043 [P] Write equivalence test suite in packages/core/src/__tests__/optimizers/equivalence.test.ts — for a battery of schemas (simple, nested, arrays, unions, refines, transforms, superRefines), compare zodResolver output vs optimized output at each level; verify identical accept/reject for all inputs (FR-017)
-- [ ] T044 [P] Write backward compatibility tests — verify walkSchema returns FormField[] (not WalkResult) when no validation option; verify all existing tests pass unchanged; verify config without validation key produces zodResolver behavior
+- [x] T043 [P] Write equivalence test suite in packages/core/src/__tests__/optimizers/equivalence.test.ts — for a battery of schemas (simple, nested, arrays, unions, refines, transforms, superRefines), compare zodResolver output vs optimized output at each level; verify identical accept/reject for all inputs (FR-017)
+- [x] T044 [P] Write backward compatibility tests — verify walkSchema returns FormField[] (not WalkResult) when no validation option; verify all existing tests pass unchanged; verify config without validation key produces zodResolver behavior
 - [ ] T045 [P] Write nested schemaLite integration tests in packages/core/src/__tests__/optimizers/schema-lite.test.ts — test FR-016: given a nested z.object with some descendants having refines and others fully inlineable, verify schemaLite preserves container structure with .loose() for branches with un-inlined validation and prunes empty subtrees entirely
 - [ ] T046 [P] Write runtime config propagation tests in packages/react/src/__tests__/optimized-validation.test.ts — test that useZodForm reads validation.level from z2f.config.ts global config and passes it to walkSchema; verify level propagates correctly through context to optimizer chain
 - [ ] T047 Modify CLI generate command in packages/cli/src/commands/generate.ts — read validation config from z2f.config.ts; pass optimization level to walker and codegen; no new CLI flags (config-driven per clarification)
-- [ ] T048 Run full test suite (pnpm test) and type check (pnpm run type-check) — zero failures, zero type errors
+- [x] T048 Run full test suite (pnpm test) and type check (pnpm run type-check) — zero failures, zero type errors
 - [ ] T049 Run quickstart.md validation — follow quickstart steps end-to-end and verify expected outputs
 
 ---
