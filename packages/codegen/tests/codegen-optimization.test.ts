@@ -138,4 +138,96 @@ describe('codegen optimization', () => {
       expect(code).not.toContain('schemaLite');
     });
   });
+
+  describe('L2 native rules codegen (T026)', () => {
+    it('emits all native rule types correctly', () => {
+      const fields = [
+        makeField({
+          key: 'username',
+          validation: {
+            mode: 'native',
+            rules: {
+              required: 'Username is required',
+              minLength: { value: 3, message: 'Min 3 chars' },
+              maxLength: { value: 50, message: 'Max 50 chars' },
+              pattern: { value: /^[a-z]+$/, message: 'Lowercase only' }
+            }
+          }
+        })
+      ];
+      const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 2 });
+      expect(code).toContain('required: "Username is required"');
+      expect(code).toContain('minLength: { value: 3');
+      expect(code).toContain('maxLength: { value: 50');
+      expect(code).toContain('pattern: { value: /^[a-z]+$/');
+    });
+
+    it('emits min/max for number fields', () => {
+      const fields = [
+        makeField({
+          key: 'age',
+          zodType: 'number',
+          validation: {
+            mode: 'native',
+            rules: {
+              min: { value: 0, message: '>= 0' },
+              max: { value: 120, message: '<= 120' }
+            }
+          }
+        })
+      ];
+      const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 2 });
+      expect(code).toContain('min: { value: 0');
+      expect(code).toContain('max: { value: 120');
+    });
+
+    it('does not emit hoisted const for native-mode fields', () => {
+      const fields = [
+        makeField({
+          key: 'name',
+          validation: { mode: 'native', rules: { required: 'Required' } }
+        })
+      ];
+      const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 2 });
+      expect(code).not.toContain('const _validate_name');
+    });
+
+    it('omits zod import when all fields are native/component-enforced and no schemaLite', () => {
+      const fields = [
+        makeField({
+          key: 'name',
+          validation: { mode: 'native', rules: { required: 'Required' } }
+        }),
+        makeField({
+          key: 'color',
+          component: 'Select',
+          zodType: 'enum',
+          validation: { mode: 'component-enforced' }
+        })
+      ];
+      const code = generateFormComponent(fields, {
+        ...baseConfig,
+        validationLevel: 2,
+        schemaLite: null
+      });
+      expect(code).not.toContain("import { z } from 'zod'");
+      expect(code).not.toContain('import { zodResolver }');
+    });
+
+    it('retains zod import when at least one zodSchema field exists', () => {
+      const fields = [
+        makeField({
+          key: 'name',
+          validation: { mode: 'native', rules: { required: 'Required' } }
+        }),
+        makeField({
+          key: 'bio',
+          validation: { mode: 'zodSchema' },
+          zodSchema: {} as any
+        })
+      ];
+      const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 2 });
+      expect(code).toContain("from 'zod'");
+    });
+  });
 });

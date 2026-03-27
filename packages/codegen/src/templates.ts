@@ -194,6 +194,17 @@ export function renderOptimizedRegister(field: FormField, fieldKey: string): str
     return registerPathExpr(fieldKey);
   }
 
+  if (mode === 'watch') {
+    const watchFields = field.validation?.watchFields ?? [];
+    const safeKey = fieldKey.replace(/[^a-zA-Z0-9_]/g, '_');
+    // Emit register with validate that uses watched values
+    const watchExpr = watchFields.map((f) => `'${f}'`).join(', ');
+    if (fieldKey.includes('${')) {
+      return `register(\`${fieldKey}\`, { validate: _watchValidate_${safeKey} /* watch: [${watchExpr}] */ })`;
+    }
+    return `register('${fieldKey}', { validate: _watchValidate_${safeKey} /* watch: [${watchExpr}] */ })`;
+  }
+
   // undefined validation — backward compatible
   return registerPathExpr(fieldKey);
 }

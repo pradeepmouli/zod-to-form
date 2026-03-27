@@ -141,4 +141,56 @@ describe('SchemaLiteCollector', () => {
     const invalid = safeParse(result, { email: 'not-an-email', other: 'ignored' });
     expect(invalid.success).toBe(false);
   });
+
+  describe('nested schemaLite integration (T045 / FR-016)', () => {
+    it('preserves container structure with .loose() for branches with un-inlined validation', () => {
+      const collector = createSchemaLiteCollector();
+      // A field with a refine that can't be inlined
+      const nameSchema = z.string().min(2);
+      collector.addField('name', nameSchema as any);
+
+      const result = collector.build();
+      expect(result).not.toBeNull();
+
+      // Should validate the collected field
+      const valid = safeParse(result, { name: 'hello', age: 42, extra: true });
+      expect(valid.success).toBe(true);
+
+      // Should reject invalid value for the collected field
+      const invalid = safeParse(result, { name: 'a', age: 42 });
+      expect(invalid.success).toBe(false);
+
+      // Extra fields should pass through (loose object)
+      const withExtras = safeParse(result, { name: 'ok', unknownField: 'anything' });
+      expect(withExtras.success).toBe(true);
+    });
+
+    it('prunes empty subtrees — empty collector builds null', () => {
+      const collector = createSchemaLiteCollector();
+      expect(collector.build()).toBeNull();
+    });
+
+    it('handles multiple fallthrough fields', () => {
+      const collector = createSchemaLiteCollector();
+      const nameSchema = z.string().min(2);
+      const ageSchema = z.number().min(0);
+      collector.addField('name', nameSchema as any);
+      collector.addField('age', ageSchema as any);
+
+      const result = collector.build();
+      expect(result).not.toBeNull();
+
+      // Both fields validated
+      const valid = safeParse(result, { name: 'hello', age: 5 });
+      expect(valid.success).toBe(true);
+
+      // Name too short
+      const badName = safeParse(result, { name: 'a', age: 5 });
+      expect(badName.success).toBe(false);
+
+      // Age negative
+      const badAge = safeParse(result, { name: 'hello', age: -1 });
+      expect(badAge.success).toBe(false);
+    });
+  });
 });

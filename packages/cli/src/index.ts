@@ -115,6 +115,7 @@ export async function runGenerate(options: GenerateOptions): Promise<{
     false;
   const effectiveUi = options.ui ?? componentConfig.defaults?.ui ?? 'shadcn';
   const effectiveOverwrite = componentConfig.defaults?.overwrite ?? false;
+  const effectiveValidation = componentConfig.defaults?.validation;
 
   const outputPath = resolveOutputPath(cwd, effectiveOut, componentName);
   const schema = await loadSchema(schemaPath, exportName);
@@ -131,7 +132,16 @@ export async function runGenerate(options: GenerateOptions): Promise<{
   }
 
   // SAFETY: same as above — loadSchema returns a ZodObject which is $ZodType at runtime
-  const fields = walkSchema(schema as never, { formRegistry });
+  const walkOptions: Parameters<typeof walkSchema>[1] = { formRegistry };
+  if (effectiveValidation?.level) {
+    (walkOptions as any).validation = { level: effectiveValidation.level };
+  }
+  const walkResult = walkSchema(schema as never, walkOptions as any);
+
+  // When optimization is enabled, walkResult is WalkResult { fields, schemaLite }
+  const isOptimized = effectiveValidation?.level != null;
+  const fields = isOptimized ? (walkResult as any).fields : walkResult;
+  const schemaLite = isOptimized ? (walkResult as any).schemaLite : undefined;
 
   const config = {
     schemaPath,
@@ -144,7 +154,8 @@ export async function runGenerate(options: GenerateOptions): Promise<{
       fields: Object.keys(mergedFields).length > 0 ? mergedFields : componentConfig.fields
     },
     ui: effectiveUi,
-    serverAction: effectiveServerAction
+    serverAction: effectiveServerAction,
+    ...(isOptimized ? { validationLevel: effectiveValidation!.level, schemaLite } : {})
   };
 
   const code = await generateFormComponent(fields, config);

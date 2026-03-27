@@ -2,7 +2,7 @@ import { useMemo, memo } from 'react';
 import type { ComponentType, ReactNode } from 'react';
 import type { FormField, FieldConfig, ComponentOverride } from '@zod-to-form/core';
 import { getEmptyDefault } from '@zod-to-form/core';
-import { useController, useFieldArray, useFormContext } from 'react-hook-form';
+import { useController, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { defaultComponentMap } from './components/index.js';
 
 type ComponentMap = typeof defaultComponentMap;
@@ -217,6 +217,35 @@ function getRegisterOptions(field: FormField): Record<string, unknown> {
   // component-enforced: no validation emitted
 
   return opts;
+}
+
+/**
+ * Hook for watch-mode validation (L3 cross-field).
+ * Uses useWatch to observe dependent fields and returns a validate function
+ * that receives watched values.
+ */
+function useWatchValidate(field: FormField): ((value: unknown) => true | string) | undefined {
+  const { control } = useFormContext();
+  const watchFields = field.validation?.mode === 'watch' ? field.validation.watchFields : undefined;
+  const watchValidate =
+    field.validation?.mode === 'watch' ? field.validation.watchValidate : undefined;
+
+  // useWatch must be called unconditionally (React hooks rules)
+  const watchedValues = useWatch({
+    control,
+    name: (watchFields as string[]) ?? [],
+    disabled: !watchFields
+  });
+
+  if (!watchFields || !watchValidate) return undefined;
+
+  // Build a map of field name → watched value
+  const watchedMap: Record<string, unknown> = {};
+  for (let i = 0; i < watchFields.length; i++) {
+    watchedMap[watchFields[i]!] = Array.isArray(watchedValues) ? watchedValues[i] : watchedValues;
+  }
+
+  return (value: unknown) => watchValidate(value, watchedMap);
 }
 
 export interface FieldTemplateProps {
@@ -524,8 +553,13 @@ const ControlledFieldInner = memo(function ControlledFieldInner({
   errorMessage
 }: ControlledFieldProps) {
   const { control } = useFormContext();
+  // L3 watch mode for controlled components
+  const watchValidateFn = useWatchValidate(field);
   // When AOT validation is enabled, pass per-field rules to controller
   const controllerRules = (() => {
+    if (watchValidateFn) {
+      return { validate: watchValidateFn };
+    }
     if (field.validation?.mode === 'native' && field.validation.rules) {
       return field.validation.rules;
     }
@@ -565,6 +599,8 @@ export const FieldRenderer = memo(function FieldRenderer({
 }: FieldRendererProps) {
   // Always call hooks first (React hooks rule — no conditional hook calls)
   const { register, formState } = useFormContext();
+  // L3 watch mode: must call hook unconditionally
+  const watchValidate = useWatchValidate(field);
   const componentMap = { ...defaultComponentMap, ...components };
   const mapping = useMemo(
     () => resolveFieldOverride(field, componentConfig),
@@ -625,8 +661,14 @@ export const FieldRenderer = memo(function FieldRenderer({
 
   let fieldContent: ReactNode;
 
+  // Build register options, merging watch-mode validate if active
+  const registerOpts = getRegisterOptions(field);
+  if (watchValidate) {
+    registerOpts['validate'] = watchValidate;
+  }
+
   if (field.render) {
-    const registration = register(field.key, getRegisterOptions(field));
+    const registration = register(field.key, registerOpts);
     const componentProps = {
       ...buildBaseComponentProps(field, errorMessage),
       ...field.props,
@@ -645,7 +687,7 @@ export const FieldRenderer = memo(function FieldRenderer({
       />
     );
   } else {
-    const registration = register(field.key, getRegisterOptions(field));
+    const registration = register(field.key, registerOpts);
     const componentProps: Record<string, unknown> = {
       ...buildBaseComponentProps(field, errorMessage),
       ...field.props,
