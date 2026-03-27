@@ -58,8 +58,8 @@
 ### Tests for User Story 1
 
 - [x] T014 [P] [US1] Write L1 decompose optimizer tests in packages/core/src/__tests__/optimizers/l1-decompose.test.ts — test per-field zodSchema extraction for string/number/boolean/enum/date/array/object types; test field.validation.mode set to 'zodSchema'; test wrapper types (optional/nullable/default/pipe) store unwrapped inner schema; test safety-net fallback adds field to schemaLite
-- [ ] T015 [P] [US1] Write runtime optimized validation tests in packages/react/src/__tests__/optimized-validation.test.ts — test useZodForm skips zodResolver when validation.level is set; test FieldRenderer adds validate function to register() when field.validation.mode is 'zodSchema'; test SchemaLiteSubmit wraps onSubmit with safeParse and maps errors via setError
-- [ ] T016 [P] [US1] Write codegen optimization tests in packages/codegen/src/__tests__/codegen-optimization.test.ts — test hoisted const _fieldName emitted at module scope; test register({ validate }) references hoisted validator; test no zodResolver import in output; test schemaLite emitted with submit handler when non-null; test no schemaLite when empty
+- [x] T015 [P] [US1] Write runtime optimized validation tests in packages/react/src/__tests__/optimized-validation.test.ts — test useZodForm skips zodResolver when validation.level is set; test FieldRenderer adds validate function to register() when field.validation.mode is 'zodSchema'; test SchemaLiteSubmit wraps onSubmit with safeParse and maps errors via setError
+- [x] T016 [P] [US1] Write codegen optimization tests in packages/codegen/src/__tests__/codegen-optimization.test.ts — test hoisted const _fieldName emitted at module scope; test register({ validate }) references hoisted validator; test no zodResolver import in output; test schemaLite emitted with submit handler when non-null; test no schemaLite when empty
 
 ### Implementation for User Story 1
 
@@ -68,8 +68,8 @@
 - [x] T019 [US1] Modify useZodForm in packages/react/src/useZodForm.ts — when config has validation.level set: call walkSchema with validation option to get WalkResult; skip zodResolver; store schemaLite in ref for submit-time use
 - [x] T020 [US1] Implement SchemaLiteSubmit helper in packages/react/src/SchemaLiteSubmit.ts — a function (not component) that wraps onSubmit: runs schemaLite.safeParse(data), maps r.error.issues to form.setError(path, message), calls original onSubmit only if valid
 - [x] T021 [US1] Modify FieldRenderer in packages/react/src/FieldRenderer.tsx — when field.validation?.mode === 'zodSchema': add validate function to register() options (or useController rules) that calls field.zodSchema.safeParse(v) and returns success or first error message
-- [ ] T022 [US1] Modify codegen templates in packages/codegen/src/templates.ts — when field.validation?.mode === 'zodSchema': emit hoisted const at module scope, emit register({ validate }) referencing it; remove zodResolver import; emit schemaLite + submit handler when WalkResult.schemaLite is non-null
-- [ ] T023 [US1] Modify codegen generate in packages/codegen/src/generate.ts — accept WalkResult (fields + schemaLite) from walker when optimization enabled; pass schemaLite to template emitter; omit @hookform/resolvers import
+- [x] T022 [US1] Modify codegen templates in packages/codegen/src/templates.ts — when field.validation?.mode === 'zodSchema': emit hoisted const at module scope, emit register({ validate }) referencing it; remove zodResolver import; emit schemaLite + submit handler when WalkResult.schemaLite is non-null
+- [x] T023 [US1] Modify codegen generate in packages/codegen/src/generate.ts — accept WalkResult (fields + schemaLite) from walker when optimization enabled; pass schemaLite to template emitter; omit @hookform/resolvers import
 
 **Checkpoint**: Level 1 complete. Forms validate per-field without zodResolver. SchemaLite handles top-level refines on submit. All existing tests still pass.
 

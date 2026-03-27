@@ -68,7 +68,8 @@ export function getFileHeader(
   hasArrays = false,
   mode: 'submit' | 'auto-save' = 'submit',
   componentImportLine?: string,
-  options?: { hasControlled?: boolean; formProvider?: boolean; preset?: 'shadcn' | 'html' }
+  options?: { hasControlled?: boolean; formProvider?: boolean; preset?: 'shadcn' | 'html' },
+  optimized?: { includeZodResolver: boolean; includeZod: boolean }
 ): string {
   const rhfParts = ['useForm'];
   if (hasArrays) rhfParts.push('useFieldArray');
@@ -80,17 +81,23 @@ export function getFileHeader(
 
   const isShadcn = options?.preset === 'shadcn';
 
+  // When optimized, conditionally include zodResolver and zod imports
+  const includeZodResolver = optimized ? optimized.includeZodResolver : true;
+  const includeZod = optimized ? optimized.includeZod : true;
+
   return [
     ...(reactImports ? [reactImports] : []),
     rhfImports,
-    `import { zodResolver } from '@hookform/resolvers/zod';`,
-    `import { z } from 'zod';`,
+    ...(includeZodResolver ? [`import { zodResolver } from '@hookform/resolvers/zod';`] : []),
+    ...(includeZod ? [`import { z } from 'zod';`] : []),
     ...(componentImportLine ? [componentImportLine] : []),
     `import { ${exportName} } from '${schemaImportPath}';`,
     ``,
     STRIP_INDEX_SIGNATURE_TYPE,
     ``,
-    `type FormData = StripIndexSignature<z.output<typeof ${exportName}>>;`,
+    ...(includeZod
+      ? [`type FormData = StripIndexSignature<z.output<typeof ${exportName}>>;`]
+      : [`type FormData = StripIndexSignature<import('zod').output<typeof ${exportName}>>;`]),
     ...(!isShadcn ? [``, NORMALIZE_FORM_VALUES_BLOCK] : [])
   ].join('\n');
 }
@@ -129,6 +136,66 @@ function renderSelect(field: FormField): string {
     .join('');
 
   return `<select id="${field.key}"${disabledAttr(field)} {...${registerPathExpr(field.key)}}>${options}</select>`;
+}
+
+export function renderOptimizedRegister(field: FormField, fieldKey: string): string {
+  const mode = field.validation?.mode;
+
+  if (mode === 'native') {
+    const rules = field.validation?.rules;
+    if (!rules || Object.keys(rules).length === 0) {
+      return registerPathExpr(fieldKey);
+    }
+    const parts: string[] = [];
+    if (rules.required !== undefined) {
+      parts.push(`required: ${JSON.stringify(rules.required)}`);
+    }
+    if (rules.minLength !== undefined) {
+      parts.push(
+        `minLength: { value: ${rules.minLength.value}, message: ${JSON.stringify(rules.minLength.message)} }`
+      );
+    }
+    if (rules.maxLength !== undefined) {
+      parts.push(
+        `maxLength: { value: ${rules.maxLength.value}, message: ${JSON.stringify(rules.maxLength.message)} }`
+      );
+    }
+    if (rules.min !== undefined) {
+      parts.push(
+        `min: { value: ${rules.min.value}, message: ${JSON.stringify(rules.min.message)} }`
+      );
+    }
+    if (rules.max !== undefined) {
+      parts.push(
+        `max: { value: ${rules.max.value}, message: ${JSON.stringify(rules.max.message)} }`
+      );
+    }
+    if (rules.pattern !== undefined) {
+      parts.push(
+        `pattern: { value: ${rules.pattern.value}, message: ${JSON.stringify(rules.pattern.message)} }`
+      );
+    }
+    const rulesStr = parts.join(', ');
+    if (fieldKey.includes('${')) {
+      return `register(\`${fieldKey}\`, { ${rulesStr} })`;
+    }
+    return `register('${fieldKey}', { ${rulesStr} })`;
+  }
+
+  if (mode === 'zodSchema') {
+    const safeKey = fieldKey.replace(/[^a-zA-Z0-9_]/g, '_');
+    if (fieldKey.includes('${')) {
+      return `register(\`${fieldKey}\`, { validate: _validate_${safeKey} })`;
+    }
+    return `register('${fieldKey}', { validate: _validate_${safeKey} })`;
+  }
+
+  if (mode === 'component-enforced') {
+    return registerPathExpr(fieldKey);
+  }
+
+  // undefined validation — backward compatible
+  return registerPathExpr(fieldKey);
 }
 
 export function renderField(field: FormField): string {
