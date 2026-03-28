@@ -59,6 +59,9 @@ pnpm run dev           # Dev mode (parallel)
 
 ## Recent Changes
 - 006-validation-optimization: Added TypeScript 5.x with strict mode + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), @hookform/resolvers (peer — conditional after optimization)
+
+## Backlog
+- **Vite plugin**: When built, should strip the `@hookform/resolvers` import from `useZodForm` when `optimization` is enabled in z2f config. The static import currently adds ~2KB gzipped even when unused. The plugin can detect the config at build time and rewrite to a resolver-free code path — no runtime tricks needed.
 - 005-api-surface-cleanup: Added TypeScript 5.x (strict mode) + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), @hookform/resolvers
 - 004-studio-layout-redesign: Added TypeScript 5.x (strict mode) + React 18+, CodeMirror 6, Zod v4, React Hook Form 7+, @zod-to-form/core, @zod-to-form/react, fflate (new — zip for export)
 
