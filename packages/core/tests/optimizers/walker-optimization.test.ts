@@ -108,19 +108,36 @@ describe('walkSchema with optimization', () => {
     expect(result.fields.map((f) => f.key)).toEqual(['beta', 'alpha']);
   });
 
-  it('schemaLite captures top-level transform (pipe wrapper)', () => {
-    const schema = z
-      .object({ name: z.string() })
-      .transform((data) => ({ ...data, upper: data.name.toUpperCase() }));
+  it('schemaLite captures top-level transform as lite schema', () => {
+    const schema = z.object({ name: z.string() }).transform((data) => ({ ...data, added: true }));
 
     const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
     expect(result.fields).toHaveLength(1);
-    // Transform wraps in a pipe — schemaLite should be the original schema
     expect(result.schemaLite).not.toBeNull();
-    // The schemaLite should run the transform
+
+    // Lite schema runs the transform
     const parsed = safeParse(result.schemaLite, { name: 'hello' });
     expect(parsed.success).toBe(true);
-    expect(parsed.data).toHaveProperty('upper', 'HELLO');
+    expect(parsed.data).toHaveProperty('added', true);
+  });
+
+  it('schemaLite captures superRefine before transform', () => {
+    const schema = z
+      .object({ a: z.string(), b: z.string() })
+      .superRefine((data, ctx) => {
+        if (data.a === data.b) {
+          ctx.addIssue({ code: 'custom', message: 'Must differ', path: ['b'] });
+        }
+      })
+      .transform((d) => d);
+
+    const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+    expect(result.schemaLite).not.toBeNull();
+    // The superRefine check from before the transform should be preserved
+    const fail = safeParse(result.schemaLite, { a: 'same', b: 'same' });
+    expect(fail.success).toBe(false);
+    const pass = safeParse(result.schemaLite, { a: 'hello', b: 'world' });
+    expect(pass.success).toBe(true);
   });
 
   it('schemaLite captures superRefine on transformed schema', () => {

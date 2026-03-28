@@ -112,6 +112,74 @@ function processField(
 }
 
 /**
+ * Collect top-level effects from the schema and add them to the collector.
+ *
+ * Handles both check-based effects (superRefine/refine) and pipe/transform wrappers.
+ * The collector uses these to build a lite schema for submit-time validation.
+ */
+function collectTopLevelEffects(
+  schema: ZodType,
+  objectSchema: ZodType,
+  collector: ReturnType<typeof createSchemaLiteCollector>
+): void {
+  const def = schema._zod.def as unknown as Record<string, unknown>;
+
+  // Case 1: pipe/transform wrapper (def.type === 'pipe')
+  // The outer schema wraps the object in a pipe. Extract the transform function
+  // from def.out and any checks on the pipe itself.
+  if (schema !== objectSchema && def['type'] === 'pipe') {
+    const out = def['out'] as ZodType | undefined;
+    const outDef = out?._zod?.def as Record<string, unknown> | undefined;
+
+    // Extract the transform function if present
+    if (outDef?.['type'] === 'transform' && typeof outDef['transform'] === 'function') {
+      collector.addTransform(outDef['transform'] as (data: unknown) => unknown);
+    } else if (out) {
+      // Non-transform pipe (e.g. z.object().pipe(otherSchema)) — can't decompose
+      collector.setOriginalSchema(schema);
+      return;
+    }
+
+    // Collect any checks on the pipe itself (e.g. .transform().superRefine())
+    const pipeChecks = def['checks'] as unknown[] | undefined;
+    if (pipeChecks) {
+      for (const check of pipeChecks) {
+        collector.addCheck(check);
+      }
+    }
+
+    // Also collect checks on the inner object (e.g. .superRefine().transform())
+    // The inner object (objectSchema = def.in) may have superRefine checks
+    if (hasTopLevelEffects(objectSchema)) {
+      extractChecksFromSchema(objectSchema, collector);
+    }
+    return;
+  }
+
+  // Case 2: checks on the object schema (superRefine/refine, no pipe wrapper)
+  if (hasTopLevelEffects(schema)) {
+    extractChecksFromSchema(schema, collector);
+  }
+}
+
+function extractChecksFromSchema(
+  schema: ZodType,
+  collector: ReturnType<typeof createSchemaLiteCollector>
+): void {
+  const def = schema._zod.def as unknown as Record<string, unknown>;
+  const checks = def['checks'] as unknown[];
+  const parent = schema._zod.parent;
+  const parentDef = parent
+    ? ((parent as ZodType)._zod.def as unknown as Record<string, unknown>)
+    : undefined;
+  const parentChecks = (parentDef?.['checks'] as unknown[] | undefined) ?? [];
+  const extraChecks = checks.slice(parentChecks.length);
+  for (const check of extraChecks) {
+    collector.addCheck(check);
+  }
+}
+
+/**
  * Detect top-level refines/transforms/superRefines on the schema.
  *
  * In Zod v4, `z.object({}).superRefine(fn)` creates a new object schema
@@ -184,31 +252,15 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
       level: options!.optimization!.level
     };
 
-    // Detect top-level effects and capture them for schemaLite.
+    // Detect and capture top-level effects for schemaLite.
     //
-    // Two cases:
-    // 1. schema.superRefine(fn) / schema.refine(fn) — same def.type="object"
-    //    but with extra checks. Extract the checks for the lite schema.
-    // 2. schema.transform(fn) / schema.pipe(other) — wraps in def.type="pipe".
-    //    The pipe/transform changes the output shape, so we store the entire
-    //    original schema as schemaLite (can't decompose transforms).
-    if (schema !== objectSchema) {
-      // Case 2: pipe/transform wrapper — store original schema for submit-time
-      collector.setOriginalSchema(schema);
-    } else if (hasTopLevelEffects(schema)) {
-      // Case 1: same object type with extra checks (superRefine/refine)
-      const def = schema._zod.def as unknown as Record<string, unknown>;
-      const checks = def['checks'] as unknown[];
-      const parent = schema._zod.parent;
-      const parentDef = parent
-        ? ((parent as ZodType)._zod.def as unknown as Record<string, unknown>)
-        : undefined;
-      const parentChecks = (parentDef?.['checks'] as unknown[] | undefined) ?? [];
-      const extraChecks = checks.slice(parentChecks.length);
-      for (const check of extraChecks) {
-        collector.addCheck(check);
-      }
-    }
+    // Effects come in two forms:
+    // 1. Checks (superRefine/refine): stored in def.checks on the schema
+    // 2. Pipe/transform: wraps schema in def.type="pipe" with def.out holding the transform
+    //
+    // We extract both and replay them onto a lite z.object({}).loose() schema
+    // so submit-time validation skips field-level checks but preserves effects.
+    collectTopLevelEffects(schema, objectSchema, collector);
   }
 
   // Each top-level field gets its own `seen` set so that reused schema instances

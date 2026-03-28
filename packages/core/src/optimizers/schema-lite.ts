@@ -3,20 +3,35 @@ import type { $ZodType } from 'zod/v4/core';
 import type { SchemaLiteCollector } from './types.js';
 
 /**
+ * Zod v4's fluent methods return different TS types but all implement
+ * $ZodType at runtime. We use this interface to chain without fighting types.
+ */
+interface Chainable {
+  check(c: unknown): Chainable;
+  transform(fn: (data: unknown) => unknown): Chainable;
+}
+
+/**
  * Create a new SchemaLiteCollector instance.
  *
  * Builds a "lite" schema for submit-time validation:
- * - For superRefine/refine: z.object({}).loose() + extracted checks
- * - For transform/pipe: the original schema (can't decompose transforms)
+ * - Checks (superRefine/refine): z.object({}).loose().check(c1).check(c2)
+ * - Transforms: z.object({}).loose().check(...).transform(fn)
+ * - Non-decomposable pipes: original schema as-is
  */
 export function createSchemaLiteCollector(): SchemaLiteCollector {
   const collectedChecks: unknown[] = [];
+  const collectedTransforms: Array<(data: unknown) => unknown> = [];
   const fieldMap = new Map<string, $ZodType>();
   let originalSchema: $ZodType | null = null;
 
   return {
     addCheck(check: unknown): void {
       collectedChecks.push(check);
+    },
+
+    addTransform(fn: (data: unknown) => unknown): void {
+      collectedTransforms.push(fn);
     },
 
     addField(path: string, schema: $ZodType): void {
@@ -28,36 +43,51 @@ export function createSchemaLiteCollector(): SchemaLiteCollector {
     },
 
     isEmpty(): boolean {
-      return collectedChecks.length === 0 && fieldMap.size === 0 && originalSchema === null;
+      return (
+        collectedChecks.length === 0 &&
+        collectedTransforms.length === 0 &&
+        fieldMap.size === 0 &&
+        originalSchema === null
+      );
     },
 
     build(): $ZodType | null {
-      if (collectedChecks.length === 0 && fieldMap.size === 0 && !originalSchema) {
+      if (
+        collectedChecks.length === 0 &&
+        collectedTransforms.length === 0 &&
+        fieldMap.size === 0 &&
+        !originalSchema
+      ) {
         return null;
       }
 
-      // When the schema has a pipe/transform wrapper, the output shape changes
-      // and we can't decompose it into a lite schema. Use the original.
+      // Non-decomposable pipe — use original schema as-is
       if (originalSchema) {
         return originalSchema;
       }
 
-      // Build lite schema: z.object({...fallthrough}).loose() + extracted checks
+      // Build lite schema from collected effects
       const shape: Record<string, $ZodType> = {};
       for (const [path, schema] of fieldMap) {
         shape[path] = schema;
       }
 
-      let result: $ZodType =
+      let result: Chainable =
         Object.keys(shape).length > 0
-          ? (z.object(shape).loose() as unknown as $ZodType)
-          : (z.object({}).loose() as unknown as $ZodType);
+          ? (z.object(shape).loose() as unknown as Chainable)
+          : (z.object({}).loose() as unknown as Chainable);
 
+      // Replay checks (superRefine/refine)
       for (const check of collectedChecks) {
-        result = (result as unknown as { check(c: unknown): $ZodType }).check(check);
+        result = result.check(check);
       }
 
-      return result;
+      // Replay transforms
+      for (const fn of collectedTransforms) {
+        result = result.transform(fn);
+      }
+
+      return result as unknown as $ZodType;
     },
 
     get checks(): ReadonlyArray<unknown> {
