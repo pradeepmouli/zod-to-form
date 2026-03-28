@@ -571,7 +571,8 @@ function generateHoistedValidators(fields: FormField[], exportName: string): str
   const zodFields = collectZodSchemaFields(fields).filter((f) => !f.key.includes('.'));
   return zodFields.map((field) => {
     const safeKey = field.key.replace(/[^a-zA-Z0-9_]/g, '_');
-    return `const _validate_${safeKey} = (value: unknown) => { const r = ${exportName}.shape.${field.key}.safeParse(value); return r.success ? true : r.error.issues[0]?.message ?? 'Invalid'; };`;
+    const keyLiteral = JSON.stringify(field.key);
+    return `const _validate_${safeKey} = (value: unknown) => { const r = ${exportName}.shape[${keyLiteral}].safeParse(value); return r.success ? true : r.error.issues[0]?.message ?? 'Invalid'; };`;
   });
 }
 
