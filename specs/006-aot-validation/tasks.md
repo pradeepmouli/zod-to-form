@@ -1,6 +1,6 @@
 # Tasks: Validation Optimization
 
-**Input**: Design documents from `/specs/006-aot-validation/`
+**Input**: Design documents from `/specs/006-validation-optimization/`
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
 **Tests**: Included per Constitution Principle V (Test-First Development — NON-NEGOTIABLE).
@@ -21,7 +21,7 @@
 - [x] T002 [P] Define FormOptimizer, FormOptimizerContext, ValidationStrategy, NativeRules, and WalkResult types in packages/core/src/optimizers/types.ts
 - [x] T003 [P] Define SchemaLiteCollector interface in packages/core/src/optimizers/types.ts (same file as T002)
 - [x] T004 Add zodSchema and validation properties to FormField interface in packages/core/src/types.ts
-- [x] T005 Add validation config option (`validation?: { level?: 1 | 2 | 3 }`) to ConfigDefaults in packages/core/src/config.ts
+- [x] T005 Add optimization config option (`optimization?: { level?: 1 | 2 | 3 }`) to ConfigDefaults in packages/core/src/config.ts
 - [x] T006 Create barrel export in packages/core/src/optimizers/index.ts — export all types and createOptimizers factory
 - [x] T007 Export optimizer types from packages/core/src/index.ts (FormOptimizer, FormOptimizerContext, ValidationStrategy, NativeRules, WalkResult)
 
@@ -36,13 +36,13 @@
 ### Tests for Foundational
 
 - [x] T008 [P] Write SchemaLiteCollector tests in packages/core/src/__tests__/optimizers/schema-lite.test.ts — test addTopLevel, addField, isEmpty, build (returns null when empty, constructs z.object({}).loose().superRefine() when non-empty), and pruning of empty subtrees
-- [x] T009 [P] Write walker optimization integration tests in packages/core/src/__tests__/walker-optimization.test.ts — test that walkSchema returns FormField[] when no validation option, returns WalkResult when validation.level set, optimizer chain runs after processors, custom optimizers override builtins
+- [x] T009 [P] Write walker optimization integration tests in packages/core/src/__tests__/walker-optimization.test.ts — test that walkSchema returns FormField[] when no validation option, returns WalkResult when optimization.level set, optimizer chain runs after processors, custom optimizers override builtins
 
 ### Implementation for Foundational
 
 - [x] T010 Implement SchemaLiteCollector class in packages/core/src/optimizers/schema-lite.ts — addTopLevel, addField, isEmpty, build methods per data-model.md lifecycle
 - [x] T011 Implement createOptimizers factory in packages/core/src/optimizers/index.ts — merges builtin optimizers with custom optimizers (same pattern as createProcessors in packages/core/src/registry.ts)
-- [x] T012 Integrate optimizer chain into walker in packages/core/src/walker.ts — after processor dispatch and metadata overlay, run optimizer chain for the field; create SchemaLiteCollector before walk, evaluate after walk; return WalkResult when validation option is set (overloaded return type)
+- [x] T012 Integrate optimizer chain into walker in packages/core/src/walker.ts — after processor dispatch and metadata overlay, run optimizer chain for the field; create SchemaLiteCollector before walk, evaluate after walk; return WalkResult when optimization option is set (overloaded return type)
 - [x] T013 Add top-level refine/transform detection pre-pass in packages/core/src/walker.ts — before field iteration, inspect schema for top-level refines/transforms/superRefines/pipes via schema._zod.def and add them to SchemaLiteCollector
 
 **Checkpoint**: Foundation ready — optimizer infrastructure tested and integrated into walker. User story implementation can now begin.
@@ -65,7 +65,7 @@
 
 - [x] T017 [P] [US1] Implement L1 decompose optimizers in packages/core/src/optimizers/l1-decompose.ts — one optimizer per Zod type (string, number, boolean, enum, date, literal, array, object, union, intersection, record, tuple, file); each stores field.zodSchema = schema and sets field.validation = { mode: 'zodSchema' }; wrapper type optimizers (optional, nullable, default, readonly, pipe, lazy) delegate to inner type
 - [x] T018 [US1] Register L1 optimizers as builtinOptimizers in packages/core/src/optimizers/index.ts — populate the Record<string, FormOptimizer[]> with L1 optimizer for each def.type
-- [x] T019 [US1] Modify useZodForm in packages/react/src/useZodForm.ts — when config has validation.level set: call walkSchema with validation option to get WalkResult; skip zodResolver; store schemaLite in ref for submit-time use
+- [x] T019 [US1] Modify useZodForm in packages/react/src/useZodForm.ts — when config has optimization.level set: call walkSchema with optimization option to get WalkResult; skip zodResolver; store schemaLite in ref for submit-time use
 - [x] T020 [US1] Implement SchemaLiteSubmit helper in packages/react/src/SchemaLiteSubmit.ts — a function (not component) that wraps onSubmit: runs schemaLite.safeParse(data), maps r.error.issues to form.setError(path, message), calls original onSubmit only if valid
 - [x] T021 [US1] Modify FieldRenderer in packages/react/src/FieldRenderer.tsx — when field.validation?.mode === 'zodSchema': add validate function to register() options (or useController rules) that calls field.zodSchema.safeParse(v) and returns success or first error message
 - [x] T022 [US1] Modify codegen templates in packages/codegen/src/templates.ts — when field.validation?.mode === 'zodSchema': emit hoisted const at module scope, emit register({ validate }) referencing it; remove zodResolver import; emit schemaLite + submit handler when WalkResult.schemaLite is non-null
@@ -136,7 +136,7 @@
 ### Implementation for User Story 4
 
 - [x] T041 [US4] Verify createOptimizers merges custom optimizers correctly in packages/core/src/optimizers/index.ts — custom optimizers for a type replace the entire chain for that type (same as createProcessors)
-- [x] T042 [US4] Add custom optimizer example to walkSchema options validation in packages/core/src/walker.ts — ensure WalkOptions.validation.optimizers is passed through to createOptimizers
+- [x] T042 [US4] Add custom optimizer example to walkSchema options validation in packages/core/src/walker.ts — ensure WalkOptions.optimization.optimizers is passed through to createOptimizers
 
 **Checkpoint**: Custom optimizers work. Extensibility story verified.
 
@@ -147,10 +147,10 @@
 **Purpose**: Equivalence testing, backward compatibility verification, integration across all three packages
 
 - [x] T043 [P] Write equivalence test suite in packages/core/src/__tests__/optimizers/equivalence.test.ts — for a battery of schemas (simple, nested, arrays, unions, refines, transforms, superRefines), compare zodResolver output vs optimized output at each level; verify identical accept/reject for all inputs (FR-017)
-- [x] T044 [P] Write backward compatibility tests — verify walkSchema returns FormField[] (not WalkResult) when no validation option; verify all existing tests pass unchanged; verify config without validation key produces zodResolver behavior
+- [x] T044 [P] Write backward compatibility tests — verify walkSchema returns FormField[] (not WalkResult) when no optimization option; verify all existing tests pass unchanged; verify config without optimization key produces zodResolver behavior
 - [x] T045 [P] Write nested schemaLite integration tests in packages/core/src/__tests__/optimizers/schema-lite.test.ts — test FR-016: given a nested z.object with some descendants having refines and others fully inlineable, verify schemaLite preserves container structure with .loose() for branches with un-inlined validation and prunes empty subtrees entirely
-- [x] T046 [P] Write runtime config propagation tests in packages/react/src/__tests__/optimized-validation.test.ts — test that useZodForm reads validation.level from z2f.config.ts global config and passes it to walkSchema; verify level propagates correctly through context to optimizer chain
-- [x] T047 Modify CLI generate command in packages/cli/src/commands/generate.ts — read validation config from z2f.config.ts; pass optimization level to walker and codegen; no new CLI flags (config-driven per clarification)
+- [x] T046 [P] Write runtime config propagation tests in packages/react/src/__tests__/optimized-validation.test.ts — test that useZodForm reads optimization.level from z2f.config.ts global config and passes it to walkSchema; verify level propagates correctly through context to optimizer chain
+- [x] T047 Modify CLI generate command in packages/cli/src/commands/generate.ts — read optimization config from z2f.config.ts; pass optimization level to walker and codegen; no new CLI flags (config-driven per clarification)
 - [x] T048 Run full test suite (pnpm test) and type check (pnpm run type-check) — zero failures, zero type errors
 - [x] T049 Run quickstart.md validation — follow quickstart steps end-to-end and verify expected outputs
 

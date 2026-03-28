@@ -1,6 +1,6 @@
 # Feature Specification: Validation Optimization
 
-**Feature Branch**: `006-aot-validation`
+**Feature Branch**: `006-validation-optimization`
 **Created**: 2026-03-26
 **Status**: Draft
 **Input**: Progressive decomposition of composed Zod schemas into per-field validation, eliminating zodResolver overhead through three optimization levels (decompose tree, native rules, cross-field UX).

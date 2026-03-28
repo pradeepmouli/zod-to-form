@@ -1,7 +1,7 @@
 # Implementation Plan: Validation Optimization
 
-**Branch**: `006-aot-validation` | **Date**: 2026-03-26 | **Spec**: [spec.md](spec.md)
-**Input**: Feature specification from `/specs/006-aot-validation/spec.md`
+**Branch**: `006-validation-optimization` | **Date**: 2026-03-26 | **Spec**: [spec.md](spec.md)
+**Input**: Feature specification from `/specs/006-validation-optimization/spec.md`
 
 ## Summary
 
@@ -40,7 +40,7 @@ No violations. No complexity tracking needed.
 ### Documentation (this feature)
 
 ```text
-specs/006-aot-validation/
+specs/006-validation-optimization/
 ├── spec.md              # Feature specification
 ├── plan.md              # This file
 ├── research.md          # Phase 0 output
@@ -59,14 +59,13 @@ packages/
 │   ├── types.ts                    # MODIFY — add FormField.validation, FormOptimizer types
 │   ├── walker.ts                   # MODIFY — integrate optimizer chain after processor dispatch
 │   ├── registry.ts                 # MODIFY — add createOptimizers() factory
-│   ├── config.ts                   # MODIFY — add validation optimization config to ZodFormsConfig
+│   ├── config.ts                   # MODIFY — add optimization config to ZodFormsConfig
 │   ├── optimizers/                 # NEW — optimizer implementations
 │   │   ├── index.ts                # Barrel export + createOptimizers
 │   │   ├── types.ts                # FormOptimizer, FormOptimizerContext, SchemaLiteCollector
 │   │   ├── schema-lite.ts          # SchemaLiteCollector implementation
 │   │   ├── l1-decompose.ts         # Level 1: per-field Zod schema extraction
 │   │   ├── l2-native-rules.ts      # Level 2: Zod → native RHF rule conversion
-│   │   ├── l3-cross-field.ts       # Level 3: superRefine → watch/validate
 │   │   └── constraint-map.ts       # Zod constraint → RHF rule mapping table
 │   └── __tests__/
 │       ├── optimizers/
@@ -103,7 +102,7 @@ packages/
 - `packages/core/src/optimizers/schema-lite.ts` — SchemaLiteCollector implementation
 - `packages/core/src/optimizers/index.ts` — `createOptimizers()`, `builtinOptimizers`
 - `packages/core/src/walker.ts` — After processor dispatch, run optimizer chain if `options.optimizers` provided
-- `packages/core/src/config.ts` — Add `validation?: { level?: 1 | 2 | 3 }` to `ZodFormsConfig.defaults`
+- `packages/core/src/config.ts` — Add `optimization?: { level?: 1 | 2 | 3 }` to `ZodFormsConfig.defaults`
 - `packages/core/src/registry.ts` — Export `createOptimizers`
 
 **Key design decisions**:
@@ -176,7 +175,7 @@ packages/
 **Goal**: Wire optimization level into `z2f.config.ts`, ensure backward compatibility, add CLI flag for codegen.
 
 **Files touched**:
-- `packages/core/src/config.ts` — Add `validation?: { level?: 1 | 2 | 3 }` to `ConfigDefaults`
+- `packages/core/src/config.ts` — Add `optimization?: { level?: 1 | 2 | 3 }` to `ConfigDefaults`
 - `packages/cli/src/commands/generate.ts` — Read config, pass optimization level to walker + codegen
 - `packages/react/src/useZodForm.ts` — Read config from context/props, pass to walker
 - Integration tests across all three packages

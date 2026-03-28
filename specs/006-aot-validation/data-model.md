@@ -1,6 +1,6 @@
 # Data Model: Validation Optimization
 
-**Feature**: 006-aot-validation | **Date**: 2026-03-26
+**Feature**: 006-validation-optimization | **Date**: 2026-03-26
 
 ## Entity Definitions
 
@@ -136,7 +136,7 @@ Added to `ZodFormsConfig.defaults`:
 
 ```
 defaults: {
-  validation?: {
+  optimization?: {
     level?: 1 | 2 | 3     // Optimization depth (undefined = disabled, use zodResolver)
   }
 }
