@@ -1,5 +1,4 @@
-import { useEffect, useMemo } from 'react';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useMemo, useState } from 'react';
 import { walkSchema, registerFlat, normalizeFormValues } from '@zod-to-form/core';
 import type { FormField, WalkResult, OptimizationConfig } from '@zod-to-form/core';
 import { useForm } from 'react-hook-form';
@@ -33,6 +32,15 @@ function rhfCast<T>(value: T): never {
   return value as never;
 }
 
+// Dynamic import of zodResolver — keeps @hookform/resolvers out of the bundle
+// when optimization is enabled and the resolver is never used.
+// The promise is kicked off at module load time so it resolves before first render
+// in the common case. If it hasn't resolved yet, the hook waits.
+let _zodResolver: typeof import('@hookform/resolvers/zod').zodResolver | undefined;
+const _resolverPromise = import('@hookform/resolvers/zod').then((mod) => {
+  _zodResolver = mod.zodResolver;
+});
+
 export function useZodForm<TSchema extends ZodObject>(
   schema: TSchema,
   options?: UseZodFormOptions<TSchema>
@@ -40,9 +48,17 @@ export function useZodForm<TSchema extends ZodObject>(
   const validationLevel = options?.optimization?.level;
   const isOptimized = validationLevel !== undefined;
 
+  // Wait for dynamic zodResolver import when not optimized
+  const [resolverLoaded, setResolverLoaded] = useState(!!_zodResolver);
+  useEffect(() => {
+    if (isOptimized || _zodResolver) return;
+    _resolverPromise.then(() => setResolverLoaded(true));
+  }, [isOptimized]);
+
   const baseResolver = useMemo(
-    () => (isOptimized ? undefined : zodResolver(rhfCast(schema))),
-    [schema, isOptimized]
+    () => (isOptimized || !_zodResolver ? undefined : _zodResolver(rhfCast(schema))),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- resolverLoaded triggers re-creation when import completes
+    [schema, isOptimized, resolverLoaded]
   );
 
   // Build a registry from flat field config when no explicit registry is provided
@@ -93,16 +109,17 @@ export function useZodForm<TSchema extends ZodObject>(
 
   const form = useForm<output<TSchema>>({
     // When optimized, skip zodResolver — per-field validation is handled by register({ validate })
-    resolver: isOptimized
-      ? undefined
-      : rhfCast((values: unknown, context: unknown, resolverOptions: unknown) =>
-          baseResolver!(
-            rhfCast(normalizeFormValues(values)),
-            context,
-            // SAFETY: RHF's ResolverOptions type is not exported; narrow from unknown via parameter extraction
-            resolverOptions as Parameters<NonNullable<typeof baseResolver>>[2]
-          )
-        ),
+    resolver:
+      isOptimized || !baseResolver
+        ? undefined
+        : rhfCast((values: unknown, context: unknown, resolverOptions: unknown) =>
+            baseResolver(
+              rhfCast(normalizeFormValues(values)),
+              context,
+              // SAFETY: RHF's ResolverOptions type is not exported; narrow from unknown via parameter extraction
+              resolverOptions as Parameters<typeof baseResolver>[2]
+            )
+          ),
     defaultValues: rhfCast(options?.defaultValues),
     values: rhfCast(options?.values),
     mode: options?.mode
