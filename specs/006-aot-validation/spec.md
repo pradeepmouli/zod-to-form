@@ -1,4 +1,4 @@
-# Feature Specification: AOT Validation Optimization
+# Feature Specification: Validation Optimization
 
 **Feature Branch**: `006-aot-validation`
 **Created**: 2026-03-26

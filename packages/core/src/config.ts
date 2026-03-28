@@ -81,7 +81,7 @@ export type ConfigDefaults = {
   serverAction?: boolean;
   /** Wrap generated form in <FormProvider {...form}> */
   formProvider?: boolean;
-  /** AOT validation optimization configuration */
+  /** Validation optimization configuration */
   validation?: ValidationConfig;
 };
 

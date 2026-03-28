@@ -1,4 +1,4 @@
-# Tasks: AOT Validation Optimization
+# Tasks: Validation Optimization
 
 **Input**: Design documents from `/specs/006-aot-validation/`
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/

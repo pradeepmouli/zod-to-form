@@ -21,7 +21,7 @@ export type CodegenConfig = {
   serverAction?: boolean;
   /** Force FormProvider wrapper in submit mode. Auto-save mode always uses FormProvider regardless. */
   formProvider?: boolean;
-  /** AOT validation optimization level. When set, generated code uses per-field validation instead of zodResolver. */
+  /** Validation optimization level. When set, generated code uses per-field validation instead of zodResolver. */
   validationLevel?: 1 | 2 | 3;
   /** SchemaLite for submit-time validation of top-level effects (null when no effects exist) */
   schemaLite?: import('zod/v4/core').$ZodType | null;

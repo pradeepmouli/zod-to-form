@@ -1,4 +1,4 @@
-# Implementation Plan: AOT Validation Optimization
+# Implementation Plan: Validation Optimization
 
 **Branch**: `006-aot-validation` | **Date**: 2026-03-26 | **Spec**: [spec.md](spec.md)
 **Input**: Feature specification from `/specs/006-aot-validation/spec.md`

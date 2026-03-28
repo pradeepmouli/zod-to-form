@@ -1,4 +1,4 @@
-# Quickstart: AOT Validation Optimization
+# Quickstart: Validation Optimization
 
 **Feature**: 006-aot-validation | **Date**: 2026-03-26
 

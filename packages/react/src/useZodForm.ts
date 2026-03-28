@@ -19,7 +19,7 @@ type UseZodFormOptions<TSchema extends ZodObject> = {
   processors?: Record<string, FormProcessor>;
   mode?: 'onSubmit' | 'onChange' | 'onBlur';
   onValueChange?: (values: output<TSchema>) => void;
-  /** AOT validation optimization config. When set, skips zodResolver and uses per-field validation. */
+  /** Validation optimization config. When set, skips zodResolver and uses per-field validation. */
   validation?: ValidationConfig;
 };
 

@@ -1,4 +1,4 @@
-# Data Model: AOT Validation Optimization
+# Data Model: Validation Optimization
 
 **Feature**: 006-aot-validation | **Date**: 2026-03-26
 

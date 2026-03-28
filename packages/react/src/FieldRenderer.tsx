@@ -197,7 +197,7 @@ function getRegisterOptions(field: FormField): Record<string, unknown> {
     };
   }
 
-  // AOT validation: per-field validation
+  // Optimized validation: per-field validation
   if (field.validation?.mode === 'native' && field.validation.rules) {
     // L2: native RHF rules — spread directly into register options
     const rules = field.validation.rules;
@@ -555,7 +555,7 @@ const ControlledFieldInner = memo(function ControlledFieldInner({
   const { control } = useFormContext();
   // L3 watch mode for controlled components
   const watchValidateFn = useWatchValidate(field);
-  // When AOT validation is enabled, pass per-field rules to controller
+  // When optimized validation is enabled, pass per-field rules to controller
   const controllerRules = (() => {
     if (watchValidateFn) {
       return { validate: watchValidateFn };
