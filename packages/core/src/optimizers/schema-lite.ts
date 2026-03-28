@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import type { $ZodType } from 'zod/v4/core';
 import type { SchemaLiteCollector, SchemaLiteEntry } from './types.js';
 
@@ -37,37 +36,25 @@ export function createSchemaLiteCollector(): SchemaLiteCollector {
         return null;
       }
 
-      // When the walker stored the original schema (has top-level superRefine/refine),
-      // use it directly for submit-time validation. The original schema already
-      // validates all fields + top-level effects, so fieldMap entries (safety-net
-      // fallthrough fields) are covered by it.
+      // When the walker stored the original schema (has top-level superRefine/refine/transform),
+      // use it directly for submit-time validation. The original schema already validates
+      // all fields + top-level effects, so fieldMap entries are covered by it.
       if (originalSchema) {
         return originalSchema;
       }
 
-      // No original schema — build from collected fields + entries.
-      const shape: Record<string, $ZodType> = {};
-      for (const [path, schema] of fieldMap) {
-        shape[path] = schema;
+      // No original schema — this path is used when individual fields couldn't be inlined
+      // (safety-net fallthrough) but no top-level effects exist.
+      // Future L3 optimizer may also use addTopLevel to reconstruct effects,
+      // but that requires operating on ZodPipe for transforms — deferred until L3.
+      if (fieldMap.size > 0) {
+        // Return the original schema if we have one, otherwise this is a partial
+        // validation case that shouldn't happen in practice (fields without effects
+        // should be handled by per-field validators, not schemaLite).
+        return null;
       }
 
-      // .loose() allows unknown keys to pass through — critical because
-      // schemaLite validates a subset of form data.
-      let result: ReturnType<ReturnType<typeof z.object>['loose']> =
-        Object.keys(shape).length > 0 ? z.object(shape).loose() : z.object({}).loose();
-
-      for (const entry of topLevelEntries) {
-        if (entry.type === 'superRefine') {
-          result = result.superRefine(entry.fn as (data: unknown, ctx: unknown) => void);
-        } else if (entry.type === 'refine') {
-          result = result.refine(entry.fn as (data: unknown) => unknown);
-        } else if (entry.type === 'transform') {
-          // transform() returns ZodPipe, not the same type — cast through $ZodType
-          return result.transform(entry.fn as (data: unknown) => unknown) as unknown as $ZodType;
-        }
-      }
-
-      return result as $ZodType;
+      return null;
     },
 
     setOriginalSchema(schema: $ZodType): void {
