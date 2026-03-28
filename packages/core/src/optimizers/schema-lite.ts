@@ -51,22 +51,19 @@ export function createSchemaLiteCollector(): SchemaLiteCollector {
         shape[path] = schema;
       }
 
-      // Zod's .loose() allows unknown keys to pass through — critical because
-      // schemaLite validates a subset of form data. Zod v4's fluent API returns
-      // new schema instances whose internal types don't unify with $ZodType,
-      // requiring the result variable to be untyped.
-      // SAFETY: z.object().loose().superRefine/refine/transform return valid $ZodType at runtime
+      // .loose() allows unknown keys to pass through — critical because
+      // schemaLite validates a subset of form data.
       let result: ReturnType<ReturnType<typeof z.object>['loose']> =
         Object.keys(shape).length > 0 ? z.object(shape).loose() : z.object({}).loose();
 
       for (const entry of topLevelEntries) {
         if (entry.type === 'superRefine') {
-          // SAFETY: entry.fn is the superRefine callback stored as unknown — Zod accepts any function here
-          result = (result as any).superRefine(entry.fn) as typeof result;
+          result = result.superRefine(entry.fn as (data: unknown, ctx: unknown) => void);
         } else if (entry.type === 'refine') {
-          result = (result as any).refine(entry.fn) as typeof result;
+          result = result.refine(entry.fn as (data: unknown) => unknown);
         } else if (entry.type === 'transform') {
-          result = (result as any).transform(entry.fn) as typeof result;
+          // transform() returns ZodPipe, not the same type — cast through $ZodType
+          return result.transform(entry.fn as (data: unknown) => unknown) as unknown as $ZodType;
         }
       }
 
