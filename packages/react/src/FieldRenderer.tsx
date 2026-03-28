@@ -171,8 +171,9 @@ function zodSchemaValidate(field: FormField): ((value: unknown) => true | string
     safeParse(v: unknown): { success: boolean; error?: { issues: Array<{ message: string }> } };
   };
   return (value: unknown) => {
-    const normalizedValue = value === '' ? undefined : value;
-    const result = schema.safeParse(normalizedValue);
+    // Normalize empty strings to undefined to match zodResolver behavior
+    const normalized = value === '' ? undefined : value;
+    const result = schema.safeParse(normalized);
     if (result.success) return true;
     return result.error?.issues[0]?.message ?? 'Validation failed';
   };

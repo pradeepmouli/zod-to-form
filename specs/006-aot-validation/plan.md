@@ -1,7 +1,7 @@
 # Implementation Plan: Validation Optimization
 
-**Branch**: `006-validation-optimization` | **Date**: 2026-03-26 | **Spec**: [spec.md](spec.md)
-**Input**: Feature specification from `/specs/006-validation-optimization/spec.md`
+**Branch**: `006-aot-validation` | **Date**: 2026-03-26 | **Spec**: [spec.md](spec.md)
+**Input**: Feature specification from `/specs/006-aot-validation/spec.md`
 
 ## Summary
 
@@ -40,7 +40,7 @@ No violations. No complexity tracking needed.
 ### Documentation (this feature)
 
 ```text
-specs/006-validation-optimization/
+specs/006-aot-validation/
 ├── spec.md              # Feature specification
 ├── plan.md              # This file
 ├── research.md          # Phase 0 output

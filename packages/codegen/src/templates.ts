@@ -110,32 +110,37 @@ function disabledAttr(field: FormField): string {
   return field.disabled ? ' disabled' : '';
 }
 
-function renderInput(field: FormField): string {
+function renderInput(field: FormField, regExpr?: string): string {
   const inputType = typeof field.props['type'] === 'string' ? field.props['type'] : 'text';
-  return `<input id="${field.key}" type="${inputType}"${disabledAttr(field)} {...${registerPathExpr(field.key)}} />`;
+  const reg = regExpr ?? registerPathExpr(field.key);
+  return `<input id="${field.key}" type="${inputType}"${disabledAttr(field)} {...${reg}} />`;
 }
 
-function renderCheckbox(field: FormField): string {
-  return `<input id="${field.key}" type="checkbox"${disabledAttr(field)} {...${registerPathExpr(field.key)}} />`;
+function renderCheckbox(field: FormField, regExpr?: string): string {
+  const reg = regExpr ?? registerPathExpr(field.key);
+  return `<input id="${field.key}" type="checkbox"${disabledAttr(field)} {...${reg}} />`;
 }
 
-function renderDatePicker(field: FormField): string {
-  const registerExpr = field.key.includes('${')
-    ? `register(\`${field.key}\`, { valueAsDate: true })`
-    : `register('${field.key}', { valueAsDate: true })`;
-  return `<input id="${field.key}" type="date"${disabledAttr(field)} {...${registerExpr}} />`;
+function renderDatePicker(field: FormField, regExpr?: string): string {
+  const reg =
+    regExpr ??
+    (field.key.includes('${')
+      ? `register(\`${field.key}\`, { valueAsDate: true })`
+      : `register('${field.key}', { valueAsDate: true })`);
+  return `<input id="${field.key}" type="date"${disabledAttr(field)} {...${reg}} />`;
 }
 
-function renderFileInput(field: FormField): string {
-  return `<input id="${field.key}" type="file"${disabledAttr(field)} {...${registerPathExpr(field.key)}} />`;
+function renderFileInput(field: FormField, regExpr?: string): string {
+  const reg = regExpr ?? registerPathExpr(field.key);
+  return `<input id="${field.key}" type="file"${disabledAttr(field)} {...${reg}} />`;
 }
 
-function renderSelect(field: FormField): string {
+function renderSelect(field: FormField, regExpr?: string): string {
   const options = (field.options ?? [])
     .map((option) => `<option value="${String(option.value)}">${option.label}</option>`)
     .join('');
-
-  return `<select id="${field.key}"${disabledAttr(field)} {...${registerPathExpr(field.key)}}>${options}</select>`;
+  const reg = regExpr ?? registerPathExpr(field.key);
+  return `<select id="${field.key}"${disabledAttr(field)} {...${reg}}>${options}</select>`;
 }
 
 export function renderOptimizedRegister(field: FormField, fieldKey: string): string {
@@ -195,35 +200,32 @@ export function renderOptimizedRegister(field: FormField, fieldKey: string): str
   }
 
   if (mode === 'watch') {
-    const watchFields = field.validation?.watchFields ?? [];
-    const safeKey = fieldKey.replace(/[^a-zA-Z0-9_]/g, '_');
-    // Emit register with validate that uses watched values
-    const watchExpr = watchFields.map((f) => `'${f}'`).join(', ');
-    if (fieldKey.includes('${')) {
-      return `register(\`${fieldKey}\`, { validate: _watchValidate_${safeKey} /* watch: [${watchExpr}] */ })`;
-    }
-    return `register('${fieldKey}', { validate: _watchValidate_${safeKey} /* watch: [${watchExpr}] */ })`;
+    // Watch-mode codegen is not yet supported — fall back to plain register.
+    // Runtime FieldRenderer handles watch mode via useWatch hook.
+    return registerPathExpr(fieldKey);
   }
 
   // undefined validation — backward compatible
   return registerPathExpr(fieldKey);
 }
 
-export function renderField(field: FormField): string {
+export function renderField(field: FormField, regExpr?: string): string {
   switch (field.component) {
     case 'Checkbox':
     case 'Switch':
-      return renderCheckbox(field);
+      return renderCheckbox(field, regExpr);
     case 'DatePicker':
-      return renderDatePicker(field);
+      return renderDatePicker(field, regExpr);
     case 'FileInput':
-      return renderFileInput(field);
+      return renderFileInput(field, regExpr);
     case 'Select':
     case 'RadioGroup':
-      return renderSelect(field);
-    case 'Textarea':
-      return `<textarea id="${field.key}"${disabledAttr(field)} {...${registerPathExpr(field.key)}} />`;
+      return renderSelect(field, regExpr);
+    case 'Textarea': {
+      const reg = regExpr ?? registerPathExpr(field.key);
+      return `<textarea id="${field.key}"${disabledAttr(field)} {...${reg}} />`;
+    }
     default:
-      return renderInput(field);
+      return renderInput(field, regExpr);
   }
 }

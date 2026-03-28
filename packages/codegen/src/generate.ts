@@ -7,7 +7,7 @@ import {
   registerPathExpr,
   renderOptimizedRegister
 } from './templates.js';
-import { getFieldTemplateSource, PRESET_TEMPLATE_IMPORTS } from './field-templates.js';
+import { PRESET_TEMPLATE_IMPORTS } from './field-templates.js';
 
 export type CodegenConfig = {
   /** Optional pre-computed import path for the schema (e.g., './schema.js'). Defaults to './schema'. The CLI typically computes this from file paths; the browser playground can pass it explicitly. */
@@ -506,14 +506,11 @@ function renderFieldBlockWithConfig(
     return renderFieldContainer(field, content, indent, preset);
   }
 
-  // When optimized and the field has a validation strategy, use the optimized register expression
+  // When optimized and the field has a validation strategy, pass the optimized
+  // register expression directly into renderField (avoids brittle string replace)
   if (optimized && field.validation) {
-    let content = renderField(field);
-    // Replace the standard register expression with the optimized one
-    const standardExpr = registerPathExpr(field.key);
     const optimizedExpr = renderOptimizedRegister(field, field.key);
-    content = content.replace(`{...${standardExpr}}`, `{...${optimizedExpr}}`);
-    return renderFieldContainer(field, content, indent, preset);
+    return renderFieldContainer(field, renderField(field, optimizedExpr), indent, preset);
   }
 
   return renderFieldContainer(field, renderField(field), indent, preset);
@@ -558,11 +555,11 @@ function hasAnyZodSchemaOrSchemaLite(
 }
 
 function needsZodResolver(
-  fields: FormField[],
-  schemaLite: import('zod/v4/core').$ZodType | null | undefined
+  _fields: FormField[],
+  _schemaLite: import('zod/v4/core').$ZodType | null | undefined
 ): boolean {
-  // When optimized, zodResolver is only needed if schemaLite exists
-  return schemaLite != null;
+  // Optimized mode never uses zodResolver — per-field validation + submit wrapper handle everything
+  return false;
 }
 
 function generateHoistedValidators(fields: FormField[], exportName: string): string[] {
@@ -696,23 +693,9 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
   // Build useForm options based on optimization mode
   let useFormLines: string[];
   if (optimized) {
-    if (needsZodResolver(fields, config.schemaLite)) {
-      // schemaLite exists — use zodResolver with schemaLite for submit-time validation
-      useFormLines =
-        preset === 'shadcn'
-          ? [
-              `  const form = useForm<FormData>({`,
-              `    resolver: zodResolver(${config.exportName}),`
-            ]
-          : [
-              `  const baseResolver = zodResolver(${config.exportName});`,
-              `  const form = useForm<FormData>({`,
-              `    resolver: (values: unknown, ctx: unknown, opts: unknown) => baseResolver(normalizeFormValues(values) as FormData, ctx, opts),`
-            ];
-    } else {
-      // No zodResolver needed — purely per-field validation
-      useFormLines = [`  const form = useForm<FormData>({`];
-    }
+    // Optimized mode never uses zodResolver — per-field validation handles fields,
+    // and schemaLite (if present) handles top-level effects in the submit wrapper.
+    useFormLines = [`  const form = useForm<FormData>({`];
   } else {
     // Non-optimized (default) — always use zodResolver
     useFormLines =
@@ -726,13 +709,23 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
   }
 
   // Build schemaLite submit wrapper
+  const schemaLiteName = `_schemaLite_${config.exportName}`;
   const schemaLiteWrapper = hasSchemaLite
     ? [
         ``,
-        `  // schemaLite: submit-time validation for top-level effects`,
+        `  // Submit-time validation for top-level effects (superRefine, refine)`,
+        `  const ${schemaLiteName} = ${config.exportName};`,
         `  const onSubmitValidated = (data: FormData) => {`,
-        `    const result = ${config.exportName}.safeParse(data);`,
-        `    if (!result.success) return;`,
+        `    const result = ${schemaLiteName}.safeParse(data);`,
+        `    if (!result.success) {`,
+        `      for (const issue of result.error.issues) {`,
+        `        const field = issue.path?.[0];`,
+        `        if (typeof field === 'string') {`,
+        `          form.setError(field as keyof FormData & string, { type: 'validate', message: issue.message });`,
+        `        }`,
+        `      }`,
+        `      return;`,
+        `    }`,
         `    props.onSubmit(data);`,
         `  };`
       ]

@@ -1,6 +1,6 @@
 # Quickstart: Validation Optimization
 
-**Feature**: 006-validation-optimization | **Date**: 2026-03-26
+**Feature**: 006-aot-validation | **Date**: 2026-03-26
 
 ## Enable Optimization
 

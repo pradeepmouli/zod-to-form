@@ -29,7 +29,7 @@ export type FormOptimizer<T extends $ZodType = $ZodType> = (
 // ─── SchemaLite Collector ────────────────────────────────────────────
 
 export interface SchemaLiteEntry {
-  type: 'refine' | 'transform' | 'superRefine' | 'pipe';
+  type: 'refine' | 'transform' | 'superRefine';
   fn: unknown;
 }
 

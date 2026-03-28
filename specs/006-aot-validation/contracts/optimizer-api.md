@@ -1,6 +1,6 @@
 # API Contract: Optimizer Registry
 
-**Feature**: 006-validation-optimization | **Date**: 2026-03-26
+**Feature**: 006-aot-validation | **Date**: 2026-03-26
 
 ## Public Types (exported from `@zod-to-form/core`)
 
@@ -76,11 +76,11 @@ export interface WalkResult {
 ### walkSchema Overloads
 
 ```typescript
-// Existing signature (no optimization) — returns FormField[]
-export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[];
-
-// Optimized signature — returns WalkResult
+// Optimized signature (more specific — must come first for correct overload resolution)
 export function walkSchema(schema: ZodType, options: WalkOptions & { optimization: { level: 1 | 2 | 3 } }): WalkResult;
+
+// Default signature (no optimization) — returns FormField[]
+export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[];
 ```
 
 ## Config Extension

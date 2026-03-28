@@ -1,5 +1,6 @@
 import type { $ZodType } from 'zod/v4/core';
 import type { UseFormSetError } from 'react-hook-form';
+import { normalizeFormValues } from '@zod-to-form/core';
 
 type SafeParseable = {
   safeParse(data: unknown): {
@@ -20,7 +21,7 @@ export function wrapWithSchemaLite<TData extends Record<string, unknown>>(
 ): (data: TData) => void | Promise<void> {
   const schema = schemaLite as unknown as SafeParseable;
   return (data: TData) => {
-    const result = schema.safeParse(data);
+    const result = schema.safeParse(normalizeFormValues(data));
     if (!result.success) {
       for (const issue of result.error!.issues) {
         const path = issue.path.map(String).join('.');

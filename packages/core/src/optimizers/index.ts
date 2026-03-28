@@ -13,8 +13,8 @@ import { buildL1Optimizers } from './l1-decompose.js';
 import { buildL2Optimizers } from './l2-native-rules.js';
 
 /**
- * Built-in optimizers, populated by L1/L2/L3 registration.
- * Keyed by def.type, each entry is an ordered chain of optimizers (L1 → L2 → L3).
+ * Built-in optimizers, populated by L1/L2 registration.
+ * Keyed by def.type, each entry is an ordered chain of optimizers (L1 → L2).
  */
 function buildBuiltinOptimizers(): Record<string, FormOptimizer[]> {
   const l1 = buildL1Optimizers();
