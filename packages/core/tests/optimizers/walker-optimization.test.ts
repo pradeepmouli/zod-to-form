@@ -42,7 +42,7 @@ describe('walkSchema with optimization', () => {
         optimizers: {
           string: [testOptimizer],
           number: [testOptimizer]
-        } as any
+        }
       }
     }) as WalkResult;
 
@@ -62,7 +62,7 @@ describe('walkSchema with optimization', () => {
     const result = walkSchema(schema, {
       validation: {
         level: 1,
-        optimizers: { string: [customOptimizer] } as any
+        optimizers: { string: [customOptimizer] }
       }
     }) as WalkResult;
 

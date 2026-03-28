@@ -1,13 +1,7 @@
 import type { $ZodType } from 'zod/v4/core';
 import type { FormOptimizer } from './types.js';
 
-/**
- * Level 1 optimizer: Stores the original Zod schema on each field
- * and sets validation.mode = 'zodSchema' for per-field validation.
- *
- * This is the foundational optimizer that decomposes the full-form
- * zodResolver into per-field validators.
- */
+/** L1: stores per-field zodSchema for decomposed validation. */
 const l1Optimizer: FormOptimizer = (schema: $ZodType, _ctx, field) => {
   field.zodSchema = schema;
   field.validation = { mode: 'zodSchema' };

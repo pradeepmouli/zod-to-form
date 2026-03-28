@@ -1,4 +1,5 @@
 import type { $ZodArray, $ZodObject, $ZodRegistry, $ZodType } from 'zod/v4/core';
+import type { FormOptimizer } from './optimizers/types.js';
 
 // ─── Validation Strategy (used by FormField and optimizers) ──────────
 
@@ -204,9 +205,6 @@ export interface WalkOptions {
   /** AOT validation optimization settings */
   validation?: {
     level: 1 | 2 | 3;
-    optimizers?: Record<
-      string,
-      Array<(schema: $ZodType, ctx: unknown, field: FormField, params: ProcessParams) => void>
-    >;
+    optimizers?: Record<string, FormOptimizer[]>;
   };
 }

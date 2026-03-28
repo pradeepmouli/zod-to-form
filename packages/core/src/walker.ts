@@ -176,9 +176,7 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
 
   if (isOptimized) {
     collector = createSchemaLiteCollector();
-    const optimizers = createOptimizers(
-      (options!.validation!.optimizers as Record<string, any>) ?? {}
-    );
+    const optimizers = createOptimizers(options!.validation!.optimizers ?? {});
 
     optimizerCtx = {
       optimizers,
@@ -191,7 +189,7 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
     // In Zod v4, superRefine bakes the check into the schema — we can't easily
     // extract the function. Instead, store the original schema for submit-time use.
     if (hasTopLevelEffects(schema)) {
-      collector.setOriginalSchema(schema as any);
+      collector.setOriginalSchema(schema);
     }
   }
 
