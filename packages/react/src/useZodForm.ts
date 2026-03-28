@@ -6,6 +6,7 @@ import { z } from 'zod';
 import type { $ZodType } from 'zod/v4/core';
 import type { output, ZodObject } from 'zod';
 import type { FieldConfig, FormMeta, FormProcessor, ZodFormRegistry } from '@zod-to-form/core';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 type UseZodFormOptions<TSchema extends ZodObject> = {
   defaultValues?: Partial<output<TSchema>>;
@@ -32,20 +33,11 @@ function rhfCast<T>(value: T): never {
   return value as never;
 }
 
-// Lazy-loaded zodResolver — cached after first call.
-// Keeps @hookform/resolvers out of the initial bundle when optimization is enabled.
-let _zodResolver: ((schema: any) => any) | undefined;
-function getZodResolver(): (schema: any) => any {
-  if (!_zodResolver) {
-    // Synchronous require — bundlers (Vite, webpack, Next.js) resolve this at build time.
-    // Keeps @hookform/resolvers out of the bundle when optimization is enabled
-    // and this code path is never reached (dead code elimination).
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require('@hookform/resolvers/zod') as { zodResolver: (schema: any) => any };
-    _zodResolver = mod.zodResolver;
-  }
-  return _zodResolver;
-}
+// zodResolver is imported statically but only invoked when optimization is NOT enabled.
+// Bundlers that support tree-shaking of unused imports (Vite, webpack 5, esbuild)
+// can eliminate it when all call sites are dead code. For full elimination,
+// a separate entrypoint (@zod-to-form/react/optimized) would be needed — tracked
+// as a future improvement.
 
 export function useZodForm<TSchema extends ZodObject>(
   schema: TSchema,
@@ -55,7 +47,7 @@ export function useZodForm<TSchema extends ZodObject>(
   const isOptimized = validationLevel !== undefined;
 
   const baseResolver = useMemo(
-    () => (isOptimized ? undefined : getZodResolver()(rhfCast(schema))),
+    () => (isOptimized ? undefined : zodResolver(rhfCast(schema))),
     [schema, isOptimized]
   );
 
