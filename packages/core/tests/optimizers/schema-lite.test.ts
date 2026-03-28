@@ -193,4 +193,44 @@ describe('SchemaLiteCollector', () => {
       expect(badAge.success).toBe(false);
     });
   });
+
+  describe('setOriginalSchema', () => {
+    it('returns originalSchema from build() when set with no other entries', () => {
+      const collector = createSchemaLiteCollector();
+      const schema = z.object({ a: z.string(), b: z.string() }).superRefine((data, ctx) => {
+        if (data.a === data.b) {
+          ctx.addIssue({ code: 'custom', message: 'Must differ', path: ['b'] });
+        }
+      });
+      collector.setOriginalSchema(schema as any);
+
+      expect(collector.isEmpty()).toBe(false);
+
+      const result = collector.build();
+      expect(result).toBe(schema); // Should be the exact same reference
+
+      // Validates via the original schema's superRefine
+      const fail = safeParse(result, { a: 'same', b: 'same' });
+      expect(fail.success).toBe(false);
+      const pass = safeParse(result, { a: 'hello', b: 'world' });
+      expect(pass.success).toBe(true);
+    });
+
+    it('returns originalSchema even when fieldMap has entries', () => {
+      const collector = createSchemaLiteCollector();
+      const schema = z.object({ a: z.string(), b: z.string() }).superRefine((data, ctx) => {
+        if (data.a === data.b) {
+          ctx.addIssue({ code: 'custom', message: 'Must differ', path: ['b'] });
+        }
+      });
+      collector.setOriginalSchema(schema as any);
+      collector.addField('extra', z.string().min(2) as any);
+
+      const result = collector.build();
+      expect(result).not.toBeNull();
+      // Original schema's superRefine should still work
+      const fail = safeParse(result, { a: 'same', b: 'same' });
+      expect(fail.success).toBe(false);
+    });
+  });
 });

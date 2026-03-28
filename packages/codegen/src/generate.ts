@@ -561,14 +561,6 @@ function hasAnyZodSchemaOrSchemaLite(
   return collectZodSchemaFields(fields).length > 0;
 }
 
-function needsZodResolver(
-  _fields: FormField[],
-  _schemaLite: import('zod/v4/core').$ZodType | null | undefined
-): boolean {
-  // Optimized mode never uses zodResolver — per-field validation + submit wrapper handle everything
-  return false;
-}
-
 function generateHoistedValidators(fields: FormField[], exportName: string): string[] {
   // Only hoist validators for top-level fields — nested paths (e.g. "address.street")
   // can't be accessed via simple .shape.key and would produce invalid code.
@@ -608,7 +600,7 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
   // Determine optimized import flags
   const optimizedOptions = optimized
     ? {
-        includeZodResolver: needsZodResolver(fields, config.schemaLite),
+        includeZodResolver: false, // Optimized mode never uses zodResolver
         includeZod: hasAnyZodSchemaOrSchemaLite(fields, config.schemaLite)
       }
     : undefined;

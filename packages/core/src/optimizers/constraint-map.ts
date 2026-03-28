@@ -46,14 +46,20 @@ export function extractNativeRules(schema: $ZodType): NativeRules | null {
     };
   }
 
-  // Number constraints: bag also uses 'minimum'/'maximum' for number min/max.
-  // Detect number vs string by checking if the schema type is numeric.
+  // Number constraints: Zod v4 uses bag['minimum'] for inclusive (min/gte)
+  // and bag['exclusiveMinimum'] for exclusive (gt). RHF min/max are always
+  // inclusive, so exclusive bounds cannot be mapped — fall back to atomic Zod.
   const schemaType = (def['type'] as string) ?? '';
   if (schemaType === 'number' || schemaType === 'bigint') {
-    // For numbers, bag['minimum'] and bag['maximum'] are the bounds.
-    // Check inclusivity from the check defs — RHF min/max are always inclusive.
+    const exclusiveMin = bag['exclusiveMinimum'];
+    const exclusiveMax = bag['exclusiveMaximum'];
+
+    // Exclusive bounds → can't map to native RHF rules
+    if (typeof exclusiveMin === 'number' || typeof exclusiveMax === 'number') {
+      return null;
+    }
+
     if (typeof minimum === 'number') {
-      if (!isInclusive(checks, 'greater_than')) return null; // exclusive → can't map
       rules.min = {
         value: minimum,
         message: extractMessage(checks, 'greater_than', `Must be at least ${minimum}`)
@@ -61,7 +67,6 @@ export function extractNativeRules(schema: $ZodType): NativeRules | null {
       delete rules.minLength; // was string interpretation, replace with number
     }
     if (typeof maximum === 'number') {
-      if (!isInclusive(checks, 'less_than')) return null;
       rules.max = {
         value: maximum,
         message: extractMessage(checks, 'less_than', `Must be at most ${maximum}`)
@@ -83,26 +88,6 @@ export function extractNativeRules(schema: $ZodType): NativeRules | null {
   }
 
   return rules;
-}
-
-/**
- * Check if a numeric bound check is inclusive.
- * RHF min/max rules are always inclusive (>=, <=), so exclusive bounds
- * must fall back to atomic Zod for strict equivalence.
- */
-function isInclusive(
-  checks: Array<{ _zod?: { def: Record<string, unknown> } }> | undefined,
-  checkName: string
-): boolean {
-  if (!checks) return true; // No checks = assume inclusive (default for z.number().min/max)
-  for (const check of checks) {
-    const checkDef = check._zod?.def ?? (check as Record<string, unknown>);
-    if (checkDef['check'] === checkName) {
-      // Zod v4 defaults to inclusive=true for min/max
-      return checkDef['inclusive'] !== false;
-    }
-  }
-  return true;
 }
 
 /**

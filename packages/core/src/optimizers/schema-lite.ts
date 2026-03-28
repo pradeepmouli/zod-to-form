@@ -37,40 +37,42 @@ export function createSchemaLiteCollector(): SchemaLiteCollector {
         return null;
       }
 
-      // If we have the original schema with effects, use it directly.
-      // This preserves the exact superRefine/refine behavior.
-      if (originalSchema && fieldMap.size === 0 && topLevelEntries.length === 0) {
+      // When the walker stored the original schema (has top-level superRefine/refine),
+      // use it directly for submit-time validation. The original schema already
+      // validates all fields + top-level effects, so fieldMap entries (safety-net
+      // fallthrough fields) are covered by it.
+      if (originalSchema) {
         return originalSchema;
       }
 
-      // Build the object shape from collected fields
+      // No original schema — build from collected fields + entries.
       const shape: Record<string, $ZodType> = {};
       for (const [path, schema] of fieldMap) {
         shape[path] = schema;
       }
 
-      // Start with a loose object (allows unknown keys to pass through)
-      let result: any =
+      // Zod's .loose() allows unknown keys to pass through — critical because
+      // schemaLite validates a subset of form data. Zod v4's fluent API returns
+      // new schema instances whose internal types don't unify with $ZodType,
+      // requiring the result variable to be untyped.
+      // SAFETY: z.object().loose().superRefine/refine/transform return valid $ZodType at runtime
+      let result: ReturnType<ReturnType<typeof z.object>['loose']> =
         Object.keys(shape).length > 0 ? z.object(shape).loose() : z.object({}).loose();
 
-      // Chain top-level entries (function-based superRefines)
       for (const entry of topLevelEntries) {
         if (entry.type === 'superRefine') {
-          result = result.superRefine(entry.fn as any);
+          // SAFETY: entry.fn is the superRefine callback stored as unknown — Zod accepts any function here
+          result = (result as any).superRefine(entry.fn) as typeof result;
         } else if (entry.type === 'refine') {
-          result = result.refine(entry.fn as any);
+          result = (result as any).refine(entry.fn) as typeof result;
         } else if (entry.type === 'transform') {
-          result = result.transform(entry.fn as any);
+          result = (result as any).transform(entry.fn) as typeof result;
         }
       }
 
       return result as $ZodType;
     },
 
-    /**
-     * Set the original schema with top-level effects.
-     * Used when the schema has superRefine/refine that can't be extracted as functions.
-     */
     setOriginalSchema(schema: $ZodType): void {
       originalSchema = schema;
     },

@@ -46,6 +46,27 @@ describe('L2 native rules optimizer', () => {
     });
   });
 
+  describe('exclusive bounds → stays as zodSchema (FR-017)', () => {
+    it('falls back to zodSchema for z.number().gt() (exclusive >)', () => {
+      const schema = z.object({ score: z.number().gt(0) });
+      const { fields } = walkL2(schema);
+      expect(fields[0]!.validation?.mode).toBe('zodSchema');
+    });
+
+    it('falls back to zodSchema for z.number().lt() (exclusive <)', () => {
+      const schema = z.object({ score: z.number().lt(100) });
+      const { fields } = walkL2(schema);
+      expect(fields[0]!.validation?.mode).toBe('zodSchema');
+    });
+
+    it('uses native rules for z.number().gte() (inclusive >=)', () => {
+      const schema = z.object({ score: z.number().gte(0) });
+      const { fields } = walkL2(schema);
+      expect(fields[0]!.validation?.mode).toBe('native');
+      expect(fields[0]!.validation?.rules?.min).toEqual(expect.objectContaining({ value: 0 }));
+    });
+  });
+
   describe('refine/transform → stays as zodSchema', () => {
     it('keeps entire chain as zodSchema when field has refine', () => {
       const schema = z.object({

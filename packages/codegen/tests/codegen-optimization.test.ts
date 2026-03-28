@@ -99,6 +99,9 @@ describe('codegen optimization', () => {
       ];
       const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 1 });
       expect(code).toContain('validate');
+      // Should emit hoisted validator const
+      expect(code).toContain('const _validate_email');
+      expect(code).toContain('.safeParse');
     });
 
     it('emits no validation for component-enforced fields', () => {

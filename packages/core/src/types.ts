@@ -13,10 +13,12 @@ export interface NativeRules {
 }
 
 export interface ValidationStrategy {
-  mode: 'zodSchema' | 'native' | 'component-enforced' | 'watch';
+  mode: 'zodSchema' | 'native' | 'component-enforced';
   rules?: NativeRules;
-  watchFields?: string[];
-  watchValidate?: (value: unknown, watchedValues: Record<string, unknown>) => true | string;
+  // TODO(L3): Add watch mode when cross-field optimization is implemented
+  // mode: 'zodSchema' | 'native' | 'component-enforced' | 'watch';
+  // watchFields?: string[];
+  // watchValidate?: (value: unknown, watchedValues: Record<string, unknown>) => true | string;
 }
 
 // ─── FormField: Intermediate Representation ───────────────────────────

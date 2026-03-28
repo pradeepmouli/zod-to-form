@@ -142,5 +142,27 @@ describe('optimized validation', () => {
       });
       expect(onSubmit).not.toHaveBeenCalled();
     });
+
+    it('sets root error for form-level issues (empty path)', () => {
+      const schemaLite = z
+        .object({ a: z.string(), b: z.string() })
+        .loose()
+        .superRefine((data, ctx) => {
+          if (data.a === data.b) {
+            ctx.addIssue({ code: 'custom', message: 'Must differ' });
+          }
+        });
+      const setError = vi.fn();
+      const onSubmit = vi.fn();
+
+      const wrapped = wrapWithSchemaLite(schemaLite, setError, onSubmit);
+      wrapped({ a: 'same', b: 'same' } as Record<string, unknown>);
+
+      expect(setError).toHaveBeenCalledWith('root', {
+        type: 'validate',
+        message: 'Must differ'
+      });
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
   });
 });

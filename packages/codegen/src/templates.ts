@@ -199,11 +199,8 @@ export function renderOptimizedRegister(field: FormField, fieldKey: string): str
     return registerPathExpr(fieldKey);
   }
 
-  if (mode === 'watch') {
-    // Watch-mode codegen is not yet supported — fall back to plain register.
-    // Runtime FieldRenderer handles watch mode via useWatch hook.
-    return registerPathExpr(fieldKey);
-  }
+  // TODO(L3): Handle watch mode when cross-field optimization is implemented
+  // if (mode === 'watch') { ... }
 
   // undefined validation — backward compatible
   return registerPathExpr(fieldKey);
