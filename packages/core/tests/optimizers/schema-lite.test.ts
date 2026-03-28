@@ -17,13 +17,13 @@ describe('SchemaLiteCollector', () => {
     expect(collector.build()).toBeNull();
   });
 
-  it('tracks top-level entries after addTopLevel', () => {
+  it('tracks checks after addCheck', () => {
     const collector = createSchemaLiteCollector();
-    const fn = () => {};
-    collector.addTopLevel({ type: 'superRefine', fn });
+    const check = {};
+    collector.addCheck(check);
     expect(collector.isEmpty()).toBe(false);
-    expect(collector.topLevel).toHaveLength(1);
-    expect(collector.topLevel[0]).toEqual({ type: 'superRefine', fn });
+    expect(collector.checks).toHaveLength(1);
+    expect(collector.checks[0]).toBe(check);
   });
 
   it('tracks fallthrough fields after addField', () => {
@@ -34,76 +34,66 @@ describe('SchemaLiteCollector', () => {
     expect(collector.fields.get('name')).toBe(schema);
   });
 
-  it('removeTopLevel removes a specific entry', () => {
-    const collector = createSchemaLiteCollector();
-    const fn1 = () => {};
-    const fn2 = () => {};
-    const entry1 = { type: 'superRefine' as const, fn: fn1 };
-    const entry2 = { type: 'refine' as const, fn: fn2 };
-    collector.addTopLevel(entry1);
-    collector.addTopLevel(entry2);
-    expect(collector.topLevel).toHaveLength(2);
-
-    collector.removeTopLevel(entry1);
-    expect(collector.topLevel).toHaveLength(1);
-    expect(collector.topLevel[0]).toBe(entry2);
-  });
-
-  it('becomes empty after all entries are removed', () => {
-    const collector = createSchemaLiteCollector();
-    const entry = { type: 'superRefine' as const, fn: () => {} };
-    collector.addTopLevel(entry);
-    expect(collector.isEmpty()).toBe(false);
-
-    collector.removeTopLevel(entry);
-    expect(collector.isEmpty()).toBe(true);
-    expect(collector.build()).toBeNull();
-  });
-
-  describe('setOriginalSchema', () => {
-    it('returns originalSchema from build() when set with no other entries', () => {
-      const collector = createSchemaLiteCollector();
-      const schema = z.object({ a: z.string(), b: z.string() }).superRefine((data, ctx) => {
+  describe('build with real Zod checks', () => {
+    it('builds lite schema from superRefine check', () => {
+      // Create a schema with superRefine and extract its check
+      const base = z.object({ a: z.string(), b: z.string() });
+      const withSR = base.superRefine((data, ctx) => {
         if (data.a === data.b) {
           ctx.addIssue({ code: 'custom', message: 'Must differ', path: ['b'] });
         }
       });
-      collector.setOriginalSchema(schema as any);
+      const check = (withSR._zod.def as any).checks[0];
 
-      expect(collector.isEmpty()).toBe(false);
-
-      const result = collector.build();
-      expect(result).toBe(schema); // Exact same reference
-
-      const fail = safeParse(result, { a: 'same', b: 'same' });
-      expect(fail.success).toBe(false);
-      const pass = safeParse(result, { a: 'hello', b: 'world' });
-      expect(pass.success).toBe(true);
-    });
-
-    it('returns originalSchema even when fieldMap has entries', () => {
       const collector = createSchemaLiteCollector();
-      const schema = z.object({ a: z.string(), b: z.string() }).superRefine((data, ctx) => {
-        if (data.a === data.b) {
-          ctx.addIssue({ code: 'custom', message: 'Must differ', path: ['b'] });
-        }
-      });
-      collector.setOriginalSchema(schema as any);
-      collector.addField('extra', z.string().min(2) as any);
+      collector.addCheck(check);
 
       const result = collector.build();
       expect(result).not.toBeNull();
-      const fail = safeParse(result, { a: 'same', b: 'same' });
-      expect(fail.success).toBe(false);
+
+      // Lite schema validates the superRefine effect
+      expect(safeParse(result, { a: 'same', b: 'same' }).success).toBe(false);
+      expect(safeParse(result, { a: 'hello', b: 'world' }).success).toBe(true);
+
+      // Lite schema does NOT validate field types (loose object)
+      expect(safeParse(result, { a: 123, b: 456 }).success).toBe(true);
     });
 
-    it('build returns null when only addField is used without setOriginalSchema', () => {
-      // Fields without top-level effects are handled by per-field validators,
-      // not schemaLite. The collector returns null in this case.
+    it('builds lite schema from multiple checks', () => {
+      const base = z.object({ a: z.string(), b: z.string() });
+      const withTwo = base
+        .superRefine((data, ctx) => {
+          if (data.a === data.b) ctx.addIssue({ code: 'custom', message: 'fn1', path: ['b'] });
+        })
+        .superRefine((data, ctx) => {
+          if (data.a.length < 2) ctx.addIssue({ code: 'custom', message: 'fn2', path: ['a'] });
+        });
+      const checks = (withTwo._zod.def as any).checks;
+
+      const collector = createSchemaLiteCollector();
+      for (const check of checks) {
+        collector.addCheck(check);
+      }
+
+      const result = collector.build();
+      expect(result).not.toBeNull();
+
+      // Both checks validate
+      expect(safeParse(result, { a: 'x', b: 'x' }).success).toBe(false); // fn1 + fn2
+      expect(safeParse(result, { a: 'x', b: 'y' }).success).toBe(false); // fn2 only
+      expect(safeParse(result, { a: 'hello', b: 'world' }).success).toBe(true);
+    });
+
+    it('builds lite schema with fallthrough fields', () => {
       const collector = createSchemaLiteCollector();
       collector.addField('name', z.string().min(2) as any);
-      expect(collector.isEmpty()).toBe(false); // has entries
-      expect(collector.build()).toBeNull(); // but no original schema → null
+
+      const result = collector.build();
+      expect(result).not.toBeNull();
+
+      // Validates the collected field
+      expect(safeParse(result, { name: 'ab', extra: true }).success).toBe(true);
+      expect(safeParse(result, { name: 'a' }).success).toBe(false);
     });
   });
 });

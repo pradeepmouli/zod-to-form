@@ -184,12 +184,22 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
       level: options!.optimization!.level
     };
 
-    // Detect top-level effects (superRefine, refine, transform)
-    // When the schema has checks beyond its parent, it has top-level effects.
-    // In Zod v4, superRefine bakes the check into the schema — we can't easily
-    // extract the function. Instead, store the original schema for submit-time use.
+    // Detect top-level effects (superRefine, refine, transform).
+    // Extract the extra checks added beyond the parent (base object) and pass
+    // them to the collector. The collector builds a lite schema: z.object({}).loose()
+    // with only these checks — no field-level validation (that's per-field).
     if (hasTopLevelEffects(schema)) {
-      collector.setOriginalSchema(schema);
+      const def = schema._zod.def as unknown as Record<string, unknown>;
+      const checks = def['checks'] as unknown[];
+      const parent = schema._zod.parent;
+      const parentDef = parent
+        ? ((parent as ZodType)._zod.def as unknown as Record<string, unknown>)
+        : undefined;
+      const parentChecks = (parentDef?.['checks'] as unknown[] | undefined) ?? [];
+      const extraChecks = checks.slice(parentChecks.length);
+      for (const check of extraChecks) {
+        collector.addCheck(check);
+      }
     }
   }
 

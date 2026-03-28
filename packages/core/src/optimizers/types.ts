@@ -28,26 +28,17 @@ export type FormOptimizer<T extends $ZodType = $ZodType> = (
 
 // ─── SchemaLite Collector ────────────────────────────────────────────
 
-export interface SchemaLiteEntry {
-  type: 'refine' | 'transform' | 'superRefine';
-  fn: unknown;
-}
-
 export interface SchemaLiteCollector {
-  /** Add a top-level refine/transform/superRefine from the original schema */
-  addTopLevel(entry: SchemaLiteEntry): void;
-  /** Remove a top-level entry (used by L3 when converting superRefines) */
-  removeTopLevel(entry: SchemaLiteEntry): void;
+  /** Add a raw Zod check object extracted from the schema's checks array */
+  addCheck(check: unknown): void;
   /** Add a field that couldn't be inlined (safety net fallback) */
   addField(path: string, schema: $ZodType): void;
-  /** Set the original schema with top-level effects for submit-time use */
-  setOriginalSchema(schema: $ZodType): void;
   /** True when nothing has been collected */
   isEmpty(): boolean;
-  /** Build the final schemaLite or return null if empty */
+  /** Build the lite schema: z.object({}).loose() + collected checks */
   build(): $ZodType | null;
-  /** Read-only access to collected top-level entries */
-  readonly topLevel: ReadonlyArray<SchemaLiteEntry>;
+  /** Read-only access to collected checks */
+  readonly checks: ReadonlyArray<unknown>;
   /** Read-only access to collected fallthrough fields */
   readonly fields: ReadonlyMap<string, $ZodType>;
 }
