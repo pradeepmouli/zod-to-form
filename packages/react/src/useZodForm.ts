@@ -1,5 +1,4 @@
 import { useEffect, useMemo } from 'react';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { walkSchema, registerFlat, normalizeFormValues } from '@zod-to-form/core';
 import type { FormField, WalkResult, OptimizationConfig } from '@zod-to-form/core';
 import { useForm } from 'react-hook-form';
@@ -33,6 +32,21 @@ function rhfCast<T>(value: T): never {
   return value as never;
 }
 
+// Lazy-loaded zodResolver — cached after first call.
+// Keeps @hookform/resolvers out of the initial bundle when optimization is enabled.
+let _zodResolver: ((schema: any) => any) | undefined;
+function getZodResolver(): (schema: any) => any {
+  if (!_zodResolver) {
+    // Synchronous require — bundlers (Vite, webpack, Next.js) resolve this at build time.
+    // Keeps @hookform/resolvers out of the bundle when optimization is enabled
+    // and this code path is never reached (dead code elimination).
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require('@hookform/resolvers/zod') as { zodResolver: (schema: any) => any };
+    _zodResolver = mod.zodResolver;
+  }
+  return _zodResolver;
+}
+
 export function useZodForm<TSchema extends ZodObject>(
   schema: TSchema,
   options?: UseZodFormOptions<TSchema>
@@ -41,7 +55,7 @@ export function useZodForm<TSchema extends ZodObject>(
   const isOptimized = validationLevel !== undefined;
 
   const baseResolver = useMemo(
-    () => (isOptimized ? undefined : zodResolver(rhfCast(schema))),
+    () => (isOptimized ? undefined : getZodResolver()(rhfCast(schema))),
     [schema, isOptimized]
   );
 
