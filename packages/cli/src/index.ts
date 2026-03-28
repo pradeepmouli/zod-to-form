@@ -115,7 +115,7 @@ export async function runGenerate(options: GenerateOptions): Promise<{
     false;
   const effectiveUi = options.ui ?? componentConfig.defaults?.ui ?? 'shadcn';
   const effectiveOverwrite = componentConfig.defaults?.overwrite ?? false;
-  const effectiveValidation = componentConfig.defaults?.validation;
+  const effectiveOptimization = componentConfig.defaults?.optimization;
 
   const outputPath = resolveOutputPath(cwd, effectiveOut, componentName);
   const schema = await loadSchema(schemaPath, exportName);
@@ -134,12 +134,12 @@ export async function runGenerate(options: GenerateOptions): Promise<{
   // SAFETY: same as above — loadSchema returns a ZodObject which is $ZodType at runtime
   let fields: import('@zod-to-form/core').FormField[];
   let schemaLite: import('zod/v4/core').$ZodType | null | undefined;
-  const isOptimized = effectiveValidation?.level != null;
+  const isOptimized = effectiveOptimization?.level != null;
 
   if (isOptimized) {
     const result = walkSchema(schema as never, {
       formRegistry,
-      validation: { level: effectiveValidation!.level as 1 | 2 | 3 }
+      optimization: { level: effectiveOptimization!.level as 1 | 2 | 3 }
     });
     fields = result.fields;
     schemaLite = result.schemaLite;
@@ -160,7 +160,7 @@ export async function runGenerate(options: GenerateOptions): Promise<{
     },
     ui: effectiveUi,
     serverAction: effectiveServerAction,
-    ...(isOptimized ? { validationLevel: effectiveValidation!.level, schemaLite } : {})
+    ...(isOptimized ? { validationLevel: effectiveOptimization!.level, schemaLite } : {})
   };
 
   const code = await generateFormComponent(fields, config);

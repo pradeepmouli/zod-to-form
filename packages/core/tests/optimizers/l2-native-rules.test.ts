@@ -4,7 +4,7 @@ import { walkSchema } from '../../src/walker.js';
 import type { WalkResult } from '../../src/optimizers/types.js';
 
 function walkL2(schema: z.ZodType): WalkResult {
-  return walkSchema(schema, { validation: { level: 2 } }) as WalkResult;
+  return walkSchema(schema, { optimization: { level: 2 } }) as WalkResult;
 }
 
 describe('L2 native rules optimizer', () => {

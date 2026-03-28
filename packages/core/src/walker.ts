@@ -139,11 +139,11 @@ function hasTopLevelEffects(schema: ZodType): boolean {
 
 /**
  * Walk a Zod schema and produce a FormField[] tree.
- * When validation option is set, returns WalkResult with fields + schemaLite.
+ * When optimization option is set, returns WalkResult with fields + schemaLite.
  */
 export function walkSchema(
   schema: ZodType,
-  options: WalkOptions & { validation: { level: 1 | 2 | 3 } }
+  options: WalkOptions & { optimization: { level: 1 | 2 | 3 } }
 ): WalkResult;
 export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[];
 export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] | WalkResult {
@@ -168,7 +168,7 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
   const processors = createProcessors(options?.processors ?? {});
   const shape = (objectSchema._zod.def as unknown as { shape: Record<string, ZodType> }).shape;
 
-  const isOptimized = options?.validation?.level !== undefined;
+  const isOptimized = options?.optimization?.level !== undefined;
 
   // Set up optimizer context if optimization is enabled
   let optimizerCtx: FormOptimizerContext | undefined;
@@ -176,12 +176,12 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
 
   if (isOptimized) {
     collector = createSchemaLiteCollector();
-    const optimizers = createOptimizers(options!.validation!.optimizers ?? {});
+    const optimizers = createOptimizers(options!.optimization!.optimizers ?? {});
 
     optimizerCtx = {
       optimizers,
       schemaLite: collector,
-      level: options!.validation!.level
+      level: options!.optimization!.level
     };
 
     // Detect top-level effects (superRefine, refine, transform)

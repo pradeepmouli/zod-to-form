@@ -12,7 +12,7 @@ describe('Custom optimizer registration (US4)', () => {
 
     const schema = z.object({ name: z.string().min(2) });
     const result = walkSchema(schema, {
-      validation: {
+      optimization: {
         level: 2,
         optimizers: { string: [customOptimizer] }
       }
@@ -33,7 +33,7 @@ describe('Custom optimizer registration (US4)', () => {
 
     const schema = z.object({ dob: z.date() });
     const result = walkSchema(schema, {
-      validation: {
+      optimization: {
         level: 2,
         optimizers: { date: [dateRangeOptimizer] }
       }
@@ -53,7 +53,7 @@ describe('Custom optimizer registration (US4)', () => {
     });
 
     const result = walkSchema(schema, {
-      validation: {
+      optimization: {
         level: 2,
         // Only override string, number uses default chain
         optimizers: { string: [customOptimizer] }

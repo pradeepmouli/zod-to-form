@@ -17,7 +17,7 @@ describe('walkSchema with optimization', () => {
 
   it('returns WalkResult when validation.level is set', () => {
     const schema = z.object({ name: z.string() });
-    const result = walkSchema(schema, { validation: { level: 1 } }) as WalkResult;
+    const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
     expect(result).toHaveProperty('fields');
     expect(result).toHaveProperty('schemaLite');
     expect(Array.isArray(result.fields)).toBe(true);
@@ -37,7 +37,7 @@ describe('walkSchema with optimization', () => {
     });
 
     const result = walkSchema(schema, {
-      validation: {
+      optimization: {
         level: 1,
         optimizers: {
           string: [testOptimizer],
@@ -60,7 +60,7 @@ describe('walkSchema with optimization', () => {
 
     const schema = z.object({ name: z.string() });
     const result = walkSchema(schema, {
-      validation: {
+      optimization: {
         level: 1,
         optimizers: { string: [customOptimizer] }
       }
@@ -71,7 +71,7 @@ describe('walkSchema with optimization', () => {
 
   it('schemaLite is null when no top-level refines exist and all fields inline', () => {
     const schema = z.object({ name: z.string() });
-    const result = walkSchema(schema, { validation: { level: 1 } }) as WalkResult;
+    const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
     expect(result.schemaLite).toBeNull();
   });
 
@@ -87,7 +87,7 @@ describe('walkSchema with optimization', () => {
         }
       });
 
-    const result = walkSchema(schema, { validation: { level: 1 } }) as WalkResult;
+    const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
     expect(result.schemaLite).not.toBeNull();
 
     // schemaLite should validate the superRefine
@@ -104,7 +104,7 @@ describe('walkSchema with optimization', () => {
       alpha: z.string()
     });
 
-    const result = walkSchema(schema, { validation: { level: 1 } }) as WalkResult;
+    const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
     expect(result.fields.map((f) => f.key)).toEqual(['beta', 'alpha']);
   });
 });

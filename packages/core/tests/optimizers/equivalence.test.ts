@@ -9,7 +9,7 @@ function safeParse(schema: any, data: unknown) {
 
 describe('Validation equivalence (FR-017)', () => {
   function walkOptimized(schema: z.ZodType, level: 1 | 2 | 3 = 2): WalkResult {
-    return walkSchema(schema, { validation: { level } }) as WalkResult;
+    return walkSchema(schema, { optimization: { level } }) as WalkResult;
   }
 
   describe('simple schemas — native rules match zodResolver', () => {

@@ -8,7 +8,7 @@ function safeParse(schema: any, data: unknown) {
 }
 
 function walkOptimized(schema: z.ZodType, level: 1 | 2 | 3 = 1): WalkResult {
-  return walkSchema(schema, { validation: { level } }) as WalkResult;
+  return walkSchema(schema, { optimization: { level } }) as WalkResult;
 }
 
 describe('L1 decompose optimizer', () => {

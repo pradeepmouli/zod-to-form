@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { walkSchema, registerFlat, normalizeFormValues } from '@zod-to-form/core';
-import type { FormField, WalkResult, ValidationConfig } from '@zod-to-form/core';
+import type { FormField, WalkResult, OptimizationConfig } from '@zod-to-form/core';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import type { $ZodType } from 'zod/v4/core';
@@ -20,7 +20,7 @@ type UseZodFormOptions<TSchema extends ZodObject> = {
   mode?: 'onSubmit' | 'onChange' | 'onBlur';
   onValueChange?: (values: output<TSchema>) => void;
   /** Validation optimization config. When set, skips zodResolver and uses per-field validation. */
-  validation?: ValidationConfig;
+  optimization?: OptimizationConfig;
 };
 
 /**
@@ -37,7 +37,7 @@ export function useZodForm<TSchema extends ZodObject>(
   schema: TSchema,
   options?: UseZodFormOptions<TSchema>
 ) {
-  const validationLevel = options?.validation?.level;
+  const validationLevel = options?.optimization?.level;
   const isOptimized = validationLevel !== undefined;
 
   const baseResolver = useMemo(
@@ -69,7 +69,7 @@ export function useZodForm<TSchema extends ZodObject>(
         const result: WalkResult = walkSchema(schema, {
           formRegistry: effectiveRegistry,
           processors: options?.processors,
-          validation: { level: validationLevel! }
+          optimization: { level: validationLevel! }
         });
         return { fields: result.fields, schemaLite: result.schemaLite, error: null };
       }

@@ -69,7 +69,7 @@ export type TypedFieldConfig<
 
 // ─── Config Types ────────────────────────────────────────────────────
 
-export type ValidationConfig = {
+export type OptimizationConfig = {
   level?: 1 | 2 | 3;
 };
 
@@ -82,7 +82,7 @@ export type ConfigDefaults = {
   /** Wrap generated form in <FormProvider {...form}> */
   formProvider?: boolean;
   /** Validation optimization configuration */
-  validation?: ValidationConfig;
+  optimization?: OptimizationConfig;
 };
 
 export type ZodTypeConfig<
@@ -205,7 +205,7 @@ const fieldOverrideSchema = z
   })
   .loose();
 
-const validationConfigSchema = z
+const optimizationConfigSchema = z
   .object({
     level: z.number().min(1).max(3).optional()
   })
@@ -220,7 +220,7 @@ const defaultsSchema = z
     overwrite: z.boolean().optional(),
     serverAction: z.boolean().optional(),
     formProvider: z.boolean().optional(),
-    validation: validationConfigSchema
+    optimization: optimizationConfigSchema
   })
   .loose()
   .optional();

@@ -2,7 +2,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { z } from 'zod';
-import type { ValidationConfig } from '@zod-to-form/core';
+import type { OptimizationConfig } from '@zod-to-form/core';
 import { useZodForm } from '../src/useZodForm.js';
 import { wrapWithSchemaLite } from '../src/SchemaLiteSubmit.js';
 
@@ -14,8 +14,8 @@ describe('optimized validation', () => {
         age: z.number().optional()
       });
 
-      const validation: ValidationConfig = { level: 2 };
-      const { result } = renderHook(() => useZodForm(schema, { validation }));
+      const optimization: OptimizationConfig = { level: 2 };
+      const { result } = renderHook(() => useZodForm(schema, { optimization }));
 
       expect(result.current.fields).toBeDefined();
       expect(Array.isArray(result.current.fields)).toBe(true);
@@ -41,8 +41,8 @@ describe('optimized validation', () => {
           }
         });
 
-      const validation: ValidationConfig = { level: 2 };
-      const { result } = renderHook(() => useZodForm(schema, { validation }));
+      const optimization: OptimizationConfig = { level: 2 };
+      const { result } = renderHook(() => useZodForm(schema, { optimization }));
 
       expect(result.current.fields).toBeDefined();
       expect(result.current.schemaLite).not.toBeNull();
@@ -67,8 +67,8 @@ describe('optimized validation', () => {
           }
         });
 
-      const validation: ValidationConfig = { level: 1 };
-      const { result } = renderHook(() => useZodForm(schema, { validation }));
+      const optimization: OptimizationConfig = { level: 1 };
+      const { result } = renderHook(() => useZodForm(schema, { optimization }));
 
       expect(result.current.schemaLite).not.toBeNull();
     });
@@ -82,8 +82,8 @@ describe('optimized validation', () => {
         role: z.enum(['a', 'b'])
       });
 
-      const validation: ValidationConfig = { level: 2 };
-      const { result } = renderHook(() => useZodForm(schema, { validation }));
+      const optimization: OptimizationConfig = { level: 2 };
+      const { result } = renderHook(() => useZodForm(schema, { optimization }));
 
       const nameField = result.current.fields.find((f) => f.key === 'name');
       const roleField = result.current.fields.find((f) => f.key === 'role');

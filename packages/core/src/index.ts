@@ -25,7 +25,7 @@ export type {
   ZodFormsConfig,
   ZodTypeConfig,
   ConfigDefaults,
-  ValidationConfig,
+  OptimizationConfig,
   StripIndexSignature
 } from './config.js';
 

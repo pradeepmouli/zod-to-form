@@ -203,7 +203,7 @@ export interface WalkOptions {
   /** Maximum recursion depth for lazy/recursive schemas (default: 5) */
   maxDepth?: number;
   /** Validation optimization settings */
-  validation?: {
+  optimization?: {
     level: 1 | 2 | 3;
     optimizers?: Record<string, FormOptimizer[]>;
   };

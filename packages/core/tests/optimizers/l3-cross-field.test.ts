@@ -4,7 +4,7 @@ import { walkSchema } from '../../src/walker.js';
 import type { WalkResult } from '../../src/optimizers/types.js';
 
 function walkL3(schema: z.ZodType): WalkResult {
-  return walkSchema(schema, { validation: { level: 3 } }) as WalkResult;
+  return walkSchema(schema, { optimization: { level: 3 } }) as WalkResult;
 }
 
 describe('L3 cross-field optimizer', () => {
