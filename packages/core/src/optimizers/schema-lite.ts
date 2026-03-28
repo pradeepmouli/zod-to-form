@@ -5,14 +5,14 @@ import type { SchemaLiteCollector } from './types.js';
 /**
  * Create a new SchemaLiteCollector instance.
  *
- * Builds a "lite" schema for submit-time validation: z.object({}).loose()
- * with only the top-level effect checks (superRefine/refine/transform)
- * chained on. This skips field-level validation (handled per-field)
- * while preserving cross-field and form-level validation.
+ * Builds a "lite" schema for submit-time validation:
+ * - For superRefine/refine: z.object({}).loose() + extracted checks
+ * - For transform/pipe: the original schema (can't decompose transforms)
  */
 export function createSchemaLiteCollector(): SchemaLiteCollector {
   const collectedChecks: unknown[] = [];
   const fieldMap = new Map<string, $ZodType>();
+  let originalSchema: $ZodType | null = null;
 
   return {
     addCheck(check: unknown): void {
@@ -23,33 +23,36 @@ export function createSchemaLiteCollector(): SchemaLiteCollector {
       fieldMap.set(path, schema);
     },
 
+    setOriginalSchema(schema: $ZodType): void {
+      originalSchema = schema;
+    },
+
     isEmpty(): boolean {
-      return collectedChecks.length === 0 && fieldMap.size === 0;
+      return collectedChecks.length === 0 && fieldMap.size === 0 && originalSchema === null;
     },
 
     build(): $ZodType | null {
-      if (collectedChecks.length === 0 && fieldMap.size === 0) {
+      if (collectedChecks.length === 0 && fieldMap.size === 0 && !originalSchema) {
         return null;
       }
 
-      // Build the shape from fallthrough fields (safety-net fields that
-      // couldn't be inlined). Most schemas won't have any.
+      // When the schema has a pipe/transform wrapper, the output shape changes
+      // and we can't decompose it into a lite schema. Use the original.
+      if (originalSchema) {
+        return originalSchema;
+      }
+
+      // Build lite schema: z.object({...fallthrough}).loose() + extracted checks
       const shape: Record<string, $ZodType> = {};
       for (const [path, schema] of fieldMap) {
         shape[path] = schema;
       }
 
-      // Start with a loose object — allows extra keys to pass through
-      // since per-field validators handle field-level validation.
       let result: $ZodType =
         Object.keys(shape).length > 0
           ? (z.object(shape).loose() as unknown as $ZodType)
           : (z.object({}).loose() as unknown as $ZodType);
 
-      // Attach the extracted check objects from the original schema.
-      // Zod v4's .check() method attaches a raw check to a schema,
-      // preserving the exact superRefine/refine/transform behavior
-      // without needing to extract or reconstruct the callback function.
       for (const check of collectedChecks) {
         result = (result as unknown as { check(c: unknown): $ZodType }).check(check);
       }

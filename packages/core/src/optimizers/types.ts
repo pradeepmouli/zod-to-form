@@ -33,9 +33,11 @@ export interface SchemaLiteCollector {
   addCheck(check: unknown): void;
   /** Add a field that couldn't be inlined (safety net fallback) */
   addField(path: string, schema: $ZodType): void;
+  /** Store the original schema when it has pipe/transform wrappers that can't be decomposed */
+  setOriginalSchema(schema: $ZodType): void;
   /** True when nothing has been collected */
   isEmpty(): boolean;
-  /** Build the lite schema: z.object({}).loose() + collected checks */
+  /** Build the lite schema: z.object({}).loose() + collected checks, or the original for pipes */
   build(): $ZodType | null;
   /** Read-only access to collected checks */
   readonly checks: ReadonlyArray<unknown>;
