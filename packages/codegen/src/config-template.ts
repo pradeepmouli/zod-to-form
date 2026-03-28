@@ -24,6 +24,7 @@ export type ConfigTemplateOptions = {
     overwrite?: boolean;
     serverAction?: boolean;
     formProvider?: boolean;
+    validation?: { level?: 1 | 2 | 3 };
   };
   /** Per-field overrides */
   fields?: Record<string, Record<string, unknown>>;
@@ -97,7 +98,14 @@ export function buildConfigSource(opts: ConfigTemplateOptions): string {
   lines.push(`    ui: '${defaults.ui}',`);
   lines.push(`    overwrite: ${defaults.overwrite},`);
   lines.push(`    serverAction: ${defaults.serverAction},`);
-  lines.push(`    formProvider: ${defaults.formProvider}`);
+  lines.push(`    formProvider: ${defaults.formProvider},`);
+  if (defaults.validation?.level) {
+    lines.push(`    validation: { level: ${defaults.validation.level} }`);
+  } else {
+    lines.push(
+      `    // validation: { level: 2 }  // 1 = decompose, 2 = native rules, 3 = cross-field`
+    );
+  }
   lines.push(`  },`);
 
   // include/exclude
