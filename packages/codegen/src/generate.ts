@@ -319,7 +319,8 @@ function renderNestedBlock(
 function renderArrayBlock(
   field: FormField,
   componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
-  indent: string
+  indent: string,
+  optimized = false
 ): string {
   if (field.key.includes('${')) {
     return [
@@ -355,7 +356,13 @@ function renderArrayBlock(
   } else if (mappedItem.source === 'fields' && mappedItem.componentName) {
     itemJsx = `<${mappedItem.componentName} {...${registerPathExpr(indexedItemField.key)}}${renderOverrideProps(mappedItem.override?.props)} />`;
   } else {
-    itemJsx = renderFieldBlockWithConfig(indexedItemField, componentConfig, `${indent}      `);
+    itemJsx = renderFieldBlockWithConfig(
+      indexedItemField,
+      componentConfig,
+      `${indent}      `,
+      'html',
+      optimized
+    );
   }
 
   return [
@@ -491,7 +498,7 @@ function renderFieldBlockWithConfig(
   }
 
   if (field.component === 'ArrayField') {
-    return renderArrayBlock(field, componentConfig, indent);
+    return renderArrayBlock(field, componentConfig, indent, optimized);
   }
 
   if (mapping.componentName && (mapping.componentOverride || mapping.override)) {
@@ -722,6 +729,8 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
         `        const field = issue.path?.[0];`,
         `        if (typeof field === 'string') {`,
         `          form.setError(field as keyof FormData & string, { type: 'validate', message: issue.message });`,
+        `        } else {`,
+        `          form.setError('root' as any, { type: 'validate', message: issue.message });`,
         `        }`,
         `      }`,
         `      return;`,
