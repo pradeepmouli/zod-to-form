@@ -126,7 +126,7 @@ describe('codegen optimization', () => {
         validationLevel: 2,
         schemaLite: {} as any
       });
-      expect(code).toContain('schemaLite');
+      expect(code).toContain('onSubmitValidated');
     });
   });
 
@@ -138,7 +138,7 @@ describe('codegen optimization', () => {
         validationLevel: 2,
         schemaLite: null
       });
-      expect(code).not.toContain('schemaLite');
+      expect(code).not.toContain('onSubmitValidated');
     });
   });
 

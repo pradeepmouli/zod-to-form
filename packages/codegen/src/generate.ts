@@ -707,15 +707,17 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
           ];
   }
 
-  // Build schemaLite submit wrapper
-  const schemaLiteName = `_schemaLite_${config.exportName}`;
+  // Build submit wrapper for schemas with top-level effects.
+  // Codegen uses the imported schema directly for submit-time validation
+  // because the runtime lite schema can't be serialized into generated code.
+  // The full schema re-validates field constraints, but that's acceptable —
+  // it only runs on submit, not per-keystroke.
   const schemaLiteWrapper = hasSchemaLite
     ? [
         ``,
-        `  // Submit-time validation for top-level effects (superRefine, refine)`,
-        `  const ${schemaLiteName} = ${config.exportName};`,
+        `  // Submit-time validation for top-level effects (superRefine, refine, transform)`,
         `  const onSubmitValidated = (data: FormData) => {`,
-        `    const result = ${schemaLiteName}.safeParse(data);`,
+        `    const result = ${config.exportName}.safeParse(data);`,
         `    if (!result.success) {`,
         `      for (const issue of result.error.issues) {`,
         `        const field = issue.path?.[0];`,

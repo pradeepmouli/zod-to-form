@@ -21,7 +21,7 @@ export function extractNativeRules(schema: $ZodType): NativeRules | null {
     for (const check of checks) {
       const checkDef = check._zod?.def ?? (check as Record<string, unknown>);
       const checkType = checkDef['check'] as string | undefined;
-      if (checkType === 'custom' || checkType === 'transform') {
+      if (checkType === 'custom' || checkType === 'transform' || checkType === undefined) {
         return null;
       }
     }

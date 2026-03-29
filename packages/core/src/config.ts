@@ -207,7 +207,7 @@ const fieldOverrideSchema = z
 
 const optimizationConfigSchema = z
   .object({
-    level: z.number().min(1).max(3).optional()
+    level: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional()
   })
   .loose()
   .optional();

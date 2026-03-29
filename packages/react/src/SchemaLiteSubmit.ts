@@ -22,8 +22,8 @@ export function wrapWithSchemaLite<TData extends Record<string, unknown>>(
   const schema = schemaLite as unknown as SafeParseable;
   return (data: TData) => {
     const result = schema.safeParse(normalizeFormValues(data));
-    if (!result.success) {
-      for (const issue of result.error!.issues) {
+    if (!result.success && result.error) {
+      for (const issue of result.error.issues) {
         const path = issue.path.map(String).join('.');
         if (path) {
           // SAFETY: RHF's FieldPath type can't be derived from generic TData at runtime
