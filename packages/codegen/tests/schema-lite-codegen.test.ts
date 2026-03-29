@@ -11,7 +11,7 @@ describe('generateSchemaLiteFile', () => {
   });
 
   describe('checks-only case', () => {
-    const info: SchemaLiteInfo = { type: 'checks', checkCount: 2 };
+    const info: SchemaLiteInfo = { type: 'checks', checkCount: 2, fallthroughFields: [] };
 
     it('generates code that extracts checks and builds lite schema', () => {
       const code = generateSchemaLiteFile(schemaPath, exportName, info)!;
@@ -34,7 +34,8 @@ describe('generateSchemaLiteFile', () => {
       const info: SchemaLiteInfo = {
         type: 'transform',
         hasInnerChecks: false,
-        hasOuterChecks: false
+        hasOuterChecks: false,
+        fallthroughFields: []
       };
       const code = generateSchemaLiteFile(schemaPath, exportName, info)!;
       expect(code).toContain("import { z } from 'zod'");
@@ -47,7 +48,8 @@ describe('generateSchemaLiteFile', () => {
       const info: SchemaLiteInfo = {
         type: 'transform',
         hasInnerChecks: true,
-        hasOuterChecks: false
+        hasOuterChecks: false,
+        fallthroughFields: []
       };
       const code = generateSchemaLiteFile(schemaPath, exportName, info)!;
       expect(code).toContain('Inner checks');
@@ -58,7 +60,8 @@ describe('generateSchemaLiteFile', () => {
       const info: SchemaLiteInfo = {
         type: 'transform',
         hasInnerChecks: false,
-        hasOuterChecks: true
+        hasOuterChecks: true,
+        fallthroughFields: []
       };
       const code = generateSchemaLiteFile(schemaPath, exportName, info)!;
       expect(code).toContain('Outer checks');
@@ -69,7 +72,8 @@ describe('generateSchemaLiteFile', () => {
       const info: SchemaLiteInfo = {
         type: 'transform',
         hasInnerChecks: true,
-        hasOuterChecks: true
+        hasOuterChecks: true,
+        fallthroughFields: []
       };
       const code = generateSchemaLiteFile(schemaPath, exportName, info)!;
       expect(code).toContain('Inner checks');
@@ -84,6 +88,25 @@ describe('generateSchemaLiteFile', () => {
       expect(code).toContain(`import { ${exportName} } from '${schemaPath}'`);
       expect(code).toContain(`export const schemaLite = ${exportName}`);
       expect(code).not.toContain('import { z }');
+    });
+  });
+
+  describe('fallthrough fields', () => {
+    it('includes fallthrough fields in the lite object shape', () => {
+      const info: SchemaLiteInfo = {
+        type: 'checks',
+        checkCount: 1,
+        fallthroughFields: ['email', 'name']
+      };
+      const code = generateSchemaLiteFile(schemaPath, exportName, info)!;
+      expect(code).toContain(`"email": ${exportName}._zod.def.shape["email"]`);
+      expect(code).toContain(`"name": ${exportName}._zod.def.shape["name"]`);
+    });
+
+    it('uses empty object when no fallthrough fields', () => {
+      const info: SchemaLiteInfo = { type: 'checks', checkCount: 1, fallthroughFields: [] };
+      const code = generateSchemaLiteFile(schemaPath, exportName, info)!;
+      expect(code).toContain('z.object({}).loose()');
     });
   });
 });

@@ -8,8 +8,13 @@ export type { NativeRules, ValidationStrategy };
 
 /** Metadata for codegen to reconstruct the lite schema in a generated file */
 export type SchemaLiteInfo =
-  | { type: 'checks'; checkCount: number }
-  | { type: 'transform'; hasInnerChecks: boolean; hasOuterChecks: boolean }
+  | { type: 'checks'; checkCount: number; fallthroughFields: string[] }
+  | {
+      type: 'transform';
+      hasInnerChecks: boolean;
+      hasOuterChecks: boolean;
+      fallthroughFields: string[];
+    }
   | { type: 'original' }
   | null;
 

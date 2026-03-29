@@ -1,6 +1,20 @@
 import type { SchemaLiteInfo } from '@zod-to-form/core';
 
 /**
+ * Emit the base lite schema: z.object({...fallthrough}).loose()
+ * Fallthrough fields are referenced from the imported schema's shape.
+ */
+function emitLiteBase(exportName: string, fallthroughFields: string[]): string {
+  if (fallthroughFields.length === 0) {
+    return `let _lite: any = z.object({}).loose();`;
+  }
+  const shapeEntries = fallthroughFields
+    .map((key) => `${JSON.stringify(key)}: ${exportName}._zod.def.shape[${JSON.stringify(key)}]`)
+    .join(', ');
+  return `let _lite: any = z.object({ ${shapeEntries} }).loose();`;
+}
+
+/**
  * Generate the content of a .lite.ts file that constructs a lite schema
  * from the imported schema's check objects at runtime.
  *
@@ -24,16 +38,16 @@ export function generateSchemaLiteFile(
     return lines.join('\n');
   }
 
-  // Checks-only case: z.object({}).loose().check(c1).check(c2)
+  // Checks-only case: z.object({...fallthrough}).loose().check(c1).check(c2)
   if (info.type === 'checks') {
     lines.push(`import { z } from 'zod';`);
     lines.push(`import { ${exportName} } from '${schemaImportPath}';`);
     lines.push('');
+    lines.push(emitLiteBase(exportName, info.fallthroughFields));
     lines.push(
       `const _parentCheckCount = ${exportName}._zod.parent?._zod.def.checks?.length ?? 0;`
     );
     lines.push(`const _checks = (${exportName}._zod.def.checks ?? []).slice(_parentCheckCount);`);
-    lines.push(`let _lite: any = z.object({}).loose();`);
     lines.push(`for (const _c of _checks) _lite = _lite.check(_c);`);
     lines.push(`export const schemaLite = _lite;`);
     lines.push('');
@@ -46,7 +60,7 @@ export function generateSchemaLiteFile(
     lines.push(`import { ${exportName} } from '${schemaImportPath}';`);
     lines.push('');
     lines.push(`const _def = ${exportName}._zod.def;`);
-    lines.push(`let _lite: any = z.object({}).loose();`);
+    lines.push(emitLiteBase(exportName, info.fallthroughFields));
     lines.push('');
 
     if (info.hasInnerChecks) {

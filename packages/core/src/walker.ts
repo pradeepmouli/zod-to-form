@@ -151,14 +151,15 @@ function collectTopLevelEffects(
     return {
       type: 'transform',
       hasInnerChecks,
-      hasOuterChecks: (pipeChecks?.length ?? 0) > 0
+      hasOuterChecks: (pipeChecks?.length ?? 0) > 0,
+      fallthroughFields: []
     };
   }
 
   // Case 2: checks on the object schema (superRefine/refine, no pipe wrapper)
   if (hasTopLevelEffects(schema)) {
     const checkCount = extractChecksFromSchema(schema, collector);
-    return { type: 'checks', checkCount };
+    return { type: 'checks', checkCount, fallthroughFields: [] };
   }
 
   return null;
@@ -289,6 +290,12 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
   });
 
   if (isOptimized && collector) {
+    // Attach fallthrough field paths to the info for codegen
+    const fallthroughFields = [...collector.fields.keys()];
+    if (schemaLiteInfo && schemaLiteInfo.type !== 'original') {
+      schemaLiteInfo.fallthroughFields = fallthroughFields;
+    }
+
     return {
       fields: sorted,
       schemaLite: collector.build(),
