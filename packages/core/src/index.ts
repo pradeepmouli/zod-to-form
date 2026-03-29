@@ -33,7 +33,8 @@ export type {
   FormOptimizer,
   FormOptimizerContext,
   WalkResult,
-  SchemaLiteCollector
+  SchemaLiteCollector,
+  SchemaLiteInfo
 } from './optimizers/index.js';
 
 export {

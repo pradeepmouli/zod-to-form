@@ -6,9 +6,18 @@ export type { NativeRules, ValidationStrategy };
 
 // ─── Walk Result ─────────────────────────────────────────────────────
 
+/** Metadata for codegen to reconstruct the lite schema in a generated file */
+export type SchemaLiteInfo =
+  | { type: 'checks'; checkCount: number }
+  | { type: 'transform'; hasInnerChecks: boolean; hasOuterChecks: boolean }
+  | { type: 'original' }
+  | null;
+
 export interface WalkResult {
   fields: FormField[];
   schemaLite: $ZodType | null;
+  /** Codegen metadata — describes how to reconstruct schemaLite in generated code */
+  schemaLiteInfo: SchemaLiteInfo;
 }
 
 // ─── Optimizer Types ─────────────────────────────────────────────────

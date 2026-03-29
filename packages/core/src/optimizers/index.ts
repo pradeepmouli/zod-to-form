@@ -2,7 +2,8 @@ export type {
   FormOptimizer,
   FormOptimizerContext,
   WalkResult,
-  SchemaLiteCollector
+  SchemaLiteCollector,
+  SchemaLiteInfo
 } from './types.js';
 
 export { createSchemaLiteCollector } from './schema-lite.js';

@@ -180,6 +180,33 @@ packages/
 - `packages/react/src/useZodForm.ts` — Read config from context/props, pass to walker
 - Integration tests across all three packages
 
+### Phase 6: SchemaLite Codegen
+
+**Goal**: Generate a separate `.lite.ts` file that constructs the lite schema from the imported schema's check objects at runtime. The form component imports the lite schema for submit-time validation instead of using the full schema.
+
+**Files touched**:
+- `packages/codegen/src/generate.ts` — Add `generateSchemaLite()` function, update `generateFormComponent()` to import from `.lite.ts`
+- `packages/codegen/src/schema-lite-codegen.ts` — NEW — Generate `.lite.ts` file content
+- `packages/cli/src/index.ts` — Write `.lite.ts` alongside the form component
+- `packages/codegen/src/__tests__/codegen-optimization.test.ts` — Test lite file generation
+
+**Generated output structure**:
+```text
+signup-form.tsx          → imports { schemaLite } from './signup-form.lite.js'
+signup-form.lite.ts      → imports schema, extracts checks, exports lite schema
+```
+
+**Three codegen cases**:
+1. **Checks only** (superRefine/refine on object): Extract checks from `Schema._zod.def.checks`, replay via `.check(c)` onto `z.object({}).loose()`
+2. **Transform + checks** (pipe wrapper): Extract transform from `def.out._zod.def.transform`, inner checks from `def.in`, outer checks from `def.checks`
+3. **Non-decomposable pipe**: Re-export the original schema
+
+**Key design decisions**:
+- The `.lite.ts` file imports the same schema as the form component — same import path
+- Check extraction happens at runtime in the generated file via `Schema._zod.def.checks` — no serialization of check objects needed
+- The lite file always imports `z` from `zod` (needed for `z.object({}).loose()`)
+- WalkResult carries `schemaLiteInfo` metadata so codegen knows which case to emit
+
 ## Complexity Tracking
 
 No constitution violations. No complexity justification needed.

@@ -156,6 +156,28 @@
 
 ---
 
+## Phase 8: SchemaLite Codegen (FR-018)
+
+**Purpose**: Generate a `.lite.ts` file that constructs the lite schema from the imported schema's checks at runtime, and update the form component to import it for submit-time validation.
+
+### Tests
+
+- [ ] T050 [P] Write schema-lite-codegen tests in packages/codegen/tests/schema-lite-codegen.test.ts — test checks-only case (superRefine), transform case (pipe wrapper), compound case (superRefine + transform), non-decomposable pipe case (re-exports original), no-effects case (no file generated)
+- [ ] T051 [P] Extend codegen-optimization tests in packages/codegen/tests/codegen-optimization.test.ts — test form component imports schemaLite from .lite.js; test onSubmitValidated uses imported schemaLite not full schema
+
+### Implementation
+
+- [ ] T052 Add SchemaLiteInfo metadata to WalkResult in packages/core/src/optimizers/types.ts — carry reconstruction info (checks-only, transform, non-decomposable, none) so codegen knows which case to emit
+- [ ] T053 Update walker to populate SchemaLiteInfo in packages/core/src/walker.ts — set info based on what collectTopLevelEffects found
+- [ ] T054 Implement generateSchemaLiteFile in packages/codegen/src/schema-lite-codegen.ts — generate .lite.ts content for each case (checks-only, transform+checks, non-decomposable pipe)
+- [ ] T055 Update generateFormComponent in packages/codegen/src/generate.ts — import schemaLite from .lite.js, use it in onSubmitValidated instead of full schema
+- [ ] T056 Update CLI to write .lite.ts alongside form component in packages/cli/src/index.ts — write both files, handle dry-run and overwrite
+- [ ] T057 Run full test suite and type check
+
+**Checkpoint**: Codegen produces proper lite schema files. Forms use lite validation on submit.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

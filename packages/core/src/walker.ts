@@ -4,7 +4,7 @@ import { processFallback } from './processors/fallback.js';
 import { createProcessors } from './registry.js';
 import { createBaseField } from './utils.js';
 import type { FormField, WalkOptions } from './types.js';
-import type { FormOptimizerContext, WalkResult } from './optimizers/types.js';
+import type { FormOptimizerContext, WalkResult, SchemaLiteInfo } from './optimizers/types.js';
 import { createOptimizers } from './optimizers/index.js';
 import { createSchemaLiteCollector } from './optimizers/schema-lite.js';
 
@@ -121,26 +121,21 @@ function collectTopLevelEffects(
   schema: ZodType,
   objectSchema: ZodType,
   collector: ReturnType<typeof createSchemaLiteCollector>
-): void {
+): SchemaLiteInfo {
   const def = schema._zod.def as unknown as Record<string, unknown>;
 
   // Case 1: pipe/transform wrapper (def.type === 'pipe')
-  // The outer schema wraps the object in a pipe. Extract the transform function
-  // from def.out and any checks on the pipe itself.
   if (schema !== objectSchema && def['type'] === 'pipe') {
     const out = def['out'] as ZodType | undefined;
     const outDef = out?._zod?.def as Record<string, unknown> | undefined;
 
-    // Extract the transform function if present
     if (outDef?.['type'] === 'transform' && typeof outDef['transform'] === 'function') {
       collector.addTransform(outDef['transform'] as (data: unknown) => unknown);
     } else if (out) {
-      // Non-transform pipe (e.g. z.object().pipe(otherSchema)) — can't decompose
       collector.setOriginalSchema(schema);
-      return;
+      return { type: 'original' };
     }
 
-    // Collect any checks on the pipe itself (e.g. .transform().superRefine())
     const pipeChecks = def['checks'] as unknown[] | undefined;
     if (pipeChecks) {
       for (const check of pipeChecks) {
@@ -148,24 +143,31 @@ function collectTopLevelEffects(
       }
     }
 
-    // Also collect checks on the inner object (e.g. .superRefine().transform())
-    // The inner object (objectSchema = def.in) may have superRefine checks
-    if (hasTopLevelEffects(objectSchema)) {
+    const hasInnerChecks = hasTopLevelEffects(objectSchema);
+    if (hasInnerChecks) {
       extractChecksFromSchema(objectSchema, collector);
     }
-    return;
+
+    return {
+      type: 'transform',
+      hasInnerChecks,
+      hasOuterChecks: (pipeChecks?.length ?? 0) > 0
+    };
   }
 
   // Case 2: checks on the object schema (superRefine/refine, no pipe wrapper)
   if (hasTopLevelEffects(schema)) {
-    extractChecksFromSchema(schema, collector);
+    const checkCount = extractChecksFromSchema(schema, collector);
+    return { type: 'checks', checkCount };
   }
+
+  return null;
 }
 
 function extractChecksFromSchema(
   schema: ZodType,
   collector: ReturnType<typeof createSchemaLiteCollector>
-): void {
+): number {
   const def = schema._zod.def as unknown as Record<string, unknown>;
   const checks = def['checks'] as unknown[];
   const parent = schema._zod.parent;
@@ -177,6 +179,7 @@ function extractChecksFromSchema(
   for (const check of extraChecks) {
     collector.addCheck(check);
   }
+  return extraChecks.length;
 }
 
 /**
@@ -241,6 +244,7 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
   // Set up optimizer context if optimization is enabled
   let optimizerCtx: FormOptimizerContext | undefined;
   let collector: ReturnType<typeof createSchemaLiteCollector> | undefined;
+  let schemaLiteInfo: SchemaLiteInfo = null;
 
   if (isOptimized) {
     collector = createSchemaLiteCollector();
@@ -260,7 +264,7 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
     //
     // We extract both and replay them onto a lite z.object({}).loose() schema
     // so submit-time validation skips field-level checks but preserves effects.
-    collectTopLevelEffects(schema, objectSchema, collector);
+    schemaLiteInfo = collectTopLevelEffects(schema, objectSchema, collector);
   }
 
   // Each top-level field gets its own `seen` set so that reused schema instances
@@ -287,7 +291,8 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
   if (isOptimized && collector) {
     return {
       fields: sorted,
-      schemaLite: collector.build()
+      schemaLite: collector.build(),
+      schemaLiteInfo
     };
   }
 

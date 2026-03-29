@@ -25,6 +25,10 @@ export type CodegenConfig = {
   validationLevel?: 1 | 2 | 3;
   /** SchemaLite for submit-time validation of top-level effects (null when no effects exist) */
   schemaLite?: import('zod/v4/core').$ZodType | null;
+  /** Codegen metadata for generating the .lite.ts file */
+  schemaLiteInfo?: import('@zod-to-form/core').SchemaLiteInfo;
+  /** Output path of the form component — used to compute the .lite.ts import path */
+  outputPath?: string;
 };
 
 function renderLiteralProp(value: unknown): string | undefined {
@@ -615,6 +619,12 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
     optimizedOptions
   );
 
+  // When optimized with schemaLite, the form imports from the .lite.ts file
+  const hasSchemaLite = optimized && config.schemaLite != null;
+  const schemaLiteImport = hasSchemaLite
+    ? `import { schemaLite } from './${config.componentName}.lite.js';`
+    : undefined;
+
   // Generate hoisted validators for optimized mode
   const hoistedValidators = optimized ? generateHoistedValidators(fields, config.exportName) : [];
 
@@ -666,9 +676,6 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
         ]
       : [];
 
-  // When optimized with schemaLite, wrap handleSubmit with schemaLite validation
-  const hasSchemaLite = optimized && config.schemaLite != null;
-
   const formOpen =
     config.mode === 'auto-save'
       ? `    <form>`
@@ -707,18 +714,15 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
           ];
   }
 
-  // Build submit wrapper for schemas with top-level effects.
-  // Codegen uses the imported schema directly for submit-time validation
-  // because the runtime lite schema can't be serialized into generated code.
-  // The full schema re-validates field constraints, but that's acceptable —
-  // it only runs on submit, not per-keystroke.
+  // Build submit wrapper using the imported schemaLite from the .lite.ts file.
+  // The lite schema only validates top-level effects (superRefine/refine/transform),
+  // not field-level constraints (those are handled per-field).
   const schemaLiteWrapper = hasSchemaLite
     ? [
         ``,
-        `  // Submit-time validation for top-level effects (superRefine, refine, transform)`,
         `  const onSubmitValidated = (data: FormData) => {`,
-        `    const result = ${config.exportName}.safeParse(data);`,
-        `    if (!result.success) {`,
+        `    const result = schemaLite.safeParse(data);`,
+        `    if (!result.success && result.error) {`,
         `      for (const issue of result.error.issues) {`,
         `        const field = issue.path?.[0];`,
         `        if (typeof field === 'string') {`,
@@ -736,6 +740,7 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
 
   return [
     header,
+    ...(schemaLiteImport ? [schemaLiteImport] : []),
     ...(hoistedValidators.length > 0 ? ['', ...hoistedValidators] : []),
     '',
     `export function ${config.componentName}(props: {`,

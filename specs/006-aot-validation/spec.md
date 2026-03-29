@@ -111,6 +111,7 @@ As a developer with custom components that enforce constraints (e.g., a DateRang
 - **FR-015**: System MUST default to the current zodResolver behavior when optimization is not enabled (backward compatible).
 - **FR-016**: System MUST preserve schemaLite container structure with `.loose()` when nested validation remains, pruning empty subtrees.
 - **FR-017**: System MUST guarantee strict validation equivalence — optimized validation (at any level) MUST produce identical accept/reject decisions to zodResolver for all inputs. If a native rule cannot perfectly replicate a Zod validator's behavior, the system MUST fall back to atomic Zod for that field.
+- **FR-018**: In codegen mode, the system MUST generate a separate `.lite.ts` file that constructs a lite schema by extracting top-level effect checks from the imported schema and replaying them onto `z.object({}).loose()`. The generated form component MUST import and use the lite schema for submit-time validation instead of the full schema. For non-decomposable pipes, the `.lite.ts` file MUST re-export the original schema.
 
 ### Key Entities
 
