@@ -728,7 +728,7 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
         `        if (typeof field === 'string') {`,
         `          form.setError(field as keyof FormData & string, { type: 'validate', message: issue.message });`,
         `        } else {`,
-        `          form.setError('root' as any, { type: 'validate', message: issue.message });`,
+        `          form.setError('root' as any, { type: 'validate', message: issue.message }); // RHF root error key`,
         `        }`,
         `      }`,
         `      return;`,

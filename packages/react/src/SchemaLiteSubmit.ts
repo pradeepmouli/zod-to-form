@@ -29,7 +29,7 @@ export function wrapWithSchemaLite<TData extends Record<string, unknown>>(
           // SAFETY: RHF's FieldPath type can't be derived from generic TData at runtime
           (setError as any)(path, { type: 'validate', message: issue.message });
         } else {
-          // Form-level error (empty path) — set on RHF's root error key
+          // SAFETY: RHF's root error key is not in FieldPath<TData>
           (setError as any)('root', { type: 'validate', message: issue.message });
         }
       }
