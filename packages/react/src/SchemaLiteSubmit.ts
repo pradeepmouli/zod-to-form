@@ -1,5 +1,5 @@
 import type { $ZodType } from 'zod/v4/core';
-import type { UseFormSetError } from 'react-hook-form';
+import type { UseFormSetError, FieldPath, FieldValues } from 'react-hook-form';
 import { normalizeFormValues } from '@zod-to-form/core';
 
 type SafeParseable = {
@@ -26,11 +26,9 @@ export function wrapWithSchemaLite<TData extends Record<string, unknown>>(
       for (const issue of result.error.issues) {
         const path = issue.path.map(String).join('.');
         if (path) {
-          // SAFETY: RHF's FieldPath type can't be derived from generic TData at runtime
-          (setError as any)(path, { type: 'validate', message: issue.message });
+          setError(path as FieldPath<TData>, { type: 'validate', message: issue.message });
         } else {
-          // SAFETY: RHF's root error key is not in FieldPath<TData>
-          (setError as any)('root', { type: 'validate', message: issue.message });
+          setError('root', { type: 'validate', message: issue.message });
         }
       }
       return;
