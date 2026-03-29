@@ -90,6 +90,10 @@ As a developer with custom components that enforce constraints (e.g., a DateRang
 - What happens when a field uses `z.lazy()`? The lazy wrapper is unwrapped to its inner schema and delegated to the appropriate L1 optimizer (same as other wrapper types like optional/nullable/default).
 - What happens when optimization is disabled? The system falls back to the current zodResolver behavior with zero changes to output.
 
+### Security Note
+
+SchemaLite uses `.loose()` to allow form fields not in its shape to pass through — this is required because per-field validators handle those fields client-side. The lite schema only validates top-level effects (superRefine/refine/transform), not the data shape. **Server-side handlers MUST validate the full schema** (e.g. `schema.safeParse(req.body)`) to reject injected fields and enforce field-level type constraints. Client-side optimization does not replace server-side validation.
+
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
