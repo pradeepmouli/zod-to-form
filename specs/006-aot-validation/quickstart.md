@@ -1,10 +1,10 @@
-# Quickstart: AOT Validation Optimization
+# Quickstart: Validation Optimization
 
 **Feature**: 006-aot-validation | **Date**: 2026-03-26
 
 ## Enable Optimization
 
-Add the `validation` key to your `z2f.config.ts`:
+Add the `optimization` key to your `z2f.config.ts`:
 
 ```typescript
 import { defineConfig } from '@zod-to-form/core';
@@ -12,7 +12,7 @@ import { defineConfig } from '@zod-to-form/core';
 export default defineConfig({
   components: { source: '@/components/ui', preset: 'shadcn' },
   defaults: {
-    validation: { level: 2 },  // 1 = decompose, 2 = native rules, 3 = cross-field UX
+    optimization: { level: 2 },  // 1 = decompose, 2 = native rules, 3 = cross-field UX
   },
 });
 ```
@@ -48,7 +48,7 @@ const dateRangeOptimizer: FormOptimizer = (schema, ctx, field) => {
 };
 
 const result = walkSchema(schema, {
-  validation: {
+  optimization: {
     level: 2,
     optimizers: { date: [dateRangeOptimizer] },
   },
@@ -70,4 +70,4 @@ pnpm test -- --grep "equivalence"
 
 ## Disabling Optimization
 
-Remove the `validation` key from config or set it to `undefined`. The system falls back to `zodResolver` with zero changes to output.
+Remove the `optimization` key from config or set it to `undefined`. The system falls back to `zodResolver` with zero changes to output.

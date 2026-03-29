@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import type { FormMeta } from '../src/types.js';
 import { walkSchema } from '../src/walker.js';
 
 describe('metadata resolution', () => {
@@ -60,12 +61,10 @@ describe('metadata resolution', () => {
   });
 
   it('applies render function from form registry and sets hasCustomRender', () => {
-    const formRegistry = z.registry<{
-      render?: (field: import('../src/types.js').FormField, props: unknown) => unknown;
-    }>();
+    const formRegistry = z.registry<FormMeta>();
 
-    const customRender = (_field: import('../src/types.js').FormField, _props: unknown) =>
-      'custom-output';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- test: registry generics don't perfectly unify with FormField's expanded shape
+    const customRender = (() => 'custom-output') as any;
     const name = z.string();
     formRegistry.add(name, { render: customRender });
 

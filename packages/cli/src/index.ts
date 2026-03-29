@@ -21,7 +21,7 @@ import {
   walkSchema
 } from '@zod-to-form/core';
 import { z } from 'zod';
-import { generateFormComponent } from './codegen.js';
+import { generateFormComponent, generateSchemaLiteFile } from './codegen.js';
 import { loadConfig, loadSchema, resolveSchemaExportNames } from './loader.js';
 import { runInit, type InitOptions } from './init.js';
 import { generateServerAction } from './server-action.js';
@@ -115,6 +115,7 @@ export async function runGenerate(options: GenerateOptions): Promise<{
     false;
   const effectiveUi = options.ui ?? componentConfig.defaults?.ui ?? 'shadcn';
   const effectiveOverwrite = componentConfig.defaults?.overwrite ?? false;
+  const effectiveOptimization = componentConfig.defaults?.optimization;
 
   const outputPath = resolveOutputPath(cwd, effectiveOut, componentName);
   const schema = await loadSchema(schemaPath, exportName);
@@ -131,7 +132,24 @@ export async function runGenerate(options: GenerateOptions): Promise<{
   }
 
   // SAFETY: same as above — loadSchema returns a ZodObject which is $ZodType at runtime
-  const fields = walkSchema(schema as never, { formRegistry });
+  let fields: import('@zod-to-form/core').FormField[];
+  let schemaLite: import('zod/v4/core').$ZodType | null | undefined;
+  const isOptimized = effectiveOptimization?.level != null;
+
+  let schemaLiteInfo: import('@zod-to-form/core').SchemaLiteInfo = null;
+
+  if (isOptimized) {
+    const result = walkSchema(schema as never, {
+      formRegistry,
+      optimization: { level: effectiveOptimization!.level as 1 | 2 | 3 }
+    });
+    fields = result.fields;
+    schemaLite = result.schemaLite;
+    schemaLiteInfo = result.schemaLiteInfo;
+  } else {
+    fields = walkSchema(schema as never, { formRegistry });
+    schemaLite = undefined;
+  }
 
   const config = {
     schemaPath,
@@ -144,7 +162,10 @@ export async function runGenerate(options: GenerateOptions): Promise<{
       fields: Object.keys(mergedFields).length > 0 ? mergedFields : componentConfig.fields
     },
     ui: effectiveUi,
-    serverAction: effectiveServerAction
+    serverAction: effectiveServerAction,
+    ...(isOptimized
+      ? { validationLevel: effectiveOptimization!.level, schemaLite, schemaLiteInfo }
+      : {})
   };
 
   const code = await generateFormComponent(fields, config);
@@ -170,6 +191,15 @@ export async function runGenerate(options: GenerateOptions): Promise<{
 
   await mkdir(path.dirname(outputPath), { recursive: true });
   await writeFile(outputPath, code, 'utf8');
+
+  // Generate .lite.ts alongside the form component when schemaLite is needed
+  if (isOptimized && schemaLiteInfo) {
+    const liteCode = generateSchemaLiteFile(config, schemaLiteInfo);
+    if (liteCode) {
+      const litePath = outputPath.replace(/\.tsx?$/, '.lite.ts');
+      await writeFile(litePath, liteCode, 'utf8');
+    }
+  }
 
   // Generate server action alongside the form component when requested
   if (effectiveServerAction) {

@@ -69,6 +69,10 @@ export type TypedFieldConfig<
 
 // ─── Config Types ────────────────────────────────────────────────────
 
+export type OptimizationConfig = {
+  level?: 1 | 2 | 3;
+};
+
 export type ConfigDefaults = {
   mode?: 'submit' | 'auto-save';
   ui?: 'shadcn' | 'html';
@@ -77,6 +81,8 @@ export type ConfigDefaults = {
   serverAction?: boolean;
   /** Wrap generated form in <FormProvider {...form}> */
   formProvider?: boolean;
+  /** Validation optimization configuration */
+  optimization?: OptimizationConfig;
 };
 
 export type ZodTypeConfig<
@@ -199,6 +205,13 @@ const fieldOverrideSchema = z
   })
   .loose();
 
+const optimizationConfigSchema = z
+  .object({
+    level: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional()
+  })
+  .loose()
+  .optional();
+
 const defaultsSchema = z
   .object({
     mode: z.string().optional(),
@@ -206,7 +219,8 @@ const defaultsSchema = z
     out: z.string().optional(),
     overwrite: z.boolean().optional(),
     serverAction: z.boolean().optional(),
-    formProvider: z.boolean().optional()
+    formProvider: z.boolean().optional(),
+    optimization: optimizationConfigSchema
   })
   .loose()
   .optional();

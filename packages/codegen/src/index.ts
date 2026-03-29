@@ -6,6 +6,8 @@ export type { CodegenConfig } from './generate.js';
 
 export { getFileHeader, renderField, registerPathExpr } from './templates.js';
 
+export { generateSchemaLiteFile } from './schema-lite-codegen.js';
+
 export { buildConfigSource } from './config-template.js';
 export type { ConfigTemplateOptions } from './config-template.js';
 

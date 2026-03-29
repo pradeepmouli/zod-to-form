@@ -1,4 +1,4 @@
-# Implementation Plan: AOT Validation Optimization
+# Implementation Plan: Validation Optimization
 
 **Branch**: `006-aot-validation` | **Date**: 2026-03-26 | **Spec**: [spec.md](spec.md)
 **Input**: Feature specification from `/specs/006-aot-validation/spec.md`
@@ -59,14 +59,13 @@ packages/
 │   ├── types.ts                    # MODIFY — add FormField.validation, FormOptimizer types
 │   ├── walker.ts                   # MODIFY — integrate optimizer chain after processor dispatch
 │   ├── registry.ts                 # MODIFY — add createOptimizers() factory
-│   ├── config.ts                   # MODIFY — add validation optimization config to ZodFormsConfig
+│   ├── config.ts                   # MODIFY — add optimization config to ZodFormsConfig
 │   ├── optimizers/                 # NEW — optimizer implementations
 │   │   ├── index.ts                # Barrel export + createOptimizers
 │   │   ├── types.ts                # FormOptimizer, FormOptimizerContext, SchemaLiteCollector
 │   │   ├── schema-lite.ts          # SchemaLiteCollector implementation
 │   │   ├── l1-decompose.ts         # Level 1: per-field Zod schema extraction
 │   │   ├── l2-native-rules.ts      # Level 2: Zod → native RHF rule conversion
-│   │   ├── l3-cross-field.ts       # Level 3: superRefine → watch/validate
 │   │   └── constraint-map.ts       # Zod constraint → RHF rule mapping table
 │   └── __tests__/
 │       ├── optimizers/
@@ -79,7 +78,7 @@ packages/
 ├── react/src/
 │   ├── useZodForm.ts               # MODIFY — conditional zodResolver vs per-field validation
 │   ├── FieldRenderer.tsx            # MODIFY — consume field.validation for register() options
-│   ├── SchemaLiteSubmit.tsx         # NEW — submit-time schemaLite validation wrapper
+│   ├── SchemaLiteSubmit.ts          # NEW — submit-time schemaLite validation utility (pure function, no JSX)
 │   └── __tests__/
 │       └── optimized-validation.test.ts
 └── codegen/src/
@@ -103,7 +102,7 @@ packages/
 - `packages/core/src/optimizers/schema-lite.ts` — SchemaLiteCollector implementation
 - `packages/core/src/optimizers/index.ts` — `createOptimizers()`, `builtinOptimizers`
 - `packages/core/src/walker.ts` — After processor dispatch, run optimizer chain if `options.optimizers` provided
-- `packages/core/src/config.ts` — Add `validation?: { level?: 1 | 2 | 3 }` to `ZodFormsConfig.defaults`
+- `packages/core/src/config.ts` — Add `optimization?: { level?: 1 | 2 | 3 }` to `ZodFormsConfig.defaults`
 - `packages/core/src/registry.ts` — Export `createOptimizers`
 
 **Key design decisions**:
@@ -176,10 +175,37 @@ packages/
 **Goal**: Wire optimization level into `z2f.config.ts`, ensure backward compatibility, add CLI flag for codegen.
 
 **Files touched**:
-- `packages/core/src/config.ts` — Add `validation?: { level?: 1 | 2 | 3 }` to `ConfigDefaults`
+- `packages/core/src/config.ts` — Add `optimization?: { level?: 1 | 2 | 3 }` to `ConfigDefaults`
 - `packages/cli/src/commands/generate.ts` — Read config, pass optimization level to walker + codegen
 - `packages/react/src/useZodForm.ts` — Read config from context/props, pass to walker
 - Integration tests across all three packages
+
+### Phase 6: SchemaLite Codegen
+
+**Goal**: Generate a separate `.lite.ts` file that constructs the lite schema from the imported schema's check objects at runtime. The form component imports the lite schema for submit-time validation instead of using the full schema.
+
+**Files touched**:
+- `packages/codegen/src/generate.ts` — Add `generateSchemaLite()` function, update `generateFormComponent()` to import from `.lite.ts`
+- `packages/codegen/src/schema-lite-codegen.ts` — NEW — Generate `.lite.ts` file content
+- `packages/cli/src/index.ts` — Write `.lite.ts` alongside the form component
+- `packages/codegen/src/__tests__/codegen-optimization.test.ts` — Test lite file generation
+
+**Generated output structure**:
+```text
+signup-form.tsx          → imports { schemaLite } from './signup-form.lite.js'
+signup-form.lite.ts      → imports schema, extracts checks, exports lite schema
+```
+
+**Three codegen cases**:
+1. **Checks only** (superRefine/refine on object): Extract checks from `Schema._zod.def.checks`, replay via `.check(c)` onto `z.object({}).loose()`
+2. **Transform + checks** (pipe wrapper): Extract transform from `def.out._zod.def.transform`, inner checks from `def.in`, outer checks from `def.checks`
+3. **Non-decomposable pipe**: Re-export the original schema
+
+**Key design decisions**:
+- The `.lite.ts` file imports the same schema as the form component — same import path
+- Check extraction happens at runtime in the generated file via `Schema._zod.def.checks` — no serialization of check objects needed
+- The lite file always imports `z` from `zod` (needed for `z.object({}).loose()`)
+- WalkResult carries `schemaLiteInfo` metadata so codegen knows which case to emit
 
 ## Complexity Tracking
 

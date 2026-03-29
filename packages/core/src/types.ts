@@ -1,4 +1,25 @@
 import type { $ZodArray, $ZodObject, $ZodRegistry, $ZodType } from 'zod/v4/core';
+import type { FormOptimizer } from './optimizers/types.js';
+
+// ─── Validation Strategy (used by FormField and optimizers) ──────────
+
+export interface NativeRules {
+  required?: string;
+  min?: { value: number; message: string };
+  max?: { value: number; message: string };
+  minLength?: { value: number; message: string };
+  maxLength?: { value: number; message: string };
+  pattern?: { value: RegExp; message: string };
+}
+
+export interface ValidationStrategy {
+  mode: 'zodSchema' | 'native' | 'component-enforced';
+  rules?: NativeRules;
+  // TODO(L3): Add watch mode when cross-field optimization is implemented
+  // mode: 'zodSchema' | 'native' | 'component-enforced' | 'watch';
+  // watchFields?: string[];
+  // watchValidate?: (value: unknown, watchedValues: Record<string, unknown>) => true | string;
+}
 
 // ─── FormField: Intermediate Representation ───────────────────────────
 
@@ -61,6 +82,10 @@ export interface FormField {
   hasCustomRender?: boolean;
   /** Custom render function from FormMeta (runtime only, not serialisable) */
   render?: (field: FormField, props: Record<string, unknown>) => unknown;
+  /** Atomic Zod schema for this field, set by L1 optimizer */
+  zodSchema?: $ZodType;
+  /** Validation strategy set by optimizers (undefined = use zodResolver) */
+  validation?: ValidationStrategy;
 }
 
 // ─── FieldConfig: Serializable field configuration ────────────────────
@@ -179,4 +204,9 @@ export interface WalkOptions {
   processors?: Record<string, FormProcessor>;
   /** Maximum recursion depth for lazy/recursive schemas (default: 5) */
   maxDepth?: number;
+  /** Validation optimization settings */
+  optimization?: {
+    level: 1 | 2 | 3;
+    optimizers?: Record<string, FormOptimizer[]>;
+  };
 }

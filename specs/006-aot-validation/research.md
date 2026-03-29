@@ -1,4 +1,4 @@
-# Research: AOT Validation Optimization
+# Research: Validation Optimization
 
 **Feature**: 006-aot-validation | **Date**: 2026-03-26
 

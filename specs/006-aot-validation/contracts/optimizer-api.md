@@ -57,8 +57,8 @@ export interface WalkOptions {
   maxDepth?: number;
 
   // New — optimization
-  validation?: {
-    level?: 1 | 2 | 3;
+  optimization?: {
+    level: 1 | 2 | 3;
     optimizers?: Record<string, FormOptimizer[]>;
   };
 }
@@ -76,16 +76,20 @@ export interface WalkResult {
 ### walkSchema Overloads
 
 ```typescript
-// Existing signature (no optimization) — returns FormField[]
-export function walkSchema(schema: ZodType, options?: WalkOptions & { validation?: undefined }): FormField[];
+// Optimized signature (more specific — must come first for correct overload resolution)
+export function walkSchema(schema: ZodType, options: WalkOptions & { optimization: { level: 1 | 2 | 3 } }): WalkResult;
 
-// Optimized signature — returns WalkResult
-export function walkSchema(schema: ZodType, options: WalkOptions & { validation: { level: 1 | 2 | 3 } }): WalkResult;
+// Default signature (no optimization) — returns FormField[]
+export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[];
 ```
 
 ## Config Extension
 
 ```typescript
+export type OptimizationConfig = {
+  level?: 1 | 2 | 3;
+};
+
 export type ConfigDefaults = {
   // ...existing
   mode?: 'submit' | 'auto-save';
@@ -96,9 +100,7 @@ export type ConfigDefaults = {
   formProvider?: boolean;
 
   // New
-  validation?: {
-    level?: 1 | 2 | 3;
-  };
+  optimization?: OptimizationConfig;
 };
 ```
 
@@ -116,7 +118,7 @@ const myOptimizer: FormOptimizer = (schema, ctx, field, params) => {
 };
 
 const result = walkSchema(schema, {
-  validation: {
+  optimization: {
     level: 2,
     optimizers: { date: [myOptimizer] },
   },
@@ -129,7 +131,7 @@ Custom optimizers are merged with builtins: `{ ...builtinOptimizers, ...custom }
 
 - `walkSchema(schema)` → returns `FormField[]` (unchanged)
 - `walkSchema(schema, { processors })` → returns `FormField[]` (unchanged)
-- `walkSchema(schema, { validation: { level: 2 } })` → returns `WalkResult`
+- `walkSchema(schema, { optimization: { level: 2 } })` → returns `WalkResult`
 - `FormField.validation` is optional — all existing code that doesn't read it works unchanged
 - `FormField.zodSchema` is optional — same
-- Config `validation` key is optional — omitting it preserves zodResolver behavior
+- Config `optimization` key is optional — omitting it preserves zodResolver behavior

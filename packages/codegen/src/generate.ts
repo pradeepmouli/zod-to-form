@@ -1,8 +1,13 @@
 import type { FormField } from '@zod-to-form/core';
 import { getEmptyDefault } from '@zod-to-form/core';
 import type { ComponentOverride, FieldConfig, ZodFormsConfig } from '@zod-to-form/core';
-import { getFileHeader, renderField, registerPathExpr } from './templates.js';
-import { getFieldTemplateSource, PRESET_TEMPLATE_IMPORTS } from './field-templates.js';
+import {
+  getFileHeader,
+  renderField,
+  registerPathExpr,
+  renderOptimizedRegister
+} from './templates.js';
+import { PRESET_TEMPLATE_IMPORTS } from './field-templates.js';
 
 export type CodegenConfig = {
   /** Optional pre-computed import path for the schema (e.g., './schema.js'). Defaults to './schema'. The CLI typically computes this from file paths; the browser playground can pass it explicitly. */
@@ -16,6 +21,14 @@ export type CodegenConfig = {
   serverAction?: boolean;
   /** Force FormProvider wrapper in submit mode. Auto-save mode always uses FormProvider regardless. */
   formProvider?: boolean;
+  /** Validation optimization level. When set, generated code uses per-field validation instead of zodResolver. */
+  validationLevel?: 1 | 2 | 3;
+  /** SchemaLite for submit-time validation of top-level effects (null when no effects exist) */
+  schemaLite?: import('zod/v4/core').$ZodType | null;
+  /** Codegen metadata for generating the .lite.ts file */
+  schemaLiteInfo?: import('@zod-to-form/core').SchemaLiteInfo;
+  /** Output path of the form component — used to compute the .lite.ts import path */
+  outputPath?: string;
 };
 
 function renderLiteralProp(value: unknown): string | undefined {
@@ -287,10 +300,13 @@ function serializeDefaultValue(value: unknown): string {
 function renderNestedBlock(
   field: FormField,
   componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
-  indent: string
+  indent: string,
+  optimized = false
 ): string {
   const children = (field.children ?? [])
-    .map((child) => renderFieldBlockWithConfig(child, componentConfig, `${indent}  `))
+    .map((child) =>
+      renderFieldBlockWithConfig(child, componentConfig, `${indent}  `, 'html', optimized)
+    )
     .join('\n');
 
   return [
@@ -307,7 +323,8 @@ function renderNestedBlock(
 function renderArrayBlock(
   field: FormField,
   componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
-  indent: string
+  indent: string,
+  optimized = false
 ): string {
   if (field.key.includes('${')) {
     return [
@@ -343,7 +360,13 @@ function renderArrayBlock(
   } else if (mappedItem.source === 'fields' && mappedItem.componentName) {
     itemJsx = `<${mappedItem.componentName} {...${registerPathExpr(indexedItemField.key)}}${renderOverrideProps(mappedItem.override?.props)} />`;
   } else {
-    itemJsx = renderFieldBlockWithConfig(indexedItemField, componentConfig, `${indent}      `);
+    itemJsx = renderFieldBlockWithConfig(
+      indexedItemField,
+      componentConfig,
+      `${indent}      `,
+      'html',
+      optimized
+    );
   }
 
   return [
@@ -449,7 +472,8 @@ function renderFieldBlockWithConfig(
   field: FormField,
   componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
   indent = '      ',
-  preset: 'shadcn' | 'html' = 'html'
+  preset: 'shadcn' | 'html' = 'html',
+  optimized = false
 ): string {
   const mapping = getMappedFieldComponent(field, componentConfig);
   if (field.hasCustomRender) {
@@ -474,11 +498,11 @@ function renderFieldBlockWithConfig(
   }
 
   if (field.component === 'Fieldset') {
-    return renderNestedBlock(field, componentConfig, indent);
+    return renderNestedBlock(field, componentConfig, indent, optimized);
   }
 
   if (field.component === 'ArrayField') {
-    return renderArrayBlock(field, componentConfig, indent);
+    return renderArrayBlock(field, componentConfig, indent, optimized);
   }
 
   if (mapping.componentName && (mapping.componentOverride || mapping.override)) {
@@ -491,6 +515,13 @@ function renderFieldBlockWithConfig(
       overrideProps
     );
     return renderFieldContainer(field, content, indent, preset);
+  }
+
+  // When optimized and the field has a validation strategy, pass the optimized
+  // register expression directly into renderField (avoids brittle string replace)
+  if (optimized && field.validation) {
+    const optimizedExpr = renderOptimizedRegister(field, field.key);
+    return renderFieldContainer(field, renderField(field, optimizedExpr), indent, preset);
   }
 
   return renderFieldContainer(field, renderField(field), indent, preset);
@@ -510,12 +541,48 @@ function hasControlledFields(
   return false;
 }
 
+function collectZodSchemaFields(fields: FormField[]): FormField[] {
+  const result: FormField[] = [];
+  for (const field of fields) {
+    if (field.validation?.mode === 'zodSchema') {
+      result.push(field);
+    }
+    if (field.children?.length) {
+      result.push(...collectZodSchemaFields(field.children));
+    }
+    if (field.arrayItem) {
+      result.push(...collectZodSchemaFields([field.arrayItem]));
+    }
+  }
+  return result;
+}
+
+function hasAnyZodSchemaOrSchemaLite(
+  fields: FormField[],
+  schemaLite: import('zod/v4/core').$ZodType | null | undefined
+): boolean {
+  if (schemaLite) return true;
+  return collectZodSchemaFields(fields).length > 0;
+}
+
+function generateHoistedValidators(fields: FormField[], exportName: string): string[] {
+  // Only hoist validators for top-level fields — nested paths (e.g. "address.street")
+  // can't be accessed via simple .shape.key and would produce invalid code.
+  const zodFields = collectZodSchemaFields(fields).filter((f) => !f.key.includes('.'));
+  return zodFields.map((field) => {
+    const safeKey = field.key.replace(/[^a-zA-Z0-9_]/g, '_');
+    const keyLiteral = JSON.stringify(field.key);
+    return `const _validate_${safeKey} = (value: unknown) => { const r = ${exportName}.shape[${keyLiteral}].safeParse(value); return r.success ? true : r.error.issues[0]?.message ?? 'Invalid'; };`;
+  });
+}
+
 export function generateFormComponent(fields: FormField[], config: CodegenConfig): string {
   const schemaImportPath = config.schemaImportPath ?? './schema';
   const arrayFields = collectArrayFields(fields);
   const hasArrays = arrayFields.length > 0;
   const useFormProvider = config.formProvider || config.mode === 'auto-save';
   const hasControlled = hasControlledFields(fields, config.componentConfig);
+  const optimized = config.validationLevel != null;
 
   const preset =
     config.componentConfig?.components?.preset ?? (config.ui === 'shadcn' ? 'shadcn' : 'html');
@@ -534,16 +601,37 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
       ? `import { ${Array.from(importNames).sort().join(', ')} } from '${config.componentConfig.components.source}';`
       : undefined;
 
+  // Determine optimized import flags
+  const optimizedOptions = optimized
+    ? {
+        includeZodResolver: false, // Optimized mode never uses zodResolver
+        includeZod: hasAnyZodSchemaOrSchemaLite(fields, config.schemaLite)
+      }
+    : undefined;
+
   const header = getFileHeader(
     schemaImportPath,
     config.exportName,
     hasArrays,
     config.mode,
     componentImportLine,
-    { hasControlled, formProvider: useFormProvider, preset }
+    { hasControlled, formProvider: useFormProvider, preset },
+    optimizedOptions
   );
+
+  // When optimized with schemaLite, the form imports from the .lite.ts file
+  const hasSchemaLite = optimized && config.schemaLite != null;
+  const schemaLiteImport = hasSchemaLite
+    ? `import { schemaLite } from './${config.componentName}.lite.js';`
+    : undefined;
+
+  // Generate hoisted validators for optimized mode
+  const hoistedValidators = optimized ? generateHoistedValidators(fields, config.exportName) : [];
+
   const body = fields
-    .map((field) => renderFieldBlockWithConfig(field, config.componentConfig, '      ', preset))
+    .map((field) =>
+      renderFieldBlockWithConfig(field, config.componentConfig, '      ', preset, optimized)
+    )
     .join('\n');
 
   const arrayHooks = arrayFields
@@ -591,7 +679,9 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
   const formOpen =
     config.mode === 'auto-save'
       ? `    <form>`
-      : `    <form onSubmit={handleSubmit(props.onSubmit)}>`;
+      : hasSchemaLite
+        ? `    <form onSubmit={handleSubmit(onSubmitValidated)}>`
+        : `    <form onSubmit={handleSubmit(props.onSubmit)}>`;
 
   const formTail =
     config.mode === 'auto-save' ? [] : [`      <button type="submit">Submit</button>`];
@@ -606,19 +696,57 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
       ]
     : formContent;
 
+  // Build useForm options based on optimization mode
+  let useFormLines: string[];
+  if (optimized) {
+    // Optimized mode never uses zodResolver — per-field validation handles fields,
+    // and schemaLite (if present) handles top-level effects in the submit wrapper.
+    useFormLines = [`  const form = useForm<FormData>({`];
+  } else {
+    // Non-optimized (default) — always use zodResolver
+    useFormLines =
+      preset === 'shadcn'
+        ? [`  const form = useForm<FormData>({`, `    resolver: zodResolver(${config.exportName}),`]
+        : [
+            `  const baseResolver = zodResolver(${config.exportName});`,
+            `  const form = useForm<FormData>({`,
+            `    resolver: (values: unknown, ctx: unknown, opts: unknown) => baseResolver(normalizeFormValues(values) as FormData, ctx, opts),`
+          ];
+  }
+
+  // Build submit wrapper using the imported schemaLite from the .lite.ts file.
+  // The lite schema only validates top-level effects (superRefine/refine/transform),
+  // not field-level constraints (those are handled per-field).
+  const schemaLiteWrapper = hasSchemaLite
+    ? [
+        ``,
+        `  const onSubmitValidated = (data: FormData) => {`,
+        `    const result = schemaLite.safeParse(data);`,
+        `    if (!result.success && result.error) {`,
+        `      for (const issue of result.error.issues) {`,
+        `        const field = issue.path?.[0];`,
+        `        if (typeof field === 'string') {`,
+        `          form.setError(field as keyof FormData & string, { type: 'validate', message: issue.message });`,
+        `        } else {`,
+        `          form.setError('root', { type: 'validate', message: issue.message });`,
+        `        }`,
+        `      }`,
+        `      return;`,
+        `    }`,
+        `    props.onSubmit(data);`,
+        `  };`
+      ]
+    : [];
+
   return [
     header,
+    ...(schemaLiteImport ? [schemaLiteImport] : []),
+    ...(hoistedValidators.length > 0 ? ['', ...hoistedValidators] : []),
     '',
     `export function ${config.componentName}(props: {`,
     ...propsLines,
     `}) {`,
-    ...(preset === 'shadcn'
-      ? [`  const form = useForm<FormData>({`, `    resolver: zodResolver(${config.exportName}),`]
-      : [
-          `  const baseResolver = zodResolver(${config.exportName});`,
-          `  const form = useForm<FormData>({`,
-          `    resolver: (values: unknown, ctx: unknown, opts: unknown) => baseResolver(normalizeFormValues(values) as FormData, ctx, opts),`
-        ]),
+    ...useFormLines,
     ...(config.mode === 'auto-save' ? [`    mode: 'onChange',`] : []),
     `    defaultValues: props.defaultValues,`,
     `    values: props.values,`,
@@ -626,6 +754,7 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
     `  const ${useFormDestructure} = form;`,
     ...(hasArrays ? [arrayHooks] : []),
     ...autoSaveEffect,
+    ...schemaLiteWrapper,
     '',
     `  return (`,
     ...wrappedContent,
