@@ -155,4 +155,31 @@ describe('walkSchema with optimization', () => {
     const fail = safeParse(result.schemaLite, { a: 'same', b: 'same' });
     expect(fail.success).toBe(false);
   });
+
+  it('schemaLite captures ALL checks from chained superRefines', () => {
+    const schema = z
+      .object({ a: z.string(), b: z.string() })
+      .superRefine((data, ctx) => {
+        if (!data.a) ctx.addIssue({ code: 'custom', message: 'a required', path: ['a'] });
+      })
+      .superRefine((data, ctx) => {
+        if (data.a === data.b)
+          ctx.addIssue({ code: 'custom', message: 'must differ', path: ['b'] });
+      });
+
+    const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+    expect(result.schemaLite).not.toBeNull();
+
+    // First superRefine: a is required
+    const failA = safeParse(result.schemaLite, { a: '', b: 'world' });
+    expect(failA.success).toBe(false);
+
+    // Second superRefine: a !== b
+    const failB = safeParse(result.schemaLite, { a: 'same', b: 'same' });
+    expect(failB.success).toBe(false);
+
+    // Both pass
+    const pass = safeParse(result.schemaLite, { a: 'hello', b: 'world' });
+    expect(pass.success).toBe(true);
+  });
 });

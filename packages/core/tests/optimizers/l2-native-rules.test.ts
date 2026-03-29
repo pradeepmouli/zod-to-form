@@ -44,6 +44,13 @@ describe('L2 native rules optimizer', () => {
       expect(field.validation?.rules?.min).toEqual(expect.objectContaining({ value: 0 }));
       expect(field.validation?.rules?.max).toEqual(expect.objectContaining({ value: 120 }));
     });
+
+    it('falls back to zodSchema for multiple format patterns', () => {
+      const schema = z.object({ contact: z.string().email().regex(/^test/) });
+      const { fields } = walkL2(schema);
+      // Multiple patterns can't be represented as a single RHF pattern rule
+      expect(fields[0]!.validation?.mode).toBe('zodSchema');
+    });
   });
 
   describe('exclusive bounds → stays as zodSchema (FR-017)', () => {

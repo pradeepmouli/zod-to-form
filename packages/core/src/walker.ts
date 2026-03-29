@@ -170,13 +170,20 @@ function extractChecksFromSchema(
   collector: ReturnType<typeof createSchemaLiteCollector>
 ): number {
   const def = schema._zod.def as unknown as Record<string, unknown>;
-  const checks = def['checks'] as unknown[];
-  const parent = schema._zod.parent;
-  const parentDef = parent
-    ? ((parent as ZodType)._zod.def as unknown as Record<string, unknown>)
-    : undefined;
-  const parentChecks = (parentDef?.['checks'] as unknown[] | undefined) ?? [];
-  const extraChecks = checks.slice(parentChecks.length);
+  const checks = def['checks'] as unknown[] | undefined;
+  if (!checks || checks.length === 0) return 0;
+
+  // Walk up to the root parent (base object without effects) to get the
+  // original check count. This handles chained effects like
+  // .superRefine(fn1).superRefine(fn2) where each link adds one check.
+  let root: ZodType = schema;
+  while (root._zod.parent) {
+    root = root._zod.parent as ZodType;
+  }
+  const rootDef = root._zod.def as unknown as Record<string, unknown>;
+  const rootChecks = (rootDef['checks'] as unknown[] | undefined) ?? [];
+
+  const extraChecks = checks.slice(rootChecks.length);
   for (const check of extraChecks) {
     collector.addCheck(check);
   }

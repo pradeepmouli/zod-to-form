@@ -75,9 +75,14 @@ export function extractNativeRules(schema: $ZodType): NativeRules | null {
     }
   }
 
-  // Format-based patterns (email, url, uuid) — extract exact Zod regex from bag
+  // Format-based patterns (email, url, uuid) — extract exact Zod regex from bag.
+  // Multiple patterns (e.g. z.string().email().url()) can't be represented as a
+  // single RHF pattern rule — fall back to atomic Zod for strict equivalence.
   const patternsSet = bag['patterns'];
-  if (patternsSet instanceof Set && patternsSet.size > 0) {
+  if (patternsSet instanceof Set && patternsSet.size > 1) {
+    return null;
+  }
+  if (patternsSet instanceof Set && patternsSet.size === 1) {
     const firstPattern = [...patternsSet][0] as RegExp | undefined;
     if (firstPattern instanceof RegExp) {
       rules.pattern = {
