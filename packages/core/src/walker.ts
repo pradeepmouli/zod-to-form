@@ -3,6 +3,14 @@ import { resolveMetadata } from './metadata.js';
 import { processFallback } from './processors/fallback.js';
 import { createProcessors } from './registry.js';
 import { createBaseField } from './utils.js';
+
+/**
+ * Zod v4's $ZodTypeDef is a union without an index signature.
+ * Bracket access (def['checks']) requires casting to Record<string, unknown>.
+ * The double cast (as unknown as) is needed because $ZodTypeDef and
+ * Record<string, unknown> don't structurally overlap.
+ */
+type Def = Record<string, unknown>;
 import type { FormField, WalkOptions } from './types.js';
 import type { FormOptimizerContext, WalkResult, SchemaLiteInfo } from './optimizers/types.js';
 import { createOptimizers } from './optimizers/index.js';
@@ -122,7 +130,7 @@ function collectTopLevelEffects(
   objectSchema: ZodType,
   collector: ReturnType<typeof createSchemaLiteCollector>
 ): SchemaLiteInfo {
-  const def = schema._zod.def as unknown as Record<string, unknown>;
+  const def = schema._zod.def as unknown as Def;
 
   // Case 1: pipe/transform wrapper (def.type === 'pipe')
   if (schema !== objectSchema && def['type'] === 'pipe') {
@@ -169,7 +177,7 @@ function extractChecksFromSchema(
   schema: ZodType,
   collector: ReturnType<typeof createSchemaLiteCollector>
 ): number {
-  const def = schema._zod.def as unknown as Record<string, unknown>;
+  const def = schema._zod.def as unknown as Def;
   const checks = def['checks'] as unknown[] | undefined;
   if (!checks || checks.length === 0) return 0;
 
@@ -180,7 +188,7 @@ function extractChecksFromSchema(
   while (root._zod.parent) {
     root = root._zod.parent as ZodType;
   }
-  const rootDef = root._zod.def as unknown as Record<string, unknown>;
+  const rootDef = root._zod.def as unknown as Def;
   const rootChecks = (rootDef['checks'] as unknown[] | undefined) ?? [];
 
   const extraChecks = checks.slice(rootChecks.length);
@@ -201,14 +209,14 @@ function extractChecksFromSchema(
  * differ from its parent, indicating superRefine/refine was applied.
  */
 function hasTopLevelEffects(schema: ZodType): boolean {
-  const def = schema._zod.def as unknown as Record<string, unknown>;
+  const def = schema._zod.def as unknown as Def;
   const checks = def['checks'] as unknown[] | undefined;
   if (!checks || checks.length === 0) return false;
 
   // If there's a parent, compare check counts
   const parent = schema._zod.parent;
   if (parent) {
-    const parentDef = (parent as ZodType)._zod.def as unknown as Record<string, unknown>;
+    const parentDef = (parent as ZodType)._zod.def as unknown as Def;
     const parentChecks = parentDef['checks'] as unknown[] | undefined;
     return !parentChecks || checks.length > parentChecks.length;
   }
@@ -233,7 +241,7 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
   // If the schema is wrapped in pipes/effects, find the underlying object
   if (topLevelType !== 'object') {
     // Try to find the inner object schema for pipe/effect wrappers
-    const def = schema._zod.def as unknown as Record<string, unknown>;
+    const def = schema._zod.def as unknown as Def;
     if (topLevelType === 'pipe' && def['in']) {
       objectSchema = def['in'] as ZodType;
     }
