@@ -165,28 +165,75 @@ function getErrorAtPath(errors: unknown, path: string): string | undefined {
   return undefined;
 }
 
+function zodSchemaValidate(field: FormField): ((value: unknown) => true | string) | undefined {
+  if (field.validation?.mode !== 'zodSchema' || !field.zodSchema) return undefined;
+  const schema = field.zodSchema as unknown as {
+    safeParse(v: unknown): { success: boolean; error?: { issues: Array<{ message: string }> } };
+  };
+  return (value: unknown) => {
+    // Normalize empty strings to undefined to match zodResolver behavior
+    const normalized = value === '' ? undefined : value;
+    const result = schema.safeParse(normalized);
+    if (result.success) return true;
+    return result.error?.issues[0]?.message ?? 'Validation failed';
+  };
+}
+
 function getRegisterOptions(field: FormField): Record<string, unknown> {
+  const opts: Record<string, unknown> = {};
+
   if (field.zodType === 'number' || field.zodType === 'bigint') {
-    return { valueAsNumber: true };
+    opts['valueAsNumber'] = true;
   }
 
   if (field.zodType === 'date') {
-    return { valueAsDate: true };
+    opts['valueAsDate'] = true;
   }
 
   if (field.zodType === 'file') {
-    return {
-      setValueAs: (value: unknown) => {
-        if (value instanceof FileList) {
-          return value.length > 0 ? value.item(0) : undefined;
-        }
-        return value;
+    opts['setValueAs'] = (value: unknown) => {
+      if (value instanceof FileList) {
+        return value.length > 0 ? value.item(0) : undefined;
       }
+      return value;
     };
   }
 
-  return {};
+  // Optimized validation: per-field validation
+  if (field.validation?.mode === 'native' && field.validation.rules) {
+    // L2: native RHF rules — spread directly into register options
+    const rules = field.validation.rules;
+    if (rules.required) opts['required'] = rules.required;
+    if (rules.min) opts['min'] = rules.min;
+    if (rules.max) opts['max'] = rules.max;
+    if (rules.minLength) opts['minLength'] = rules.minLength;
+    if (rules.maxLength) opts['maxLength'] = rules.maxLength;
+    if (rules.pattern) opts['pattern'] = rules.pattern;
+  } else if (field.validation?.mode === 'zodSchema') {
+    // L1: per-field zodSchema validation via register({ validate })
+    const validate = zodSchemaValidate(field);
+    if (validate) {
+      opts['validate'] = validate;
+    }
+  }
+  // component-enforced: no validation emitted
+
+  return opts;
 }
+
+// TODO(L3): Re-enable when L3 cross-field optimization is implemented
+// function useWatchValidate(field: FormField): ((value: unknown) => true | string) | undefined {
+//   const { control } = useFormContext();
+//   const watchFields = field.validation?.mode === 'watch' ? field.validation.watchFields : undefined;
+//   const watchValidate = field.validation?.mode === 'watch' ? field.validation.watchValidate : undefined;
+//   const watchedValues = useWatch({ control, name: (watchFields as string[]) ?? [], disabled: !watchFields });
+//   if (!watchFields || !watchValidate) return undefined;
+//   const watchedMap: Record<string, unknown> = {};
+//   for (let i = 0; i < watchFields.length; i++) {
+//     watchedMap[watchFields[i]!] = Array.isArray(watchedValues) ? watchedValues[i] : watchedValues;
+//   }
+//   return (value: unknown) => watchValidate(value, watchedMap);
+// }
 
 export interface FieldTemplateProps {
   children: ReactNode;
@@ -493,7 +540,22 @@ const ControlledFieldInner = memo(function ControlledFieldInner({
   errorMessage
 }: ControlledFieldProps) {
   const { control } = useFormContext();
-  const { field: controllerField } = useController({ name: field.key, control });
+  // TODO(L3): Re-enable watch mode for controlled components
+  // const watchValidateFn = useWatchValidate(field);
+  // When optimized validation is enabled, pass per-field rules to controller
+  const controllerRules = (() => {
+    // TODO(L3): if (watchValidateFn) return { validate: watchValidateFn };
+    if (field.validation?.mode === 'native' && field.validation.rules) {
+      return field.validation.rules;
+    }
+    const validate = zodSchemaValidate(field);
+    return validate ? { validate } : undefined;
+  })();
+  const { field: controllerField } = useController({
+    name: field.key,
+    control,
+    rules: controllerRules
+  });
 
   // controllerField is ControllerRenderProps which extends Record<string, unknown>
   const resolved = resolveProps(
@@ -522,6 +584,8 @@ export const FieldRenderer = memo(function FieldRenderer({
 }: FieldRendererProps) {
   // Always call hooks first (React hooks rule — no conditional hook calls)
   const { register, formState } = useFormContext();
+  // TODO(L3): Re-enable useWatchValidate when L3 cross-field optimization is implemented
+  // const watchValidate = useWatchValidate(field);
   const componentMap = { ...defaultComponentMap, ...components };
   const mapping = useMemo(
     () => resolveFieldOverride(field, componentConfig),
@@ -582,8 +646,12 @@ export const FieldRenderer = memo(function FieldRenderer({
 
   let fieldContent: ReactNode;
 
+  const registerOpts = getRegisterOptions(field);
+  // TODO(L3): Merge watch-mode validate when L3 cross-field optimization is implemented
+  // if (watchValidate) { registerOpts['validate'] = watchValidate; }
+
   if (field.render) {
-    const registration = register(field.key, getRegisterOptions(field));
+    const registration = register(field.key, registerOpts);
     const componentProps = {
       ...buildBaseComponentProps(field, errorMessage),
       ...field.props,
@@ -602,7 +670,7 @@ export const FieldRenderer = memo(function FieldRenderer({
       />
     );
   } else {
-    const registration = register(field.key, getRegisterOptions(field));
+    const registration = register(field.key, registerOpts);
     const componentProps: Record<string, unknown> = {
       ...buildBaseComponentProps(field, errorMessage),
       ...field.props,
