@@ -131,7 +131,7 @@ Run a comprehensive pull request review using multiple specialized agents, each 
 
 ## Agent Descriptions:
 
-**comment**:
+**comments**:
 - Verifies comment accuracy vs code
 - Identifies comment rot
 - Checks documentation completeness
