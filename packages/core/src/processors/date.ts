@@ -1,8 +1,8 @@
-import type { $ZodType as ZodType } from 'zod/v4/core';
+import type { $ZodDate, $ZodISODate, $ZodStringFormat, $ZodType as ZodType } from 'zod/v4/core';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
 
 export function processDate(
-  _schema: ZodType,
+  _schema: $ZodDate | $ZodISODate,
   _ctx: FormProcessorContext,
   field: FormField,
   _params: ProcessParams

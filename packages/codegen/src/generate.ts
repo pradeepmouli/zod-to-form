@@ -1,12 +1,13 @@
 import type { FormField } from '@zod-to-form/core';
 import { getEmptyDefault } from '@zod-to-form/core';
-import type {
-  ComponentOverride,
-  FieldConfig,
-  FormPrimitivesConfig,
-  ZodFormsConfig
-} from '@zod-to-form/core';
-import { getFileHeader, renderField, registerPathExpr } from './templates.js';
+import type { ComponentOverride, FieldConfig, ZodFormsConfig } from '@zod-to-form/core';
+import {
+  getFileHeader,
+  renderField,
+  registerPathExpr,
+  renderOptimizedRegister
+} from './templates.js';
+import { PRESET_TEMPLATE_IMPORTS } from './field-templates.js';
 
 export type CodegenConfig = {
   /** Optional pre-computed import path for the schema (e.g., './schema.js'). Defaults to './schema'. The CLI typically computes this from file paths; the browser playground can pass it explicitly. */
@@ -20,6 +21,14 @@ export type CodegenConfig = {
   serverAction?: boolean;
   /** Force FormProvider wrapper in submit mode. Auto-save mode always uses FormProvider regardless. */
   formProvider?: boolean;
+  /** Validation optimization level. When set, generated code uses per-field validation instead of zodResolver. */
+  validationLevel?: 1 | 2 | 3;
+  /** SchemaLite for submit-time validation of top-level effects (null when no effects exist) */
+  schemaLite?: import('zod/v4/core').$ZodType | null;
+  /** Codegen metadata for generating the .lite.ts file */
+  schemaLiteInfo?: import('@zod-to-form/core').SchemaLiteInfo;
+  /** Output path of the form component — used to compute the .lite.ts import path */
+  outputPath?: string;
 };
 
 function renderLiteralProp(value: unknown): string | undefined {
@@ -34,6 +43,15 @@ function renderLiteralProp(value: unknown): string | undefined {
   return undefined;
 }
 
+/** Known RHF field expressions that should be resolved, not rendered as literal props */
+const RHF_FIELD_EXPRESSIONS = new Set([
+  'field.value',
+  'field.onChange',
+  'field.onBlur',
+  'field.ref',
+  'field.name'
+]);
+
 function renderOverrideProps(props: Record<string, unknown> | undefined): string {
   if (!props) {
     return '';
@@ -41,7 +59,16 @@ function renderOverrideProps(props: Record<string, unknown> | undefined): string
 
   const attrs = Object.entries(props)
     .map(([key, value]) => {
+      // Skip RHF field expressions — they are resolved by resolvePropMap/renderControlledComponent
+      if (typeof value === 'string' && RHF_FIELD_EXPRESSIONS.has(value)) {
+        return '';
+      }
       const rendered = renderLiteralProp(value);
+      if (!rendered && value !== undefined && value !== null) {
+        console.warn(
+          `[zod-to-form codegen] Prop "${key}" has unsupported type "${typeof value}" and will be omitted from generated code.`
+        );
+      }
       return rendered ? ` ${key}=${rendered}` : '';
     })
     .join('');
@@ -95,73 +122,45 @@ function collectMappedComponentNames(
   return out;
 }
 
-function collectFormPrimitiveNames(
-  primitives: FormPrimitivesConfig<Record<string, unknown>> | undefined
-): Set<string> {
-  const names = new Set<string>();
-  if (!primitives) {
-    return names;
-  }
-
-  if (primitives.field) {
-    names.add(primitives.field);
-  }
-
-  if (primitives.label) {
-    names.add(primitives.label);
-  }
-
-  if (primitives.control) {
-    names.add(primitives.control);
-  }
-
-  return names;
-}
-
 function renderFieldContainer(
   field: FormField,
   content: string,
   indent: string,
-  primitives: FormPrimitivesConfig<Record<string, unknown>> | undefined
+  preset: 'shadcn' | 'html' = 'html'
 ): string {
-  const styleAttr = field.gridColumn ? ` style={{ gridColumn: '${field.gridColumn}' }}` : '';
-  const fieldTag = primitives?.field;
-  const labelTag = primitives?.label;
-  const controlTag = primitives?.control;
+  const labelContent = field.deprecated
+    ? `<s>${field.label}</s> <span title="Deprecated">⚠</span>`
+    : field.label;
 
-  if (!fieldTag && !labelTag && !controlTag) {
-    return [
-      `${indent}<div${styleAttr}>`,
-      `${indent}  <label htmlFor="${field.key}">${field.label}</label>`,
-      `${indent}  ${content}`,
-      `${indent}</div>`
-    ].join('\n');
+  if (preset === 'shadcn') {
+    const lines = [
+      `${indent}<FormItem>`,
+      `${indent}  <FormLabel htmlFor="${field.key}">${labelContent}</FormLabel>`,
+      `${indent}  <FormControl>${content}</FormControl>`
+    ];
+    if (field.description) {
+      lines.push(`${indent}  <FormDescription>${field.description}</FormDescription>`);
+    }
+    if (field.helpText) {
+      lines.push(
+        `${indent}  <p className="text-sm text-muted-foreground mt-1">${field.helpText}</p>`
+      );
+    }
+    lines.push(`${indent}  <FormMessage />`);
+    lines.push(`${indent}</FormItem>`);
+    return lines.join('\n');
   }
 
-  const openField = fieldTag ? `<${fieldTag}${styleAttr}>` : `<div${styleAttr}>`;
-  const closeField = fieldTag ? `</${fieldTag}>` : `</div>`;
-  const openLabel = labelTag
-    ? `<${labelTag} htmlFor="${field.key}">`
-    : `<label htmlFor="${field.key}">`;
-  const closeLabel = labelTag ? `</${labelTag}>` : `</label>`;
-
-  if (!controlTag) {
-    return [
-      `${indent}${openField}`,
-      `${indent}  ${openLabel}${field.label}${closeLabel}`,
-      `${indent}  ${content}`,
-      `${indent}${closeField}`
-    ].join('\n');
+  const lines = [
+    `${indent}<div>`,
+    `${indent}  <label htmlFor="${field.key}">${labelContent}</label>`,
+    `${indent}  ${content}`
+  ];
+  if (field.helpText) {
+    lines.push(`${indent}  <p>${field.helpText}</p>`);
   }
-
-  return [
-    `${indent}${openField}`,
-    `${indent}  ${openLabel}${field.label}${closeLabel}`,
-    `${indent}  <${controlTag}>`,
-    `${indent}    ${content}`,
-    `${indent}  </${controlTag}>`,
-    `${indent}${closeField}`
-  ].join('\n');
+  lines.push(`${indent}</div>`);
+  return lines.join('\n');
 }
 
 function normalizeFieldKey(key: string): string {
@@ -216,8 +215,10 @@ export function resolveFieldMapping<TComponents extends Record<string, unknown>>
 }
 
 function toVarName(key: string): string {
-  const parts = key.split(/[^a-zA-Z0-9]+/).filter(p => p.length > 0);
-  return parts.map((part, i) => (i === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1))).join('');
+  const parts = key.split(/[^a-zA-Z0-9]+/).filter((p) => p.length > 0);
+  return parts
+    .map((part, i) => (i === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1)))
+    .join('');
 }
 
 function collectArrayFields(fields: FormField[]): FormField[] {
@@ -299,11 +300,13 @@ function serializeDefaultValue(value: unknown): string {
 function renderNestedBlock(
   field: FormField,
   componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
-  primitives: FormPrimitivesConfig<Record<string, unknown>> | undefined,
-  indent: string
+  indent: string,
+  optimized = false
 ): string {
   const children = (field.children ?? [])
-    .map((child) => renderFieldBlockWithConfig(child, componentConfig, primitives, `${indent}  `))
+    .map((child) =>
+      renderFieldBlockWithConfig(child, componentConfig, `${indent}  `, 'html', optimized)
+    )
     .join('\n');
 
   return [
@@ -320,8 +323,8 @@ function renderNestedBlock(
 function renderArrayBlock(
   field: FormField,
   componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
-  primitives: FormPrimitivesConfig<Record<string, unknown>> | undefined,
-  indent: string
+  indent: string,
+  optimized = false
 ): string {
   if (field.key.includes('${')) {
     return [
@@ -360,8 +363,9 @@ function renderArrayBlock(
     itemJsx = renderFieldBlockWithConfig(
       indexedItemField,
       componentConfig,
-      primitives,
-      `${indent}      `
+      `${indent}      `,
+      'html',
+      optimized
     );
   }
 
@@ -387,10 +391,26 @@ function resolvePropMap(
   componentOverride?: ComponentOverride,
   override?: FieldConfig
 ): Record<string, string> | undefined {
-  const entryMap = componentOverride?.propMap;
-  const fieldMap = override?.propMap;
-  if (!entryMap && !fieldMap) return undefined;
-  return { ...entryMap, ...fieldMap };
+  const entryMap = componentOverride?.props;
+  const fieldMap = override?.props;
+  function filterRhfProps(
+    map: Record<string, unknown> | undefined
+  ): Record<string, string> | undefined {
+    if (!map) return undefined;
+    const filtered: Record<string, string> = {};
+    let hasAny = false;
+    for (const [k, v] of Object.entries(map)) {
+      if (typeof v === 'string' && RHF_FIELD_EXPRESSIONS.has(v)) {
+        filtered[k] = v;
+        hasAny = true;
+      }
+    }
+    return hasAny ? filtered : undefined;
+  }
+  const filteredEntry = filterRhfProps(entryMap);
+  const filteredField = filterRhfProps(fieldMap);
+  if (!filteredEntry && !filteredField) return undefined;
+  return { ...filteredEntry, ...filteredField };
 }
 
 function renderControlledComponent(
@@ -451,14 +471,14 @@ function renderMappedComponent(
 function renderFieldBlockWithConfig(
   field: FormField,
   componentConfig: ZodFormsConfig<Record<string, unknown>> | undefined,
-  primitives: FormPrimitivesConfig<Record<string, unknown>> | undefined,
-  indent = '      '
+  indent = '      ',
+  preset: 'shadcn' | 'html' = 'html',
+  optimized = false
 ): string {
   const mapping = getMappedFieldComponent(field, componentConfig);
   if (field.hasCustomRender) {
-    const styleAttr = field.gridColumn ? ` style={{ gridColumn: '${field.gridColumn}' }}` : '';
     return [
-      `${indent}<div${styleAttr}>`,
+      `${indent}<div>`,
       `${indent}  <label htmlFor="${field.key}">${field.label}</label>`,
       `${indent}  {/* TODO: custom renderer for ${field.key} — replace with your component */}`,
       `${indent}</div>`
@@ -467,23 +487,22 @@ function renderFieldBlockWithConfig(
 
   if (mapping.source === 'fields' && mapping.componentName) {
     const overrideProps = renderOverrideProps(mapping.override?.props);
-    let content: string;
-    content = renderMappedComponent(
+    const content = renderMappedComponent(
       field,
       mapping.componentName,
       mapping.componentOverride,
       mapping.override,
       overrideProps
     );
-    return renderFieldContainer(field, content, indent, primitives);
+    return renderFieldContainer(field, content, indent, preset);
   }
 
   if (field.component === 'Fieldset') {
-    return renderNestedBlock(field, componentConfig, primitives, indent);
+    return renderNestedBlock(field, componentConfig, indent, optimized);
   }
 
   if (field.component === 'ArrayField') {
-    return renderArrayBlock(field, componentConfig, primitives, indent);
+    return renderArrayBlock(field, componentConfig, indent, optimized);
   }
 
   if (mapping.componentName && (mapping.componentOverride || mapping.override)) {
@@ -495,10 +514,17 @@ function renderFieldBlockWithConfig(
       mapping.override,
       overrideProps
     );
-    return renderFieldContainer(field, content, indent, primitives);
+    return renderFieldContainer(field, content, indent, preset);
   }
 
-  return renderFieldContainer(field, renderField(field), indent, primitives);
+  // When optimized and the field has a validation strategy, pass the optimized
+  // register expression directly into renderField (avoids brittle string replace)
+  if (optimized && field.validation) {
+    const optimizedExpr = renderOptimizedRegister(field, field.key);
+    return renderFieldContainer(field, renderField(field, optimizedExpr), indent, preset);
+  }
+
+  return renderFieldContainer(field, renderField(field), indent, preset);
 }
 
 function hasControlledFields(
@@ -515,22 +541,73 @@ function hasControlledFields(
   return false;
 }
 
+function collectZodSchemaFields(fields: FormField[]): FormField[] {
+  const result: FormField[] = [];
+  for (const field of fields) {
+    if (field.validation?.mode === 'zodSchema') {
+      result.push(field);
+    }
+    if (field.children?.length) {
+      result.push(...collectZodSchemaFields(field.children));
+    }
+    if (field.arrayItem) {
+      result.push(...collectZodSchemaFields([field.arrayItem]));
+    }
+  }
+  return result;
+}
+
+function hasAnyZodSchemaOrSchemaLite(
+  fields: FormField[],
+  schemaLite: import('zod/v4/core').$ZodType | null | undefined
+): boolean {
+  if (schemaLite) return true;
+  return collectZodSchemaFields(fields).length > 0;
+}
+
+function generateHoistedValidators(fields: FormField[], exportName: string): string[] {
+  // Only hoist validators for top-level fields — nested paths (e.g. "address.street")
+  // can't be accessed via simple .shape.key and would produce invalid code.
+  const zodFields = collectZodSchemaFields(fields).filter((f) => !f.key.includes('.'));
+  return zodFields.map((field) => {
+    const safeKey = field.key.replace(/[^a-zA-Z0-9_]/g, '_');
+    const keyLiteral = JSON.stringify(field.key);
+    return `const _validate_${safeKey} = (value: unknown) => { const r = ${exportName}.shape[${keyLiteral}].safeParse(value); return r.success ? true : r.error.issues[0]?.message ?? 'Invalid'; };`;
+  });
+}
+
 export function generateFormComponent(fields: FormField[], config: CodegenConfig): string {
   const schemaImportPath = config.schemaImportPath ?? './schema';
   const arrayFields = collectArrayFields(fields);
   const hasArrays = arrayFields.length > 0;
-  const formPrimitives = config.componentConfig?.formPrimitives;
   const useFormProvider = config.formProvider || config.mode === 'auto-save';
   const hasControlled = hasControlledFields(fields, config.componentConfig);
+  const optimized = config.validationLevel != null;
+
+  const preset =
+    config.componentConfig?.components?.preset ?? (config.ui === 'shadcn' ? 'shadcn' : 'html');
 
   const mappedComponents = collectMappedComponentNames(fields, config.componentConfig);
-  const primitiveComponents = collectFormPrimitiveNames(formPrimitives);
-  const importNames = new Set<string>([...mappedComponents, ...primitiveComponents]);
+  const importNames = new Set<string>(mappedComponents);
+
+  // Add form primitive imports required by the preset's field template
+  const templateImports = PRESET_TEMPLATE_IMPORTS[preset] ?? [];
+  for (const name of templateImports) {
+    importNames.add(name);
+  }
 
   const componentImportLine =
     config.componentConfig && importNames.size > 0
       ? `import { ${Array.from(importNames).sort().join(', ')} } from '${config.componentConfig.components.source}';`
       : undefined;
+
+  // Determine optimized import flags
+  const optimizedOptions = optimized
+    ? {
+        includeZodResolver: false, // Optimized mode never uses zodResolver
+        includeZod: hasAnyZodSchemaOrSchemaLite(fields, config.schemaLite)
+      }
+    : undefined;
 
   const header = getFileHeader(
     schemaImportPath,
@@ -538,11 +615,22 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
     hasArrays,
     config.mode,
     componentImportLine,
-    { hasControlled, formProvider: useFormProvider }
+    { hasControlled, formProvider: useFormProvider, preset },
+    optimizedOptions
   );
+
+  // When optimized with schemaLite, the form imports from the .lite.ts file
+  const hasSchemaLite = optimized && config.schemaLite != null;
+  const schemaLiteImport = hasSchemaLite
+    ? `import { schemaLite } from './${config.componentName}.lite.js';`
+    : undefined;
+
+  // Generate hoisted validators for optimized mode
+  const hoistedValidators = optimized ? generateHoistedValidators(fields, config.exportName) : [];
+
   const body = fields
     .map((field) =>
-      renderFieldBlockWithConfig(field, config.componentConfig, formPrimitives, '      ')
+      renderFieldBlockWithConfig(field, config.componentConfig, '      ', preset, optimized)
     )
     .join('\n');
 
@@ -591,7 +679,9 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
   const formOpen =
     config.mode === 'auto-save'
       ? `    <form>`
-      : `    <form onSubmit={handleSubmit(props.onSubmit)}>`;
+      : hasSchemaLite
+        ? `    <form onSubmit={handleSubmit(onSubmitValidated)}>`
+        : `    <form onSubmit={handleSubmit(props.onSubmit)}>`;
 
   const formTail =
     config.mode === 'auto-save' ? [] : [`      <button type="submit">Submit</button>`];
@@ -606,15 +696,57 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
       ]
     : formContent;
 
+  // Build useForm options based on optimization mode
+  let useFormLines: string[];
+  if (optimized) {
+    // Optimized mode never uses zodResolver — per-field validation handles fields,
+    // and schemaLite (if present) handles top-level effects in the submit wrapper.
+    useFormLines = [`  const form = useForm<FormData>({`];
+  } else {
+    // Non-optimized (default) — always use zodResolver
+    useFormLines =
+      preset === 'shadcn'
+        ? [`  const form = useForm<FormData>({`, `    resolver: zodResolver(${config.exportName}),`]
+        : [
+            `  const baseResolver = zodResolver(${config.exportName});`,
+            `  const form = useForm<FormData>({`,
+            `    resolver: (values: unknown, ctx: unknown, opts: unknown) => baseResolver(normalizeFormValues(values) as FormData, ctx, opts),`
+          ];
+  }
+
+  // Build submit wrapper using the imported schemaLite from the .lite.ts file.
+  // The lite schema only validates top-level effects (superRefine/refine/transform),
+  // not field-level constraints (those are handled per-field).
+  const schemaLiteWrapper = hasSchemaLite
+    ? [
+        ``,
+        `  const onSubmitValidated = (data: FormData) => {`,
+        `    const result = schemaLite.safeParse(data);`,
+        `    if (!result.success && result.error) {`,
+        `      for (const issue of result.error.issues) {`,
+        `        const field = issue.path?.[0];`,
+        `        if (typeof field === 'string') {`,
+        `          form.setError(field as keyof FormData & string, { type: 'validate', message: issue.message });`,
+        `        } else {`,
+        `          form.setError('root', { type: 'validate', message: issue.message });`,
+        `        }`,
+        `      }`,
+        `      return;`,
+        `    }`,
+        `    props.onSubmit(data);`,
+        `  };`
+      ]
+    : [];
+
   return [
     header,
+    ...(schemaLiteImport ? [schemaLiteImport] : []),
+    ...(hoistedValidators.length > 0 ? ['', ...hoistedValidators] : []),
     '',
     `export function ${config.componentName}(props: {`,
     ...propsLines,
     `}) {`,
-    `  const baseResolver = zodResolver(${config.exportName});`,
-    `  const form = useForm<FormData>({`,
-    `    resolver: (values: unknown, ctx: unknown, opts: unknown) => baseResolver(normalizeFormValues(values) as FormData, ctx, opts),`,
+    ...useFormLines,
     ...(config.mode === 'auto-save' ? [`    mode: 'onChange',`] : []),
     `    defaultValues: props.defaultValues,`,
     `    values: props.values,`,
@@ -622,6 +754,7 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
     `  const ${useFormDestructure} = form;`,
     ...(hasArrays ? [arrayHooks] : []),
     ...autoSaveEffect,
+    ...schemaLiteWrapper,
     '',
     `  return (`,
     ...wrappedContent,

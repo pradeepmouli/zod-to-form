@@ -1,12 +1,75 @@
 import type { FormField } from '@zod-to-form/core';
 
+// ─── Inlined type utility (zero-dep codegen) ─────────────────────────
+const STRIP_INDEX_SIGNATURE_TYPE = `type StripIndexSignature<T> = T extends readonly (infer U)[]
+  ? StripIndexSignature<U>[]
+  : T extends object
+    ? {
+        [K in keyof T as string extends K
+          ? never
+          : number extends K
+            ? never
+            : symbol extends K
+              ? never
+              : K]: StripIndexSignature<T[K]>;
+      }
+    : T;`;
+
+// ─── Inlined normalizeFormValues (zero-dep codegen for html preset) ──
+const NORMALIZE_FORM_VALUES_BLOCK = `function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  return Object.prototype.toString.call(value) === '[object Object]';
+}
+
+function isFileListLike(value: unknown): value is FileList & { [index: number]: File } {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as {
+    length?: unknown;
+    item?: unknown;
+  };
+
+  return typeof candidate.length === 'number' && typeof candidate.item === 'function';
+}
+
+function normalizeFormValues(value: unknown): unknown {
+  if (isFileListLike(value)) {
+    return value.length > 0 ? (value.item(0) ?? value[0]) : undefined;
+  }
+
+  if (value === '') {
+    return undefined;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeFormValues(item));
+  }
+
+  if (isPlainObject(value)) {
+    const entries = Object.entries(value as Record<string, unknown>).map(([key, nested]) => [
+      key,
+      normalizeFormValues(nested)
+    ]);
+
+    return Object.fromEntries(entries);
+  }
+
+  return value;
+}`;
+
 export function getFileHeader(
   schemaImportPath: string,
   exportName: string,
   hasArrays = false,
   mode: 'submit' | 'auto-save' = 'submit',
   componentImportLine?: string,
-  options?: { hasControlled?: boolean; formProvider?: boolean }
+  options?: { hasControlled?: boolean; formProvider?: boolean; preset?: 'shadcn' | 'html' },
+  optimized?: { includeZodResolver: boolean; includeZod: boolean }
 ): string {
   const rhfParts = ['useForm'];
   if (hasArrays) rhfParts.push('useFieldArray');
@@ -16,17 +79,26 @@ export function getFileHeader(
 
   const reactImports = mode === 'auto-save' ? `import { useEffect } from 'react';` : '';
 
+  const isShadcn = options?.preset === 'shadcn';
+
+  // When optimized, conditionally include zodResolver and zod imports
+  const includeZodResolver = optimized ? optimized.includeZodResolver : true;
+  const includeZod = optimized ? optimized.includeZod : true;
+
   return [
     ...(reactImports ? [reactImports] : []),
     rhfImports,
-    `import { zodResolver } from '@hookform/resolvers/zod';`,
-    `import { normalizeFormValues } from '@zod-to-form/core';`,
-    `import { z } from 'zod';`,
-    `import type { StripIndexSignature } from '@zod-to-form/core';`,
+    ...(includeZodResolver ? [`import { zodResolver } from '@hookform/resolvers/zod';`] : []),
+    ...(includeZod ? [`import { z } from 'zod';`] : []),
     ...(componentImportLine ? [componentImportLine] : []),
     `import { ${exportName} } from '${schemaImportPath}';`,
     ``,
-    `type FormData = StripIndexSignature<z.output<typeof ${exportName}>>;`
+    STRIP_INDEX_SIGNATURE_TYPE,
+    ``,
+    ...(includeZod
+      ? [`type FormData = StripIndexSignature<z.output<typeof ${exportName}>>;`]
+      : [`type FormData = StripIndexSignature<import('zod').output<typeof ${exportName}>>;`]),
+    ...(!isShadcn ? [``, NORMALIZE_FORM_VALUES_BLOCK] : [])
   ].join('\n');
 }
 
@@ -34,49 +106,123 @@ export function registerPathExpr(path: string): string {
   return path.includes('${') ? `register(\`${path}\`)` : `register('${path}')`;
 }
 
-function renderInput(field: FormField): string {
+function disabledAttr(field: FormField): string {
+  return field.disabled ? ' disabled' : '';
+}
+
+function renderInput(field: FormField, regExpr?: string): string {
   const inputType = typeof field.props['type'] === 'string' ? field.props['type'] : 'text';
-  return `<input id="${field.key}" type="${inputType}" {...${registerPathExpr(field.key)}} />`;
+  const reg = regExpr ?? registerPathExpr(field.key);
+  return `<input id="${field.key}" type="${inputType}"${disabledAttr(field)} {...${reg}} />`;
 }
 
-function renderCheckbox(field: FormField): string {
-  return `<input id="${field.key}" type="checkbox" {...${registerPathExpr(field.key)}} />`;
+function renderCheckbox(field: FormField, regExpr?: string): string {
+  const reg = regExpr ?? registerPathExpr(field.key);
+  return `<input id="${field.key}" type="checkbox"${disabledAttr(field)} {...${reg}} />`;
 }
 
-function renderDatePicker(field: FormField): string {
-  const registerExpr = field.key.includes('${')
-    ? `register(\`${field.key}\`, { valueAsDate: true })`
-    : `register('${field.key}', { valueAsDate: true })`;
-  return `<input id="${field.key}" type="date" {...${registerExpr}} />`;
+function renderDatePicker(field: FormField, regExpr?: string): string {
+  const reg =
+    regExpr ??
+    (field.key.includes('${')
+      ? `register(\`${field.key}\`, { valueAsDate: true })`
+      : `register('${field.key}', { valueAsDate: true })`);
+  return `<input id="${field.key}" type="date"${disabledAttr(field)} {...${reg}} />`;
 }
 
-function renderFileInput(field: FormField): string {
-  return `<input id="${field.key}" type="file" {...${registerPathExpr(field.key)}} />`;
+function renderFileInput(field: FormField, regExpr?: string): string {
+  const reg = regExpr ?? registerPathExpr(field.key);
+  return `<input id="${field.key}" type="file"${disabledAttr(field)} {...${reg}} />`;
 }
 
-function renderSelect(field: FormField): string {
+function renderSelect(field: FormField, regExpr?: string): string {
   const options = (field.options ?? [])
     .map((option) => `<option value="${String(option.value)}">${option.label}</option>`)
     .join('');
-
-  return `<select id="${field.key}" {...${registerPathExpr(field.key)}}>${options}</select>`;
+  const reg = regExpr ?? registerPathExpr(field.key);
+  return `<select id="${field.key}"${disabledAttr(field)} {...${reg}}>${options}</select>`;
 }
 
-export function renderField(field: FormField): string {
+export function renderOptimizedRegister(field: FormField, fieldKey: string): string {
+  const mode = field.validation?.mode;
+
+  if (mode === 'native') {
+    const rules = field.validation?.rules;
+    if (!rules || Object.keys(rules).length === 0) {
+      return registerPathExpr(fieldKey);
+    }
+    const parts: string[] = [];
+    if (rules.required !== undefined) {
+      parts.push(`required: ${JSON.stringify(rules.required)}`);
+    }
+    if (rules.minLength !== undefined) {
+      parts.push(
+        `minLength: { value: ${rules.minLength.value}, message: ${JSON.stringify(rules.minLength.message)} }`
+      );
+    }
+    if (rules.maxLength !== undefined) {
+      parts.push(
+        `maxLength: { value: ${rules.maxLength.value}, message: ${JSON.stringify(rules.maxLength.message)} }`
+      );
+    }
+    if (rules.min !== undefined) {
+      parts.push(
+        `min: { value: ${rules.min.value}, message: ${JSON.stringify(rules.min.message)} }`
+      );
+    }
+    if (rules.max !== undefined) {
+      parts.push(
+        `max: { value: ${rules.max.value}, message: ${JSON.stringify(rules.max.message)} }`
+      );
+    }
+    if (rules.pattern !== undefined) {
+      parts.push(
+        `pattern: { value: ${rules.pattern.value}, message: ${JSON.stringify(rules.pattern.message)} }`
+      );
+    }
+    const rulesStr = parts.join(', ');
+    if (fieldKey.includes('${')) {
+      return `register(\`${fieldKey}\`, { ${rulesStr} })`;
+    }
+    return `register('${fieldKey}', { ${rulesStr} })`;
+  }
+
+  if (mode === 'zodSchema') {
+    const safeKey = fieldKey.replace(/[^a-zA-Z0-9_]/g, '_');
+    if (fieldKey.includes('${')) {
+      return `register(\`${fieldKey}\`, { validate: _validate_${safeKey} })`;
+    }
+    return `register('${fieldKey}', { validate: _validate_${safeKey} })`;
+  }
+
+  if (mode === 'component-enforced') {
+    return registerPathExpr(fieldKey);
+  }
+
+  // TODO(L3): Handle watch mode when cross-field optimization is implemented
+  // if (mode === 'watch') { ... }
+
+  // undefined validation — backward compatible
+  return registerPathExpr(fieldKey);
+}
+
+export function renderField(field: FormField, regExpr?: string): string {
   switch (field.component) {
     case 'Checkbox':
     case 'Switch':
-      return renderCheckbox(field);
+      return renderCheckbox(field, regExpr);
     case 'DatePicker':
-      return renderDatePicker(field);
+      return renderDatePicker(field, regExpr);
     case 'FileInput':
-      return renderFileInput(field);
+      return renderFileInput(field, regExpr);
     case 'Select':
     case 'RadioGroup':
-      return renderSelect(field);
-    case 'Textarea':
-      return `<textarea id="${field.key}" {...${registerPathExpr(field.key)}} />`;
+      return renderSelect(field, regExpr);
+    case 'Textarea': {
+      const reg = regExpr ?? registerPathExpr(field.key);
+      return `<textarea id="${field.key}"${disabledAttr(field)} {...${reg}} />`;
+    }
     default:
-      return renderInput(field);
+      return renderInput(field, regExpr);
   }
 }

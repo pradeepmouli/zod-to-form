@@ -1,4 +1,25 @@
 import type { $ZodArray, $ZodObject, $ZodRegistry, $ZodType } from 'zod/v4/core';
+import type { FormOptimizer } from './optimizers/types.js';
+
+// ─── Validation Strategy (used by FormField and optimizers) ──────────
+
+export interface NativeRules {
+  required?: string;
+  min?: { value: number; message: string };
+  max?: { value: number; message: string };
+  minLength?: { value: number; message: string };
+  maxLength?: { value: number; message: string };
+  pattern?: { value: RegExp; message: string };
+}
+
+export interface ValidationStrategy {
+  mode: 'zodSchema' | 'native' | 'component-enforced';
+  rules?: NativeRules;
+  // TODO(L3): Add watch mode when cross-field optimization is implemented
+  // mode: 'zodSchema' | 'native' | 'component-enforced' | 'watch';
+  // watchFields?: string[];
+  // watchValidate?: (value: unknown, watchedValues: Record<string, unknown>) => true | string;
+}
 
 // ─── FormField: Intermediate Representation ───────────────────────────
 
@@ -41,8 +62,12 @@ export interface FormField {
   hidden: boolean;
   /** Display order override from form registry */
   order?: number;
-  /** CSS grid-column hint from form registry */
-  gridColumn?: string;
+  /** Non-interactive state (greyed out) */
+  disabled: boolean;
+  /** Help text rendered below the input, distinct from description (below label) */
+  helpText?: string;
+  /** Whether the field is marked as deprecated in the schema registry */
+  deprecated: boolean;
   /** Options for enum/union select fields */
   options?: FormFieldOption[];
   /** Children for nested objects */
@@ -57,9 +82,25 @@ export interface FormField {
   hasCustomRender?: boolean;
   /** Custom render function from FormMeta (runtime only, not serialisable) */
   render?: (field: FormField, props: Record<string, unknown>) => unknown;
+  /** Atomic Zod schema for this field, set by L1 optimizer */
+  zodSchema?: $ZodType;
+  /** Validation strategy set by optimizers (undefined = use zodResolver) */
+  validation?: ValidationStrategy;
 }
 
 // ─── FieldConfig: Serializable field configuration ────────────────────
+
+/**
+ * Known RHF field expression strings that can be used as values in `props`.
+ * When a prop value matches one of these strings, it is resolved from the
+ * RHF controller field at render time instead of being passed as a literal.
+ */
+export type FieldExpression =
+  | 'field.value'
+  | 'field.onChange'
+  | 'field.onBlur'
+  | 'field.ref'
+  | 'field.name';
 
 type FieldConfigBase = {
   /** Component name override, e.g. "Textarea", "Switch", "Combobox" */
@@ -68,19 +109,27 @@ type FieldConfigBase = {
   order?: number;
   /** Hide field from UI (remains in form state) */
   hidden?: boolean;
-  /** CSS grid column hint */
-  gridColumn?: string;
-  /** Arbitrary field metadata props forwarded by processors */
-  props?: Record<string, unknown>;
-  /** Per-field prop mapping override (merges over ComponentOverride.propMap) */
-  propMap?: Record<string, string>;
+  /** Render as non-interactive (greyed out). Boolean only. */
+  disabled?: boolean;
   /**
    * Group this field into a named section component.
    * Fields sharing the same section value are suppressed individually
-   * and rendered once via `<SectionComponent fields={[...fieldNames]} />`.
-   * The section component reads its fields from FormProvider context.
+   * and rendered once via the section component resolved from componentModule.
    */
   section?: string;
+  /** Help text rendered below the input, distinct from description (below label) */
+  helpText?: string;
+  /**
+   * Props passed to the rendered component.
+   *
+   * Values matching a known field expression string (`field.value`, `field.onChange`,
+   * `field.onBlur`, `field.ref`, `field.name`) are resolved from the RHF controller
+   * at render time. All other values pass through as literals.
+   *
+   * When both preset override props and per-field config props are present,
+   * they are shallow-merged with field config winning on key conflict.
+   */
+  props?: Record<string, unknown>;
 };
 
 type FieldConfigExtras<T extends $ZodType> =
@@ -99,10 +148,10 @@ export type FieldConfig<T extends $ZodType = $ZodType> = FieldConfigBase & Field
 
 // ─── FormMeta: Registry Annotation ────────────────────────────────────
 
-export interface FormMeta extends FieldConfig {
+export type FormMeta<T extends $ZodType = $ZodType> = FieldConfig<T> & {
   /** Custom render function (runtime only, ignored in codegen) */
   render?: (field: FormField, props: unknown) => unknown;
-}
+};
 
 // ─── Processor Types ──────────────────────────────────────────────────
 
@@ -136,8 +185,8 @@ export interface FormProcessorContext {
   processChild?: (schema: $ZodType, key: string) => FormField;
 }
 
-export type FormProcessor = (
-  schema: $ZodType,
+export type FormProcessor<T extends $ZodType = $ZodType> = (
+  schema: T,
   ctx: FormProcessorContext,
   field: FormField,
   params: ProcessParams
@@ -155,4 +204,9 @@ export interface WalkOptions {
   processors?: Record<string, FormProcessor>;
   /** Maximum recursion depth for lazy/recursive schemas (default: 5) */
   maxDepth?: number;
+  /** Validation optimization settings */
+  optimization?: {
+    level: 1 | 2 | 3;
+    optimizers?: Record<string, FormOptimizer[]>;
+  };
 }

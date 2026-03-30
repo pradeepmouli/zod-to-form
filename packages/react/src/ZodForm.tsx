@@ -1,10 +1,10 @@
-import type { ReactNode } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import { useMemo } from 'react';
 import { FormProvider } from 'react-hook-form';
 import type { output, ZodObject } from 'zod';
 import type { FormField, FormProcessor, ZodFormRegistry } from '@zod-to-form/core';
 import { normalizeFieldKey, collectFieldSections } from '@zod-to-form/core';
-import { FieldRenderer } from './FieldRenderer.js';
+import { FieldRenderer, warnRemovedConfigKeys } from './FieldRenderer.js';
 import { defaultComponentMap } from './components/index.js';
 import type { RuntimeComponentConfig } from './FieldRenderer.js';
 import { useZodForm } from './useZodForm.js';
@@ -24,6 +24,8 @@ type ZodFormProps<TSchema extends ZodObject> = {
   children?: ReactNode;
 };
 
+const _warnedKeys = new Set<string>();
+
 export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>): ReactNode {
   const {
     schema,
@@ -39,6 +41,22 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
     className,
     children
   } = props;
+  // US6: Warn if the old sectionComponents key is detected in componentConfig
+  if (
+    componentConfig &&
+    'sectionComponents' in componentConfig &&
+    !_warnedKeys.has('sectionComponents')
+  ) {
+    _warnedKeys.add('sectionComponents');
+    console.warn(
+      `[zod-to-form] "sectionComponents" in componentConfig has been removed. ` +
+        `Section components are now resolved from "componentConfig.componentModule" instead.`
+    );
+  }
+
+  // One-time validation of removed config keys (propMap, gridColumn, controlled+expressions)
+  warnRemovedConfigKeys(componentConfig);
+
   const mergedComponents = useMemo(() => ({ ...defaultComponentMap, ...components }), [components]);
 
   const { form, fields } = useZodForm(schema, {
@@ -97,7 +115,7 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
  * Renders section components that group multiple form fields.
  * Each section component receives a `fields` prop with the field names it manages,
  * and reads/writes its fields via useFormContext (FormProvider).
- * Components must be pre-imported and provided via `componentConfig.sectionComponents`.
+ * Section components are resolved by name from `componentConfig.componentModule`.
  */
 function SectionRenderer({
   sections,
@@ -107,10 +125,35 @@ function SectionRenderer({
   componentConfig: RuntimeComponentConfig | undefined;
 }) {
   const elements: ReactNode[] = [];
+  const mod = componentConfig?.componentModule;
+
+  if (!mod && sections.size > 0 && !_warnedKeys.has('__no_module__')) {
+    _warnedKeys.add('__no_module__');
+    console.warn(
+      `[zod-to-form] ${sections.size} section(s) configured but componentModule is not provided. ` +
+        `Section fields will not be rendered. Pass componentConfig.componentModule.`
+    );
+  }
+
   for (const [sectionName, fieldKeys] of sections) {
-    const SectionComponent = componentConfig?.sectionComponents?.[sectionName];
-    if (SectionComponent) {
+    const candidate = mod?.[sectionName];
+    // Accept functions and React.memo/forwardRef/lazy (objects with $$typeof)
+    if (
+      typeof candidate === 'function' ||
+      (candidate != null && typeof candidate === 'object' && '$$typeof' in candidate)
+    ) {
+      const SectionComponent = candidate as ComponentType<{ fields: string[] }>;
       elements.push(<SectionComponent key={sectionName} fields={fieldKeys} />);
+    } else if (!_warnedKeys.has(sectionName)) {
+      _warnedKeys.add(sectionName);
+      const reason =
+        candidate === undefined
+          ? 'was not found in componentModule'
+          : `was found but is not a function (got ${typeof candidate})`;
+      console.warn(
+        `[zod-to-form] Section "${sectionName}" (grouping fields: ${fieldKeys.join(', ')}) ` +
+          `${reason}. Those fields will not be rendered.`
+      );
     }
   }
   return <>{elements}</>;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { processUnion } from '../../src/processors/union.js';
+import { processUnion, processDiscriminatedUnion } from '../../src/processors/union.js';
 import { createBaseField } from '../../src/utils.js';
 import type { FormField, FormProcessorContext } from '../../src/types.js';
 
@@ -52,16 +52,16 @@ describe('processUnion (literal union → Select)', () => {
   });
 });
 
-describe('processUnion (discriminated union)', () => {
+describe('processDiscriminatedUnion', () => {
   it('maps a discriminated union to a Select for the discriminator key', () => {
     const schema = z.discriminatedUnion('role', [
       z.object({ role: z.literal('admin'), level: z.number() }),
       z.object({ role: z.literal('user'), name: z.string() })
     ]);
-    const field = createBaseField('profile', 'union');
+    const field = createBaseField('profile', 'discriminated_union');
     const ctx = createContext((_s, key) => createBaseField(key, 'string'));
 
-    processUnion(schema, ctx, field, {});
+    processDiscriminatedUnion(schema, ctx, field, {});
 
     expect(field.component).toBe('Select');
     expect(field.options).toHaveLength(2);
@@ -74,10 +74,10 @@ describe('processUnion (discriminated union)', () => {
       z.object({ role: z.literal('admin'), level: z.number() }),
       z.object({ role: z.literal('user'), name: z.string() })
     ]);
-    const field = createBaseField('profile', 'union');
+    const field = createBaseField('profile', 'discriminated_union');
     const ctx = createContext((_s, key) => createBaseField(key, 'string'));
 
-    processUnion(schema, ctx, field, {});
+    processDiscriminatedUnion(schema, ctx, field, {});
 
     const variants = field.props['_variants'] as Record<string, FormField[]>;
     expect(variants).toBeDefined();
@@ -91,10 +91,10 @@ describe('processUnion (discriminated union)', () => {
       z.object({ type: z.literal('a'), x: z.string() }),
       z.object({ type: z.literal('b'), y: z.number() })
     ]);
-    const field = createBaseField('item', 'union');
+    const field = createBaseField('item', 'discriminated_union');
     const ctx = createContext((_s, key) => createBaseField(key, 'string'));
 
-    processUnion(schema, ctx, field, {});
+    processDiscriminatedUnion(schema, ctx, field, {});
 
     expect(field.props['_discriminator']).toBe('type');
   });

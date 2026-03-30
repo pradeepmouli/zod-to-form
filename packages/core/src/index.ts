@@ -9,22 +9,39 @@ export type {
   FormProcessorContext,
   FormMeta,
   FieldConfig,
+  FieldExpression,
   ProcessParams,
   WalkOptions,
-  ZodFormRegistry
+  ZodFormRegistry,
+  NativeRules,
+  ValidationStrategy
 } from './types.js';
 
 export type {
   ComponentOverride,
   ComponentPreset,
   ComponentsConfig,
-  FormPrimitivesConfig,
   TypedFieldConfig,
   ZodFormsConfig,
   ZodTypeConfig,
   ConfigDefaults,
+  OptimizationConfig,
   StripIndexSignature
 } from './config.js';
+
+export type {
+  FormOptimizer,
+  FormOptimizerContext,
+  WalkResult,
+  SchemaLiteCollector,
+  SchemaLiteInfo
+} from './optimizers/index.js';
+
+export {
+  createOptimizers,
+  builtinOptimizers,
+  createSchemaLiteCollector
+} from './optimizers/index.js';
 
 export {
   defineConfig,

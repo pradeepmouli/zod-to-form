@@ -198,7 +198,16 @@ def detect_domain(query):
         "web": ["aria", "focus", "outline", "semantic", "virtualize", "autocomplete", "form", "input type", "preconnect"]
     }
 
-    scores = {domain: sum(1 for kw in keywords if re.search(r'\b' + re.escape(kw) + r'\b', query_lower)) for domain, keywords in domain_keywords.items()}
+    scores = {
+        domain: sum(
+            1 for kw in keywords if (
+                re.search(r'\b' + re.escape(kw) + r'\b', query_lower)
+                if re.match(r'^\w+$', kw)
+                else kw in query_lower
+            )
+        )
+        for domain, keywords in domain_keywords.items()
+    }
     best = max(scores, key=scores.get)
     return best if scores[best] > 0 else "style"
 

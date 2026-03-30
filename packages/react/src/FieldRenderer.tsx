@@ -11,7 +11,7 @@ export type RuntimeComponentConfig = {
   /**
    * Component source and optional per-component overrides.
    * `source` is used by CLI codegen to emit a static import statement (not used at runtime).
-   * `overrides` maps component names to `ComponentOverride` metadata (controlled, propMap, etc.).
+   * `overrides` maps component names to `ComponentOverride` metadata (controlled, props, etc.).
    */
   components: {
     source: string;
@@ -20,15 +20,72 @@ export type RuntimeComponentConfig = {
   /**
    * The pre-imported components module object, e.g. `import * as myComponents from './components'`.
    * Used to resolve component functions by name at runtime.
+   * Section components are also resolved from this module.
    */
   componentModule?: Record<string, unknown>;
   fields?: Record<string, FieldConfig>;
-  /**
-   * Pre-imported section components, keyed by the section name used in `fields[key].section`.
-   * Required when using section field grouping at runtime.
-   */
-  sectionComponents?: Record<string, ComponentType<{ fields: string[] }>>;
 };
+
+const _warned = new Set<string>();
+
+/**
+ * One-time validation of component config for removed keys.
+ * Called once per form render (from ZodForm), not per field.
+ */
+export function warnRemovedConfigKeys(componentConfig: RuntimeComponentConfig | undefined): void {
+  if (!componentConfig) return;
+
+  // Check component overrides for removed keys and misconfiguration
+  if (componentConfig.components.overrides) {
+    for (const [name, entry] of Object.entries(componentConfig.components.overrides)) {
+      if (!entry) continue;
+
+      if ('propMap' in entry && !_warned.has(`override:propMap:${name}`)) {
+        _warned.add(`override:propMap:${name}`);
+        console.warn(
+          `[zod-to-form] Component override "${name}" uses "propMap" which has been removed. ` +
+            `Move field expression values into "props" instead.`
+        );
+      }
+
+      if (entry.props && !entry.controlled) {
+        const hasFieldExpr = Object.values(entry.props).some(
+          (v) => typeof v === 'string' && FIELD_EXPRESSIONS.has(v)
+        );
+        if (hasFieldExpr && !_warned.has(`override:noControlled:${name}`)) {
+          _warned.add(`override:noControlled:${name}`);
+          console.warn(
+            `[zod-to-form] Component override "${name}" has field expression values in "props" ` +
+              `but "controlled" is not set to true. Field expressions are only resolved for controlled components.`
+          );
+        }
+      }
+    }
+  }
+
+  // Check field configs for removed keys
+  if (componentConfig.fields) {
+    for (const [key, fieldConfig] of Object.entries(componentConfig.fields)) {
+      if (!fieldConfig) continue;
+
+      if ('propMap' in fieldConfig && !_warned.has(`field:propMap:${key}`)) {
+        _warned.add(`field:propMap:${key}`);
+        console.warn(
+          `[zod-to-form] Field "${key}" uses "propMap" which has been removed. ` +
+            `Move field expression values into "props" instead. ` +
+            `Example: props: { onValueChange: 'field.onChange' }`
+        );
+      }
+      if ('gridColumn' in fieldConfig && !_warned.has(`field:gridColumn:${key}`)) {
+        _warned.add(`field:gridColumn:${key}`);
+        console.warn(
+          `[zod-to-form] Field "${key}" uses "gridColumn" which has been removed. ` +
+            `Use "props.style" or "props.className" for layout instead.`
+        );
+      }
+    }
+  }
+}
 
 function resolveFieldOverride(
   field: FormField,
@@ -52,11 +109,19 @@ function resolveFieldOverride(
   };
 }
 
+/** Check if a value is a valid React component (function, memo, forwardRef, lazy) */
+function isReactComponent(value: unknown): boolean {
+  if (typeof value === 'function') return true;
+  // React.memo, forwardRef, lazy produce objects with $$typeof
+  if (value !== null && typeof value === 'object' && '$$typeof' in value) return true;
+  return false;
+}
+
 function asComponentType(
   value: unknown,
   errorMessage: string
 ): ComponentType<Record<string, unknown>> {
-  if (typeof value !== 'function') {
+  if (!isReactComponent(value)) {
     throw new Error(errorMessage);
   }
 
@@ -100,27 +165,119 @@ function getErrorAtPath(errors: unknown, path: string): string | undefined {
   return undefined;
 }
 
+function zodSchemaValidate(field: FormField): ((value: unknown) => true | string) | undefined {
+  if (field.validation?.mode !== 'zodSchema' || !field.zodSchema) return undefined;
+  const schema = field.zodSchema as unknown as {
+    safeParse(v: unknown): { success: boolean; error?: { issues: Array<{ message: string }> } };
+  };
+  return (value: unknown) => {
+    // Normalize empty strings to undefined to match zodResolver behavior
+    const normalized = value === '' ? undefined : value;
+    const result = schema.safeParse(normalized);
+    if (result.success) return true;
+    return result.error?.issues[0]?.message ?? 'Validation failed';
+  };
+}
+
 function getRegisterOptions(field: FormField): Record<string, unknown> {
+  const opts: Record<string, unknown> = {};
+
   if (field.zodType === 'number' || field.zodType === 'bigint') {
-    return { valueAsNumber: true };
+    opts['valueAsNumber'] = true;
   }
 
   if (field.zodType === 'date') {
-    return { valueAsDate: true };
+    opts['valueAsDate'] = true;
   }
 
   if (field.zodType === 'file') {
-    return {
-      setValueAs: (value: unknown) => {
-        if (value instanceof FileList) {
-          return value.length > 0 ? value.item(0) : undefined;
-        }
-        return value;
+    opts['setValueAs'] = (value: unknown) => {
+      if (value instanceof FileList) {
+        return value.length > 0 ? value.item(0) : undefined;
       }
+      return value;
     };
   }
 
-  return {};
+  // Optimized validation: per-field validation
+  if (field.validation?.mode === 'native' && field.validation.rules) {
+    // L2: native RHF rules — spread directly into register options
+    const rules = field.validation.rules;
+    if (rules.required) opts['required'] = rules.required;
+    if (rules.min) opts['min'] = rules.min;
+    if (rules.max) opts['max'] = rules.max;
+    if (rules.minLength) opts['minLength'] = rules.minLength;
+    if (rules.maxLength) opts['maxLength'] = rules.maxLength;
+    if (rules.pattern) opts['pattern'] = rules.pattern;
+  } else if (field.validation?.mode === 'zodSchema') {
+    // L1: per-field zodSchema validation via register({ validate })
+    const validate = zodSchemaValidate(field);
+    if (validate) {
+      opts['validate'] = validate;
+    }
+  }
+  // component-enforced: no validation emitted
+
+  return opts;
+}
+
+// TODO(L3): Re-enable when L3 cross-field optimization is implemented
+// function useWatchValidate(field: FormField): ((value: unknown) => true | string) | undefined {
+//   const { control } = useFormContext();
+//   const watchFields = field.validation?.mode === 'watch' ? field.validation.watchFields : undefined;
+//   const watchValidate = field.validation?.mode === 'watch' ? field.validation.watchValidate : undefined;
+//   const watchedValues = useWatch({ control, name: (watchFields as string[]) ?? [], disabled: !watchFields });
+//   if (!watchFields || !watchValidate) return undefined;
+//   const watchedMap: Record<string, unknown> = {};
+//   for (let i = 0; i < watchFields.length; i++) {
+//     watchedMap[watchFields[i]!] = Array.isArray(watchedValues) ? watchedValues[i] : watchedValues;
+//   }
+//   return (value: unknown) => watchValidate(value, watchedMap);
+// }
+
+export interface FieldTemplateProps {
+  children: ReactNode;
+  label: string;
+  description?: string;
+  helpText?: string;
+  error?: string;
+  name: string;
+  required?: boolean;
+  disabled?: boolean;
+  deprecated?: boolean;
+}
+
+function DefaultFieldTemplate({
+  children,
+  label,
+  description,
+  helpText,
+  error,
+  name,
+  deprecated,
+  components
+}: FieldTemplateProps & { components?: Partial<ComponentMap> }) {
+  const { FieldLabel, FieldDescription, FieldMessage } = { ...defaultComponentMap, ...components };
+  return (
+    <>
+      <FieldLabel htmlFor={name}>
+        {deprecated ? <s>{label}</s> : label}
+        {deprecated ? (
+          <span aria-hidden="true" title="Deprecated">
+            {' '}
+            ⚠
+          </span>
+        ) : null}
+        {deprecated ? <span className="sr-only"> (Deprecated)</span> : null}
+      </FieldLabel>
+      {children}
+      {description ? <FieldDescription>{description}</FieldDescription> : null}
+      {helpText ? (
+        <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>{helpText}</p>
+      ) : null}
+      {error ? <FieldMessage>{error}</FieldMessage> : null}
+    </>
+  );
 }
 
 type FieldRendererProps = {
@@ -129,7 +286,20 @@ type FieldRendererProps = {
   componentConfig?: RuntimeComponentConfig;
 };
 
-// ─── T088: Fieldset block for nested object fields ────────────────────
+function buildBaseComponentProps(
+  field: FormField,
+  errorMessage: string | undefined
+): Record<string, unknown> {
+  return {
+    id: field.key,
+    'aria-invalid': errorMessage ? 'true' : 'false',
+    required: field.required,
+    readOnly: field.readOnly,
+    disabled: field.disabled
+  };
+}
+
+// ─── Fieldset block for nested object fields ──────────────────────────
 
 const FieldsetBlock = memo(function FieldsetBlock({
   field,
@@ -139,13 +309,38 @@ const FieldsetBlock = memo(function FieldsetBlock({
   const componentMap = { ...defaultComponentMap, ...components };
   const FieldComponent = componentMap.Field;
 
-  const wrapperProps: Record<string, unknown> = {};
-  if (field.gridColumn) {
-    wrapperProps['style'] = { gridColumn: field.gridColumn };
+  const overrideComponentName = componentConfig?.fields?.[field.key]?.component;
+  if (overrideComponentName && componentConfig?.componentModule) {
+    const candidate = componentConfig.componentModule[overrideComponentName];
+    if (isReactComponent(candidate)) {
+      const OverrideComponent = candidate as ComponentType<{ children?: ReactNode }>;
+      return (
+        <FieldComponent>
+          <OverrideComponent>
+            {field.children?.map((child) => (
+              <FieldRenderer
+                key={child.key}
+                field={child}
+                components={componentMap}
+                componentConfig={componentConfig}
+              />
+            ))}
+          </OverrideComponent>
+        </FieldComponent>
+      );
+    }
+    // Warn if component not found, fall back to fieldset
+    if (!_warned.has(`fieldset:${field.key}`)) {
+      _warned.add(`fieldset:${field.key}`);
+      console.warn(
+        `[zod-to-form] Field "${field.key}" specifies component "${overrideComponentName}" ` +
+          `but it was not found in componentModule. Falling back to <fieldset>.`
+      );
+    }
   }
 
   return (
-    <FieldComponent {...wrapperProps}>
+    <FieldComponent>
       <fieldset>
         <legend>{field.label}</legend>
         {field.children?.map((child) => (
@@ -161,7 +356,7 @@ const FieldsetBlock = memo(function FieldsetBlock({
   );
 });
 
-// ─── T089: Array block with useFieldArray ─────────────────────────────
+// ─── Array block with useFieldArray ───────────────────────────────────
 
 function getDefaultAppendValue(arrayItem: FormField | undefined): unknown {
   if (!arrayItem) return '';
@@ -178,13 +373,8 @@ const ArrayBlock = memo(function ArrayBlock({
   const { fields: items, append, remove } = useFieldArray({ control, name: field.key });
   const minLength = field.constraints.minLength ?? 0;
 
-  const wrapperProps: Record<string, unknown> = {};
-  if (field.gridColumn) {
-    wrapperProps['style'] = { gridColumn: field.gridColumn };
-  }
-
   return (
-    <fieldset {...wrapperProps}>
+    <fieldset>
       <legend>{field.label}</legend>
       {items.map((item, index) => {
         if (!field.arrayItem) return null;
@@ -213,7 +403,7 @@ const ArrayBlock = memo(function ArrayBlock({
   );
 });
 
-// ─── T090: Discriminated union block with watch ───────────────────────
+// ─── Discriminated union block with watch ─────────────────────────────
 
 const DiscriminatedUnionBlock = memo(function DiscriminatedUnionBlock({
   field,
@@ -230,13 +420,9 @@ const DiscriminatedUnionBlock = memo(function DiscriminatedUnionBlock({
 
   const FieldComponent = componentMap.Field;
   const FieldLabelComponent = componentMap.FieldLabel;
-  const wrapperProps: Record<string, unknown> = {};
-  if (field.gridColumn) {
-    wrapperProps['style'] = { gridColumn: field.gridColumn };
-  }
 
   return (
-    <FieldComponent {...wrapperProps}>
+    <FieldComponent>
       <FieldLabelComponent htmlFor={discKey}>{field.label}</FieldLabelComponent>
       <select id={discKey} {...register(discKey)}>
         <option value="">Select…</option>
@@ -258,59 +444,80 @@ const DiscriminatedUnionBlock = memo(function DiscriminatedUnionBlock({
   );
 });
 
+/** Maps field expression strings to their corresponding RHF controller field property names */
+const EXPRESSION_TO_FIELD_PROP: Record<string, string> = {
+  'field.value': 'value',
+  'field.onChange': 'onChange',
+  'field.onBlur': 'onBlur',
+  'field.ref': 'ref',
+  'field.name': 'name'
+};
+
+/** Derived from EXPRESSION_TO_FIELD_PROP — guaranteed to stay in sync */
+const FIELD_EXPRESSIONS = new Set(Object.keys(EXPRESSION_TO_FIELD_PROP));
+
 /**
- * Apply propMap to remap RHF controller field props to component-specific prop names.
- * Default RHF field props: value, onChange, onBlur, ref, name.
- * propMap entries like { onSelect: 'field.onChange' } replace the default mapping.
+ * Resolve props for a controlled component by merging preset override props,
+ * per-field config props, and the RHF controller field.
+ *
+ * - Props whose values match a known field expression string (e.g., `'field.onChange'`)
+ *   are resolved from the RHF controller field.
+ * - All other props pass through as literal values.
+ * - Merge order: preset override props → field config props (field wins on conflict).
+ * - RHF default props (value, onChange, onBlur, ref, name) are included unless
+ *   a field expression explicitly remaps that controller property to a different prop name.
  */
-function applyPropMap(
+function resolveProps(
   controllerField: Record<string, unknown>,
-  propMap: Record<string, string> | undefined
+  presetProps: Record<string, unknown> | undefined,
+  fieldProps: Record<string, unknown> | undefined
 ): Record<string, unknown> {
-  if (!propMap) return controllerField;
+  // Shallow merge: preset first, field config wins on conflict (FR-019)
+  const merged: Record<string, unknown> = { ...presetProps, ...fieldProps };
 
-  const result: Record<string, unknown> = {};
-  const rhfFieldProps: Record<string, string> = {
-    'field.value': 'value',
-    'field.onChange': 'onChange',
-    'field.onBlur': 'onBlur',
-    'field.ref': 'ref',
-    'field.name': 'name'
-  };
+  // Separate field expressions from literal props
+  const fieldExpressionEntries: Array<[string, string]> = [];
+  const literalEntries: Array<[string, unknown]> = [];
 
-  // Track which RHF expressions are remapped
-  const remappedExprs = new Set(Object.values(propMap));
-
-  // Copy defaults that aren't being remapped away
-  for (const [expr, defaultProp] of Object.entries(rhfFieldProps)) {
-    if (!remappedExprs.has(expr)) {
-      result[defaultProp] = controllerField[defaultProp];
+  for (const [key, value] of Object.entries(merged)) {
+    if (typeof value === 'string' && FIELD_EXPRESSIONS.has(value)) {
+      fieldExpressionEntries.push([key, value]);
+    } else {
+      literalEntries.push([key, value]);
     }
   }
 
-  // Apply remapped props
-  for (const [componentProp, rhfExpr] of Object.entries(propMap)) {
-    const defaultProp = rhfFieldProps[rhfExpr];
-    if (defaultProp) {
-      result[componentProp] = controllerField[defaultProp];
+  // Start with default RHF controller field props
+  const result: Record<string, unknown> = { ...controllerField };
+
+  // Track which RHF expressions are remapped to custom prop names
+  const remappedExprs = new Set(fieldExpressionEntries.map(([, expr]) => expr));
+
+  // Remove default props whose RHF expression is being remapped to a different name
+  for (const [expr, defaultProp] of Object.entries(EXPRESSION_TO_FIELD_PROP)) {
+    if (remappedExprs.has(expr)) {
+      // Only remove if the remapped prop name differs from the default
+      const remappedPropName = fieldExpressionEntries.find(([, e]) => e === expr)?.[0];
+      if (remappedPropName !== defaultProp) {
+        delete result[defaultProp];
+      }
     }
+  }
+
+  // Apply field expression mappings — resolve from controller field
+  for (const [propName, expr] of fieldExpressionEntries) {
+    const controllerProp = EXPRESSION_TO_FIELD_PROP[expr];
+    if (controllerProp) {
+      result[propName] = controllerField[controllerProp];
+    }
+  }
+
+  // Apply literal props (override any controller defaults)
+  for (const [key, value] of literalEntries) {
+    result[key] = value;
   }
 
   return result;
-}
-
-/**
- * Merge component-level propMap with per-field propMap override.
- * Per-field entries win when keys overlap.
- */
-function resolvePropMap(
-  componentOverride?: ComponentOverride,
-  fieldOverride?: FieldConfig
-): Record<string, string> | undefined {
-  const entryMap = componentOverride?.propMap;
-  const fieldMap = fieldOverride?.propMap;
-  if (!entryMap && !fieldMap) return undefined;
-  return { ...entryMap, ...fieldMap };
 }
 
 // ─── Controlled field wrapper ──────────────────────────────────────────
@@ -320,38 +527,51 @@ function resolvePropMap(
 type ControlledFieldProps = {
   field: FormField;
   Component: ComponentType<Record<string, unknown>>;
-  propMap: Record<string, string> | undefined;
-  overrideProps?: Record<string, unknown>;
+  presetProps: Record<string, unknown> | undefined;
+  fieldConfigProps: Record<string, unknown> | undefined;
   errorMessage?: string;
 };
 
 const ControlledFieldInner = memo(function ControlledFieldInner({
   field,
   Component,
-  propMap,
-  overrideProps,
+  presetProps,
+  fieldConfigProps,
   errorMessage
 }: ControlledFieldProps) {
   const { control } = useFormContext();
-  // Note: useController does not use register() options like valueAsNumber/valueAsDate.
-  // Controlled components manage their own value types via onChange — the component
-  // is responsible for passing the correct value type back to RHF.
-  const { field: controllerField } = useController({ name: field.key, control });
+  // TODO(L3): Re-enable watch mode for controlled components
+  // const watchValidateFn = useWatchValidate(field);
+  // When optimized validation is enabled, pass per-field rules to controller
+  const controllerRules = (() => {
+    // TODO(L3): if (watchValidateFn) return { validate: watchValidateFn };
+    if (field.validation?.mode === 'native' && field.validation.rules) {
+      return field.validation.rules;
+    }
+    const validate = zodSchemaValidate(field);
+    return validate ? { validate } : undefined;
+  })();
+  const { field: controllerField } = useController({
+    name: field.key,
+    control,
+    rules: controllerRules
+  });
 
-  const mappedProps = applyPropMap(controllerField as unknown as Record<string, unknown>, propMap);
+  // controllerField is ControllerRenderProps which extends Record<string, unknown>
+  const resolved = resolveProps(
+    controllerField as Record<string, unknown>,
+    presetProps,
+    fieldConfigProps
+  );
 
   const componentProps: Record<string, unknown> = {
-    id: field.key,
-    'aria-invalid': errorMessage ? 'true' : 'false',
-    required: field.required,
-    readOnly: field.readOnly,
+    ...buildBaseComponentProps(field, errorMessage),
     ...field.props,
-    ...overrideProps,
-    ...mappedProps
+    ...resolved
   };
 
-  if ('options' in field && field['options']) {
-    componentProps['options'] = field['options'];
+  if (field.options) {
+    componentProps['options'] = field.options;
   }
 
   return <Component {...componentProps} />;
@@ -364,6 +584,8 @@ export const FieldRenderer = memo(function FieldRenderer({
 }: FieldRendererProps) {
   // Always call hooks first (React hooks rule — no conditional hook calls)
   const { register, formState } = useFormContext();
+  // TODO(L3): Re-enable useWatchValidate when L3 cross-field optimization is implemented
+  // const watchValidate = useWatchValidate(field);
   const componentMap = { ...defaultComponentMap, ...components };
   const mapping = useMemo(
     () => resolveFieldOverride(field, componentConfig),
@@ -403,10 +625,13 @@ export const FieldRenderer = memo(function FieldRenderer({
     componentMap[field.component as keyof ComponentMap] ??
     componentMap.Input) as ComponentType<Record<string, unknown>>;
   const FieldComponent = componentMap.Field;
-  const FieldLabelComponent = componentMap.FieldLabel;
-  const FieldDescriptionComponent = componentMap.FieldDescription;
-  const FieldMessageComponent = componentMap.FieldMessage;
   const errorMessage = getErrorAtPath(formState.errors, field.key);
+
+  // Resolve field template: componentModule['FieldTemplate'] → DefaultFieldTemplate fallback
+  const customTemplate = componentConfig?.componentModule?.['FieldTemplate'];
+  const FieldTemplate = (
+    isReactComponent(customTemplate) ? customTemplate : DefaultFieldTemplate
+  ) as typeof DefaultFieldTemplate;
 
   if (field.hidden) {
     return null;
@@ -419,61 +644,66 @@ export const FieldRenderer = memo(function FieldRenderer({
 
   const isControlled = mapping.componentOverride?.controlled === true;
 
-  const wrapperProps: Record<string, unknown> = {};
-  if (field.gridColumn) {
-    wrapperProps['style'] = { gridColumn: field.gridColumn };
-  }
-
   let fieldContent: ReactNode;
 
+  const registerOpts = getRegisterOptions(field);
+  // TODO(L3): Merge watch-mode validate when L3 cross-field optimization is implemented
+  // if (watchValidate) { registerOpts['validate'] = watchValidate; }
+
   if (field.render) {
-    const registration = register(field.key, getRegisterOptions(field));
-    const componentProps: Record<string, unknown> = {
-      id: field.key,
-      'aria-invalid': errorMessage ? 'true' : 'false',
-      required: field.required,
-      readOnly: field.readOnly,
+    const registration = register(field.key, registerOpts);
+    const componentProps = {
+      ...buildBaseComponentProps(field, errorMessage),
       ...field.props,
       ...mapping.override?.props,
       ...registration
     };
     fieldContent = field.render(field, componentProps) as ReactNode;
   } else if (isControlled) {
-    const propMap = resolvePropMap(mapping.componentOverride, mapping.override);
     fieldContent = (
       <ControlledFieldInner
         field={field}
         Component={Component}
-        propMap={propMap}
-        overrideProps={mapping.override?.props}
+        presetProps={mapping.componentOverride?.props}
+        fieldConfigProps={mapping.override?.props}
         errorMessage={errorMessage}
       />
     );
   } else {
-    const registration = register(field.key, getRegisterOptions(field));
+    const registration = register(field.key, registerOpts);
     const componentProps: Record<string, unknown> = {
-      id: field.key,
-      'aria-invalid': errorMessage ? 'true' : 'false',
-      required: field.required,
-      readOnly: field.readOnly,
+      ...buildBaseComponentProps(field, errorMessage),
       ...field.props,
       ...mapping.override?.props,
       ...registration
     };
-    if ('options' in field && field['options']) {
-      componentProps['options'] = field['options'];
+    if (field.options) {
+      componentProps['options'] = field.options;
     }
     fieldContent = <Component {...componentProps} />;
   }
 
+  const mergedFieldProps = { ...field.props, ...mapping.override?.props };
+  const wrapperProps: Record<string, unknown> = {
+    ...(mergedFieldProps['style'] ? { style: mergedFieldProps['style'] } : undefined),
+    ...(mergedFieldProps['className'] ? { className: mergedFieldProps['className'] } : undefined)
+  };
+
   return (
     <FieldComponent {...wrapperProps}>
-      <FieldLabelComponent htmlFor={field.key}>{field.label}</FieldLabelComponent>
-      {fieldContent}
-      {field.description ? (
-        <FieldDescriptionComponent>{field.description}</FieldDescriptionComponent>
-      ) : null}
-      {errorMessage ? <FieldMessageComponent>{errorMessage}</FieldMessageComponent> : null}
+      <FieldTemplate
+        name={field.key}
+        label={field.label}
+        description={field.description}
+        helpText={field.helpText}
+        error={errorMessage}
+        required={field.required}
+        disabled={field.disabled}
+        deprecated={field.deprecated}
+        components={components}
+      >
+        {fieldContent}
+      </FieldTemplate>
     </FieldComponent>
   );
 });

@@ -21,7 +21,8 @@ const fieldConfigSchema = z.object({
   placeholder: z.string().optional(),
   order: z.coerce.number().optional(),
   hidden: z.boolean().optional(),
-  gridColumn: z.string().optional()
+  disabled: z.boolean().optional(),
+  helpText: z.string().optional()
 });
 
 type FieldConfigEntry = z.infer<typeof fieldConfigSchema>;
@@ -229,6 +230,9 @@ export function parseConfigFromTs(source: string): ConfigParseResult {
     // Limitations: string values containing unquoted-key-like patterns (e.g. "Note: foo") may be
     // mangled. A proper JS parser would be more robust but is overkill for the playground config.
     let normalized = jsonStr
+      // Remove full-line comments (lines starting with optional whitespace + //)
+      // but keep // inside string literals (e.g. URLs like "https://...")
+      .replace(/^\s*\/\/.*$/gm, '')
       // Remove spread expressions (e.g. ...SHADCN_OVERRIDES) — not representable in JSON
       .replace(/\.\.\.\w+,?\s*/g, '')
       // Replace single quotes with double quotes

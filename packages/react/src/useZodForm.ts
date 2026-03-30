@@ -1,10 +1,12 @@
 import { useEffect, useMemo } from 'react';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { walkSchema, registerFlat, normalizeFormValues } from '@zod-to-form/core';
+import type { FormField, WalkResult, OptimizationConfig } from '@zod-to-form/core';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import type { $ZodType } from 'zod/v4/core';
 import type { output, ZodObject } from 'zod';
 import type { FieldConfig, FormMeta, FormProcessor, ZodFormRegistry } from '@zod-to-form/core';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 type UseZodFormOptions<TSchema extends ZodObject> = {
   defaultValues?: Partial<output<TSchema>>;
@@ -17,14 +19,37 @@ type UseZodFormOptions<TSchema extends ZodObject> = {
   processors?: Record<string, FormProcessor>;
   mode?: 'onSubmit' | 'onChange' | 'onBlur';
   onValueChange?: (values: output<TSchema>) => void;
+  /** Validation optimization config. When set, skips zodResolver and uses per-field validation. */
+  optimization?: OptimizationConfig;
 };
+
+/**
+ * Bridge cast for the Zod v4 ↔ RHF type boundary.
+ * RHF's resolver type is nominally incompatible with Zod v4's internal
+ * `_zod.version` discriminant. This single cast point replaces scattered
+ * `as never` throughout the hook.
+ */
+function rhfCast<T>(value: T): never {
+  return value as never;
+}
+
+// zodResolver is imported statically but only invoked when optimization is NOT enabled.
+// Bundlers that support tree-shaking of unused imports (Vite, webpack 5, esbuild)
+// can eliminate it when all call sites are dead code. For full elimination,
+// a separate entrypoint (@zod-to-form/react/optimized) would be needed — tracked
+// as a future improvement.
 
 export function useZodForm<TSchema extends ZodObject>(
   schema: TSchema,
   options?: UseZodFormOptions<TSchema>
 ) {
-  // SAFETY: ZodObject extends $ZodType at runtime but TS nominal typing on _zod.version requires the cast
-  const baseResolver = useMemo(() => zodResolver(schema as never), [schema]);
+  const validationLevel = options?.optimization?.level;
+  const isOptimized = validationLevel !== undefined;
+
+  const baseResolver = useMemo(
+    () => (isOptimized ? undefined : zodResolver(rhfCast(schema))),
+    [schema, isOptimized]
+  );
 
   // Build a registry from flat field config when no explicit registry is provided
   const effectiveRegistry = useMemo(() => {
@@ -32,63 +57,68 @@ export function useZodForm<TSchema extends ZodObject>(
     if (!options?.fields || Object.keys(options.fields).length === 0) return undefined;
     const reg = z.registry<FormMeta>();
     try {
-      // SAFETY: ZodObject extends $ZodType at runtime but TS nominal typing requires the cast
-      registerFlat(reg, schema as never, options.fields);
+      registerFlat(reg, rhfCast(schema), options.fields);
     } catch (error) {
-      console.error(
-        '[zod-to-form] Failed to register field config into registry. ' +
-          'The form will render without field overrides.',
-        error
-      );
+      console.error('[zod-to-form] Failed to register field config into registry.', error);
       return undefined;
     }
     return reg;
   }, [schema, options?.formRegistry, options?.fields]);
 
-  const walkResult = useMemo(() => {
+  const walkResult = useMemo((): {
+    fields: FormField[];
+    schemaLite: $ZodType | null;
+    error: string | null;
+  } => {
     try {
+      if (isOptimized) {
+        const result: WalkResult = walkSchema(schema, {
+          formRegistry: effectiveRegistry,
+          processors: options?.processors,
+          optimization: { level: validationLevel! }
+        });
+        return { fields: result.fields, schemaLite: result.schemaLite, error: null };
+      }
       return {
         fields: walkSchema(schema, {
           formRegistry: effectiveRegistry,
           processors: options?.processors
         }),
+        schemaLite: null,
         error: null
       };
     } catch (err) {
       console.error('[zod-to-form] walkSchema failed:', err);
       return {
-        fields: [] as import('@zod-to-form/core').FormField[],
+        fields: [] as FormField[],
+        schemaLite: null,
         error: err instanceof Error ? err.message : 'Schema processing failed'
       };
     }
-  }, [schema, effectiveRegistry, options?.processors]);
+  }, [schema, effectiveRegistry, options?.processors, validationLevel, isOptimized]);
 
   const form = useForm<output<TSchema>>({
-    // SAFETY: resolver wraps baseResolver to normalize FileLists before validation.
-    // The `as never` casts are required because RHF's resolver type is nominally
-    // incompatible with Zod v4's internal version discriminant, same as zodResolver above.
-    resolver: ((values: unknown, context: unknown, resolverOptions: unknown) =>
-      baseResolver(
-        normalizeFormValues(values) as never,
-        context,
-        resolverOptions as Parameters<typeof baseResolver>[2]
-      )) as never,
-    // SAFETY: Partial<output<TSchema>> is structurally correct but RHF's DeepPartial
-    // is not directly assignable — cast required at the RHF boundary.
-    defaultValues: options?.defaultValues as never,
-    values: options?.values as never,
+    // When optimized, skip zodResolver — per-field validation is handled by register({ validate })
+    resolver: isOptimized
+      ? undefined
+      : rhfCast((values: unknown, context: unknown, resolverOptions: unknown) =>
+          baseResolver!(
+            rhfCast(normalizeFormValues(values)),
+            context,
+            // SAFETY: RHF's ResolverOptions type is not exported; narrow from unknown via parameter extraction
+            resolverOptions as Parameters<NonNullable<typeof baseResolver>>[2]
+          )
+        ),
+    defaultValues: rhfCast(options?.defaultValues),
+    values: rhfCast(options?.values),
     mode: options?.mode
   });
 
   useEffect(() => {
-    if (!options?.onValueChange) {
-      return undefined;
-    }
+    if (!options?.onValueChange) return;
 
     const subscription = form.watch((values, info) => {
-      if (!info?.name) {
-        return;
-      }
+      if (!info?.name) return;
 
       const parsed = schema.safeParse(normalizeFormValues(values));
       if (parsed.success) {
@@ -105,6 +135,8 @@ export function useZodForm<TSchema extends ZodObject>(
     form,
     fields: walkResult.fields,
     /** Non-null when walkSchema threw — lets consumers display the error instead of an empty form */
-    schemaError: walkResult.error
+    schemaError: walkResult.error,
+    /** SchemaLite for submit-time validation (non-null when optimization is enabled and top-level effects exist) */
+    schemaLite: walkResult.schemaLite
   };
 }

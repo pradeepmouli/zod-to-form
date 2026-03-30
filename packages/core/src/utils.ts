@@ -22,12 +22,6 @@ export function inferLabel(key: string): string {
   );
 }
 
-/**
- * Join a parent key path with a child key.
- *
- * @example joinPath(undefined, 'name') → 'name'
- * @example joinPath('address', 'street') → 'address.street'
- */
 export function joinPath(parent: string | undefined, key: string): string {
   if (!parent) return key;
   return `${parent}.${key}`;
@@ -293,6 +287,8 @@ export function createBaseField(key: string, zodType: string): FormField {
     required: true,
     readOnly: false,
     hidden: false,
+    disabled: false,
+    deprecated: false,
     constraints: {},
     zodType
   };

@@ -21,9 +21,12 @@ export const DEFAULT_PANE_SIZES: PaneSizes = {
   rightHorizontalSplit: 50
 };
 
-/** Clamp all pane size values to the valid 10-90% range */
+export const MIN_PANE_PCT = 15;
+export const MAX_PANE_PCT = 85;
+
+/** Clamp all pane size values to the valid range */
 export function clampPaneSizes(sizes: PaneSizes): PaneSizes {
-  const clamp = (v: number) => Math.max(10, Math.min(90, v));
+  const clamp = (v: number) => Math.max(MIN_PANE_PCT, Math.min(MAX_PANE_PCT, v));
   return {
     verticalSplit: clamp(sizes.verticalSplit),
     leftHorizontalSplit: clamp(sizes.leftHorizontalSplit),

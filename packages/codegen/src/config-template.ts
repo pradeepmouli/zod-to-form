@@ -17,12 +17,6 @@ export type ConfigTemplateOptions = {
   preset?: 'shadcn' | 'html';
   /** Component overrides (name → { controlled?: boolean }) */
   overrides?: Record<string, { controlled?: boolean }>;
-  /** Form primitive component names */
-  formPrimitives?: {
-    field?: string;
-    label?: string;
-    control?: string;
-  };
   /** Defaults block */
   defaults?: {
     mode?: 'submit' | 'auto-save';
@@ -30,6 +24,7 @@ export type ConfigTemplateOptions = {
     overwrite?: boolean;
     serverAction?: boolean;
     formProvider?: boolean;
+    optimization?: { level?: 1 | 2 | 3 };
   };
   /** Per-field overrides */
   fields?: Record<string, Record<string, unknown>>;
@@ -89,16 +84,6 @@ export function buildConfigSource(opts: ConfigTemplateOptions): string {
   }
   lines.push(`  },`);
 
-  // formPrimitives block
-  if (opts.formPrimitives) {
-    const fp = opts.formPrimitives;
-    lines.push(`  formPrimitives: {`);
-    if (fp.field) lines.push(`    field: '${fp.field}',`);
-    if (fp.label) lines.push(`    label: '${fp.label}',`);
-    if (fp.control) lines.push(`    control: '${fp.control}'`);
-    lines.push(`  },`);
-  }
-
   // defaults block
   const defaults = {
     mode: 'submit',
@@ -113,7 +98,14 @@ export function buildConfigSource(opts: ConfigTemplateOptions): string {
   lines.push(`    ui: '${defaults.ui}',`);
   lines.push(`    overwrite: ${defaults.overwrite},`);
   lines.push(`    serverAction: ${defaults.serverAction},`);
-  lines.push(`    formProvider: ${defaults.formProvider}`);
+  lines.push(`    formProvider: ${defaults.formProvider},`);
+  if (defaults.optimization?.level) {
+    lines.push(`    optimization: { level: ${defaults.optimization.level} }`);
+  } else {
+    lines.push(
+      `    // optimization: { level: 2 }  // 1 = decompose, 2 = native rules, 3 = cross-field`
+    );
+  }
   lines.push(`  },`);
 
   // include/exclude

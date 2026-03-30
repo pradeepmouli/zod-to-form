@@ -19,3 +19,4 @@ Thumbs.db
 *.tsbuildinfo
 .claude/settings.local.json
 sgconfig.yml
+docs/html/

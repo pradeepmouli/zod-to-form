@@ -1,12 +1,17 @@
-import type { $ZodType as ZodType } from 'zod/v4/core';
+import type {
+  $ZodType as ZodType,
+  $ZodDiscriminatedUnion,
+  $ZodUnion,
+  $ZodObject,
+  $ZodLiteral
+} from 'zod/v4/core';
 import type { FormField, FormFieldOption, FormProcessorContext, ProcessParams } from '../types.js';
 import { inferLabel } from '../utils.js';
-import { getDef, getShape } from './_utils.js';
 
 function getLiteralValues(schema: ZodType): (string | number | boolean)[] {
-  const def = getDef(schema);
-  if (def['type'] === 'literal') {
-    const values = def['values'] as (string | number | boolean)[] | undefined;
+  const def = schema._zod.def;
+  if (def.type === 'literal') {
+    const values = (def as { values?: (string | number | boolean)[] }).values;
     return values ?? [];
   }
   return [];
@@ -22,29 +27,28 @@ function buildOptionFromLiteral(schema: ZodType): FormFieldOption | null {
 
 function isAllLiterals(options: ZodType[]): boolean {
   return options.every((opt) => {
-    const def = getDef(opt);
-    return def['type'] === 'literal';
+    return opt._zod.def.type === 'literal';
   });
 }
 
 export function processUnion(
-  schema: ZodType,
+  schema: $ZodUnion,
   ctx: FormProcessorContext,
   field: FormField,
   params: ProcessParams
 ): void {
-  const def = getDef(schema);
-  const options = def['options'] as ZodType[] | undefined;
-  const discriminator = def['discriminator'] as string | undefined;
+  const def = schema._zod.def;
+  const options = def.options as ZodType[] | undefined;
 
   if (!options || options.length === 0) {
     field.component = 'Input';
     return;
   }
 
-  // Discriminated union
-  if (discriminator) {
-    processDiscriminatedUnion(field, options, discriminator, params, ctx);
+  // Discriminated union: $ZodDiscriminatedUnion extends $ZodUnion, so def.type is "union"
+  // but the def has a `discriminator` property. Delegate to the specialized processor.
+  if ('discriminator' in def && typeof def.discriminator === 'string') {
+    processDiscriminatedUnion(schema as unknown as $ZodDiscriminatedUnion, ctx, field, params);
     return;
   }
 
@@ -61,13 +65,21 @@ export function processUnion(
   field.component = 'Input';
 }
 
-function processDiscriminatedUnion(
+export function processDiscriminatedUnion(
+  schema: $ZodDiscriminatedUnion,
+  ctx: FormProcessorContext,
   field: FormField,
-  options: ZodType[],
-  discriminator: string,
-  params: ProcessParams,
-  ctx: FormProcessorContext
+  params: ProcessParams
 ): void {
+  const def = schema._zod.def;
+  const options = def.options as ZodType[] | undefined;
+  const discriminator = def.discriminator;
+
+  if (!options || options.length === 0 || !discriminator) {
+    field.component = 'Input';
+    return;
+  }
+
   field.component = 'Select';
   field.props['_discriminator'] = discriminator;
 
@@ -75,22 +87,18 @@ function processDiscriminatedUnion(
   const variants: Record<string, FormField[]> = {};
 
   for (const variantSchema of options) {
-    const variantDef = getDef(variantSchema);
-    const shape = getShape(variantDef);
+    const shape = (variantSchema as $ZodObject)._zod.def.shape as Record<string, ZodType>;
 
-    // Find the discriminator literal value
     const discSchema = shape[discriminator];
     if (!discSchema) continue;
 
-    const discDef = getDef(discSchema);
-    const discValues = discDef['values'] as (string | number | boolean)[] | undefined;
+    const discValues = (discSchema as $ZodLiteral)._zod.def.values;
     const discValue = discValues?.[0];
     if (discValue === undefined) continue;
 
     const strValue = String(discValue);
     selectOptions.push({ value: strValue, label: inferLabel(strValue) });
 
-    // Build children for this variant (excluding the discriminator field itself)
     if (ctx.processChild) {
       const variantChildren: FormField[] = Object.entries(shape)
         .filter(([key]) => key !== discriminator)

@@ -23,14 +23,18 @@ export function transpile(source: string): TranspileResult {
     });
     return { ok: true, code: result.code };
   } catch (err: unknown) {
-    const error = err as { message?: string; loc?: { line?: number; column?: number } };
+    const message = err instanceof Error ? err.message : 'Syntax error';
+    const loc =
+      err && typeof err === 'object' && 'loc' in err
+        ? (err as { loc?: { line?: number; column?: number } }).loc
+        : undefined;
     return {
       ok: false,
       error: {
         type: 'syntax',
-        message: error.message ?? 'Syntax error',
-        line: error.loc?.line,
-        column: error.loc?.column
+        message,
+        line: loc?.line,
+        column: loc?.column
       }
     };
   }

@@ -20,17 +20,6 @@ type ShadcnConfigSnapshot = {
   sourcePath?: string;
 };
 
-type FormPrimitivesConfig = {
-  field: string;
-  label: string;
-  control: string;
-};
-
-type DiscoveredFormPrimitives = {
-  primitives: FormPrimitivesConfig;
-  sources: string[];
-};
-
 export type InitResult = {
   outputPath: string;
   code: string;
@@ -50,10 +39,6 @@ async function exists(filePath: string): Promise<boolean> {
   } catch {
     return false;
   }
-}
-
-function logStep(step: string): void {
-  console.log(step);
 }
 
 function logVerbose(verbose: boolean, message: string): void {
@@ -170,90 +155,6 @@ function extractExportedNames(code: string): Set<string> {
   return names;
 }
 
-async function discoverFormPrimitives(
-  cwd: string,
-  modulePath: string,
-  snapshot: ShadcnConfigSnapshot,
-  verbose: boolean
-): Promise<DiscoveredFormPrimitives> {
-  const defaults: FormPrimitivesConfig = {
-    field: 'Field',
-    label: 'FieldLabel',
-    control: 'FieldControl'
-  };
-
-  const candidateModules: string[] = [modulePath];
-  if (snapshot.aliases['ui']) {
-    candidateModules.push(`${snapshot.aliases['ui']}/field`);
-  }
-
-  const exportedNames = new Set<string>();
-  const sourceByExport = new Map<string, string>();
-
-  for (const candidateModule of candidateModules) {
-    const basePath = resolveModuleBasePath(cwd, candidateModule, snapshot);
-    if (!basePath) {
-      continue;
-    }
-
-    for (const filePath of getCandidateFiles(basePath)) {
-      if (!(await exists(filePath))) {
-        continue;
-      }
-
-      try {
-        const code = await readFile(filePath, 'utf8');
-        const fileExports = extractExportedNames(code);
-        for (const name of fileExports) {
-          exportedNames.add(name);
-          if (!sourceByExport.has(name)) {
-            sourceByExport.set(name, toPosixPath(path.relative(cwd, filePath)));
-          }
-        }
-        logVerbose(verbose, `scanned exports from ${toPosixPath(path.relative(cwd, filePath))}`);
-      } catch (err) {
-        logVerbose(
-          verbose,
-          `skipping unreadable candidate ${toPosixPath(path.relative(cwd, filePath))}: ${err instanceof Error ? err.message : String(err)}`
-        );
-      }
-    }
-  }
-
-  const field = exportedNames.has('Field')
-    ? 'Field'
-    : exportedNames.has('FormField')
-      ? 'FormField'
-      : defaults.field;
-
-  const label = exportedNames.has('FieldLabel')
-    ? 'FieldLabel'
-    : exportedNames.has('FormLabel')
-      ? 'FormLabel'
-      : exportedNames.has('Label')
-        ? 'Label'
-        : defaults.label;
-
-  const control = exportedNames.has('FieldControl')
-    ? 'FieldControl'
-    : exportedNames.has('FormControl')
-      ? 'FormControl'
-      : defaults.control;
-
-  const sources = Array.from(
-    new Set([
-      sourceByExport.get(field),
-      sourceByExport.get(label),
-      sourceByExport.get(control)
-    ]).values()
-  ).filter((value): value is string => typeof value === 'string');
-
-  return {
-    primitives: { field, label, control },
-    sources
-  };
-}
-
 type DiscoveredComponent = {
   name: string;
   controlled: boolean;
@@ -339,7 +240,6 @@ async function discoverComponents(
   cwd: string,
   modulePath: string,
   snapshot: ShadcnConfigSnapshot,
-  formPrimitives: FormPrimitivesConfig,
   verbose: boolean
 ): Promise<DiscoveredComponents> {
   const basePath = resolveModuleBasePath(cwd, modulePath, snapshot);
@@ -348,11 +248,7 @@ async function discoverComponents(
     return { components: [] };
   }
 
-  const primitiveNames = new Set([
-    formPrimitives.field,
-    formPrimitives.label,
-    formPrimitives.control
-  ]);
+  const primitiveNames = new Set<string>();
 
   const componentMap = new Map<string, boolean>();
   let source: string | undefined;
@@ -532,7 +428,6 @@ function buildConfigTemplate(
   outputPath: string,
   modulePath: string,
   explicitModulePath: string | undefined,
-  formPrimitives: FormPrimitivesConfig,
   componentEntries: DiscoveredComponent[],
   discoveredSchemas: DiscoveredSchemas,
   explicitSchemaPath: string | undefined,
@@ -565,7 +460,6 @@ function buildConfigTemplate(
     schemaExports: discoveredSchemas.exports,
     preset,
     overrides,
-    formPrimitives,
     defaults: {
       mode: 'submit',
       ui: 'shadcn',
@@ -638,7 +532,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   const verbose = options.verbose ?? false;
   const outputPath = resolveOutputPath(cwd, options.out);
 
-  logStep('[1/5] Detecting project configuration');
+  console.log('[1/5] Detecting project configuration');
   const shadcn = await detectShadcnConfig(cwd);
   logVerbose(verbose, `shadcn components.json found: ${String(shadcn.exists)}`);
   if (shadcn.sourcePath) {
@@ -648,30 +542,12 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
     logVerbose(verbose, `aliases: ${JSON.stringify(shadcn.aliases)}`);
   }
 
-  logStep('[2/5] Discovering components');
+  console.log('[2/5] Discovering components');
   const modulePath = resolveComponentModulePath(options, shadcn);
-  const discoveredPrimitives = await discoverFormPrimitives(cwd, modulePath, shadcn, verbose);
-  const discoveredComponents = await discoverComponents(
-    cwd,
-    modulePath,
-    shadcn,
-    discoveredPrimitives.primitives,
-    verbose
-  );
+  const discoveredComponents = await discoverComponents(cwd, modulePath, shadcn, verbose);
   logVerbose(verbose, `components import path: ${modulePath}`);
-  logVerbose(verbose, `formPrimitives: ${JSON.stringify(discoveredPrimitives.primitives)}`);
-  if (discoveredPrimitives.sources.length > 0) {
-    logVerbose(verbose, `formPrimitives source: ${discoveredPrimitives.sources.join(', ')}`);
-  } else {
-    logVerbose(verbose, `formPrimitives source: defaults`);
-  }
 
-  // Styled autodiscovery output
-  const p = discoveredPrimitives.primitives;
   console.log('\nDetected components:');
-  console.log(`  \u2713 Field \u2192 ${p.field}`);
-  console.log(`  \u2713 Label \u2192 ${p.label}`);
-  console.log(`  \u2713 Control \u2192 ${p.control}`);
 
   if (discoveredComponents.components.length > 0) {
     console.log('\nDiscovered field types:');
@@ -685,7 +561,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
 
   console.log(`\nUsing components from: ${modulePath}`);
 
-  logStep('[3/5] Discovering schemas');
+  console.log('[3/5] Discovering schemas');
   const discoveredSchemas = await discoverSchemas(cwd, options.schemas, verbose);
 
   if (discoveredSchemas.exports.length > 0) {
@@ -700,7 +576,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
     console.log('\nNo schemas discovered (use --schemas <path> to specify)');
   }
 
-  logStep('[4/5] Building config template');
+  console.log('[4/5] Building config template');
   const preset = shadcn.exists ? ('shadcn' as const) : undefined;
   const componentEntries = resolveComponentEntries(discoveredComponents, preset);
   const code = buildConfigTemplate(
@@ -708,14 +584,13 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
     outputPath,
     modulePath,
     options.components,
-    discoveredPrimitives.primitives,
     componentEntries,
     discoveredSchemas,
     options.schemas,
     preset
   );
 
-  logStep('[5/5] Validating output target');
+  console.log('[5/5] Validating output target');
   const outputExists = await exists(outputPath);
   if (outputExists && !options.force) {
     const summary = `Skipped: ${toPosixPath(path.relative(cwd, outputPath))} already exists (use --force to overwrite).`;
@@ -730,7 +605,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   }
 
   if (options.dryRun) {
-    logStep('Dry run (no files written)');
+    console.log('Dry run (no files written)');
     process.stdout.write(code);
     const summary = `Dry run complete for ${toPosixPath(path.relative(cwd, outputPath))}.`;
     console.log(`\n[summary] ${summary}`);
@@ -743,7 +618,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
     };
   }
 
-  logStep('Writing component config');
+  console.log('Writing component config');
   await mkdir(path.dirname(outputPath), { recursive: true });
   await writeFile(outputPath, code, 'utf8');
   const summary = `Wrote ${toPosixPath(path.relative(cwd, outputPath))}${

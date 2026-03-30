@@ -9,6 +9,10 @@ interface EvalState {
   isEvaluating: boolean;
 }
 
+function isEvaluationError(err: unknown): err is EvaluationError {
+  return err !== null && typeof err === 'object' && 'type' in err && 'message' in err;
+}
+
 export function useDebouncedEval(source: string, debounceMs = 300): EvalState {
   const clientRef = useRef<EvalWorkerClient | null>(null);
   const [evalState, setEvalState] = useState<EvalState>({
@@ -43,19 +47,13 @@ export function useDebouncedEval(source: string, debounceMs = 300): EvalState {
         });
       } catch (err: unknown) {
         // Cancelled evals are expected during rapid typing — ignore them
-        if (
-          err &&
-          typeof err === 'object' &&
-          'message' in err &&
-          (err as EvaluationError).message === 'Cancelled'
-        ) {
+        if (isEvaluationError(err) && err.message === 'Cancelled') {
           setEvalState((s) => ({ ...s, isEvaluating: false }));
           return;
         }
-        const error: EvaluationError =
-          err && typeof err === 'object' && 'type' in err && 'message' in err
-            ? (err as EvaluationError)
-            : { type: 'runtime', message: err instanceof Error ? err.message : String(err) };
+        const error: EvaluationError = isEvaluationError(err)
+          ? err
+          : { type: 'runtime', message: err instanceof Error ? err.message : String(err) };
         setEvalState((s) => ({
           fields: s.fields,
           error,

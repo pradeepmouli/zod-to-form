@@ -1,12 +1,15 @@
 # zod-to-form Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-03-20
+Auto-generated from all feature plans. Last updated: 2026-03-26
 
 ## Active Technologies
 - TypeScript 5.x (strict mode) + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), commander, jiti, prettier, chokidar (CLI direct) (refactor/001-1-componentconfig-config)
 - N/A (library/CLI tool, no persistence) (refactor/001-1-componentconfig-config)
 - Browser localStorage (playground session persistence) (claude/add-z2f-playground-Cfds4)
 - TypeScript 5.x (strict mode) + React 18+, CodeMirror 6, Zod v4, React Hook Form 7+, @zod-to-form/core, @zod-to-form/react, fflate (new — zip for export) (004-studio-layout-redesign)
+- TypeScript 5.x (strict mode) + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), @hookform/resolvers (005-api-surface-cleanup)
+- N/A (library) (005-api-surface-cleanup)
+- TypeScript 5.x with strict mode + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), @hookform/resolvers (peer — conditional after optimization) (006-validation-optimization)
 
 - TypeScript 5.x (strict mode)
 - Zod v4 (v4.0.0+) — `_zod` substrate API
@@ -55,9 +58,12 @@ pnpm run dev           # Dev mode (parallel)
 - Metadata precedence: form registry → global registry → inferred defaults
 
 ## Recent Changes
+- 006-validation-optimization: Added TypeScript 5.x with strict mode + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), @hookform/resolvers (peer — conditional after optimization)
+
+## Backlog
+- **Vite plugin**: When built, should strip the `@hookform/resolvers` import from `useZodForm` when `optimization` is enabled in z2f config. The static import currently adds ~2KB gzipped even when unused. The plugin can detect the config at build time and rewrite to a resolver-free code path — no runtime tricks needed.
+- 005-api-surface-cleanup: Added TypeScript 5.x (strict mode) + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), @hookform/resolvers
 - 004-studio-layout-redesign: Added TypeScript 5.x (strict mode) + React 18+, CodeMirror 6, Zod v4, React Hook Form 7+, @zod-to-form/core, @zod-to-form/react, fflate (new — zip for export)
-- claude/add-z2f-playground-Cfds4: Added TypeScript 5.x (strict mode)
-- refactor/001-1-componentconfig-config: Added TypeScript 5.x (strict mode) + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), commander, jiti, prettier, chokidar (CLI direct)
 
 
 <!-- MANUAL ADDITIONS START -->

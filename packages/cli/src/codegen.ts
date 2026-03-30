@@ -1,7 +1,8 @@
 import path from 'node:path';
-import type { FormField } from '@zod-to-form/core';
+import type { FormField, SchemaLiteInfo } from '@zod-to-form/core';
 import {
   generateFormComponent as generateFormComponentBase,
+  generateSchemaLiteFile as generateSchemaLiteFileBase,
   type CodegenConfig as CodegenConfigBase
 } from '@zod-to-form/codegen';
 
@@ -36,4 +37,9 @@ export async function generateFormComponent(
     ...config,
     schemaImportPath
   });
+}
+
+export function generateSchemaLiteFile(config: CodegenConfig, info: SchemaLiteInfo): string | null {
+  const schemaImportPath = getSchemaImportPath(config);
+  return generateSchemaLiteFileBase(schemaImportPath, config.exportName, info);
 }

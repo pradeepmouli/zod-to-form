@@ -158,7 +158,8 @@ describe('configToFormValues / formValuesToConfig round-trip', () => {
           placeholder: undefined,
           order: undefined,
           hidden: undefined,
-          gridColumn: undefined
+          disabled: undefined,
+          helpText: undefined
         }
       }
     };

@@ -15,6 +15,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       },
@@ -26,6 +28,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         options: [
           { value: 'user', label: 'User' },
           { value: 'admin', label: 'Admin' }
@@ -53,8 +57,11 @@ describe('generateFormComponent', () => {
     expect(output).toContain(`register('role')`);
     expect(output).toContain('Name');
     expect(output).toContain('Role');
-    expect(output).toContain("import type { StripIndexSignature } from '@zod-to-form/core';");
+    // Zero-dep: no @zod-to-form/core or @zod-to-form/react imports
+    expect(output).not.toContain('@zod-to-form/core');
     expect(output).not.toContain('@zod-to-form/react');
+    // StripIndexSignature is inlined as a local type
+    expect(output).toContain('type StripIndexSignature<T>');
   });
 
   it('emits TODO comment when field has a custom render function', async () => {
@@ -67,6 +74,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string',
         hasCustomRender: true
@@ -133,6 +142,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }
@@ -168,6 +179,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }
@@ -189,51 +202,12 @@ describe('generateFormComponent', () => {
       }
     });
 
-    expect(output).toContain(`import { TypeSelector } from '@app/components';`);
+    expect(output).toContain(`from '@app/components';`);
+    expect(output).toContain('TypeSelector');
     expect(output).toContain(
       `<TypeSelector id="DataForm.superType" {...register('DataForm.superType')} refType="Data" />`
     );
     expect(output).not.toContain(`<input id="DataForm.superType"`);
-  });
-
-  it('uses configured formPrimitives wrappers for generated fields', async () => {
-    const fields: FormField[] = [
-      {
-        key: 'name',
-        component: 'Input',
-        props: { type: 'text' },
-        label: 'Name',
-        required: true,
-        readOnly: false,
-        hidden: false,
-        constraints: {},
-        zodType: 'string'
-      }
-    ];
-
-    const output = await generateFormComponent(fields, {
-      schemaPath: '/tmp/schema.ts',
-      exportName: 'userSchema',
-      outputPath: '/tmp/UserForm.tsx',
-      componentName: 'UserForm',
-      mode: 'submit',
-      ui: 'shadcn',
-      serverAction: false,
-      componentConfig: {
-        components: { source: '@app/components' },
-        formPrimitives: {
-          field: 'Field',
-          label: 'FieldLabel',
-          control: 'FieldControl'
-        }
-      }
-    });
-
-    expect(output).toContain(`import { Field, FieldControl, FieldLabel } from '@app/components';`);
-    expect(output).toContain('<Field>');
-    expect(output).toContain('<FieldLabel htmlFor="name">Name</FieldLabel>');
-    expect(output).toContain('<FieldControl>');
-    expect(output).toContain(`<input id="name" type="text" {...register('name')} />`);
   });
 
   it('normalizes schema import extension from .mts to .mjs', async () => {
@@ -246,6 +220,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }
@@ -274,6 +250,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }
@@ -289,7 +267,9 @@ describe('generateFormComponent', () => {
       serverAction: false
     });
 
-    expect(output).toContain("import type { StripIndexSignature } from '@zod-to-form/core';");
+    // Zero-dep: StripIndexSignature inlined, not imported
+    expect(output).not.toContain('@zod-to-form/core');
+    expect(output).toContain('type StripIndexSignature<T>');
     expect(output).toContain('type FormData = StripIndexSignature<z.output<typeof userSchema>>;');
   });
 
@@ -303,6 +283,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'array',
         arrayItem: {
@@ -313,6 +295,8 @@ describe('generateFormComponent', () => {
           required: true,
           readOnly: false,
           hidden: false,
+          disabled: false,
+          deprecated: false,
           constraints: {},
           zodType: 'object',
           children: [
@@ -324,6 +308,8 @@ describe('generateFormComponent', () => {
               required: true,
               readOnly: false,
               hidden: false,
+              disabled: false,
+              deprecated: false,
               constraints: {},
               zodType: 'string'
             },
@@ -335,6 +321,8 @@ describe('generateFormComponent', () => {
               required: false,
               readOnly: false,
               hidden: false,
+              disabled: false,
+              deprecated: false,
               constraints: {},
               zodType: 'string'
             }
@@ -371,6 +359,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'array',
         arrayItem: {
@@ -381,6 +371,8 @@ describe('generateFormComponent', () => {
           required: true,
           readOnly: false,
           hidden: false,
+          disabled: false,
+          deprecated: false,
           constraints: {},
           zodType: 'object',
           children: [
@@ -392,6 +384,8 @@ describe('generateFormComponent', () => {
               required: true,
               readOnly: true,
               hidden: false,
+              disabled: false,
+              deprecated: false,
               constraints: {},
               zodType: 'literal',
               options: [{ value: 'Item', label: 'Item' }]
@@ -424,6 +418,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'array',
         arrayItem: {
@@ -434,6 +430,8 @@ describe('generateFormComponent', () => {
           required: true,
           readOnly: false,
           hidden: false,
+          disabled: false,
+          deprecated: false,
           constraints: {},
           zodType: 'object',
           children: [
@@ -445,6 +443,8 @@ describe('generateFormComponent', () => {
               required: false,
               readOnly: false,
               hidden: false,
+              disabled: false,
+              deprecated: false,
               constraints: {},
               zodType: 'array',
               arrayItem: {
@@ -455,6 +455,8 @@ describe('generateFormComponent', () => {
                 required: false,
                 readOnly: false,
                 hidden: false,
+                disabled: false,
+                deprecated: false,
                 constraints: {},
                 zodType: 'string'
               }
@@ -541,6 +543,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'object',
         children: [
@@ -552,6 +556,8 @@ describe('generateFormComponent', () => {
             required: true,
             readOnly: false,
             hidden: false,
+            disabled: false,
+            deprecated: false,
             constraints: {},
             zodType: 'string'
           },
@@ -563,6 +569,8 @@ describe('generateFormComponent', () => {
             required: true,
             readOnly: false,
             hidden: false,
+            disabled: false,
+            deprecated: false,
             constraints: {},
             zodType: 'string'
           }
@@ -603,6 +611,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'array',
         arrayItem: {
@@ -613,6 +623,8 @@ describe('generateFormComponent', () => {
           required: true,
           readOnly: false,
           hidden: false,
+          disabled: false,
+          deprecated: false,
           constraints: {},
           zodType: 'object',
           children: [
@@ -624,6 +636,8 @@ describe('generateFormComponent', () => {
               required: true,
               readOnly: false,
               hidden: false,
+              disabled: false,
+              deprecated: false,
               constraints: {},
               zodType: 'string'
             },
@@ -635,6 +649,8 @@ describe('generateFormComponent', () => {
               required: true,
               readOnly: false,
               hidden: false,
+              disabled: false,
+              deprecated: false,
               constraints: {},
               zodType: 'object',
               children: [
@@ -646,6 +662,8 @@ describe('generateFormComponent', () => {
                   required: true,
                   readOnly: false,
                   hidden: false,
+                  disabled: false,
+                  deprecated: false,
                   constraints: {},
                   zodType: 'object',
                   children: [
@@ -657,6 +675,8 @@ describe('generateFormComponent', () => {
                       required: true,
                       readOnly: false,
                       hidden: false,
+                      disabled: false,
+                      deprecated: false,
                       constraints: {},
                       zodType: 'string'
                     }
@@ -672,6 +692,8 @@ describe('generateFormComponent', () => {
               required: true,
               readOnly: false,
               hidden: false,
+              disabled: false,
+              deprecated: false,
               constraints: {},
               zodType: 'object',
               children: [
@@ -683,6 +705,8 @@ describe('generateFormComponent', () => {
                   required: true,
                   readOnly: false,
                   hidden: false,
+                  disabled: false,
+                  deprecated: false,
                   constraints: {},
                   zodType: 'number'
                 }
@@ -733,6 +757,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string',
         options: [
@@ -770,7 +796,7 @@ describe('generateFormComponent', () => {
     expect(output).not.toContain(`register('kind')`);
   });
 
-  it('generates Controller with propMap remapping', async () => {
+  it('generates Controller with props remapping', async () => {
     const fields: FormField[] = [
       {
         key: 'type',
@@ -780,6 +806,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }
@@ -799,7 +827,7 @@ describe('generateFormComponent', () => {
           overrides: {
             TypeSelector: {
               controlled: true,
-              propMap: { onSelect: 'field.onChange', value: 'field.value' }
+              props: { onSelect: 'field.onChange', value: 'field.value' }
             }
           }
         },
@@ -824,6 +852,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }
@@ -855,6 +885,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }
@@ -886,6 +918,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       },
@@ -897,6 +931,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       },
@@ -908,6 +944,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       },
@@ -919,6 +957,8 @@ describe('generateFormComponent', () => {
         required: false,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'array'
       }
@@ -958,6 +998,8 @@ describe('generateFormComponent', () => {
         required: true,
         readOnly: false,
         hidden: false,
+        disabled: false,
+        deprecated: false,
         constraints: {},
         zodType: 'string'
       }

@@ -48,8 +48,7 @@ export function FormPreview({
     if (componentMap !== 'shadcn') {
       return undefined;
     }
-    const overrides: Record<string, { controlled?: boolean; propMap?: Record<string, string> }> =
-      {};
+    const overrides: Record<string, { controlled?: boolean; props?: Record<string, unknown> }> = {};
     for (const name of Object.keys(compiledComponents)) {
       if (SHADCN_OVERRIDES[name]) {
         overrides[name] = SHADCN_OVERRIDES[name];

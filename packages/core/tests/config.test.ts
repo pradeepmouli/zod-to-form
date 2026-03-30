@@ -34,12 +34,7 @@ describe('component config contracts (backward compat)', () => {
       overwrite: true,
       types: ['userSchema'],
       include: ['*Schema'],
-      exclude: ['Internal*'],
-      formPrimitives: {
-        field: 'Field',
-        label: 'FieldLabel',
-        control: 'FieldControl'
-      }
+      exclude: ['Internal*']
     });
 
     expect(parsed.components.source).toBe('@app/components');
@@ -55,20 +50,6 @@ describe('component config contracts (backward compat)', () => {
         include: [123]
       })
     ).toThrow(/include must be an array of strings/);
-  });
-
-  it('validateConfig rejects invalid formPrimitives shape', () => {
-    expect(() =>
-      validateConfig({
-        components: {
-          source: '@app/components',
-          overrides: {}
-        },
-        formPrimitives: {
-          label: ''
-        }
-      })
-    ).toThrow(/formPrimitives\.label must be a non-empty string/);
   });
 
   it('validateConfig rejects invalid fields shape', () => {
@@ -212,8 +193,8 @@ describe('FieldConfig alignment', () => {
           component: 'Input',
           order: 1,
           hidden: false,
-          gridColumn: 'span 2',
-          props: { placeholder: 'email@example.com' }
+          disabled: false,
+          props: { placeholder: 'email@example.com', className: 'col-span-2' }
         }
       }
     });
@@ -223,8 +204,9 @@ describe('FieldConfig alignment', () => {
     expect(fieldConfig?.component).toBe('Input');
     expect(fieldConfig?.order).toBe(1);
     expect(fieldConfig?.hidden).toBe(false);
-    expect(fieldConfig?.gridColumn).toBe('span 2');
+    expect(fieldConfig?.disabled).toBe(false);
     expect(fieldConfig?.props?.['placeholder']).toBe('email@example.com');
+    expect(fieldConfig?.props?.['className']).toBe('col-span-2');
     // FieldConfig should NOT have 'render'
     expect('render' in (fieldConfig ?? {})).toBe(false);
   });

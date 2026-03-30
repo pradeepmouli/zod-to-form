@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [],
+  "references": [
+    {
+      "path": "packages/cli/tsconfig.json"
+    },
+    {
+      "path": "packages/codegen/tsconfig.json"
+    },
+    {
+      "path": "packages/core/tsconfig.json"
+    },
+    {
+      "path": "packages/react/tsconfig.json"
+    }
+  ]
+}
