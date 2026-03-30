@@ -8,7 +8,6 @@
       "Bash(.specify/scripts/bash/update-agent-context.sh claude:*)",
       "Bash(.specify/scripts/bash/check-prerequisites.sh --json)",
       "Bash(.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks)",
-      "Bash(wc -l /private/tmp/claude-501/-Users-pmouli-GitHub-nosync-active-ts-zod-to-form/1d0a6706-48b0-41e3-acff-c54d7dd04841/tasks/*.output)",
       "Bash(pnpm --filter @zod-to-form/cli test --run -- tests/codegen.test.ts -t \"propMap\")",
       "Bash(pnpm --filter @zod-to-form/cli test --run -- tests/codegen.test.ts -t \"Controller with props\")",
       "Bash(pnpm --filter @zod-to-form/react test --run)",
