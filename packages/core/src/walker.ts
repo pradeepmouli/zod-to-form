@@ -114,6 +114,22 @@ function processField(
         optimizer(schema, optimizerCtx, field, { parentKey: key });
       }
     }
+
+    // Recursive child collectors: capture effects on nested containers.
+    //
+    // L1 intentionally excludes containers (object, array, intersection, etc.)
+    // from zodSchema — calling safeParse on a container would tree-walk the
+    // entire subtree, defeating per-field decomposition.
+    //
+    // But a nested container CAN have effects: billing: z.object({...}).superRefine(fn).
+    // Without this, the superRefine is silently dropped in the optimized path.
+    //
+    // We detect container-level effects and add the full schema as a fallthrough
+    // field to the collector. The lite schema then includes the nested field with
+    // its complete validation chain, while children are still individually optimized.
+    if (!field.validation && hasTopLevelEffects(schema)) {
+      optimizerCtx.schemaLite.addField(key, schema);
+    }
   }
 
   return field;
@@ -305,10 +321,14 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
   });
 
   if (isOptimized && collector) {
-    // Attach fallthrough field paths to the info for codegen
+    // Attach fallthrough field paths to the info for codegen.
+    // If only nested containers contributed effects (no top-level effects),
+    // create a 'nested-containers' info variant so codegen knows what happened.
     const fallthroughFields = [...collector.fields.keys()];
     if (schemaLiteInfo) {
       schemaLiteInfo.fallthroughFields = fallthroughFields;
+    } else if (fallthroughFields.length > 0) {
+      schemaLiteInfo = { type: 'nested-containers', fallthroughFields };
     }
 
     return {

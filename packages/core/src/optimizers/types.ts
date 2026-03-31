@@ -21,6 +21,7 @@ export type SchemaLiteInfo =
       hasOuterChecks: boolean;
     })
   | (SchemaLiteInfoBase & { type: 'original' })
+  | (SchemaLiteInfoBase & { type: 'nested-containers' })
   | null;
 
 export interface WalkResult {
