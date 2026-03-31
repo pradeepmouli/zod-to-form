@@ -17,7 +17,9 @@ const COMPONENT_ENFORCED_TYPES = new Set(['enum', 'boolean', 'literal']);
  * Fields with refine/transform stay as 'zodSchema' mode (strict equivalence).
  */
 const l2Optimizer: FormOptimizer = (schema: $ZodType, ctx, field) => {
-  // Only run at level 2+
+  // Safety net: L2 optimizers are only appended to the chain when level >= 2
+  // (see buildBuiltinOptimizers), so this guard can't trigger under normal
+  // operation. Kept as a defensive check for custom optimizer registrations.
   if (ctx.level < 2) return;
 
   // Skip if L1 didn't set zodSchema mode

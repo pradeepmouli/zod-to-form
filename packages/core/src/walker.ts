@@ -141,7 +141,7 @@ function collectTopLevelEffects(
       collector.addTransform(outDef['transform'] as (data: unknown) => unknown);
     } else if (out) {
       collector.setOriginalSchema(schema);
-      return { type: 'original' };
+      return { type: 'original', fallthroughFields: [] };
     }
 
     const pipeChecks = def['checks'] as unknown[] | undefined;
@@ -307,7 +307,7 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
   if (isOptimized && collector) {
     // Attach fallthrough field paths to the info for codegen
     const fallthroughFields = [...collector.fields.keys()];
-    if (schemaLiteInfo && schemaLiteInfo.type !== 'original') {
+    if (schemaLiteInfo) {
       schemaLiteInfo.fallthroughFields = fallthroughFields;
     }
 

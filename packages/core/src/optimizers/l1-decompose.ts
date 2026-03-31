@@ -10,6 +10,11 @@ const l1Optimizer: FormOptimizer = (schema: $ZodType, _ctx, field) => {
 /**
  * All Zod def.types that L1 handles. Each gets the same base optimizer
  * that stores the schema and sets zodSchema mode.
+ *
+ * Container types (object, array, tuple, union, intersection, record, map, set)
+ * are excluded — they render children, not themselves. Calling zodSchema.safeParse()
+ * on a container would tree-walk the entire subtree, defeating per-field decomposition.
+ * Containers get recursive schemaLite collectors instead.
  */
 const L1_TYPES = [
   // Leaf types
@@ -22,15 +27,6 @@ const L1_TYPES = [
   'literal',
   'file',
   'template_literal',
-  // Container types
-  'object',
-  'array',
-  'tuple',
-  'union',
-  'intersection',
-  'record',
-  'map',
-  'set',
   // Wrapper types (delegate to inner, but the schema reference is the wrapper)
   'optional',
   'nullable',

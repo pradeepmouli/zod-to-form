@@ -62,10 +62,19 @@ describe('L1 decompose optimizer', () => {
       expect(fields[0]!.validation?.mode).toBe('zodSchema');
     });
 
-    it('sets zodSchema for array fields', () => {
-      const schema = z.object({ tags: z.array(z.string()) });
+    it('does not set zodSchema for container types (array, object, etc.)', () => {
+      const schema = z.object({
+        tags: z.array(z.string()),
+        nested: z.object({ inner: z.string() })
+      });
       const { fields } = walkOptimized(schema);
-      expect(fields[0]!.validation?.mode).toBe('zodSchema');
+      const tags = fields.find((f) => f.key === 'tags')!;
+      const nested = fields.find((f) => f.key === 'nested')!;
+      // Container types should NOT get zodSchema — they render children
+      expect(tags.validation).toBeUndefined();
+      expect(tags.zodSchema).toBeUndefined();
+      expect(nested.validation).toBeUndefined();
+      expect(nested.zodSchema).toBeUndefined();
     });
   });
 

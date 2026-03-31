@@ -156,6 +156,91 @@ describe('walkSchema with optimization', () => {
     expect(fail.success).toBe(false);
   });
 
+  describe('container types are not optimized', () => {
+    it('L1: nested object fields do not get zodSchema', () => {
+      const schema = z.object({
+        name: z.string(),
+        address: z.object({ street: z.string(), city: z.string() })
+      });
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+      const address = result.fields.find((f) => f.key === 'address')!;
+      // Container should NOT get zodSchema — it renders children
+      expect(address.validation).toBeUndefined();
+      expect(address.zodSchema).toBeUndefined();
+      // But its leaf children should
+      expect(address.children).toBeDefined();
+      expect(address.children![0]!.validation?.mode).toBe('zodSchema');
+    });
+
+    it('L1: array fields do not get zodSchema', () => {
+      const schema = z.object({
+        tags: z.array(z.string())
+      });
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+      const tags = result.fields.find((f) => f.key === 'tags')!;
+      expect(tags.validation).toBeUndefined();
+      expect(tags.zodSchema).toBeUndefined();
+    });
+  });
+
+  describe('L2 integration via walker', () => {
+    it('simple string field → native mode', () => {
+      const schema = z.object({ name: z.string().min(1) });
+      const result = walkSchema(schema, { optimization: { level: 2 } }) as WalkResult;
+      expect(result.fields[0]!.validation?.mode).toBe('native');
+      expect(result.fields[0]!.zodSchema).toBeUndefined();
+    });
+
+    it('enum field → component-enforced mode', () => {
+      const schema = z.object({ role: z.enum(['admin', 'user']) });
+      const result = walkSchema(schema, { optimization: { level: 2 } }) as WalkResult;
+      expect(result.fields[0]!.validation?.mode).toBe('component-enforced');
+    });
+
+    it('field with refine → zodSchema mode', () => {
+      const schema = z.object({
+        code: z.string().refine((v) => v.startsWith('X'))
+      });
+      const result = walkSchema(schema, { optimization: { level: 2 } }) as WalkResult;
+      expect(result.fields[0]!.validation?.mode).toBe('zodSchema');
+      expect(result.fields[0]!.zodSchema).toBeDefined();
+    });
+  });
+
+  describe('schemaLiteInfo metadata', () => {
+    it('returns null schemaLiteInfo when no top-level effects', () => {
+      const schema = z.object({ name: z.string() });
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+      expect(result.schemaLiteInfo).toBeNull();
+    });
+
+    it('returns checks info for superRefine', () => {
+      const schema = z.object({ a: z.string() }).superRefine((_data, _ctx) => {});
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+      expect(result.schemaLiteInfo).not.toBeNull();
+      expect(result.schemaLiteInfo!.type).toBe('checks');
+      expect(result.schemaLiteInfo!.fallthroughFields).toBeDefined();
+    });
+
+    it('returns transform info for .transform()', () => {
+      const schema = z.object({ a: z.string() }).transform((d) => d);
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+      expect(result.schemaLiteInfo).not.toBeNull();
+      expect(result.schemaLiteInfo!.type).toBe('transform');
+      expect(result.schemaLiteInfo!.fallthroughFields).toBeDefined();
+    });
+
+    it('original variant has fallthroughFields', () => {
+      // A pipe with a non-transform output triggers the 'original' variant
+      const schema = z.object({ a: z.string() }).pipe(z.object({ a: z.string() }));
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+      if (result.schemaLiteInfo?.type === 'original') {
+        expect(result.schemaLiteInfo.fallthroughFields).toBeDefined();
+        expect(Array.isArray(result.schemaLiteInfo.fallthroughFields)).toBe(true);
+      }
+    });
+  });
+
   it('schemaLite captures ALL checks from chained superRefines', () => {
     const schema = z
       .object({ a: z.string(), b: z.string() })
