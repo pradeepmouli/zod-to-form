@@ -259,6 +259,9 @@ describe('walkSchema with optimization', () => {
       // schemaLite should be non-null because billing has effects
       expect(result.schemaLite).not.toBeNull();
 
+      // Reuses 'checks' variant with checkCount: 0 for codegen compatibility
+      expect(result.schemaLiteInfo?.type).toBe('checks');
+
       // billing should be in fallthrough fields
       expect(result.schemaLiteInfo?.fallthroughFields).toContain('billing');
 
@@ -365,6 +368,23 @@ describe('walkSchema with optimization', () => {
       const card = billing.children!.find((f) => f.key === 'billing.card')!;
       expect(card.validation?.mode).toBe('zodSchema');
       expect(card.zodSchema).toBeDefined();
+    });
+
+    it('deeply nested container effects are excluded (dot-path restriction)', () => {
+      // Containers at depth > 0 have dot-paths (e.g. "address.billing") which
+      // can't be used as flat object keys in the collector's shape. These remain
+      // on the unoptimized path (full zodResolver) for correctness.
+      const schema = z.object({
+        address: z.object({
+          billing: z.object({ card: z.string() }).superRefine((_data, _ctx) => {})
+        })
+      });
+
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+
+      // No fallthrough — billing is at "address.billing" (dot-path), excluded
+      expect(result.schemaLite).toBeNull();
+      expect(result.schemaLiteInfo).toBeNull();
     });
 
     it('nested array with superRefine becomes fallthrough', () => {

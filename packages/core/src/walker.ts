@@ -11,6 +11,23 @@ import { createBaseField } from './utils.js';
  * Record<string, unknown> don't structurally overlap.
  */
 type Def = Record<string, unknown>;
+
+/**
+ * Container types that render children rather than validating themselves.
+ * Used to detect nested container effects for fallthrough collection.
+ * Matches the set excluded from L1 in l1-decompose.ts.
+ */
+const CONTAINER_TYPES = new Set([
+  'object',
+  'array',
+  'tuple',
+  'union',
+  'intersection',
+  'record',
+  'map',
+  'set'
+]);
+
 import type { FormField, WalkOptions } from './types.js';
 import type { FormOptimizerContext, WalkResult, SchemaLiteInfo } from './optimizers/types.js';
 import { createOptimizers } from './optimizers/index.js';
@@ -121,13 +138,18 @@ function processField(
     // from zodSchema — calling safeParse on a container would tree-walk the
     // entire subtree, defeating per-field decomposition.
     //
-    // But a nested container CAN have effects: billing: z.object({...}).superRefine(fn).
+    // But a container CAN have effects: billing: z.object({...}).superRefine(fn).
     // Without this, the superRefine is silently dropped in the optimized path.
     //
     // We detect container-level effects and add the full schema as a fallthrough
     // field to the collector. The lite schema then includes the nested field with
     // its complete validation chain, while children are still individually optimized.
-    if (!field.validation && hasTopLevelEffects(schema)) {
+    //
+    // Restricted to top-level keys (no dots) because the collector builds a flat
+    // z.object({ key: schema }).loose() shape. Dot-paths like "address.billing"
+    // would become literal string keys that don't match the nested data structure.
+    // Deeply nested container effects remain on the unoptimized path (full zodResolver).
+    if (CONTAINER_TYPES.has(zodType) && !key.includes('.') && hasTopLevelEffects(schema)) {
       optimizerCtx.schemaLite.addField(key, schema);
     }
   }
@@ -323,12 +345,14 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
   if (isOptimized && collector) {
     // Attach fallthrough field paths to the info for codegen.
     // If only nested containers contributed effects (no top-level effects),
-    // create a 'nested-containers' info variant so codegen knows what happened.
+    // reuse the 'checks' variant with checkCount: 0. The existing codegen
+    // for 'checks' creates z.object({...fallthrough}).loose() and replays
+    // checks — with 0 checks, only the fallthrough fields provide validation.
     const fallthroughFields = [...collector.fields.keys()];
     if (schemaLiteInfo) {
       schemaLiteInfo.fallthroughFields = fallthroughFields;
     } else if (fallthroughFields.length > 0) {
-      schemaLiteInfo = { type: 'nested-containers', fallthroughFields };
+      schemaLiteInfo = { type: 'checks', checkCount: 0, fallthroughFields };
     }
 
     return {
