@@ -142,14 +142,10 @@ function processField(
     // Without this, the superRefine is silently dropped in the optimized path.
     //
     // We detect container-level effects and add the full schema as a fallthrough
-    // field to the collector. The lite schema then includes the nested field with
-    // its complete validation chain, while children are still individually optimized.
-    //
-    // Restricted to top-level keys (no dots) because the collector builds a flat
-    // z.object({ key: schema }).loose() shape. Dot-paths like "address.billing"
-    // would become literal string keys that don't match the nested data structure.
-    // Deeply nested container effects remain on the unoptimized path (full zodResolver).
-    if (CONTAINER_TYPES.has(zodType) && !key.includes('.') && hasTopLevelEffects(schema)) {
+    // field to the collector. The collector materializes dot-paths (e.g.
+    // "address.billing") into nested z.object wrappers so the lite schema's
+    // structure matches the actual data shape during validation.
+    if (CONTAINER_TYPES.has(zodType) && hasTopLevelEffects(schema)) {
       optimizerCtx.schemaLite.addField(key, schema);
     }
   }

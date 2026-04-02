@@ -66,10 +66,26 @@ export function createSchemaLiteCollector(): SchemaLiteCollector {
         return originalSchema;
       }
 
-      // Build lite schema from collected effects
+      // Build lite schema from collected effects.
+      //
+      // Dot-paths (e.g. "address.billing") are materialized into nested
+      // z.object({ billing: schema }).loose() wrappers so the lite schema's
+      // structure matches the actual data shape during validation.
       const shape: Record<string, $ZodType> = {};
       for (const [path, schema] of fieldMap) {
-        shape[path] = schema;
+        if (!path.includes('.')) {
+          shape[path] = schema;
+          continue;
+        }
+        const segments = path.split('.');
+        const topKey = segments[0]!;
+        // Wrap from inside out: z.object({ innermost: schema }).loose()
+        let wrapped: $ZodType = schema;
+        for (let i = segments.length - 1; i >= 1; i--) {
+          const key = segments[i]!;
+          wrapped = z.object({ [key]: wrapped }).loose() as unknown as $ZodType;
+        }
+        shape[topKey] = wrapped;
       }
 
       let result: Chainable =

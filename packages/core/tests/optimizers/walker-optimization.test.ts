@@ -370,21 +370,36 @@ describe('walkSchema with optimization', () => {
       expect(card.zodSchema).toBeDefined();
     });
 
-    it('deeply nested container effects are excluded (dot-path restriction)', () => {
-      // Containers at depth > 0 have dot-paths (e.g. "address.billing") which
-      // can't be used as flat object keys in the collector's shape. These remain
-      // on the unoptimized path (full zodResolver) for correctness.
+    it('deeply nested container effects are materialized via dot-path', () => {
       const schema = z.object({
         address: z.object({
-          billing: z.object({ card: z.string() }).superRefine((_data, _ctx) => {})
+          billing: z
+            .object({ card: z.string(), bank: z.string() })
+            .superRefine((data: any, ctx: any) => {
+              if (!data.card && !data.bank) {
+                ctx.addIssue({ code: 'custom', message: 'Need payment', path: ['card'] });
+              }
+            })
         })
       });
 
       const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
 
-      // No fallthrough — billing is at "address.billing" (dot-path), excluded
-      expect(result.schemaLite).toBeNull();
-      expect(result.schemaLiteInfo).toBeNull();
+      // Deeply nested container effects should be captured
+      expect(result.schemaLite).not.toBeNull();
+      expect(result.schemaLiteInfo?.fallthroughFields).toContain('address.billing');
+
+      // The lite schema materializes the dot-path into nested objects,
+      // so validation runs against the correct data structure
+      const fail = safeParse(result.schemaLite, {
+        address: { billing: { card: '', bank: '' } }
+      });
+      expect(fail.success).toBe(false);
+
+      const pass = safeParse(result.schemaLite, {
+        address: { billing: { card: '4111', bank: '' } }
+      });
+      expect(pass.success).toBe(true);
     });
 
     it('nested array with superRefine becomes fallthrough', () => {

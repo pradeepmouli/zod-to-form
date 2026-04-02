@@ -95,6 +95,55 @@ describe('SchemaLiteCollector', () => {
       expect(safeParse(result, { name: 'ab', extra: true }).success).toBe(true);
       expect(safeParse(result, { name: 'a' }).success).toBe(false);
     });
+
+    it('materializes dot-paths into nested object wrappers', () => {
+      // Simulates a nested container: address.billing has a superRefine
+      const billingSchema = z
+        .object({ card: z.string(), bank: z.string() })
+        .superRefine((data, ctx) => {
+          if (!data.card && !data.bank) {
+            ctx.addIssue({ code: 'custom', message: 'Need payment', path: ['card'] });
+          }
+        });
+
+      const collector = createSchemaLiteCollector();
+      collector.addField('address.billing', billingSchema as any);
+
+      const result = collector.build();
+      expect(result).not.toBeNull();
+
+      // Dot-path materialized: { address: z.object({ billing: schema }).loose() }
+      // so data is validated with correct nested structure
+      const fail = safeParse(result, {
+        address: { billing: { card: '', bank: '' } }
+      });
+      expect(fail.success).toBe(false);
+
+      const pass = safeParse(result, {
+        address: { billing: { card: '4111', bank: '' } }
+      });
+      expect(pass.success).toBe(true);
+    });
+
+    it('top-level key (no dot) is not wrapped', () => {
+      const billingSchema = z.object({ card: z.string() }).superRefine((data, ctx) => {
+        if (!data.card) {
+          ctx.addIssue({ code: 'custom', message: 'Need card', path: ['card'] });
+        }
+      });
+
+      const collector = createSchemaLiteCollector();
+      collector.addField('billing', billingSchema as any);
+
+      const result = collector.build();
+      expect(result).not.toBeNull();
+
+      const fail = safeParse(result, { billing: { card: '' } });
+      expect(fail.success).toBe(false);
+
+      const pass = safeParse(result, { billing: { card: '4111' } });
+      expect(pass.success).toBe(true);
+    });
   });
 
   describe('addTransform', () => {

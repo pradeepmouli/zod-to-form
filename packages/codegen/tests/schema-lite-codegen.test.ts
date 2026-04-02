@@ -108,5 +108,36 @@ describe('generateSchemaLiteFile', () => {
       const code = generateSchemaLiteFile(schemaPath, exportName, info)!;
       expect(code).toContain('z.object({}).loose()');
     });
+
+    it('materializes dot-paths into nested shape access', () => {
+      const info: SchemaLiteInfo = {
+        type: 'checks',
+        checkCount: 0,
+        fallthroughFields: ['address.billing']
+      };
+      const code = generateSchemaLiteFile(schemaPath, exportName, info)!;
+
+      // Should navigate into nested shapes
+      expect(code).toContain(`${exportName}._zod.def.shape["address"]._zod.def.shape["billing"]`);
+      // Should wrap in z.object().loose() for the nested segment
+      expect(code).toContain('z.object({ "billing":');
+      expect(code).toContain('}).loose()');
+      // Top-level key should be "address"
+      expect(code).toContain('"address":');
+    });
+
+    it('top-level fallthrough uses direct shape access without nesting', () => {
+      const info: SchemaLiteInfo = {
+        type: 'checks',
+        checkCount: 0,
+        fallthroughFields: ['billing']
+      };
+      const code = generateSchemaLiteFile(schemaPath, exportName, info)!;
+
+      // Direct shape access — one level only, no nested ._zod.def.shape chain
+      expect(code).toContain(`"billing": ${exportName}._zod.def.shape["billing"]`);
+      // Should NOT have nested shape navigation (no second ._zod.def.shape)
+      expect(code).not.toContain('._zod.def.shape["billing"]._zod.def.shape');
+    });
   });
 });

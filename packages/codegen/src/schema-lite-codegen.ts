@@ -1,6 +1,36 @@
 import type { SchemaLiteInfo } from '@zod-to-form/core';
 
 /**
+ * Generate a shape access expression for a fallthrough field path.
+ *
+ * For top-level keys ("billing"), returns:
+ *   schema._zod.def.shape["billing"]
+ *
+ * For nested paths ("address.billing"), wraps in z.object().loose()
+ * so the lite schema's structure matches the actual data shape:
+ *   z.object({ "billing": schema._zod.def.shape["address"]._zod.def.shape["billing"] }).loose()
+ */
+function emitShapeAccess(exportName: string, path: string): { topKey: string; expr: string } {
+  const segments = path.split('.');
+  // Navigate through nested shapes: schema._zod.def.shape["a"]._zod.def.shape["b"]
+  const accessor = segments.map((seg) => `._zod.def.shape[${JSON.stringify(seg)}]`).join('');
+  const fullAccess = `${exportName}${accessor}`;
+
+  const topKey = segments[0]!;
+
+  if (segments.length === 1) {
+    return { topKey, expr: fullAccess };
+  }
+
+  // Wrap from inside out for nested paths
+  let expr = fullAccess;
+  for (let i = segments.length - 1; i >= 1; i--) {
+    expr = `z.object({ ${JSON.stringify(segments[i]!)}: ${expr} }).loose()`;
+  }
+  return { topKey, expr };
+}
+
+/**
  * Emit the base lite schema: z.object({...fallthrough}).loose()
  * Fallthrough fields are referenced from the imported schema's shape.
  */
@@ -9,7 +39,10 @@ function emitLiteBase(exportName: string, fallthroughFields: string[]): string {
     return `let _lite: any = z.object({}).loose();`;
   }
   const shapeEntries = fallthroughFields
-    .map((key) => `${JSON.stringify(key)}: ${exportName}._zod.def.shape[${JSON.stringify(key)}]`)
+    .map((key) => {
+      const { topKey, expr } = emitShapeAccess(exportName, key);
+      return `${JSON.stringify(topKey)}: ${expr}`;
+    })
     .join(', ');
   return `let _lite: any = z.object({ ${shapeEntries} }).loose();`;
 }
