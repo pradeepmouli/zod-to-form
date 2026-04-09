@@ -38,7 +38,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate HTML docs
-        run: pnpm docs
+        run: pnpm run docs
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
