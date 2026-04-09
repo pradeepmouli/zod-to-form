@@ -11,6 +11,23 @@ import { createBaseField } from './utils.js';
  * Record<string, unknown> don't structurally overlap.
  */
 type Def = Record<string, unknown>;
+
+/**
+ * Container types that render children rather than validating themselves.
+ * Used to detect nested container effects for fallthrough collection.
+ * Matches the set excluded from L1 in l1-decompose.ts.
+ */
+const CONTAINER_TYPES = new Set([
+  'object',
+  'array',
+  'tuple',
+  'union',
+  'intersection',
+  'record',
+  'map',
+  'set'
+]);
+
 import type { FormField, WalkOptions } from './types.js';
 import type { FormOptimizerContext, WalkResult, SchemaLiteInfo } from './optimizers/types.js';
 import { createOptimizers } from './optimizers/index.js';
@@ -114,6 +131,33 @@ function processField(
         optimizer(schema, optimizerCtx, field, { parentKey: key });
       }
     }
+
+    // Recursive child collectors: capture effects on nested containers.
+    //
+    // L1 intentionally excludes containers (object, array, intersection, etc.)
+    // from zodSchema — calling safeParse on a container would tree-walk the
+    // entire subtree, defeating per-field decomposition.
+    //
+    // But a container CAN have effects: billing: z.object({...}).superRefine(fn).
+    // Without this, the superRefine is silently dropped in the optimized path.
+    //
+    // We detect container-level effects and add the full schema as a fallthrough
+    // field to the collector. The collector materializes dot-paths (e.g.
+    // "address.billing") into nested z.object wrappers so the lite schema's
+    // structure matches the actual data shape during validation.
+    //
+    // Keys with numeric segments (e.g. "items.0", "tuple.1", "map.0.key") are
+    // array/tuple element template paths — NOT real object property paths.
+    // SchemaLiteCollector materializes them into nested z.object wrappers, which
+    // would produce the wrong shape (expecting { items: { "0": ... } } instead of
+    // an array). Skip these paths entirely.
+    const hasArrayIndexSegment = key.split('.').some((segment) => /^\d+$/.test(segment));
+    const isContainerWithEffects =
+      (CONTAINER_TYPES.has(zodType) && hasTopLevelEffects(schema)) ||
+      (zodType === 'pipe' && isPipeWrappedContainer(schema));
+    if (!hasArrayIndexSegment && isContainerWithEffects) {
+      optimizerCtx.schemaLite.addField(key, schema);
+    }
   }
 
   return field;
@@ -141,7 +185,7 @@ function collectTopLevelEffects(
       collector.addTransform(outDef['transform'] as (data: unknown) => unknown);
     } else if (out) {
       collector.setOriginalSchema(schema);
-      return { type: 'original' };
+      return { type: 'original', fallthroughFields: [] };
     }
 
     const pipeChecks = def['checks'] as unknown[] | undefined;
@@ -225,6 +269,17 @@ function hasTopLevelEffects(schema: ZodType): boolean {
 }
 
 /**
+ * Detect if a schema is a pipe whose input is a container type.
+ * e.g. z.object({...}).transform(fn) produces a pipe where def.in is an object.
+ */
+function isPipeWrappedContainer(schema: ZodType): boolean {
+  const def = schema._zod.def as unknown as Def;
+  if (def['type'] !== 'pipe') return false;
+  const innerDef = (def['in'] as ZodType | undefined)?._zod?.def as unknown as Def | undefined;
+  return innerDef ? CONTAINER_TYPES.has(innerDef['type'] as string) : false;
+}
+
+/**
  * Walk a Zod schema and produce a FormField[] tree.
  * When optimization option is set, returns WalkResult with fields + schemaLite.
  */
@@ -305,10 +360,16 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
   });
 
   if (isOptimized && collector) {
-    // Attach fallthrough field paths to the info for codegen
+    // Attach fallthrough field paths to the info for codegen.
+    // If only nested containers contributed effects (no top-level effects),
+    // reuse the 'checks' variant with checkCount: 0. The existing codegen
+    // for 'checks' creates z.object({...fallthrough}).loose() and replays
+    // checks — with 0 checks, only the fallthrough fields provide validation.
     const fallthroughFields = [...collector.fields.keys()];
-    if (schemaLiteInfo && schemaLiteInfo.type !== 'original') {
+    if (schemaLiteInfo) {
       schemaLiteInfo.fallthroughFields = fallthroughFields;
+    } else if (fallthroughFields.length > 0) {
+      schemaLiteInfo = { type: 'checks', checkCount: 0, fallthroughFields };
     }
 
     return {

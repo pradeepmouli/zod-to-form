@@ -79,7 +79,10 @@ describe('Validation equivalence (FR-017)', () => {
 
       const { fields } = walkOptimized(schema);
       expect(fields).toHaveLength(1);
-      expect(fields[0]!.validation?.mode).toBeDefined();
+      // Container types don't get validation mode — they render children
+      expect(fields[0]!.validation).toBeUndefined();
+      // But leaf children should be optimized
+      expect(fields[0]!.children![0]!.validation?.mode).toBeDefined();
     });
 
     it('handles arrays', () => {
@@ -88,7 +91,8 @@ describe('Validation equivalence (FR-017)', () => {
       });
 
       const { fields } = walkOptimized(schema);
-      expect(fields[0]!.validation?.mode).toBeDefined();
+      // Container types don't get validation mode
+      expect(fields[0]!.validation).toBeUndefined();
     });
 
     it('handles unions', () => {
@@ -97,7 +101,8 @@ describe('Validation equivalence (FR-017)', () => {
       });
 
       const { fields } = walkOptimized(schema);
-      expect(fields[0]!.validation?.mode).toBeDefined();
+      // Container types don't get validation mode
+      expect(fields[0]!.validation).toBeUndefined();
     });
   });
 

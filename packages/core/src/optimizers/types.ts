@@ -6,16 +6,21 @@ export type { NativeRules, ValidationStrategy };
 
 // ─── Walk Result ─────────────────────────────────────────────────────
 
+/** Base properties shared by all non-null SchemaLiteInfo variants */
+interface SchemaLiteInfoBase {
+  /** Fields that could not be inlined and remain in the lite schema */
+  fallthroughFields: string[];
+}
+
 /** Metadata for codegen to reconstruct the lite schema in a generated file */
 export type SchemaLiteInfo =
-  | { type: 'checks'; checkCount: number; fallthroughFields: string[] }
-  | {
+  | (SchemaLiteInfoBase & { type: 'checks'; checkCount: number })
+  | (SchemaLiteInfoBase & {
       type: 'transform';
       hasInnerChecks: boolean;
       hasOuterChecks: boolean;
-      fallthroughFields: string[];
-    }
-  | { type: 'original' }
+    })
+  | (SchemaLiteInfoBase & { type: 'original' })
   | null;
 
 export interface WalkResult {
