@@ -126,6 +126,27 @@ describe('generateSchemaLiteFile', () => {
       expect(code).toContain('"address":');
     });
 
+    it('merges sibling dot-paths sharing the same topKey into one z.object entry', () => {
+      // Both "address.billing" and "address.shipping" must produce a single
+      // "address" key with both sub-entries — not duplicate/overwrite keys.
+      const info: SchemaLiteInfo = {
+        type: 'checks',
+        checkCount: 0,
+        fallthroughFields: ['address.billing', 'address.shipping']
+      };
+      const code = generateSchemaLiteFile(schemaPath, exportName, info)!;
+
+      // Should navigate to both nested shapes
+      expect(code).toContain(`${exportName}._zod.def.shape["address"]._zod.def.shape["billing"]`);
+      expect(code).toContain(`${exportName}._zod.def.shape["address"]._zod.def.shape["shipping"]`);
+      // The merged wrapper must include both sub-keys
+      expect(code).toContain('"billing":');
+      expect(code).toContain('"shipping":');
+      // "address" key must appear exactly once (no duplicate keys)
+      const addressMatches = (code.match(/"address":/g) ?? []).length;
+      expect(addressMatches).toBe(1);
+    });
+
     it('top-level fallthrough uses direct shape access without nesting', () => {
       const info: SchemaLiteInfo = {
         type: 'checks',

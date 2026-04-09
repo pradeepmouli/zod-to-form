@@ -421,6 +421,99 @@ describe('walkSchema with optimization', () => {
       const pass = safeParse(result.schemaLite, { items: ['a', 'b'] });
       expect(pass.success).toBe(true);
     });
+
+    it('array element with superRefine does NOT become fallthrough (numeric segment skipped)', () => {
+      // The array itself has no effects; only its element schema does.
+      // The element is processed under key "items.0" (a template path with a
+      // numeric segment) — it must NOT be added as a fallthrough field because
+      // SchemaLiteCollector would materialise it into
+      //   { items: z.object({ "0": schema }).loose() }
+      // which is the wrong shape for an array.
+      const schema = z.object({
+        items: z.array(
+          z.object({ a: z.string(), b: z.string() }).superRefine((data, ctx) => {
+            if (data.a === data.b) {
+              ctx.addIssue({ code: 'custom', message: 'Must differ', path: ['a'] });
+            }
+          })
+        )
+      });
+
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+      // No top-level or array-level effects → schemaLite should be null
+      expect(result.schemaLite).toBeNull();
+      // The numeric-segment key "items.0" must not appear in fallthroughFields
+      const fields = result.schemaLiteInfo?.fallthroughFields ?? [];
+      expect(fields.some((f) => f.includes('.0'))).toBe(false);
+    });
+
+    it('two sibling nested containers sharing the same topKey are both captured', () => {
+      // "address.billing" and "address.shipping" both have effects.
+      // They must be merged into a single z.object({ billing, shipping }).loose()
+      // under the "address" key — not overwrite each other.
+      const billingRule = (data: any, ctx: any) => {
+        if (!data.card) {
+          ctx.addIssue({ code: 'custom', message: 'card required', path: ['card'] });
+        }
+      };
+      const shippingRule = (data: any, ctx: any) => {
+        if (!data.street) {
+          ctx.addIssue({ code: 'custom', message: 'street required', path: ['street'] });
+        }
+      };
+
+      const schema = z.object({
+        address: z.object({
+          billing: z.object({ card: z.string() }).superRefine(billingRule),
+          shipping: z.object({ street: z.string() }).superRefine(shippingRule)
+        })
+      });
+
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+      expect(result.schemaLite).not.toBeNull();
+      // Both paths should appear
+      expect(result.schemaLiteInfo?.fallthroughFields).toContain('address.billing');
+      expect(result.schemaLiteInfo?.fallthroughFields).toContain('address.shipping');
+
+      // billing rule fires
+      const failBilling = safeParse(result.schemaLite, {
+        address: { billing: { card: '' }, shipping: { street: 'Main St' } }
+      });
+      expect(failBilling.success).toBe(false);
+
+      // shipping rule fires
+      const failShipping = safeParse(result.schemaLite, {
+        address: { billing: { card: '4111' }, shipping: { street: '' } }
+      });
+      expect(failShipping.success).toBe(false);
+
+      // Both pass
+      const pass = safeParse(result.schemaLite, {
+        address: { billing: { card: '4111' }, shipping: { street: 'Main St' } }
+      });
+      expect(pass.success).toBe(true);
+    });
+
+    it('pipe-wrapped nested container becomes fallthrough', () => {
+      // z.object({...}).transform(...) wraps the object in a pipe; the zodType
+      // seen by processField is "pipe", not "object". The walker must still
+      // collect it as a fallthrough field.
+      const schema = z.object({
+        payment: z.object({ amount: z.number() }).transform((data) => ({
+          ...data,
+          amountCents: Math.round(data.amount * 100)
+        }))
+      });
+
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+      expect(result.schemaLite).not.toBeNull();
+      expect(result.schemaLiteInfo?.fallthroughFields).toContain('payment');
+
+      // The transform should run during lite-schema validation
+      const parsed = safeParse(result.schemaLite, { payment: { amount: 1.5 } });
+      expect(parsed.success).toBe(true);
+      expect((parsed.data as any)?.payment?.amountCents).toBe(150);
+    });
   });
 
   it('schemaLite captures ALL checks from chained superRefines', () => {

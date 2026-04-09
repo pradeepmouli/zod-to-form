@@ -1,50 +1,76 @@
 import type { SchemaLiteInfo } from '@zod-to-form/core';
 
 /**
- * Generate a shape access expression for a fallthrough field path.
- *
- * For top-level keys ("billing"), returns:
- *   schema._zod.def.shape["billing"]
- *
- * For nested paths ("address.billing"), wraps in z.object().loose()
- * so the lite schema's structure matches the actual data shape:
- *   z.object({ "billing": schema._zod.def.shape["address"]._zod.def.shape["billing"] }).loose()
+ * Build a tree grouping dot-paths by their first segment.
+ * Returns a map from topKey to either null (leaf) or a list of sub-paths.
  */
-function emitShapeAccess(exportName: string, path: string): { topKey: string; expr: string } {
-  const segments = path.split('.');
-  // Navigate through nested shapes: schema._zod.def.shape["a"]._zod.def.shape["b"]
-  const accessor = segments.map((seg) => `._zod.def.shape[${JSON.stringify(seg)}]`).join('');
+function buildPathTree(paths: string[]): Map<string, string[] | null> {
+  const tree = new Map<string, string[] | null>();
+  for (const path of paths) {
+    const dotIndex = path.indexOf('.');
+    if (dotIndex === -1) {
+      tree.set(path, null);
+    } else {
+      const topKey = path.slice(0, dotIndex);
+      const rest = path.slice(dotIndex + 1);
+      const sub = tree.get(topKey);
+      if (sub === null) {
+        // topKey was previously a direct leaf (no nested sub-path).
+        // Convert to a nested-path list to include this new sub-path.
+        tree.set(topKey, [rest]);
+      } else if (sub === undefined) {
+        tree.set(topKey, [rest]);
+      } else {
+        sub.push(rest);
+      }
+    }
+  }
+  return tree;
+}
+
+/**
+ * Emit a shape-access expression for a path segment tree node.
+ * accessPath: schema property segments already navigated (used to build shape accessor).
+ * subPaths: null for a leaf (direct shape access), or array of remaining sub-paths to merge.
+ */
+function emitShapeNode(
+  exportName: string,
+  accessPath: string[],
+  subPaths: string[] | null
+): string {
+  const accessor = accessPath.map((seg) => `._zod.def.shape[${JSON.stringify(seg)}]`).join('');
   const fullAccess = `${exportName}${accessor}`;
 
-  const topKey = segments[0]!;
-
-  if (segments.length === 1) {
-    return { topKey, expr: fullAccess };
+  if (subPaths === null) {
+    return fullAccess;
   }
 
-  // Wrap from inside out for nested paths
-  let expr = fullAccess;
-  for (let i = segments.length - 1; i >= 1; i--) {
-    expr = `z.object({ ${JSON.stringify(segments[i]!)}: ${expr} }).loose()`;
+  // Group sub-paths and emit a merged z.object().loose() for this level
+  const subTree = buildPathTree(subPaths);
+  const entries: string[] = [];
+  for (const [key, nested] of subTree) {
+    const expr = emitShapeNode(exportName, [...accessPath, key], nested);
+    entries.push(`${JSON.stringify(key)}: ${expr}`);
   }
-  return { topKey, expr };
+  return `z.object({ ${entries.join(', ')} }).loose()`;
 }
 
 /**
  * Emit the base lite schema: z.object({...fallthrough}).loose()
  * Fallthrough fields are referenced from the imported schema's shape.
+ * Paths sharing the same top-level key are merged into a single z.object entry.
  */
 function emitLiteBase(exportName: string, fallthroughFields: string[]): string {
   if (fallthroughFields.length === 0) {
     return `let _lite: any = z.object({}).loose();`;
   }
-  const shapeEntries = fallthroughFields
-    .map((key) => {
-      const { topKey, expr } = emitShapeAccess(exportName, key);
-      return `${JSON.stringify(topKey)}: ${expr}`;
-    })
-    .join(', ');
-  return `let _lite: any = z.object({ ${shapeEntries} }).loose();`;
+  const topTree = buildPathTree(fallthroughFields);
+  const entries: string[] = [];
+  for (const [key, subPaths] of topTree) {
+    const expr = emitShapeNode(exportName, [key], subPaths);
+    entries.push(`${JSON.stringify(key)}: ${expr}`);
+  }
+  return `let _lite: any = z.object({ ${entries.join(', ')} }).loose();`;
 }
 
 /**

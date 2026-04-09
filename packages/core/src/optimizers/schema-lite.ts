@@ -12,6 +12,41 @@ interface Chainable {
 }
 
 /**
+ * Recursively materialize a map of dot-paths into a nested object shape,
+ * merging all paths that share the same top-level key.
+ *
+ * For example, given { "address.billing": billingSchema, "address.shipping": shippingSchema }:
+ *   → { address: z.object({ billing: billingSchema, shipping: shippingSchema }).loose() }
+ */
+function materializeFieldMap(fieldMap: ReadonlyMap<string, $ZodType>): Record<string, $ZodType> {
+  const topShape: Record<string, $ZodType> = {};
+  const nestedGroups = new Map<string, Map<string, $ZodType>>();
+
+  for (const [path, schema] of fieldMap) {
+    const dotIndex = path.indexOf('.');
+    if (dotIndex === -1) {
+      topShape[path] = schema;
+    } else {
+      const topKey = path.slice(0, dotIndex);
+      const rest = path.slice(dotIndex + 1);
+      let group = nestedGroups.get(topKey);
+      if (!group) {
+        group = new Map();
+        nestedGroups.set(topKey, group);
+      }
+      group.set(rest, schema);
+    }
+  }
+
+  for (const [topKey, subMap] of nestedGroups) {
+    const nestedShape = materializeFieldMap(subMap);
+    topShape[topKey] = z.object(nestedShape).loose() as unknown as $ZodType;
+  }
+
+  return topShape;
+}
+
+/**
  * Create a new SchemaLiteCollector instance.
  *
  * Builds a "lite" schema for submit-time validation:
@@ -71,22 +106,11 @@ export function createSchemaLiteCollector(): SchemaLiteCollector {
       // Dot-paths (e.g. "address.billing") are materialized into nested
       // z.object({ billing: schema }).loose() wrappers so the lite schema's
       // structure matches the actual data shape during validation.
-      const shape: Record<string, $ZodType> = {};
-      for (const [path, schema] of fieldMap) {
-        if (!path.includes('.')) {
-          shape[path] = schema;
-          continue;
-        }
-        const segments = path.split('.');
-        const topKey = segments[0]!;
-        // Wrap from inside out: z.object({ innermost: schema }).loose()
-        let wrapped: $ZodType = schema;
-        for (let i = segments.length - 1; i >= 1; i--) {
-          const key = segments[i]!;
-          wrapped = z.object({ [key]: wrapped }).loose() as unknown as $ZodType;
-        }
-        shape[topKey] = wrapped;
-      }
+      //
+      // Paths sharing the same topKey (e.g. "address.billing" and
+      // "address.shipping") are merged into a single z.object shape rather
+      // than overwriting each other.
+      const shape = materializeFieldMap(fieldMap);
 
       let result: Chainable =
         Object.keys(shape).length > 0

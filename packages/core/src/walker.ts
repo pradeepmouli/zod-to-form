@@ -145,7 +145,17 @@ function processField(
     // field to the collector. The collector materializes dot-paths (e.g.
     // "address.billing") into nested z.object wrappers so the lite schema's
     // structure matches the actual data shape during validation.
-    if (CONTAINER_TYPES.has(zodType) && hasTopLevelEffects(schema)) {
+    //
+    // Keys with numeric segments (e.g. "items.0", "tuple.1", "map.0.key") are
+    // array/tuple element template paths — NOT real object property paths.
+    // SchemaLiteCollector materializes them into nested z.object wrappers, which
+    // would produce the wrong shape (expecting { items: { "0": ... } } instead of
+    // an array). Skip these paths entirely.
+    const hasArrayIndexSegment = key.split('.').some((segment) => /^\d+$/.test(segment));
+    const isContainerWithEffects =
+      (CONTAINER_TYPES.has(zodType) && hasTopLevelEffects(schema)) ||
+      (zodType === 'pipe' && isPipeWrappedContainer(schema));
+    if (!hasArrayIndexSegment && isContainerWithEffects) {
       optimizerCtx.schemaLite.addField(key, schema);
     }
   }
@@ -256,6 +266,17 @@ function hasTopLevelEffects(schema: ZodType): boolean {
   }
 
   return checks.length > 0;
+}
+
+/**
+ * Detect if a schema is a pipe whose input is a container type.
+ * e.g. z.object({...}).transform(fn) produces a pipe where def.in is an object.
+ */
+function isPipeWrappedContainer(schema: ZodType): boolean {
+  const def = schema._zod.def as unknown as Def;
+  if (def['type'] !== 'pipe') return false;
+  const innerDef = (def['in'] as ZodType | undefined)?._zod?.def as unknown as Def | undefined;
+  return innerDef ? CONTAINER_TYPES.has(innerDef['type'] as string) : false;
 }
 
 /**
