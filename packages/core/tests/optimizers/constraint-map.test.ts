@@ -115,6 +115,52 @@ describe('extractNativeRules', () => {
     });
   });
 
+  describe('bag["patterns"] verification (Zod v4 substrate)', () => {
+    it('z.string().email() stores regex in bag["patterns"] as a Set', () => {
+      const schema = z.string().email();
+      const bag = (schema as unknown as $ZodType)._zod.bag as Record<string, unknown>;
+      const patterns = bag['patterns'];
+
+      expect(patterns).toBeInstanceOf(Set);
+      expect((patterns as Set<unknown>).size).toBe(1);
+
+      const regex = [...(patterns as Set<unknown>)][0];
+      expect(regex).toBeInstanceOf(RegExp);
+      expect((regex as RegExp).test('user@example.com')).toBe(true);
+      expect((regex as RegExp).test('invalid')).toBe(false);
+    });
+
+    it('z.string().uuid() stores regex in bag["patterns"]', () => {
+      const schema = z.string().uuid();
+      const bag = (schema as unknown as $ZodType)._zod.bag as Record<string, unknown>;
+      const patterns = bag['patterns'];
+
+      expect(patterns).toBeInstanceOf(Set);
+      expect((patterns as Set<unknown>).size).toBe(1);
+    });
+
+    it('z.string().regex() stores regex in bag["patterns"]', () => {
+      const schema = z.string().regex(/^[A-Z]+$/);
+      const bag = (schema as unknown as $ZodType)._zod.bag as Record<string, unknown>;
+      const patterns = bag['patterns'];
+
+      expect(patterns).toBeInstanceOf(Set);
+      expect((patterns as Set<unknown>).size).toBe(1);
+
+      const regex = [...(patterns as Set<unknown>)][0];
+      expect(regex).toEqual(/^[A-Z]+$/);
+    });
+
+    it('multiple patterns accumulate in the Set', () => {
+      const schema = z.string().email().regex(/^test/);
+      const bag = (schema as unknown as $ZodType)._zod.bag as Record<string, unknown>;
+      const patterns = bag['patterns'];
+
+      expect(patterns).toBeInstanceOf(Set);
+      expect((patterns as Set<unknown>).size).toBe(2);
+    });
+  });
+
   describe('bare schemas (no constraints)', () => {
     it('returns empty rules for z.string() (no constraints)', () => {
       const rules = extract(z.string());

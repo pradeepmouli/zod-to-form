@@ -241,6 +241,281 @@ describe('walkSchema with optimization', () => {
     });
   });
 
+  describe('recursive child collectors for nested containers', () => {
+    it('captures superRefine on nested object as fallthrough field', () => {
+      const billingRule = (data: any, ctx: any) => {
+        if (!data.card && !data.bank) {
+          ctx.addIssue({ code: 'custom', message: 'Need card or bank', path: ['card'] });
+        }
+      };
+
+      const schema = z.object({
+        name: z.string(),
+        billing: z.object({ card: z.string(), bank: z.string() }).superRefine(billingRule)
+      });
+
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+
+      // schemaLite should be non-null because billing has effects
+      expect(result.schemaLite).not.toBeNull();
+
+      // Reuses 'checks' variant with checkCount: 0 for codegen compatibility
+      expect(result.schemaLiteInfo?.type).toBe('checks');
+
+      // billing should be in fallthrough fields
+      expect(result.schemaLiteInfo?.fallthroughFields).toContain('billing');
+
+      // The billing superRefine should actually run
+      const fail = safeParse(result.schemaLite, {
+        name: 'Alice',
+        billing: { card: '', bank: '' }
+      });
+      expect(fail.success).toBe(false);
+
+      const pass = safeParse(result.schemaLite, {
+        name: 'Alice',
+        billing: { card: '4111', bank: '' }
+      });
+      expect(pass.success).toBe(true);
+    });
+
+    it('nested object without effects does NOT become fallthrough', () => {
+      const schema = z.object({
+        address: z.object({ street: z.string(), city: z.string() })
+      });
+
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+
+      // No effects anywhere → null schemaLite
+      expect(result.schemaLite).toBeNull();
+      expect(result.schemaLiteInfo?.fallthroughFields ?? []).not.toContain('address');
+    });
+
+    it('captures refine on nested object', () => {
+      const schema = z.object({
+        period: z
+          .object({ start: z.string(), end: z.string() })
+          .refine((d) => d.start < d.end, { message: 'Start must precede end' })
+      });
+
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+      expect(result.schemaLite).not.toBeNull();
+      expect(result.schemaLiteInfo?.fallthroughFields).toContain('period');
+
+      const fail = safeParse(result.schemaLite, { period: { start: 'z', end: 'a' } });
+      expect(fail.success).toBe(false);
+
+      const pass = safeParse(result.schemaLite, { period: { start: 'a', end: 'z' } });
+      expect(pass.success).toBe(true);
+    });
+
+    it('combines root superRefine with nested container effects', () => {
+      const schema = z
+        .object({
+          billing: z.object({ card: z.string(), bank: z.string() }).superRefine((data, ctx) => {
+            if (!data.card && !data.bank) {
+              ctx.addIssue({ code: 'custom', message: 'Need payment', path: ['card'] });
+            }
+          }),
+          shipping: z.string()
+        })
+        .superRefine((data, ctx) => {
+          if (!data.shipping) {
+            ctx.addIssue({ code: 'custom', message: 'Shipping required', path: ['shipping'] });
+          }
+        });
+
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+      expect(result.schemaLite).not.toBeNull();
+
+      // Both root-level and nested effects should be captured
+      expect(result.schemaLiteInfo?.fallthroughFields).toContain('billing');
+
+      // Root superRefine: shipping required
+      const failShipping = safeParse(result.schemaLite, {
+        billing: { card: '4111', bank: '' },
+        shipping: ''
+      });
+      expect(failShipping.success).toBe(false);
+
+      // Nested superRefine: billing needs card or bank
+      const failBilling = safeParse(result.schemaLite, {
+        billing: { card: '', bank: '' },
+        shipping: 'UPS'
+      });
+      expect(failBilling.success).toBe(false);
+
+      // Both pass
+      const pass = safeParse(result.schemaLite, {
+        billing: { card: '4111', bank: '' },
+        shipping: 'UPS'
+      });
+      expect(pass.success).toBe(true);
+    });
+
+    it('children of nested container with effects still get optimized', () => {
+      const schema = z.object({
+        billing: z.object({ card: z.string().min(4), bank: z.string() }).superRefine(() => {})
+      });
+
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+      const billing = result.fields.find((f) => f.key === 'billing')!;
+
+      // Container itself should NOT have zodSchema (L1 exclusion preserved)
+      expect(billing.zodSchema).toBeUndefined();
+
+      // But its leaf children should still be individually optimized
+      const card = billing.children!.find((f) => f.key === 'billing.card')!;
+      expect(card.validation?.mode).toBe('zodSchema');
+      expect(card.zodSchema).toBeDefined();
+    });
+
+    it('deeply nested container effects are materialized via dot-path', () => {
+      const schema = z.object({
+        address: z.object({
+          billing: z
+            .object({ card: z.string(), bank: z.string() })
+            .superRefine((data: any, ctx: any) => {
+              if (!data.card && !data.bank) {
+                ctx.addIssue({ code: 'custom', message: 'Need payment', path: ['card'] });
+              }
+            })
+        })
+      });
+
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+
+      // Deeply nested container effects should be captured
+      expect(result.schemaLite).not.toBeNull();
+      expect(result.schemaLiteInfo?.fallthroughFields).toContain('address.billing');
+
+      // The lite schema materializes the dot-path into nested objects,
+      // so validation runs against the correct data structure
+      const fail = safeParse(result.schemaLite, {
+        address: { billing: { card: '', bank: '' } }
+      });
+      expect(fail.success).toBe(false);
+
+      const pass = safeParse(result.schemaLite, {
+        address: { billing: { card: '4111', bank: '' } }
+      });
+      expect(pass.success).toBe(true);
+    });
+
+    it('nested array with superRefine becomes fallthrough', () => {
+      const schema = z.object({
+        items: z.array(z.string()).superRefine((arr, ctx) => {
+          if (new Set(arr).size !== arr.length) {
+            ctx.addIssue({ code: 'custom', message: 'Duplicates not allowed' });
+          }
+        })
+      });
+
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+      expect(result.schemaLite).not.toBeNull();
+      expect(result.schemaLiteInfo?.fallthroughFields).toContain('items');
+
+      const fail = safeParse(result.schemaLite, { items: ['a', 'a'] });
+      expect(fail.success).toBe(false);
+
+      const pass = safeParse(result.schemaLite, { items: ['a', 'b'] });
+      expect(pass.success).toBe(true);
+    });
+
+    it('array element with superRefine does NOT become fallthrough (numeric segment skipped)', () => {
+      // The array itself has no effects; only its element schema does.
+      // The element is processed under key "items.0" (a template path with a
+      // numeric segment) — it must NOT be added as a fallthrough field because
+      // SchemaLiteCollector would materialise it into
+      //   { items: z.object({ "0": schema }).loose() }
+      // which is the wrong shape for an array.
+      const schema = z.object({
+        items: z.array(
+          z.object({ a: z.string(), b: z.string() }).superRefine((data, ctx) => {
+            if (data.a === data.b) {
+              ctx.addIssue({ code: 'custom', message: 'Must differ', path: ['a'] });
+            }
+          })
+        )
+      });
+
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+      // No top-level or array-level effects → schemaLite should be null
+      expect(result.schemaLite).toBeNull();
+      // The numeric-segment key "items.0" must not appear in fallthroughFields
+      const fields = result.schemaLiteInfo?.fallthroughFields ?? [];
+      expect(fields.some((f) => f.includes('.0'))).toBe(false);
+    });
+
+    it('two sibling nested containers sharing the same topKey are both captured', () => {
+      // "address.billing" and "address.shipping" both have effects.
+      // They must be merged into a single z.object({ billing, shipping }).loose()
+      // under the "address" key — not overwrite each other.
+      const billingRule = (data: any, ctx: any) => {
+        if (!data.card) {
+          ctx.addIssue({ code: 'custom', message: 'card required', path: ['card'] });
+        }
+      };
+      const shippingRule = (data: any, ctx: any) => {
+        if (!data.street) {
+          ctx.addIssue({ code: 'custom', message: 'street required', path: ['street'] });
+        }
+      };
+
+      const schema = z.object({
+        address: z.object({
+          billing: z.object({ card: z.string() }).superRefine(billingRule),
+          shipping: z.object({ street: z.string() }).superRefine(shippingRule)
+        })
+      });
+
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+      expect(result.schemaLite).not.toBeNull();
+      // Both paths should appear
+      expect(result.schemaLiteInfo?.fallthroughFields).toContain('address.billing');
+      expect(result.schemaLiteInfo?.fallthroughFields).toContain('address.shipping');
+
+      // billing rule fires
+      const failBilling = safeParse(result.schemaLite, {
+        address: { billing: { card: '' }, shipping: { street: 'Main St' } }
+      });
+      expect(failBilling.success).toBe(false);
+
+      // shipping rule fires
+      const failShipping = safeParse(result.schemaLite, {
+        address: { billing: { card: '4111' }, shipping: { street: '' } }
+      });
+      expect(failShipping.success).toBe(false);
+
+      // Both pass
+      const pass = safeParse(result.schemaLite, {
+        address: { billing: { card: '4111' }, shipping: { street: 'Main St' } }
+      });
+      expect(pass.success).toBe(true);
+    });
+
+    it('pipe-wrapped nested container becomes fallthrough', () => {
+      // z.object({...}).transform(...) wraps the object in a pipe; the zodType
+      // seen by processField is "pipe", not "object". The walker must still
+      // collect it as a fallthrough field.
+      const schema = z.object({
+        payment: z.object({ amount: z.number() }).transform((data) => ({
+          ...data,
+          amountCents: Math.round(data.amount * 100)
+        }))
+      });
+
+      const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+      expect(result.schemaLite).not.toBeNull();
+      expect(result.schemaLiteInfo?.fallthroughFields).toContain('payment');
+
+      // The transform should run during lite-schema validation
+      const parsed = safeParse(result.schemaLite, { payment: { amount: 1.5 } });
+      expect(parsed.success).toBe(true);
+      expect((parsed.data as any)?.payment?.amountCents).toBe(150);
+    });
+  });
+
   it('schemaLite captures ALL checks from chained superRefines', () => {
     const schema = z
       .object({ a: z.string(), b: z.string() })
