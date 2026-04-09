@@ -1,5 +1,18 @@
 # @zod-to-form/react
 
+## 0.6.4
+
+### Patch Changes
+
+- [#51](https://github.com/pradeepmouli/zod-to-form/pull/51) [`261aa2e`](https://github.com/pradeepmouli/zod-to-form/commit/261aa2ee3d03485a291ae663abc04194833b3bbd) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - Add speckit workflows for feature modification, phases-to-issues, and refactoring
+  - Add speckit.verify post-implementation verification workflow
+  - Add issuesync hooks for GitHub issue status synchronization
+  - Improve speckit.review to orchestrate specialized review agents (code, comments, tests, errors, types, simplify)
+  - Add UI/UX Pro Max BM25 search capability for design guidelines
+  - Remove legacy skill shim files
+- Updated dependencies [[`261aa2e`](https://github.com/pradeepmouli/zod-to-form/commit/261aa2ee3d03485a291ae663abc04194833b3bbd)]:
+  - @zod-to-form/core@0.6.4
+
 ## 0.6.3
 
 ### Patch Changes
