@@ -2,33 +2,57 @@
 
 ## `processArray`
 ```ts
-processArray(schema: $ZodType, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
+processArray(schema: $ZodArray, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
+- `schema: $ZodArray` — 
 - `ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `params: ProcessParams` — 
 
 ## `processTuple`
 ```ts
-processTuple(schema: $ZodType, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
+processTuple(schema: $ZodTuple, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
+- `schema: $ZodTuple` — 
 - `ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `params: ProcessParams` — 
 
 ## `processBoolean`
 ```ts
-processBoolean(schema: $ZodType, ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
+processBoolean(schema: $ZodBoolean, ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
+- `schema: $ZodBoolean` — 
 - `ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `_params: ProcessParams` — 
+
+## `processMap`
+Process z.map() — renders as an array-like repeater of key-value pair fieldsets.
+Each entry has a `key` field and a `value` field derived from the Map's type params.
+```ts
+processMap(schema: $ZodMap, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
+```
+**Parameters:**
+- `schema: $ZodMap` — 
+- `ctx: FormProcessorContext` — 
+- `field: FormField` — 
+- `params: ProcessParams` — 
+
+## `processSet`
+Process z.set() — renders as an array-like repeater of unique items.
+The value type determines the item template.
+```ts
+processSet(schema: $ZodSet, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
+```
+**Parameters:**
+- `schema: $ZodSet` — 
+- `ctx: FormProcessorContext` — 
+- `field: FormField` — 
+- `params: ProcessParams` — 
 
 ## `processCrossRef`
 ```ts
@@ -42,30 +66,30 @@ processCrossRef(schema: $ZodType, ctx: FormProcessorContext, field: FormField, _
 
 ## `processDate`
 ```ts
-processDate(_schema: $ZodType, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
+processDate(_schema: $ZodDate<unknown> | $ZodISODate, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `_schema: $ZodType` — 
+- `_schema: $ZodDate<unknown> | $ZodISODate` — 
 - `_ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `_params: ProcessParams` — 
 
 ## `processEnum`
 ```ts
-processEnum(schema: $ZodType, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
+processEnum(schema: $ZodEnum, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
+- `schema: $ZodEnum` — 
 - `_ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `_params: ProcessParams` — 
 
 ## `processLiteral`
 ```ts
-processLiteral(schema: $ZodType, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
+processLiteral(schema: $ZodLiteral, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
+- `schema: $ZodLiteral` — 
 - `_ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `_params: ProcessParams` — 
@@ -92,120 +116,140 @@ processFile(_schema: $ZodType, _ctx: FormProcessorContext, field: FormField, _pa
 
 ## `processNumber`
 ```ts
-processNumber(schema: $ZodType, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
+processNumber(schema: $ZodNumber<unknown> | $ZodBigInt<unknown>, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
+- `schema: $ZodNumber<unknown> | $ZodBigInt<unknown>` — 
 - `_ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `_params: ProcessParams` — 
 
 ## `processObject`
 ```ts
-processObject(schema: $ZodType, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
+processObject(schema: $ZodObject, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
+- `schema: $ZodObject` — 
 - `ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `params: ProcessParams` — 
 
 ## `processIntersection`
 ```ts
-processIntersection(schema: $ZodType, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
+processIntersection(schema: $ZodIntersection, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
+- `schema: $ZodIntersection` — 
 - `ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `params: ProcessParams` — 
 
-## `processString`
+## `processRecord`
 ```ts
-processString(schema: $ZodType, ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
+processRecord(schema: $ZodRecord, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
+- `schema: $ZodRecord` — 
+- `_ctx: FormProcessorContext` — 
+- `field: FormField` — 
+- `_params: ProcessParams` — 
+
+## `processString`
+```ts
+processString(schema: $ZodString, ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
+```
+**Parameters:**
+- `schema: $ZodString` — 
 - `ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `_params: ProcessParams` — 
 
 ## `processTemplateLiteral`
 ```ts
-processTemplateLiteral(schema: $ZodType, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
+processTemplateLiteral(schema: $ZodTemplateLiteral, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
+- `schema: $ZodTemplateLiteral` — 
 - `_ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `_params: ProcessParams` — 
 
 ## `processUnion`
 ```ts
-processUnion(schema: $ZodType, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
+processUnion(schema: $ZodUnion, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
+- `schema: $ZodUnion` — 
+- `ctx: FormProcessorContext` — 
+- `field: FormField` — 
+- `params: ProcessParams` — 
+
+## `processDiscriminatedUnion`
+```ts
+processDiscriminatedUnion(schema: $ZodDiscriminatedUnion, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
+```
+**Parameters:**
+- `schema: $ZodDiscriminatedUnion` — 
 - `ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `params: ProcessParams` — 
 
 ## `processDefault`
 ```ts
-processDefault(schema: $ZodType, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
+processDefault(schema: $ZodDefault<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>> | $ZodPrefault<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>>, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
+- `schema: $ZodDefault<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>> | $ZodPrefault<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>>` — 
 - `ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `params: ProcessParams` — 
 
 ## `processLazy`
 ```ts
-processLazy(schema: $ZodType, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
+processLazy(schema: $ZodLazy, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
+- `schema: $ZodLazy` — 
 - `ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `params: ProcessParams` — 
 
 ## `processNullable`
 ```ts
-processNullable(schema: $ZodType, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
+processNullable(schema: $ZodNullable, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
+- `schema: $ZodNullable` — 
 - `ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `params: ProcessParams` — 
 
 ## `processOptional`
 ```ts
-processOptional(schema: $ZodType, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
+processOptional(schema: $ZodOptional, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
+- `schema: $ZodOptional` — 
 - `ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `params: ProcessParams` — 
 
 ## `processPipe`
 ```ts
-processPipe(schema: $ZodType, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
+processPipe(schema: $ZodPipe, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
+- `schema: $ZodPipe` — 
 - `ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `params: ProcessParams` — 
 
 ## `processReadonly`
 ```ts
-processReadonly(schema: $ZodType, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
+processReadonly(schema: $ZodReadonly, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
+- `schema: $ZodReadonly` — 
 - `ctx: FormProcessorContext` — 
 - `field: FormField` — 
 - `params: ProcessParams` — 
