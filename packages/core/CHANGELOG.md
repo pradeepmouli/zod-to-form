@@ -1,5 +1,16 @@
 # @zod-to-form/core
 
+## 0.6.3
+
+### Patch Changes
+
+- [#64](https://github.com/pradeepmouli/zod-to-form/pull/64) [`bf4b93c`](https://github.com/pradeepmouli/zod-to-form/commit/bf4b93c5734d43239919ebe6d23ebc0eb944a4a1) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - Add speckit workflows for feature modification, phases-to-issues, and refactoring
+  - Add speckit.verify post-implementation verification workflow
+  - Add issuesync hooks for GitHub issue status synchronization
+  - Improve speckit.review to orchestrate specialized review agents (code, comments, tests, errors, types, simplify)
+  - Add UI/UX Pro Max BM25 search capability for design guidelines
+  - Remove legacy skill shim files
+
 ## 0.6.2
 
 ### Patch Changes
