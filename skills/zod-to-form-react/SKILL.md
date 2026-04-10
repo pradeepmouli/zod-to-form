@@ -1,22 +1,26 @@
 ---
 name: zod-to-form-react
-description: "API reference for @zod-to-form/react Use when working with ZodForm, useZodForm, normalizeFormValues, wrapWithSchemaLite."
+description: Schema-Driven Form Generation for Zod v4 - walks Zod internal type tree using processor registry pattern to emit React form components instead of JSON Schema
 license: MIT
 ---
 
 # @zod-to-form/react
 
+Schema-Driven Form Generation for Zod v4 - walks Zod internal type tree using processor registry pattern to emit React form components instead of JSON Schema
+
 ## When to Use
 
-- Calling `ZodForm()`, `useZodForm()`, `normalizeFormValues()`, `wrapWithSchemaLite()`
-- Typing with `FormField`, `FormFieldOption`, `FormFieldConstraints`, `FormMeta`, `FieldConfig`
-- Using constants/variables `defaultComponentMap`, `FIELD_COMPONENT_NAMES`, `shadcnComponentMap`
+- API surface: 4 functions, 8 types, 3 constants
 
 ## Quick Reference
 
-**4 functions** — `ZodForm`, `useZodForm`, `normalizeFormValues`, `wrapWithSchemaLite`
-**8 types** — `FormField`, `FormFieldOption`, `FormFieldConstraints`, `FormMeta`, `FieldConfig`, `WalkOptions`, `RuntimeComponentConfig`, `FieldTemplateProps`
-**3 variables** — `defaultComponentMap`, `FIELD_COMPONENT_NAMES`, `shadcnComponentMap`
+**ZodForm:** `ZodForm`
+**useZodForm:** `useZodForm`
+**normalize.d:** `normalizeFormValues`
+**SchemaLiteSubmit:** `wrapWithSchemaLite`
+**types.d:** `FormField`, `FormFieldOption`, `FormFieldConstraints`, `FormMeta`, `FieldConfig`, `WalkOptions`
+**FieldRenderer:** `RuntimeComponentConfig`, `FieldTemplateProps`
+`defaultComponentMap`, `FIELD_COMPONENT_NAMES`, `shadcnComponentMap`
 
 ## Links
 

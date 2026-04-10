@@ -514,6 +514,201 @@ describe('walkSchema with optimization', () => {
       expect(parsed.success).toBe(true);
       expect((parsed.data as any)?.payment?.amountCents).toBe(150);
     });
+
+    describe('container schema pruning', () => {
+      it('pruned schemaLite does NOT re-validate child field constraints', () => {
+        // billing.card has min(4) — after pruning, the schemaLite should NOT
+        // enforce this constraint (L1/L2 handles it per-field).
+        const schema = z.object({
+          billing: z
+            .object({ card: z.string().min(4), bank: z.string().min(2) })
+            .superRefine((data, ctx) => {
+              if (!data.card && !data.bank) {
+                ctx.addIssue({ code: 'custom', message: 'Need payment', path: ['card'] });
+              }
+            })
+        });
+
+        const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+        expect(result.schemaLite).not.toBeNull();
+
+        // The superRefine fires when both empty
+        const fail = safeParse(result.schemaLite, {
+          billing: { card: '', bank: '' }
+        });
+        expect(fail.success).toBe(false);
+
+        // With card='ab' (too short for min(4)), the superRefine passes because
+        // card is truthy. Pruned schemaLite must NOT reject this — only L1/L2 does.
+        const passLite = safeParse(result.schemaLite, {
+          billing: { card: 'ab', bank: '' }
+        });
+        expect(passLite.success).toBe(true);
+      });
+
+      it('pruned schemaLite accepts wrong types for child fields', () => {
+        // After pruning, z.any() replaces the typed container. Passing a
+        // number where a string is expected should not fail schemaLite —
+        // field-level validation handles type checking.
+        const schema = z.object({
+          period: z
+            .object({ start: z.string(), end: z.string() })
+            .refine((d) => d.start < d.end, { message: 'Start must precede end' })
+        });
+
+        const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+        expect(result.schemaLite).not.toBeNull();
+
+        // Valid strings that violate the refine
+        const failRefine = safeParse(result.schemaLite, { period: { start: 'z', end: 'a' } });
+        expect(failRefine.success).toBe(false);
+
+        // Numbers passed where strings expected — pruned schema accepts this
+        const acceptsWrongTypes = safeParse(result.schemaLite, { period: { start: 1, end: 2 } });
+        expect(acceptsWrongTypes.success).toBe(true);
+      });
+
+      it('pruned array container only runs effects, not element validation', () => {
+        const schema = z.object({
+          items: z.array(z.string().email()).superRefine((arr, ctx) => {
+            if (new Set(arr).size !== arr.length) {
+              ctx.addIssue({ code: 'custom', message: 'Duplicates not allowed' });
+            }
+          })
+        });
+
+        const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+        expect(result.schemaLite).not.toBeNull();
+
+        // Duplicate check fires
+        const failDupe = safeParse(result.schemaLite, { items: ['a@b.com', 'a@b.com'] });
+        expect(failDupe.success).toBe(false);
+
+        // Non-email strings pass schemaLite (pruned — no element validation)
+        const passNotEmail = safeParse(result.schemaLite, { items: ['not-email', 'also-not'] });
+        expect(passNotEmail.success).toBe(true);
+      });
+
+      it('pruned pipe container preserves transform without child validation', () => {
+        const schema = z.object({
+          payment: z.object({ amount: z.number().min(1).max(10000) }).transform((data) => ({
+            ...data,
+            amountCents: Math.round(data.amount * 100)
+          }))
+        });
+
+        const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+        expect(result.schemaLite).not.toBeNull();
+
+        // Transform runs correctly
+        const parsed = safeParse(result.schemaLite, { payment: { amount: 1.5 } });
+        expect(parsed.success).toBe(true);
+        expect((parsed.data as any)?.payment?.amountCents).toBe(150);
+
+        // Amount out of range (min 1, max 10000) passes schemaLite —
+        // child constraints are pruned.
+        const passOutOfRange = safeParse(result.schemaLite, { payment: { amount: 99999 } });
+        expect(passOutOfRange.success).toBe(true);
+        expect((passOutOfRange.data as any)?.payment?.amountCents).toBe(9999900);
+      });
+
+      it('pruned pipe container preserves inner superRefine + transform', () => {
+        // z.object({...}).superRefine(fn).transform(fn2) creates a pipe where
+        // the inner object has the superRefine and the pipe has the transform.
+        const schema = z.object({
+          data: z
+            .object({ a: z.string().min(5), b: z.string().min(5) })
+            .superRefine((data, ctx) => {
+              if (data.a === data.b) {
+                ctx.addIssue({ code: 'custom', message: 'Must differ', path: ['b'] });
+              }
+            })
+            .transform((d) => ({ ...d, validated: true }))
+        });
+
+        const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+        expect(result.schemaLite).not.toBeNull();
+
+        // SuperRefine fires: a === b
+        const fail = safeParse(result.schemaLite, { data: { a: 'same', b: 'same' } });
+        expect(fail.success).toBe(false);
+
+        // SuperRefine passes, transform runs
+        const pass = safeParse(result.schemaLite, { data: { a: 'hello', b: 'world' } });
+        expect(pass.success).toBe(true);
+        expect((pass.data as any)?.data?.validated).toBe(true);
+
+        // Short strings (violate min(5)) pass schemaLite — child constraints pruned
+        const passShort = safeParse(result.schemaLite, { data: { a: 'hi', b: 'yo' } });
+        expect(passShort.success).toBe(true);
+        expect((passShort.data as any)?.data?.validated).toBe(true);
+      });
+
+      it('multi-level effects: parent and child container both have superRefine', () => {
+        // address has a superRefine, and address.billing also has a superRefine.
+        // Both must be preserved in schemaLite without the parent overwriting the child.
+        const schema = z.object({
+          address: z
+            .object({
+              billing: z.object({ card: z.string(), bank: z.string() }).superRefine((data, ctx) => {
+                if (!data.card && !data.bank) {
+                  ctx.addIssue({ code: 'custom', message: 'Need payment', path: ['card'] });
+                }
+              }),
+              country: z.string()
+            })
+            .superRefine((data, ctx) => {
+              if (data.country === 'US' && !data.billing.card) {
+                ctx.addIssue({
+                  code: 'custom',
+                  message: 'US requires card',
+                  path: ['billing', 'card']
+                });
+              }
+            })
+        });
+
+        const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+        expect(result.schemaLite).not.toBeNull();
+
+        // Inner superRefine: billing needs card or bank
+        const failInner = safeParse(result.schemaLite, {
+          address: { billing: { card: '', bank: '' }, country: 'UK' }
+        });
+        expect(failInner.success).toBe(false);
+
+        // Outer superRefine: US requires card
+        const failOuter = safeParse(result.schemaLite, {
+          address: { billing: { card: '', bank: 'Chase' }, country: 'US' }
+        });
+        expect(failOuter.success).toBe(false);
+
+        // Both pass
+        const pass = safeParse(result.schemaLite, {
+          address: { billing: { card: '4111', bank: '' }, country: 'US' }
+        });
+        expect(pass.success).toBe(true);
+      });
+
+      it('pruned schema preserves object structure (not z.any())', () => {
+        // The pruned schema should be z.object({}).loose().check(...)
+        // NOT z.any(). Verify by passing a non-object value — it should fail.
+        const schema = z.object({
+          billing: z.object({ card: z.string(), bank: z.string() }).superRefine((_data, _ctx) => {})
+        });
+
+        const result = walkSchema(schema, { optimization: { level: 1 } }) as WalkResult;
+        expect(result.schemaLite).not.toBeNull();
+
+        // Object data passes (inlined fields omitted, .loose() passes them through)
+        const passObj = safeParse(result.schemaLite, { billing: { card: 123, bank: null } });
+        expect(passObj.success).toBe(true);
+
+        // Non-object data for billing fails — object structure is preserved
+        const failNonObj = safeParse(result.schemaLite, { billing: 'not-an-object' });
+        expect(failNonObj.success).toBe(false);
+      });
+    });
   });
 
   it('schemaLite captures ALL checks from chained superRefines', () => {

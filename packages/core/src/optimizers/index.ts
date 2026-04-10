@@ -6,7 +6,13 @@ export type {
   SchemaLiteInfo
 } from './types.js';
 
-export { createSchemaLiteCollector } from './schema-lite.js';
+export {
+  CONTAINER_TYPES,
+  collectContainerEffects,
+  createSchemaLiteCollector,
+  hasTopLevelEffects,
+  isPipeWrappedContainer
+} from './schema-lite.js';
 
 import type { FormOptimizer } from './types.js';
 import { buildL1Optimizers } from './l1-decompose.js';

@@ -1,22 +1,24 @@
 ---
 name: zod-to-form
-description: "API reference for zod-to-form Use when working with generateFormComponent, resolveFieldMapping, getFileHeader, renderField, registerPathExpr."
+description: Schema-Driven Form Generation for Zod v4 - walks Zod internal type tree using processor registry pattern to emit React form components instead of JSON Schema
 license: MIT
 ---
 
 # zod-to-form
 
+Schema-Driven Form Generation for Zod v4 - walks Zod internal type tree using processor registry pattern to emit React form components instead of JSON Schema
+
 ## When to Use
 
-- Calling `generateFormComponent()`, `resolveFieldMapping()`, `getFileHeader()`, `renderField()`, `registerPathExpr()`, and 3 more
-- Typing with `CodegenConfig`, `ConfigTemplateOptions`
-- Using constants/variables `PRESET_TEMPLATE_IMPORTS`
+- API surface: 8 functions, 2 types, 1 constants
 
 ## Quick Reference
 
-**8 functions** — `generateFormComponent`, `resolveFieldMapping`, `getFileHeader`, `renderField`, `registerPathExpr`, `generateSchemaLiteFile`, `buildConfigSource`, `getFieldTemplateSource`
-**2 types** — `CodegenConfig`, `ConfigTemplateOptions`
-**1 variables** — `PRESET_TEMPLATE_IMPORTS`
+**generate:** `generateFormComponent`, `resolveFieldMapping`, `CodegenConfig`
+**templates:** `getFileHeader`, `renderField`, `registerPathExpr`
+**schema-lite-codegen:** `generateSchemaLiteFile`
+**config-template:** `buildConfigSource`, `ConfigTemplateOptions`
+**field-templates:** `getFieldTemplateSource`, `PRESET_TEMPLATE_IMPORTS`
 
 ## Links
 

@@ -1,23 +1,29 @@
 # Functions
 
-## `ZodForm`
+## ZodForm
+
+### `ZodForm`
 ```ts
 ZodForm<TSchema>(props: ZodFormProps<TSchema>): ReactNode
 ```
 **Parameters:**
-- `props: ZodFormProps<TSchema>` — 
+- `props: ZodFormProps<TSchema>`
 **Returns:** `ReactNode`
 
-## `useZodForm`
+## useZodForm
+
+### `useZodForm`
 ```ts
 useZodForm<TSchema>(schema: TSchema, options?: UseZodFormOptions<TSchema>): { form: UseFormReturn<output<TSchema>, any, output<TSchema>>; fields: FormField[]; schemaError: string | null; schemaLite: $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>> | null }
 ```
 **Parameters:**
-- `schema: TSchema` — 
-- `options: UseZodFormOptions<TSchema>` (optional) — 
+- `schema: TSchema`
+- `options: UseZodFormOptions<TSchema>` (optional)
 **Returns:** `{ form: UseFormReturn<output<TSchema>, any, output<TSchema>>; fields: FormField[]; schemaError: string | null; schemaLite: $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>> | null }`
 
-## `normalizeFormValues`
+## normalize.d
+
+### `normalizeFormValues`
 Normalize raw HTML form values for Zod parsing.
 
 HTML inputs produce values that don't match Zod's expectations:
@@ -35,10 +41,12 @@ edge cases like FileList objects.
 normalizeFormValues(value: unknown): unknown
 ```
 **Parameters:**
-- `value: unknown` — 
+- `value: unknown`
 **Returns:** `unknown`
 
-## `wrapWithSchemaLite`
+## SchemaLiteSubmit
+
+### `wrapWithSchemaLite`
 Wraps a form onSubmit handler with schemaLite validation.
 Runs schemaLite.safeParse on the form data before calling the original handler.
 Maps validation errors to form fields via setError.
@@ -46,7 +54,7 @@ Maps validation errors to form fields via setError.
 wrapWithSchemaLite<TData>(schemaLite: $ZodType, setError: UseFormSetError<TData>, onSubmit: (data: TData) => void | Promise<void>): (data: TData) => void | Promise<void>
 ```
 **Parameters:**
-- `schemaLite: $ZodType` — 
-- `setError: UseFormSetError<TData>` — 
-- `onSubmit: (data: TData) => void | Promise<void>` — 
+- `schemaLite: $ZodType`
+- `setError: UseFormSetError<TData>`
+- `onSubmit: (data: TData) => void | Promise<void>`
 **Returns:** `(data: TData) => void | Promise<void>`

@@ -51,6 +51,17 @@ describe('extractNativeRules', () => {
       expect(rules).toBeNull();
     });
 
+    it('handles z.string().email().url() (email pattern + url format)', () => {
+      // .email() adds to bag.patterns, .url() adds to bag.format.
+      // The combined schema has both — extractNativeRules should handle this
+      // without crashing, returning either a single pattern or null.
+      const rules = extract(z.string().email().url());
+      // If rules are returned, the email pattern should be present
+      if (rules !== null) {
+        expect(rules.pattern?.value).toBeInstanceOf(RegExp);
+      }
+    });
+
     it('falls through to zodSchema for z.string().url() (uses format, not pattern)', () => {
       // url() stores format in bag, not patterns — extractNativeRules returns
       // a rules object without pattern, which is valid (url stays as zodSchema

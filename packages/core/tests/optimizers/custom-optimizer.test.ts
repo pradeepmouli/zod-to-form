@@ -2,6 +2,21 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { walkSchema } from '../../src/walker.js';
 import type { WalkResult, FormOptimizer } from '../../src/optimizers/types.js';
+import { builtinOptimizers } from '../../src/optimizers/index.js';
+
+describe('builtinOptimizers registry structure', () => {
+  it('string type has L1+L2 chain (2 optimizers in order)', () => {
+    expect(builtinOptimizers['string']).toHaveLength(2);
+  });
+
+  it('enum type has L1+L2 chain', () => {
+    expect(builtinOptimizers['enum']).toHaveLength(2);
+  });
+
+  it('pipe type has L1 only (no L2)', () => {
+    expect(builtinOptimizers['pipe']).toHaveLength(1);
+  });
+});
 
 describe('Custom optimizer registration (US4)', () => {
   it('custom optimizer overrides builtin for a type', () => {

@@ -1,6 +1,6 @@
 # Types & Enums
 
-## Types
+## types.d
 
 ### `FormField`
 **Properties:**
@@ -30,19 +30,19 @@
 
 ### `FormFieldOption`
 **Properties:**
-- `value: string | number` — 
-- `label: string` — 
-- `disabled: boolean` (optional) — 
+- `value: string | number`
+- `label: string`
+- `disabled: boolean` (optional)
 
 ### `FormFieldConstraints`
 **Properties:**
-- `min: number` (optional) — 
-- `max: number` (optional) — 
-- `minLength: number` (optional) — 
-- `maxLength: number` (optional) — 
-- `pattern: string` (optional) — 
-- `format: string` (optional) — 
-- `step: number` (optional) — 
+- `min: number` (optional)
+- `max: number` (optional)
+- `minLength: number` (optional)
+- `maxLength: number` (optional)
+- `pattern: string` (optional)
+- `format: string` (optional)
+- `step: number` (optional)
 
 ### `FormMeta`
 ```ts
@@ -66,16 +66,18 @@ the optimization config here. The CLI reads `config.defaults.optimization`
 and forwards it; useZodForm accepts it via its own options. Both converge
 here as the single source of truth for the walker.
 
+## FieldRenderer
+
 ### `RuntimeComponentConfig`
 
 ### `FieldTemplateProps`
 **Properties:**
-- `children: ReactNode` — 
-- `label: string` — 
-- `description: string` (optional) — 
-- `helpText: string` (optional) — 
-- `error: string` (optional) — 
-- `name: string` — 
-- `required: boolean` (optional) — 
-- `disabled: boolean` (optional) — 
-- `deprecated: boolean` (optional) — 
+- `children: ReactNode`
+- `label: string`
+- `description: string` (optional)
+- `helpText: string` (optional)
+- `error: string` (optional)
+- `name: string`
+- `required: boolean` (optional)
+- `disabled: boolean` (optional)
+- `deprecated: boolean` (optional)
