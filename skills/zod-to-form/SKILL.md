@@ -8,13 +8,15 @@ license: MIT
 
 ## When to Use
 
-- Calling `generateFormComponent()`, `resolveFieldMapping()`, `getFileHeader()`, `renderField()`, `registerPathExpr()`, and 1 more
+- Calling `generateFormComponent()`, `resolveFieldMapping()`, `getFileHeader()`, `renderField()`, `registerPathExpr()`, and 3 more
 - Typing with `CodegenConfig`, `ConfigTemplateOptions`
+- Using constants/variables `PRESET_TEMPLATE_IMPORTS`
 
 ## Quick Reference
 
-**6 functions** — `generateFormComponent`, `resolveFieldMapping`, `getFileHeader`, `renderField`, `registerPathExpr`, `buildConfigSource`
+**8 functions** — `generateFormComponent`, `resolveFieldMapping`, `getFileHeader`, `renderField`, `registerPathExpr`, `generateSchemaLiteFile`, `buildConfigSource`, `getFieldTemplateSource`
 **2 types** — `CodegenConfig`, `ConfigTemplateOptions`
+**1 variables** — `PRESET_TEMPLATE_IMPORTS`
 
 ## Links
 
