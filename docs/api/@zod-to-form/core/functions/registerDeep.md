@@ -8,7 +8,7 @@
 
 > **registerDeep**\<`S`, `Meta`\>(`registry`, `schema`, `config`): `void`
 
-Defined in: [register.ts:61](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/register.ts#L61)
+Defined in: [register.ts:61](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/register.ts#L61)
 
 Register a schema and all its nested fields in a registry using a
 path-structured [FieldConfig](../type-aliases/FieldConfig.md) tree.

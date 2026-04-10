@@ -6,7 +6,7 @@
 
 # Interface: SchemaLiteCollector
 
-Defined in: [optimizers/types.ts:50](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/optimizers/types.ts#L50)
+Defined in: [optimizers/types.ts:52](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/optimizers/types.ts#L52)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [optimizers/types.ts:50](https://github.com/pradeepmouli/zod-to-form
 
 > `readonly` **checks**: readonly `unknown`[]
 
-Defined in: [optimizers/types.ts:64](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/optimizers/types.ts#L64)
+Defined in: [optimizers/types.ts:66](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/optimizers/types.ts#L66)
 
 Read-only access to collected checks
 
@@ -24,7 +24,7 @@ Read-only access to collected checks
 
 > `readonly` **fields**: `ReadonlyMap`\<`string`, `$ZodType`\<`unknown`, `unknown`, `$ZodTypeInternals`\<`unknown`, `unknown`\>\>\>
 
-Defined in: [optimizers/types.ts:66](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/optimizers/types.ts#L66)
+Defined in: [optimizers/types.ts:68](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/optimizers/types.ts#L68)
 
 Read-only access to collected fallthrough fields
 
@@ -34,7 +34,7 @@ Read-only access to collected fallthrough fields
 
 > **addCheck**(`check`): `void`
 
-Defined in: [optimizers/types.ts:52](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/optimizers/types.ts#L52)
+Defined in: [optimizers/types.ts:54](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/optimizers/types.ts#L54)
 
 Add a raw Zod check object (superRefine/refine)
 
@@ -54,7 +54,7 @@ Add a raw Zod check object (superRefine/refine)
 
 > **addField**(`path`, `schema`): `void`
 
-Defined in: [optimizers/types.ts:56](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/optimizers/types.ts#L56)
+Defined in: [optimizers/types.ts:58](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/optimizers/types.ts#L58)
 
 Add a field that couldn't be inlined (safety net fallback)
 
@@ -78,7 +78,7 @@ Add a field that couldn't be inlined (safety net fallback)
 
 > **addTransform**(`fn`): `void`
 
-Defined in: [optimizers/types.ts:54](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/optimizers/types.ts#L54)
+Defined in: [optimizers/types.ts:56](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/optimizers/types.ts#L56)
 
 Add a transform function extracted from a pipe wrapper
 
@@ -98,7 +98,7 @@ Add a transform function extracted from a pipe wrapper
 
 > **build**(): `$ZodType`\<`unknown`, `unknown`, `$ZodTypeInternals`\<`unknown`, `unknown`\>\> \| `null`
 
-Defined in: [optimizers/types.ts:62](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/optimizers/types.ts#L62)
+Defined in: [optimizers/types.ts:64](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/optimizers/types.ts#L64)
 
 Build the lite schema: z.object({}).loose() + checks + transforms
 
@@ -112,7 +112,7 @@ Build the lite schema: z.object({}).loose() + checks + transforms
 
 > **isEmpty**(): `boolean`
 
-Defined in: [optimizers/types.ts:60](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/optimizers/types.ts#L60)
+Defined in: [optimizers/types.ts:62](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/optimizers/types.ts#L62)
 
 True when nothing has been collected
 
@@ -126,7 +126,7 @@ True when nothing has been collected
 
 > **setOriginalSchema**(`schema`): `void`
 
-Defined in: [optimizers/types.ts:58](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/optimizers/types.ts#L58)
+Defined in: [optimizers/types.ts:60](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/optimizers/types.ts#L60)
 
 Store the original schema when it can't be decomposed (non-transform pipes)
 

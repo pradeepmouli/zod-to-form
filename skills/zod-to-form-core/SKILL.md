@@ -1,22 +1,42 @@
 ---
 name: zod-to-form-core
-description: "API reference for @zod-to-form/core Use when working with createOptimizers, createSchemaLiteCollector, defineConfig, validateConfig, resolveFieldConfig."
+description: Schema-Driven Form Generation for Zod v4 - walks Zod internal type tree using processor registry pattern to emit React form components instead of JSON Schema
 license: MIT
 ---
 
 # @zod-to-form/core
 
+Schema-Driven Form Generation for Zod v4 - walks Zod internal type tree using processor registry pattern to emit React form components instead of JSON Schema
+
 ## When to Use
 
-- Calling `createOptimizers()`, `createSchemaLiteCollector()`, `defineConfig()`, `validateConfig()`, `resolveFieldConfig()`, and 37 more
-- Typing with `FormField`, `FormFieldOption`, `FormFieldConstraints`, `FormProcessor`, `FormProcessorContext`
-- Using constants/variables `builtinOptimizers`, `SHADCN_OVERRIDES`, `DEFAULT_OVERRIDES`, `builtinProcessors`
+- API surface: 42 functions, 27 types, 4 constants
 
 ## Quick Reference
 
-**42 functions** — `createOptimizers`, `createSchemaLiteCollector`, `defineConfig`, `validateConfig`, `resolveFieldConfig`, `normalizeConfig`, `inferLabel`, `joinPath`, `createBaseField`, `getEmptyDefault`, `normalizeFieldKey`, `collectFieldSections`, `normalizeFormValues`, `walkSchema`, `createProcessors`, `registerDeep`, `registerFlat`, `processArray`, `processTuple`, `processBoolean`, `processMap`, `processSet`, `processCrossRef`, `processDate`, `processEnum`, `processLiteral`, `processFallback`, `processFile`, `processNumber`, `processObject`, `processIntersection`, `processRecord`, `processString`, `processTemplateLiteral`, `processUnion`, `processDiscriminatedUnion`, `processDefault`, `processLazy`, `processNullable`, `processOptional`, `processPipe`, `processReadonly`
-**27 types** — `FormField`, `FormFieldOption`, `FormFieldConstraints`, `FormProcessor`, `FormProcessorContext`, `FormMeta`, `FieldConfig`, `FieldExpression`, `ProcessParams`, `WalkOptions`, `ZodFormRegistry`, `NativeRules`, `ValidationStrategy`, `ComponentOverride`, `ComponentPreset`, `ComponentsConfig`, `TypedFieldConfig`, `ZodFormsConfig`, `ZodTypeConfig`, `ConfigDefaults`, `OptimizationConfig`, `StripIndexSignature`, `FormOptimizer`, `FormOptimizerContext`, `WalkResult`, `SchemaLiteCollector`, `SchemaLiteInfo`
-**4 variables** — `builtinOptimizers`, `SHADCN_OVERRIDES`, `DEFAULT_OVERRIDES`, `builtinProcessors`
+`createOptimizers`, `builtinOptimizers`
+**schema-lite:** `createSchemaLiteCollector`
+**config:** `defineConfig`, `validateConfig`, `resolveFieldConfig`, `normalizeConfig`, `ComponentOverride`, `ComponentPreset`, `ComponentsConfig`, `TypedFieldConfig`, `ZodFormsConfig`, `ZodTypeConfig`, `ConfigDefaults`, `OptimizationConfig`, `StripIndexSignature`, `SHADCN_OVERRIDES`, `DEFAULT_OVERRIDES`
+**utils:** `inferLabel`, `joinPath`, `createBaseField`, `getEmptyDefault`, `normalizeFieldKey`, `collectFieldSections`
+**normalize:** `normalizeFormValues`
+**walker:** `walkSchema`
+**registry:** `createProcessors`, `builtinProcessors`
+**register:** `registerDeep`, `registerFlat`
+**array:** `processArray`, `processTuple`
+**boolean:** `processBoolean`
+**collections:** `processMap`, `processSet`
+**cross-ref:** `processCrossRef`
+**date:** `processDate`
+**enum:** `processEnum`, `processLiteral`
+**fallback:** `processFallback`
+**file:** `processFile`
+**number:** `processNumber`
+**object:** `processObject`, `processIntersection`
+**record:** `processRecord`
+**string:** `processString`, `processTemplateLiteral`
+**union:** `processUnion`, `processDiscriminatedUnion`
+**wrappers:** `processDefault`, `processLazy`, `processNullable`, `processOptional`, `processPipe`, `processReadonly`
+**types:** `FormField`, `FormFieldOption`, `FormFieldConstraints`, `FormProcessor`, `FormProcessorContext`, `FormMeta`, `FieldConfig`, `FieldExpression`, `ProcessParams`, `WalkOptions`, `ZodFormRegistry`, `NativeRules`, `ValidationStrategy`, `FormOptimizer`, `FormOptimizerContext`, `WalkResult`, `SchemaLiteCollector`, `SchemaLiteInfo`
 
 ## Links
 

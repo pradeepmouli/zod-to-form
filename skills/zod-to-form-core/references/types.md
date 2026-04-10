@@ -1,6 +1,6 @@
 # Types & Enums
 
-## Types
+## types
 
 ### `FormField`
 **Properties:**
@@ -30,19 +30,19 @@
 
 ### `FormFieldOption`
 **Properties:**
-- `value: string | number` — 
-- `label: string` — 
-- `disabled: boolean` (optional) — 
+- `value: string | number`
+- `label: string`
+- `disabled: boolean` (optional)
 
 ### `FormFieldConstraints`
 **Properties:**
-- `min: number` (optional) — 
-- `max: number` (optional) — 
-- `minLength: number` (optional) — 
-- `maxLength: number` (optional) — 
-- `pattern: string` (optional) — 
-- `format: string` (optional) — 
-- `step: number` (optional) — 
+- `min: number` (optional)
+- `max: number` (optional)
+- `minLength: number` (optional)
+- `maxLength: number` (optional)
+- `pattern: string` (optional)
+- `format: string` (optional)
+- `step: number` (optional)
 
 ### `FormProcessor`
 ```ts
@@ -105,17 +105,48 @@ $ZodRegistry<FormMeta>
 
 ### `NativeRules`
 **Properties:**
-- `required: string` (optional) — 
-- `min: { value: number; message: string }` (optional) — 
-- `max: { value: number; message: string }` (optional) — 
-- `minLength: { value: number; message: string }` (optional) — 
-- `maxLength: { value: number; message: string }` (optional) — 
-- `pattern: { value: RegExp; message: string }` (optional) — 
+- `required: string` (optional)
+- `min: { value: number; message: string }` (optional)
+- `max: { value: number; message: string }` (optional)
+- `minLength: { value: number; message: string }` (optional)
+- `maxLength: { value: number; message: string }` (optional)
+- `pattern: { value: RegExp; message: string }` (optional)
 
 ### `ValidationStrategy`
 **Properties:**
-- `mode: "zodSchema" | "native" | "component-enforced"` — 
-- `rules: NativeRules` (optional) — 
+- `mode: "zodSchema" | "native" | "component-enforced"`
+- `rules: NativeRules` (optional)
+
+### `FormOptimizer`
+```ts
+(schema: T, ctx: FormOptimizerContext, field: FormField, params: ProcessParams) => void
+```
+
+### `FormOptimizerContext`
+**Properties:**
+- `optimizers: Record<string, FormOptimizer[]>`
+- `schemaLite: SchemaLiteCollector`
+- `level: 1 | 2 | 3`
+- `collectorBasePath: string` — Dot-path prefix of the current collector's scope (empty string at root)
+
+### `WalkResult`
+**Properties:**
+- `fields: FormField[]`
+- `schemaLite: $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>> | null`
+- `schemaLiteInfo: SchemaLiteInfo` — Codegen metadata — describes how to reconstruct schemaLite in generated code
+
+### `SchemaLiteCollector`
+**Properties:**
+- `checks: readonly unknown[]` — Read-only access to collected checks
+- `fields: ReadonlyMap<string, $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>>` — Read-only access to collected fallthrough fields
+
+### `SchemaLiteInfo`
+Metadata for codegen to reconstruct the lite schema in a generated file
+```ts
+SchemaLiteInfoBase & { type: "checks"; checkCount: number } | SchemaLiteInfoBase & { type: "transform"; hasInnerChecks: boolean; hasOuterChecks: boolean } | SchemaLiteInfoBase & { type: "original" } | null
+```
+
+## config
 
 ### `ComponentOverride`
 Per-component metadata override. Only components that differ from defaults need an entry.
@@ -149,32 +180,4 @@ Strips index signatures from a type, keeping only explicitly declared keys.
 Useful for Zod's `z.output<>` which adds `[x: string]: unknown` index signatures.
 ```ts
 T extends readonly (infer U)[] ? StripIndexSignature<U>[] : T extends object ? { [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: StripIndexSignature<T[K]> } : T
-```
-
-### `FormOptimizer`
-```ts
-(schema: T, ctx: FormOptimizerContext, field: FormField, params: ProcessParams) => void
-```
-
-### `FormOptimizerContext`
-**Properties:**
-- `optimizers: Record<string, FormOptimizer[]>` — 
-- `schemaLite: SchemaLiteCollector` — 
-- `level: 1 | 2 | 3` — 
-
-### `WalkResult`
-**Properties:**
-- `fields: FormField[]` — 
-- `schemaLite: $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>> | null` — 
-- `schemaLiteInfo: SchemaLiteInfo` — Codegen metadata — describes how to reconstruct schemaLite in generated code
-
-### `SchemaLiteCollector`
-**Properties:**
-- `checks: readonly unknown[]` — Read-only access to collected checks
-- `fields: ReadonlyMap<string, $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>>` — Read-only access to collected fallthrough fields
-
-### `SchemaLiteInfo`
-Metadata for codegen to reconstruct the lite schema in a generated file
-```ts
-SchemaLiteInfoBase & { type: "checks"; checkCount: number } | SchemaLiteInfoBase & { type: "transform"; hasInnerChecks: boolean; hasOuterChecks: boolean } | SchemaLiteInfoBase & { type: "original" } | null
 ```

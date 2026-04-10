@@ -8,7 +8,7 @@
 
 > **createBaseField**(`key`, `zodType`): [`FormField`](../interfaces/FormField.md)
 
-Defined in: [utils.ts:281](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/utils.ts#L281)
+Defined in: [utils.ts:281](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/utils.ts#L281)
 
 Create a base FormField with sensible defaults.
 Processors fill in the specific component and props.

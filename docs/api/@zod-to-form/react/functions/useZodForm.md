@@ -8,7 +8,7 @@
 
 > **useZodForm**\<`TSchema`\>(`schema`, `options?`): `object`
 
-Defined in: [packages/react/src/useZodForm.ts:42](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/react/src/useZodForm.ts#L42)
+Defined in: [packages/react/src/useZodForm.ts:42](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/react/src/useZodForm.ts#L42)
 
 ## Type Parameters
 

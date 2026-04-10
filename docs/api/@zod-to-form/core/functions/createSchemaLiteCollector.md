@@ -6,9 +6,9 @@
 
 # Function: createSchemaLiteCollector()
 
-> **createSchemaLiteCollector**(): [`SchemaLiteCollector`](../interfaces/SchemaLiteCollector.md)
+> **createSchemaLiteCollector**(`options?`): [`SchemaLiteCollector`](../interfaces/SchemaLiteCollector.md)
 
-Defined in: [optimizers/schema-lite.ts:57](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/optimizers/schema-lite.ts#L57)
+Defined in: [optimizers/schema-lite.ts:188](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/optimizers/schema-lite.ts#L188)
 
 Create a new SchemaLiteCollector instance.
 
@@ -16,6 +16,17 @@ Builds a "lite" schema for submit-time validation:
 - Checks (superRefine/refine): z.object({}).loose().check(c1).check(c2)
 - Transforms: z.object({}).loose().check(...).transform(fn)
 - Non-decomposable pipes: original schema as-is
+
+## Parameters
+
+### options?
+
+#### useAnyBase?
+
+`boolean`
+
+Use z.any() instead of z.object({}).loose() when no fields are present.
+ Set for non-object containers (arrays, tuples, etc.) whose data isn't an object.
 
 ## Returns
 

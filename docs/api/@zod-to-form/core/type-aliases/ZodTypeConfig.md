@@ -8,7 +8,7 @@
 
 > **ZodTypeConfig**\<`TFieldKeys`, `TComponents`\> = `object`
 
-Defined in: [config.ts:88](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/config.ts#L88)
+Defined in: [config.ts:88](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/config.ts#L88)
 
 ## Type Parameters
 
@@ -26,7 +26,7 @@ Defined in: [config.ts:88](https://github.com/pradeepmouli/zod-to-form/blob/c74f
 
 > `optional` **fields?**: `Partial`\<`Record`\<`TFieldKeys`, [`TypedFieldConfig`](TypedFieldConfig.md)\<`TComponents`\>\>\>
 
-Defined in: [config.ts:96](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/config.ts#L96)
+Defined in: [config.ts:96](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/config.ts#L96)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [config.ts:96](https://github.com/pradeepmouli/zod-to-form/blob/c74f
 
 > `optional` **mode?**: `"submit"` \| `"auto-save"`
 
-Defined in: [config.ts:93](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/config.ts#L93)
+Defined in: [config.ts:93](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/config.ts#L93)
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: [config.ts:93](https://github.com/pradeepmouli/zod-to-form/blob/c74f
 
 > `optional` **name?**: `string`
 
-Defined in: [config.ts:92](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/config.ts#L92)
+Defined in: [config.ts:92](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/config.ts#L92)
 
 ***
 
@@ -50,7 +50,7 @@ Defined in: [config.ts:92](https://github.com/pradeepmouli/zod-to-form/blob/c74f
 
 > `optional` **out?**: `string`
 
-Defined in: [config.ts:94](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/config.ts#L94)
+Defined in: [config.ts:94](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/config.ts#L94)
 
 ***
 
@@ -58,4 +58,4 @@ Defined in: [config.ts:94](https://github.com/pradeepmouli/zod-to-form/blob/c74f
 
 > `optional` **serverAction?**: `boolean`
 
-Defined in: [config.ts:95](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/config.ts#L95)
+Defined in: [config.ts:95](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/config.ts#L95)

@@ -8,7 +8,7 @@
 
 > **registerPathExpr**(`path`): `string`
 
-Defined in: [templates.ts:105](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/codegen/src/templates.ts#L105)
+Defined in: [templates.ts:105](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/codegen/src/templates.ts#L105)
 
 ## Parameters
 
