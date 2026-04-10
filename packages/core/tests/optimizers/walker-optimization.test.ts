@@ -515,10 +515,10 @@ describe('walkSchema with optimization', () => {
       expect((parsed.data as any)?.payment?.amountCents).toBe(150);
     });
 
-    describe('container schema pruning', () => {
-      it('pruned schemaLite does NOT re-validate child field constraints', () => {
-        // billing.card has min(4) — after pruning, the schemaLite should NOT
-        // enforce this constraint (L1/L2 handles it per-field).
+    describe('inside-out collection: schemaLite excludes inlined fields', () => {
+      it('schemaLite does NOT re-validate child field constraints', () => {
+        // billing.card has min(4) — the child collector only captures the
+        // superRefine, not per-field constraints (L1/L2 handles those).
         const schema = z.object({
           billing: z
             .object({ card: z.string().min(4), bank: z.string().min(2) })
@@ -546,10 +546,9 @@ describe('walkSchema with optimization', () => {
         expect(passLite.success).toBe(true);
       });
 
-      it('pruned schemaLite accepts wrong types for child fields', () => {
-        // After pruning, z.any() replaces the typed container. Passing a
-        // number where a string is expected should not fail schemaLite —
-        // field-level validation handles type checking.
+      it('schemaLite accepts wrong types for child fields', () => {
+        // The child collector only has the refine effect — child types are
+        // validated per-field by L1/L2, not in the schemaLite.
         const schema = z.object({
           period: z
             .object({ start: z.string(), end: z.string() })
@@ -568,7 +567,7 @@ describe('walkSchema with optimization', () => {
         expect(acceptsWrongTypes.success).toBe(true);
       });
 
-      it('pruned array container only runs effects, not element validation', () => {
+      it('array container only runs effects, not element validation', () => {
         const schema = z.object({
           items: z.array(z.string().email()).superRefine((arr, ctx) => {
             if (new Set(arr).size !== arr.length) {
@@ -589,7 +588,7 @@ describe('walkSchema with optimization', () => {
         expect(passNotEmail.success).toBe(true);
       });
 
-      it('pruned pipe container preserves transform without child validation', () => {
+      it('pipe container preserves transform without child validation', () => {
         const schema = z.object({
           payment: z.object({ amount: z.number().min(1).max(10000) }).transform((data) => ({
             ...data,
@@ -612,7 +611,7 @@ describe('walkSchema with optimization', () => {
         expect((passOutOfRange.data as any)?.payment?.amountCents).toBe(9999900);
       });
 
-      it('pruned pipe container preserves inner superRefine + transform', () => {
+      it('pipe container preserves inner superRefine + transform', () => {
         // z.object({...}).superRefine(fn).transform(fn2) creates a pipe where
         // the inner object has the superRefine and the pipe has the transform.
         const schema = z.object({
@@ -690,9 +689,9 @@ describe('walkSchema with optimization', () => {
         expect(pass.success).toBe(true);
       });
 
-      it('pruned schema preserves object structure (not z.any())', () => {
-        // The pruned schema should be z.object({}).loose().check(...)
-        // NOT z.any(). Verify by passing a non-object value — it should fail.
+      it('child collector builds z.object({}).loose() — rejects non-object data', () => {
+        // The collector builds z.object({}).loose().check(...), preserving
+        // the object structure. Non-object values should fail.
         const schema = z.object({
           billing: z.object({ card: z.string(), bank: z.string() }).superRefine((_data, _ctx) => {})
         });

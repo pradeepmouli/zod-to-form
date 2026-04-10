@@ -185,7 +185,12 @@ function materializeFieldMap(fieldMap: ReadonlyMap<string, $ZodType>): Record<st
  * - Transforms: z.object({}).loose().check(...).transform(fn)
  * - Non-decomposable pipes: original schema as-is
  */
-export function createSchemaLiteCollector(): SchemaLiteCollector {
+export function createSchemaLiteCollector(options?: {
+  /** Use z.any() instead of z.object({}).loose() when no fields are present.
+   *  Set for non-object containers (arrays, tuples, etc.) whose data isn't an object. */
+  useAnyBase?: boolean;
+}): SchemaLiteCollector {
+  const useAnyBase = options?.useAnyBase ?? false;
   const collectedChecks: unknown[] = [];
   const collectedTransforms: Array<(data: unknown) => unknown> = [];
   const fieldMap = new Map<string, $ZodType>();
@@ -243,10 +248,14 @@ export function createSchemaLiteCollector(): SchemaLiteCollector {
       // than overwriting each other.
       const shape = materializeFieldMap(fieldMap);
 
-      let result: Chainable =
-        Object.keys(shape).length > 0
-          ? (z.object(shape).loose() as unknown as Chainable)
-          : (z.object({}).loose() as unknown as Chainable);
+      let result: Chainable;
+      if (Object.keys(shape).length > 0) {
+        result = z.object(shape).loose() as unknown as Chainable;
+      } else if (useAnyBase) {
+        result = z.any() as unknown as Chainable;
+      } else {
+        result = z.object({}).loose() as unknown as Chainable;
+      }
 
       // Replay checks (superRefine/refine)
       for (const check of collectedChecks) {

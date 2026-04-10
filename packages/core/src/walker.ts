@@ -69,7 +69,15 @@ function processField(
         (zodType === 'pipe' && isPipeWrappedContainer(schema)));
 
     if (containerWithEffects) {
-      childCollector = createSchemaLiteCollector();
+      // Object containers (and pipes wrapping objects) use z.object({}).loose()
+      // as the base; all others (array, tuple, etc.) use z.any().
+      const resolvedType =
+        zodType === 'pipe'
+          ? (((schema._zod.def as unknown as Def)['in'] as ZodType)?._zod?.def?.type ?? zodType)
+          : zodType;
+      childCollector = createSchemaLiteCollector({
+        useAnyBase: resolvedType !== 'object'
+      });
       collectContainerEffects(schema, childCollector);
       childOptimizerCtx = {
         ...optimizerCtx,
