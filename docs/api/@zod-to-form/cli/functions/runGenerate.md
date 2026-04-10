@@ -8,7 +8,7 @@
 
 > **runGenerate**(`options`): `Promise`\<\{ `actionCode?`: `string`; `actionPath?`: `string`; `code`: `string`; `outputPath`: `string`; `wroteFile`: `boolean`; \}\>
 
-Defined in: [cli/src/index.ts:90](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/cli/src/index.ts#L90)
+Defined in: [cli/src/index.ts:89](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/cli/src/index.ts#L89)
 
 ## Parameters
 

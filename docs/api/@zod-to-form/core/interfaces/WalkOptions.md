@@ -6,7 +6,7 @@
 
 # Interface: WalkOptions
 
-Defined in: [types.ts:151](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/types.ts#L151)
+Defined in: [types.ts:200](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/types.ts#L200)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:151](https://github.com/pradeepmouli/zod-to-form/blob/8e8d
 
 > `optional` **formRegistry?**: [`ZodFormRegistry`](../type-aliases/ZodFormRegistry.md)
 
-Defined in: [types.ts:153](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/types.ts#L153)
+Defined in: [types.ts:202](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/types.ts#L202)
 
 Custom form registry for metadata annotations
 
@@ -24,16 +24,39 @@ Custom form registry for metadata annotations
 
 > `optional` **maxDepth?**: `number`
 
-Defined in: [types.ts:157](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/types.ts#L157)
+Defined in: [types.ts:206](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/types.ts#L206)
 
 Maximum recursion depth for lazy/recursive schemas (default: 5)
 
 ***
 
+### optimization?
+
+> `optional` **optimization?**: `object`
+
+Defined in: [types.ts:215](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/types.ts#L215)
+
+Validation optimization settings.
+
+This is the walker's API surface — callers (useZodForm, CLI codegen) pass
+the optimization config here. The CLI reads `config.defaults.optimization`
+and forwards it; useZodForm accepts it via its own options. Both converge
+here as the single source of truth for the walker.
+
+#### level
+
+> **level**: `1` \| `2` \| `3`
+
+#### optimizers?
+
+> `optional` **optimizers?**: `Record`\<`string`, [`FormOptimizer`](../type-aliases/FormOptimizer.md)[]\>
+
+***
+
 ### processors?
 
-> `optional` **processors?**: `Record`\<`string`, [`FormProcessor`](../type-aliases/FormProcessor.md)\>
+> `optional` **processors?**: `Record`\<`string`, [`FormProcessor`](../type-aliases/FormProcessor.md)\<`$ZodType`\<`unknown`, `unknown`, `$ZodTypeInternals`\<`unknown`, `unknown`\>\>\>\>
 
-Defined in: [types.ts:155](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/types.ts#L155)
+Defined in: [types.ts:204](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/types.ts#L204)
 
 Custom processors to add or override built-in ones

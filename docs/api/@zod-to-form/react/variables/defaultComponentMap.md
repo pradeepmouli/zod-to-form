@@ -8,21 +8,21 @@
 
 > `const` **defaultComponentMap**: `object`
 
-Defined in: [packages/react/src/components/index.ts:32](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/react/src/components/index.ts#L32)
+Defined in: [packages/react/src/components/index.ts:32](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/react/src/components/index.ts#L32)
 
 ## Type Declaration
 
 ### Checkbox
 
-> **Checkbox**: `NamedExoticComponent`\<`InputHTMLAttributes`\<`HTMLInputElement`\>\>
+> **Checkbox**: `MemoExoticComponent`\<(`props`) => `Element`\>
 
 ### Combobox
 
-> **Combobox**: `NamedExoticComponent`\<`ComboboxProps`\> = `ComboboxFallback`
+> **Combobox**: `MemoExoticComponent`\<(`__namedParameters`) => `Element`\> = `ComboboxFallback`
 
 ### DatePicker
 
-> **DatePicker**: `NamedExoticComponent`\<`InputHTMLAttributes`\<`HTMLInputElement`\>\>
+> **DatePicker**: `MemoExoticComponent`\<(`props`) => `Element`\>
 
 ### Field
 
@@ -82,24 +82,24 @@ Defined in: [packages/react/src/components/index.ts:32](https://github.com/prade
 
 ### FileInput
 
-> **FileInput**: `NamedExoticComponent`\<`InputHTMLAttributes`\<`HTMLInputElement`\>\>
+> **FileInput**: `MemoExoticComponent`\<(`props`) => `Element`\>
 
 ### Input
 
-> **Input**: `NamedExoticComponent`\<`InputHTMLAttributes`\<`HTMLInputElement`\>\>
+> **Input**: `MemoExoticComponent`\<(`props`) => `Element`\>
 
 ### RadioGroup
 
-> **RadioGroup**: `NamedExoticComponent`\<`RadioGroupProps`\>
+> **RadioGroup**: `MemoExoticComponent`\<(`__namedParameters`) => `Element`\>
 
 ### Select
 
-> **Select**: `NamedExoticComponent`\<`SelectProps`\>
+> **Select**: `MemoExoticComponent`\<(`__namedParameters`) => `Element`\>
 
 ### Switch
 
-> **Switch**: `NamedExoticComponent`\<`InputHTMLAttributes`\<`HTMLInputElement`\>\>
+> **Switch**: `MemoExoticComponent`\<(`props`) => `Element`\>
 
 ### Textarea
 
-> **Textarea**: `NamedExoticComponent`\<`TextareaHTMLAttributes`\<`HTMLTextAreaElement`\>\>
+> **Textarea**: `MemoExoticComponent`\<(`props`) => `Element`\>

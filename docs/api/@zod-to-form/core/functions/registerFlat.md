@@ -8,7 +8,7 @@
 
 > **registerFlat**\<`Meta`\>(`registry`, `schema`, `fields`): `void`
 
-Defined in: [register.ts:189](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/register.ts#L189)
+Defined in: [register.ts:188](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/register.ts#L188)
 
 Register flat dot-path field configs against a schema's registry.
 

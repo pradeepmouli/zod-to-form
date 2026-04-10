@@ -6,7 +6,7 @@
 
 # Interface: FormFieldOption
 
-Defined in: [types.ts:5](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/types.ts#L5)
+Defined in: [types.ts:26](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/types.ts#L26)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:5](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e
 
 > `optional` **disabled?**: `boolean`
 
-Defined in: [types.ts:8](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/types.ts#L8)
+Defined in: [types.ts:29](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/types.ts#L29)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:8](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e
 
 > **label**: `string`
 
-Defined in: [types.ts:7](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/types.ts#L7)
+Defined in: [types.ts:28](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/types.ts#L28)
 
 ***
 
@@ -30,4 +30,4 @@ Defined in: [types.ts:7](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e
 
 > **value**: `string` \| `number`
 
-Defined in: [types.ts:6](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/types.ts#L6)
+Defined in: [types.ts:27](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/types.ts#L27)

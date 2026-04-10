@@ -8,7 +8,7 @@
 
 > **ZodFormsConfig**\<`TComponents`, `TSchemas`\> = `object`
 
-Defined in: core/dist/config.d.ts:76
+Defined in: core/dist/config.d.ts:71
 
 ## Type Parameters
 
@@ -26,7 +26,7 @@ Defined in: core/dist/config.d.ts:76
 
 > **components**: [`ComponentsConfig`](../../core/type-aliases/ComponentsConfig.md)\<`TComponents`\>
 
-Defined in: core/dist/config.d.ts:77
+Defined in: core/dist/config.d.ts:72
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: core/dist/config.d.ts:77
 
 > `optional` **defaults?**: [`ConfigDefaults`](../../core/type-aliases/ConfigDefaults.md)
 
-Defined in: core/dist/config.d.ts:79
+Defined in: core/dist/config.d.ts:73
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: core/dist/config.d.ts:79
 
 > `optional` **exclude?**: `string`[]
 
-Defined in: core/dist/config.d.ts:82
+Defined in: core/dist/config.d.ts:76
 
 ***
 
@@ -50,15 +50,7 @@ Defined in: core/dist/config.d.ts:82
 
 > `optional` **fields?**: `Record`\<`string`, [`TypedFieldConfig`](../../core/type-aliases/TypedFieldConfig.md)\<`TComponents`\>\>
 
-Defined in: core/dist/config.d.ts:83
-
-***
-
-### formPrimitives?
-
-> `optional` **formPrimitives?**: [`FormPrimitivesConfig`](FormPrimitivesConfig.md)\<`TComponents`\>
-
-Defined in: core/dist/config.d.ts:78
+Defined in: core/dist/config.d.ts:77
 
 ***
 
@@ -66,7 +58,7 @@ Defined in: core/dist/config.d.ts:78
 
 > `optional` **include?**: `string`[]
 
-Defined in: core/dist/config.d.ts:81
+Defined in: core/dist/config.d.ts:75
 
 ***
 
@@ -74,7 +66,7 @@ Defined in: core/dist/config.d.ts:81
 
 > `optional` **schemas?**: `{ [K in keyof TSchemas & string]?: ZodTypeConfig<TSchemas[K] extends $ZodType ? SchemaFieldPath<TSchemas[K]> : string, TComponents> }`
 
-Defined in: core/dist/config.d.ts:84
+Defined in: core/dist/config.d.ts:78
 
 ***
 
@@ -82,4 +74,4 @@ Defined in: core/dist/config.d.ts:84
 
 > `optional` **types?**: `string`[]
 
-Defined in: core/dist/config.d.ts:80
+Defined in: core/dist/config.d.ts:74

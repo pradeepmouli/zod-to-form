@@ -238,7 +238,6 @@ pnpm --filter @zod-to-form/cli run type-check
 
 - [ComponentOverride](type-aliases/ComponentOverride.md)
 - [FieldConfig](type-aliases/FieldConfig.md)
-- [FormPrimitivesConfig](type-aliases/FormPrimitivesConfig.md)
 - [ZodFormsConfig](type-aliases/ZodFormsConfig.md)
 
 ## Functions

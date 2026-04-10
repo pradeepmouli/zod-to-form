@@ -8,9 +8,7 @@
 
 > **joinPath**(`parent`, `key`): `string`
 
-Defined in: [utils.ts:31](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/utils.ts#L31)
-
-Join a parent key path with a child key.
+Defined in: [utils.ts:25](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/utils.ts#L25)
 
 ## Parameters
 
@@ -25,13 +23,3 @@ Join a parent key path with a child key.
 ## Returns
 
 `string`
-
-## Examples
-
-```ts
-joinPath(undefined, 'name') → 'name'
-```
-
-```ts
-joinPath('address', 'street') → 'address.street'
-```

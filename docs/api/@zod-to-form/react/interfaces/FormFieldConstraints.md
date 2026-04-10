@@ -6,7 +6,7 @@
 
 # Interface: FormFieldConstraints
 
-Defined in: packages/core/dist/types.d.ts:7
+Defined in: packages/core/dist/types.d.ts:35
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/core/dist/types.d.ts:7
 
 > `optional` **format?**: `string`
 
-Defined in: packages/core/dist/types.d.ts:13
+Defined in: packages/core/dist/types.d.ts:41
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: packages/core/dist/types.d.ts:13
 
 > `optional` **max?**: `number`
 
-Defined in: packages/core/dist/types.d.ts:9
+Defined in: packages/core/dist/types.d.ts:37
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: packages/core/dist/types.d.ts:9
 
 > `optional` **maxLength?**: `number`
 
-Defined in: packages/core/dist/types.d.ts:11
+Defined in: packages/core/dist/types.d.ts:39
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: packages/core/dist/types.d.ts:11
 
 > `optional` **min?**: `number`
 
-Defined in: packages/core/dist/types.d.ts:8
+Defined in: packages/core/dist/types.d.ts:36
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: packages/core/dist/types.d.ts:8
 
 > `optional` **minLength?**: `number`
 
-Defined in: packages/core/dist/types.d.ts:10
+Defined in: packages/core/dist/types.d.ts:38
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: packages/core/dist/types.d.ts:10
 
 > `optional` **pattern?**: `string`
 
-Defined in: packages/core/dist/types.d.ts:12
+Defined in: packages/core/dist/types.d.ts:40
 
 ***
 
@@ -62,4 +62,4 @@ Defined in: packages/core/dist/types.d.ts:12
 
 > `optional` **step?**: `number`
 
-Defined in: packages/core/dist/types.d.ts:14
+Defined in: packages/core/dist/types.d.ts:42

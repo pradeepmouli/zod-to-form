@@ -8,21 +8,21 @@
 
 > `const` **shadcnComponentMap**: `object`
 
-Defined in: [packages/react/src/shadcn/index.ts:149](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/react/src/shadcn/index.ts#L149)
+Defined in: [packages/react/src/shadcn/index.ts:149](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/react/src/shadcn/index.ts#L149)
 
 ## Type Declaration
 
 ### Checkbox
 
-> **Checkbox**: `NamedExoticComponent`\<`InputHTMLAttributes`\<`HTMLInputElement`\>\>
+> **Checkbox**: `MemoExoticComponent`\<(`props`) => `Element`\>
 
 ### Combobox
 
-> **Combobox**: `NamedExoticComponent`\<`ComboboxProps`\> = `ComboboxFallback`
+> **Combobox**: `MemoExoticComponent`\<(`__namedParameters`) => `Element`\> = `ComboboxFallback`
 
 ### DatePicker
 
-> **DatePicker**: `NamedExoticComponent`\<`InputHTMLAttributes`\<`HTMLInputElement`\>\>
+> **DatePicker**: `MemoExoticComponent`\<(`props`) => `Element`\>
 
 ### Field
 
@@ -82,7 +82,7 @@ Defined in: [packages/react/src/shadcn/index.ts:149](https://github.com/pradeepm
 
 ### FileInput
 
-> **FileInput**: `NamedExoticComponent`\<`InputHTMLAttributes`\<`HTMLInputElement`\>\>
+> **FileInput**: `MemoExoticComponent`\<(`props`) => `Element`\>
 
 ### Input
 
@@ -100,7 +100,7 @@ Defined in: [packages/react/src/shadcn/index.ts:149](https://github.com/pradeepm
 
 ### RadioGroup
 
-> **RadioGroup**: `NamedExoticComponent`\<`RadioGroupProps`\>
+> **RadioGroup**: `MemoExoticComponent`\<(`__namedParameters`) => `Element`\>
 
 ### Select
 
@@ -118,7 +118,7 @@ Defined in: [packages/react/src/shadcn/index.ts:149](https://github.com/pradeepm
 
 ### Switch
 
-> **Switch**: `NamedExoticComponent`\<`InputHTMLAttributes`\<`HTMLInputElement`\>\>
+> **Switch**: `MemoExoticComponent`\<(`props`) => `Element`\>
 
 ### Textarea
 

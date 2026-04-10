@@ -8,7 +8,7 @@
 
 > **FieldConfig**\<`T`\> = `FieldConfigBase` & `FieldConfigExtras`\<`T`\>
 
-Defined in: core/dist/types.d.ts:89
+Defined in: core/dist/types.d.ts:139
 
 ## Type Parameters
 

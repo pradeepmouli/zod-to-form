@@ -6,28 +6,48 @@
 
 # Function: walkSchema()
 
-> **walkSchema**(`schema`, `options?`): [`FormField`](../interfaces/FormField.md)[]
+## Call Signature
 
-Defined in: [walker.ts:94](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/walker.ts#L94)
+> **walkSchema**(`schema`, `options`): [`WalkResult`](../interfaces/WalkResult.md)
+
+Defined in: [walker.ts:286](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/walker.ts#L286)
 
 Walk a Zod schema and produce a FormField[] tree.
+When optimization option is set, returns WalkResult with fields + schemaLite.
 
-## Parameters
+### Parameters
 
-### schema
+#### schema
 
 `$ZodType`
 
-A Zod object schema (top-level must be z.object())
+#### options
 
-### options?
+[`WalkOptions`](../interfaces/WalkOptions.md) & `object`
+
+### Returns
+
+[`WalkResult`](../interfaces/WalkResult.md)
+
+## Call Signature
+
+> **walkSchema**(`schema`, `options?`): [`FormField`](../interfaces/FormField.md)[]
+
+Defined in: [walker.ts:290](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/walker.ts#L290)
+
+Walk a Zod schema and produce a FormField[] tree.
+When optimization option is set, returns WalkResult with fields + schemaLite.
+
+### Parameters
+
+#### schema
+
+`$ZodType`
+
+#### options?
 
 [`WalkOptions`](../interfaces/WalkOptions.md)
 
-Optional configuration for the walk
-
-## Returns
+### Returns
 
 [`FormField`](../interfaces/FormField.md)[]
-
-FormField[] - Ordered array of field descriptors

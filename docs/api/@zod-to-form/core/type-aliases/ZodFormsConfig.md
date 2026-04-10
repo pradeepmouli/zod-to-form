@@ -8,7 +8,7 @@
 
 > **ZodFormsConfig**\<`TComponents`, `TSchemas`\> = `object`
 
-Defined in: [config.ts:106](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/config.ts#L106)
+Defined in: [config.ts:99](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/config.ts#L99)
 
 ## Type Parameters
 
@@ -26,7 +26,7 @@ Defined in: [config.ts:106](https://github.com/pradeepmouli/zod-to-form/blob/8e8
 
 > **components**: [`ComponentsConfig`](ComponentsConfig.md)\<`TComponents`\>
 
-Defined in: [config.ts:110](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/config.ts#L110)
+Defined in: [config.ts:103](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/config.ts#L103)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [config.ts:110](https://github.com/pradeepmouli/zod-to-form/blob/8e8
 
 > `optional` **defaults?**: [`ConfigDefaults`](ConfigDefaults.md)
 
-Defined in: [config.ts:112](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/config.ts#L112)
+Defined in: [config.ts:104](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/config.ts#L104)
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: [config.ts:112](https://github.com/pradeepmouli/zod-to-form/blob/8e8
 
 > `optional` **exclude?**: `string`[]
 
-Defined in: [config.ts:115](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/config.ts#L115)
+Defined in: [config.ts:107](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/config.ts#L107)
 
 ***
 
@@ -50,15 +50,7 @@ Defined in: [config.ts:115](https://github.com/pradeepmouli/zod-to-form/blob/8e8
 
 > `optional` **fields?**: `Record`\<`string`, [`TypedFieldConfig`](TypedFieldConfig.md)\<`TComponents`\>\>
 
-Defined in: [config.ts:116](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/config.ts#L116)
-
-***
-
-### formPrimitives?
-
-> `optional` **formPrimitives?**: [`FormPrimitivesConfig`](FormPrimitivesConfig.md)\<`TComponents`\>
-
-Defined in: [config.ts:111](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/config.ts#L111)
+Defined in: [config.ts:108](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/config.ts#L108)
 
 ***
 
@@ -66,7 +58,7 @@ Defined in: [config.ts:111](https://github.com/pradeepmouli/zod-to-form/blob/8e8
 
 > `optional` **include?**: `string`[]
 
-Defined in: [config.ts:114](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/config.ts#L114)
+Defined in: [config.ts:106](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/config.ts#L106)
 
 ***
 
@@ -74,7 +66,7 @@ Defined in: [config.ts:114](https://github.com/pradeepmouli/zod-to-form/blob/8e8
 
 > `optional` **schemas?**: `{ [K in keyof TSchemas & string]?: ZodTypeConfig<TSchemas[K] extends $ZodType ? SchemaFieldPath<TSchemas[K]> : string, TComponents> }`
 
-Defined in: [config.ts:117](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/config.ts#L117)
+Defined in: [config.ts:109](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/config.ts#L109)
 
 ***
 
@@ -82,4 +74,4 @@ Defined in: [config.ts:117](https://github.com/pradeepmouli/zod-to-form/blob/8e8
 
 > `optional` **types?**: `string`[]
 
-Defined in: [config.ts:113](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/config.ts#L113)
+Defined in: [config.ts:105](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/config.ts#L105)

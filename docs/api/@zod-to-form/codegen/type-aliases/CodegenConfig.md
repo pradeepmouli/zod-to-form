@@ -8,7 +8,7 @@
 
 > **CodegenConfig** = `object`
 
-Defined in: [generate.ts:11](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/generate.ts#L11)
+Defined in: [generate.ts:12](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/codegen/src/generate.ts#L12)
 
 ## Properties
 
@@ -16,7 +16,7 @@ Defined in: [generate.ts:11](https://github.com/pradeepmouli/zod-to-form/blob/8e
 
 > `optional` **componentConfig?**: [`ZodFormsConfig`](../../cli/type-aliases/ZodFormsConfig.md)\<`Record`\<`string`, `unknown`\>\>
 
-Defined in: [generate.ts:17](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/generate.ts#L17)
+Defined in: [generate.ts:18](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/codegen/src/generate.ts#L18)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [generate.ts:17](https://github.com/pradeepmouli/zod-to-form/blob/8e
 
 > **componentName**: `string`
 
-Defined in: [generate.ts:15](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/generate.ts#L15)
+Defined in: [generate.ts:16](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/codegen/src/generate.ts#L16)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [generate.ts:15](https://github.com/pradeepmouli/zod-to-form/blob/8e
 
 > **exportName**: `string`
 
-Defined in: [generate.ts:14](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/generate.ts#L14)
+Defined in: [generate.ts:15](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/codegen/src/generate.ts#L15)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [generate.ts:14](https://github.com/pradeepmouli/zod-to-form/blob/8e
 
 > `optional` **formProvider?**: `boolean`
 
-Defined in: [generate.ts:22](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/generate.ts#L22)
+Defined in: [generate.ts:23](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/codegen/src/generate.ts#L23)
 
 Force FormProvider wrapper in submit mode. Auto-save mode always uses FormProvider regardless.
 
@@ -50,7 +50,17 @@ Force FormProvider wrapper in submit mode. Auto-save mode always uses FormProvid
 
 > **mode**: `"submit"` \| `"auto-save"`
 
-Defined in: [generate.ts:16](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/generate.ts#L16)
+Defined in: [generate.ts:17](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/codegen/src/generate.ts#L17)
+
+***
+
+### outputPath?
+
+> `optional` **outputPath?**: `string`
+
+Defined in: [generate.ts:31](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/codegen/src/generate.ts#L31)
+
+Output path of the form component — used to compute the .lite.ts import path
 
 ***
 
@@ -58,9 +68,29 @@ Defined in: [generate.ts:16](https://github.com/pradeepmouli/zod-to-form/blob/8e
 
 > `optional` **schemaImportPath?**: `string`
 
-Defined in: [generate.ts:13](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/generate.ts#L13)
+Defined in: [generate.ts:14](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/codegen/src/generate.ts#L14)
 
 Optional pre-computed import path for the schema (e.g., './schema.js'). Defaults to './schema'. The CLI typically computes this from file paths; the browser playground can pass it explicitly.
+
+***
+
+### schemaLite?
+
+> `optional` **schemaLite?**: `$ZodType` \| `null`
+
+Defined in: [generate.ts:27](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/codegen/src/generate.ts#L27)
+
+SchemaLite for submit-time validation of top-level effects (null when no effects exist)
+
+***
+
+### schemaLiteInfo?
+
+> `optional` **schemaLiteInfo?**: [`SchemaLiteInfo`](../../core/type-aliases/SchemaLiteInfo.md)
+
+Defined in: [generate.ts:29](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/codegen/src/generate.ts#L29)
+
+Codegen metadata for generating the .lite.ts file
 
 ***
 
@@ -68,7 +98,7 @@ Optional pre-computed import path for the schema (e.g., './schema.js'). Defaults
 
 > `optional` **serverAction?**: `boolean`
 
-Defined in: [generate.ts:20](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/generate.ts#L20)
+Defined in: [generate.ts:21](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/codegen/src/generate.ts#L21)
 
 #### Deprecated
 
@@ -80,4 +110,14 @@ Currently unused. Reserved for future server action codegen support.
 
 > **ui**: `"shadcn"` \| `"html"`
 
-Defined in: [generate.ts:18](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/generate.ts#L18)
+Defined in: [generate.ts:19](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/codegen/src/generate.ts#L19)
+
+***
+
+### validationLevel?
+
+> `optional` **validationLevel?**: `1` \| `2` \| `3`
+
+Defined in: [generate.ts:25](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/codegen/src/generate.ts#L25)
+
+Validation optimization level. When set, generated code uses per-field validation instead of zodResolver.

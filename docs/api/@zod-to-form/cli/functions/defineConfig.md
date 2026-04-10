@@ -8,7 +8,7 @@
 
 > **defineConfig**\<`TComponents`, `TSchemas`\>(`config`): [`ZodFormsConfig`](../type-aliases/ZodFormsConfig.md)\<`TComponents`, `TSchemas`\>
 
-Defined in: core/dist/config.d.ts:107
+Defined in: core/dist/config.d.ts:101
 
 ## Type Parameters
 

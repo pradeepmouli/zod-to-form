@@ -8,7 +8,7 @@
 
 > **resolveFieldMapping**\<`TComponents`\>(`fieldKey`, `componentName`, `componentConfig`): `object`
 
-Defined in: [generate.ts:173](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/generate.ts#L173)
+Defined in: [generate.ts:172](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/codegen/src/generate.ts#L172)
 
 ## Type Parameters
 

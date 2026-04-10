@@ -8,7 +8,7 @@
 
 > **validateConfig**(`value`, `source?`): [`ZodFormsConfig`](../type-aliases/ZodFormsConfig.md)\<`Record`\<`string`, `unknown`\>\>
 
-Defined in: core/dist/config.d.ts:108
+Defined in: core/dist/config.d.ts:102
 
 ## Parameters
 

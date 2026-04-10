@@ -8,13 +8,13 @@
 
 > **processPipe**(`schema`, `ctx`, `field`, `params`): `void`
 
-Defined in: [processors/wrappers.ts:92](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/processors/wrappers.ts#L92)
+Defined in: [processors/wrappers.ts:96](https://github.com/pradeepmouli/zod-to-form/blob/c74f77fffd2cebcc6ae8059fad83772f8d79fc1c/packages/core/src/processors/wrappers.ts#L96)
 
 ## Parameters
 
 ### schema
 
-`$ZodType`
+`$ZodPipe`
 
 ### ctx
 
