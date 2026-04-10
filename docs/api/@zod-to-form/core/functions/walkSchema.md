@@ -10,7 +10,7 @@
 
 > **walkSchema**(`schema`, `options`): [`WalkResult`](../interfaces/WalkResult.md)
 
-Defined in: [walker.ts:264](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/walker.ts#L264)
+Defined in: [walker.ts:264](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/walker.ts#L264)
 
 Walk a Zod schema and produce a FormField[] tree.
 When optimization option is set, returns WalkResult with fields + schemaLite.
@@ -33,7 +33,7 @@ When optimization option is set, returns WalkResult with fields + schemaLite.
 
 > **walkSchema**(`schema`, `options?`): [`FormField`](../interfaces/FormField.md)[]
 
-Defined in: [walker.ts:268](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/walker.ts#L268)
+Defined in: [walker.ts:268](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/walker.ts#L268)
 
 Walk a Zod schema and produce a FormField[] tree.
 When optimization option is set, returns WalkResult with fields + schemaLite.

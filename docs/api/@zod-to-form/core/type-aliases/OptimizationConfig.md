@@ -8,7 +8,7 @@
 
 > **OptimizationConfig** = `object`
 
-Defined in: [config.ts:72](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/config.ts#L72)
+Defined in: [config.ts:72](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L72)
 
 ## Properties
 
@@ -16,4 +16,4 @@ Defined in: [config.ts:72](https://github.com/pradeepmouli/zod-to-form/blob/07a3
 
 > `optional` **level?**: `1` \| `2` \| `3`
 
-Defined in: [config.ts:73](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/config.ts#L73)
+Defined in: [config.ts:73](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L73)

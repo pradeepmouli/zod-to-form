@@ -8,7 +8,7 @@
 
 > **defineConfig**\<`TComponents`, `TSchemas`\>(`config`): [`ZodFormsConfig`](../type-aliases/ZodFormsConfig.md)\<`TComponents`, `TSchemas`\>
 
-Defined in: [config.ts:411](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/config.ts#L411)
+Defined in: [config.ts:411](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L411)
 
 Identity helper that returns its argument typed as `ZodFormsConfig`.
 

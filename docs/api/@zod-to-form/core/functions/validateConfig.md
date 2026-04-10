@@ -8,7 +8,7 @@
 
 > **validateConfig**(`value`, `source?`): [`ZodFormsConfig`](../type-aliases/ZodFormsConfig.md)\<`Record`\<`string`, `unknown`\>\>
 
-Defined in: [config.ts:442](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/config.ts#L442)
+Defined in: [config.ts:442](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L442)
 
 Validates an unknown value as a `ZodFormsConfig` at runtime.
 

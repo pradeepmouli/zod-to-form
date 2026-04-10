@@ -8,7 +8,7 @@
 
 > `const` **shadcnComponentMap**: `object`
 
-Defined in: [packages/react/src/shadcn/index.ts:149](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/react/src/shadcn/index.ts#L149)
+Defined in: [packages/react/src/shadcn/index.ts:149](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/react/src/shadcn/index.ts#L149)
 
 ## Type Declaration
 
