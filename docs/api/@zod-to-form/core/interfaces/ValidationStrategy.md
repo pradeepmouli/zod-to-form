@@ -6,7 +6,7 @@
 
 # Interface: ValidationStrategy
 
-Defined in: [types.ts:15](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/types.ts#L15)
+Defined in: [types.ts:15](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/types.ts#L15)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:15](https://github.com/pradeepmouli/zod-to-form/blob/1a70c
 
 > **mode**: `"zodSchema"` \| `"native"` \| `"component-enforced"`
 
-Defined in: [types.ts:16](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/types.ts#L16)
+Defined in: [types.ts:16](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/types.ts#L16)
 
 ***
 
@@ -22,4 +22,4 @@ Defined in: [types.ts:16](https://github.com/pradeepmouli/zod-to-form/blob/1a70c
 
 > `optional` **rules?**: [`NativeRules`](NativeRules.md)
 
-Defined in: [types.ts:17](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/types.ts#L17)
+Defined in: [types.ts:17](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/types.ts#L17)

@@ -67,6 +67,12 @@ FieldConfig<T> & { render?: (field: FormField, props: unknown) => unknown }
 ```
 
 ### `FieldConfig`
+Per-field configuration that customises how a Zod schema field is rendered.
+
+Merges base options (component override, visibility, order, props) with type-aware
+extras: nested `fields` for object schemas, and `arrayItems` for array schemas.
+Use this type when annotating a `ZodFormsConfig.fields` record or a per-schema
+`schemas.[key].fields` map.
 ```ts
 FieldConfigBase & FieldConfigExtras<T>
 ```
@@ -168,6 +174,12 @@ an open `Record<string, unknown>`.
 ```
 
 ### `ZodFormsConfig`
+Root configuration type for `zod-to-form` code generation.
+
+Describes the component library to use, generation defaults, per-schema
+overrides, and global field configuration. Pass this to `defineConfig()` in
+your `z2f.config.ts` for full type inference, or load and validate it at
+runtime with `validateConfig()`.
 
 ### `ZodTypeConfig`
 

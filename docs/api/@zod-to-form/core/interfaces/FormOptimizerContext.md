@@ -6,7 +6,7 @@
 
 # Interface: FormOptimizerContext
 
-Defined in: [optimizers/types.ts:35](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/optimizers/types.ts#L35)
+Defined in: [optimizers/types.ts:35](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/optimizers/types.ts#L35)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [optimizers/types.ts:35](https://github.com/pradeepmouli/zod-to-form
 
 > **collectorBasePath**: `string`
 
-Defined in: [optimizers/types.ts:40](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/optimizers/types.ts#L40)
+Defined in: [optimizers/types.ts:40](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/optimizers/types.ts#L40)
 
 Dot-path prefix of the current collector's scope (empty string at root)
 
@@ -24,7 +24,7 @@ Dot-path prefix of the current collector's scope (empty string at root)
 
 > **level**: `1` \| `2` \| `3`
 
-Defined in: [optimizers/types.ts:38](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/optimizers/types.ts#L38)
+Defined in: [optimizers/types.ts:38](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/optimizers/types.ts#L38)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [optimizers/types.ts:38](https://github.com/pradeepmouli/zod-to-form
 
 > **optimizers**: `Record`\<`string`, [`FormOptimizer`](../type-aliases/FormOptimizer.md)[]\>
 
-Defined in: [optimizers/types.ts:36](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/optimizers/types.ts#L36)
+Defined in: [optimizers/types.ts:36](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/optimizers/types.ts#L36)
 
 ***
 
@@ -40,4 +40,4 @@ Defined in: [optimizers/types.ts:36](https://github.com/pradeepmouli/zod-to-form
 
 > **schemaLite**: [`SchemaLiteCollector`](SchemaLiteCollector.md)
 
-Defined in: [optimizers/types.ts:37](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/optimizers/types.ts#L37)
+Defined in: [optimizers/types.ts:37](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/optimizers/types.ts#L37)

@@ -8,7 +8,7 @@
 
 > `const` **defaultComponentMap**: `object`
 
-Defined in: [packages/react/src/components/index.ts:32](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/react/src/components/index.ts#L32)
+Defined in: [packages/react/src/components/index.ts:32](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/react/src/components/index.ts#L32)
 
 ## Type Declaration
 

@@ -8,7 +8,14 @@
 
 > **ZodFormsConfig**\<`TComponents`, `TSchemas`\> = `object`
 
-Defined in: core/dist/config.d.ts:71
+Defined in: core/dist/config.d.ts:82
+
+Root configuration type for `zod-to-form` code generation.
+
+Describes the component library to use, generation defaults, per-schema
+overrides, and global field configuration. Pass this to `defineConfig()` in
+your `z2f.config.ts` for full type inference, or load and validate it at
+runtime with `validateConfig()`.
 
 ## Type Parameters
 
@@ -16,9 +23,13 @@ Defined in: core/dist/config.d.ts:71
 
 `TComponents` *extends* `Record`\<`string`, `unknown`\> = `Record`\<`string`, `unknown`\>
 
+Shape of the component module (used to type `fields.component`).
+
 ### TSchemas
 
 `TSchemas` *extends* `Record`\<`string`, `unknown`\> = `Record`\<`string`, `unknown`\>
+
+Map of schema export names to their Zod schema types (used to type `schemas.[key].fields`).
 
 ## Properties
 
@@ -26,7 +37,7 @@ Defined in: core/dist/config.d.ts:71
 
 > **components**: [`ComponentsConfig`](../../core/type-aliases/ComponentsConfig.md)\<`TComponents`\>
 
-Defined in: core/dist/config.d.ts:72
+Defined in: core/dist/config.d.ts:83
 
 ***
 
@@ -34,7 +45,7 @@ Defined in: core/dist/config.d.ts:72
 
 > `optional` **defaults?**: [`ConfigDefaults`](../../core/type-aliases/ConfigDefaults.md)
 
-Defined in: core/dist/config.d.ts:73
+Defined in: core/dist/config.d.ts:84
 
 ***
 
@@ -42,7 +53,7 @@ Defined in: core/dist/config.d.ts:73
 
 > `optional` **exclude?**: `string`[]
 
-Defined in: core/dist/config.d.ts:76
+Defined in: core/dist/config.d.ts:87
 
 ***
 
@@ -50,7 +61,7 @@ Defined in: core/dist/config.d.ts:76
 
 > `optional` **fields?**: `Record`\<`string`, [`TypedFieldConfig`](../../core/type-aliases/TypedFieldConfig.md)\<`TComponents`\>\>
 
-Defined in: core/dist/config.d.ts:77
+Defined in: core/dist/config.d.ts:88
 
 ***
 
@@ -58,7 +69,7 @@ Defined in: core/dist/config.d.ts:77
 
 > `optional` **include?**: `string`[]
 
-Defined in: core/dist/config.d.ts:75
+Defined in: core/dist/config.d.ts:86
 
 ***
 
@@ -66,7 +77,7 @@ Defined in: core/dist/config.d.ts:75
 
 > `optional` **schemas?**: `{ [K in keyof TSchemas & string]?: ZodTypeConfig<TSchemas[K] extends $ZodType ? SchemaFieldPath<TSchemas[K]> : string, TComponents> }`
 
-Defined in: core/dist/config.d.ts:78
+Defined in: core/dist/config.d.ts:89
 
 ***
 
@@ -74,4 +85,4 @@ Defined in: core/dist/config.d.ts:78
 
 > `optional` **types?**: `string`[]
 
-Defined in: core/dist/config.d.ts:74
+Defined in: core/dist/config.d.ts:85

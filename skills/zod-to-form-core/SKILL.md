@@ -1,6 +1,6 @@
 ---
 name: zod-to-form-core
-description: Schema-Driven Form Generation for Zod v4 - walks Zod internal type tree using processor registry pattern to emit React form components instead of JSON Schema
+description: "Schema-Driven Form Generation for Zod v4 - walks Zod internal type tree using processor registry pattern to emit React form components instead of JSON Schema Use when working with zod, forms, form-generation, schema, codegen, react, validation, ui, components."
 license: MIT
 ---
 
@@ -10,6 +10,7 @@ Schema-Driven Form Generation for Zod v4 - walks Zod internal type tree using pr
 
 ## When to Use
 
+- Working with zod, forms, form-generation, schema, codegen, react, validation, ui, components
 - API surface: 42 functions, 27 types, 4 constants
 
 ## Quick Reference

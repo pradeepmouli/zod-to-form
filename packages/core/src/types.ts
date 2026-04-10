@@ -144,6 +144,16 @@ type FieldConfigExtras<T extends $ZodType> =
         : // leaf schema types (string, number, boolean, etc.) — neither field applies
           Record<never, never>;
 
+/**
+ * Per-field configuration that customises how a Zod schema field is rendered.
+ *
+ * Merges base options (component override, visibility, order, props) with type-aware
+ * extras: nested `fields` for object schemas, and `arrayItems` for array schemas.
+ * Use this type when annotating a `ZodFormsConfig.fields` record or a per-schema
+ * `schemas.[key].fields` map.
+ *
+ * @typeParam T - The Zod schema type of the field, used to constrain nested `fields` and `arrayItems`.
+ */
 export type FieldConfig<T extends $ZodType = $ZodType> = FieldConfigBase & FieldConfigExtras<T>;
 
 // ─── FormMeta: Registry Annotation ────────────────────────────────────

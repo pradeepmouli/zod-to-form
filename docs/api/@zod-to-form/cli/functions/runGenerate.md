@@ -8,7 +8,15 @@
 
 > **runGenerate**(`options`): `Promise`\<\{ `actionCode?`: `string`; `actionPath?`: `string`; `code`: `string`; `outputPath`: `string`; `wroteFile`: `boolean`; \}\>
 
-Defined in: [cli/src/index.ts:89](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/cli/src/index.ts#L89)
+Defined in: [cli/src/index.ts:101](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/cli/src/index.ts#L101)
+
+Executes the code generation pipeline for a single Zod schema export.
+
+Loads the config and schema, resolves field overrides, walks the Zod type
+tree to produce an intermediate `FormField[]` representation, and writes a
+React form component (plus optional server action and schema-lite files) to
+disk. When `options.dryRun` is true the generated code is printed to stdout
+instead of being written.
 
 ## Parameters
 
@@ -16,6 +24,10 @@ Defined in: [cli/src/index.ts:89](https://github.com/pradeepmouli/zod-to-form/bl
 
 `GenerateOptions`
 
+Generation options including paths for config, schema, and output.
+
 ## Returns
 
 `Promise`\<\{ `actionCode?`: `string`; `actionPath?`: `string`; `code`: `string`; `outputPath`: `string`; `wroteFile`: `boolean`; \}\>
+
+Resolved output paths and the generated code string.

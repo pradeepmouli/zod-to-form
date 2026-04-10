@@ -3,6 +3,7 @@
   "version": "0.2.0",
   "private": true,
   "description": "Schema-Driven Form Generation for Zod v4 - walks Zod internal type tree using processor registry pattern to emit React form components instead of JSON Schema",
+  "keywords": ["zod", "forms", "form-generation", "schema", "codegen", "react", "validation", "typescript", "ui", "components"],
   "type": "module",
   "author": "Pradeep Mouli <noreply@anthropic.com>",
   "license": "MIT",

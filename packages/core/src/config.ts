@@ -96,6 +96,17 @@ export type ZodTypeConfig<
   fields?: Partial<Record<TFieldKeys, TypedFieldConfig<TComponents>>>;
 };
 
+/**
+ * Root configuration type for `zod-to-form` code generation.
+ *
+ * Describes the component library to use, generation defaults, per-schema
+ * overrides, and global field configuration. Pass this to `defineConfig()` in
+ * your `z2f.config.ts` for full type inference, or load and validate it at
+ * runtime with `validateConfig()`.
+ *
+ * @typeParam TComponents - Shape of the component module (used to type `fields.component`).
+ * @typeParam TSchemas - Map of schema export names to their Zod schema types (used to type `schemas.[key].fields`).
+ */
 export type ZodFormsConfig<
   TComponents extends Record<string, unknown> = Record<string, unknown>,
   TSchemas extends Record<string, unknown> = Record<string, unknown>
@@ -380,6 +391,23 @@ const PRESET_MAP: Record<ComponentPreset, Record<string, ComponentOverride>> = {
   html: DEFAULT_OVERRIDES
 };
 
+/**
+ * Identity helper that returns its argument typed as `ZodFormsConfig`.
+ *
+ * Merges preset component overrides (e.g. shadcn) into `config.components.overrides`
+ * so that user-supplied overrides layer on top of the preset defaults. Use this in
+ * your `z2f.config.ts` to get full TypeScript inference and IDE autocompletion.
+ *
+ * @param config - The raw configuration object.
+ * @returns The same configuration with preset overrides applied.
+ *
+ * @example
+ * ```ts
+ * export default defineConfig({
+ *   components: { source: '@/components/ui', preset: 'shadcn' },
+ * });
+ * ```
+ */
 export function defineConfig<
   TComponents extends Record<string, unknown> = Record<string, unknown>,
   TSchemas extends Record<string, unknown> = Record<string, unknown>
@@ -399,6 +427,18 @@ export function defineConfig<
   };
 }
 
+/**
+ * Validates an unknown value as a `ZodFormsConfig` at runtime.
+ *
+ * Parses `value` using the internal Zod config schema and throws a descriptive
+ * error if validation fails. Use this when loading config from untrusted sources
+ * such as JSON files or dynamic `import()` calls.
+ *
+ * @param value - The value to validate.
+ * @param source - Human-readable label for error messages (defaults to `'config'`).
+ * @returns The validated configuration cast to `ZodFormsConfig`.
+ * @throws If `value` does not conform to the config schema.
+ */
 export function validateConfig(
   value: unknown,
   source = 'config'

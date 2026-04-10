@@ -29,21 +29,37 @@ createSchemaLiteCollector(options?: { useAnyBase?: boolean }): SchemaLiteCollect
 ## config
 
 ### `defineConfig`
+Identity helper that returns its argument typed as `ZodFormsConfig`.
+
+Merges preset component overrides (e.g. shadcn) into `config.components.overrides`
+so that user-supplied overrides layer on top of the preset defaults. Use this in
+your `z2f.config.ts` to get full TypeScript inference and IDE autocompletion.
 ```ts
 defineConfig<TComponents, TSchemas>(config: ZodFormsConfig<TComponents, TSchemas>): ZodFormsConfig<TComponents, TSchemas>
 ```
 **Parameters:**
-- `config: ZodFormsConfig<TComponents, TSchemas>`
-**Returns:** `ZodFormsConfig<TComponents, TSchemas>`
+- `config: ZodFormsConfig<TComponents, TSchemas>` — The raw configuration object.
+**Returns:** `ZodFormsConfig<TComponents, TSchemas>` — The same configuration with preset overrides applied.
+```ts
+export default defineConfig({
+  components: { source: '@/components/ui', preset: 'shadcn' },
+});
+```
 
 ### `validateConfig`
+Validates an unknown value as a `ZodFormsConfig` at runtime.
+
+Parses `value` using the internal Zod config schema and throws a descriptive
+error if validation fails. Use this when loading config from untrusted sources
+such as JSON files or dynamic `import()` calls.
 ```ts
 validateConfig(value: unknown, source: string): ZodFormsConfig<Record<string, unknown>>
 ```
 **Parameters:**
-- `value: unknown`
-- `source: string` — default: `'config'`
-**Returns:** `ZodFormsConfig<Record<string, unknown>>`
+- `value: unknown` — The value to validate.
+- `source: string` — default: `'config'` — Human-readable label for error messages (defaults to `'config'`).
+**Returns:** `ZodFormsConfig<Record<string, unknown>>` — The validated configuration cast to `ZodFormsConfig`.
+**Throws:** If `value` does not conform to the config schema.
 
 ### `resolveFieldConfig`
 ```ts
@@ -539,22 +555,5 @@ processOptional(schema: $ZodOptional, ctx: FormProcessorContext, field: FormFiel
 - `field: FormField`
 - `params: ProcessParams`
 
-### `processPipe`
-```ts
-processPipe(schema: $ZodPipe, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
-```
-**Parameters:**
-- `schema: $ZodPipe`
-- `ctx: FormProcessorContext`
-- `field: FormField`
-- `params: ProcessParams`
 
-### `processReadonly`
-```ts
-processReadonly(schema: $ZodReadonly, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
-```
-**Parameters:**
-- `schema: $ZodReadonly`
-- `ctx: FormProcessorContext`
-- `field: FormField`
-- `params: ProcessParams`
+<!-- truncated -->

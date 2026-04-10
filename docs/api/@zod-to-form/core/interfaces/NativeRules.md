@@ -6,7 +6,7 @@
 
 # Interface: NativeRules
 
-Defined in: [types.ts:6](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/types.ts#L6)
+Defined in: [types.ts:6](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/types.ts#L6)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:6](https://github.com/pradeepmouli/zod-to-form/blob/1a70cb
 
 > `optional` **max?**: `object`
 
-Defined in: [types.ts:9](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/types.ts#L9)
+Defined in: [types.ts:9](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/types.ts#L9)
 
 #### message
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:9](https://github.com/pradeepmouli/zod-to-form/blob/1a70cb
 
 > `optional` **maxLength?**: `object`
 
-Defined in: [types.ts:11](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/types.ts#L11)
+Defined in: [types.ts:11](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/types.ts#L11)
 
 #### message
 
@@ -46,7 +46,7 @@ Defined in: [types.ts:11](https://github.com/pradeepmouli/zod-to-form/blob/1a70c
 
 > `optional` **min?**: `object`
 
-Defined in: [types.ts:8](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/types.ts#L8)
+Defined in: [types.ts:8](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/types.ts#L8)
 
 #### message
 
@@ -62,7 +62,7 @@ Defined in: [types.ts:8](https://github.com/pradeepmouli/zod-to-form/blob/1a70cb
 
 > `optional` **minLength?**: `object`
 
-Defined in: [types.ts:10](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/types.ts#L10)
+Defined in: [types.ts:10](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/types.ts#L10)
 
 #### message
 
@@ -78,7 +78,7 @@ Defined in: [types.ts:10](https://github.com/pradeepmouli/zod-to-form/blob/1a70c
 
 > `optional` **pattern?**: `object`
 
-Defined in: [types.ts:12](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/types.ts#L12)
+Defined in: [types.ts:12](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/types.ts#L12)
 
 #### message
 
@@ -94,4 +94,4 @@ Defined in: [types.ts:12](https://github.com/pradeepmouli/zod-to-form/blob/1a70c
 
 > `optional` **required?**: `string`
 
-Defined in: [types.ts:7](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/types.ts#L7)
+Defined in: [types.ts:7](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/types.ts#L7)

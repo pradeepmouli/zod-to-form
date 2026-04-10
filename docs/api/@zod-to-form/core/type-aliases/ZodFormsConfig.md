@@ -8,7 +8,14 @@
 
 > **ZodFormsConfig**\<`TComponents`, `TSchemas`\> = `object`
 
-Defined in: [config.ts:99](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/config.ts#L99)
+Defined in: [config.ts:110](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/config.ts#L110)
+
+Root configuration type for `zod-to-form` code generation.
+
+Describes the component library to use, generation defaults, per-schema
+overrides, and global field configuration. Pass this to `defineConfig()` in
+your `z2f.config.ts` for full type inference, or load and validate it at
+runtime with `validateConfig()`.
 
 ## Type Parameters
 
@@ -16,9 +23,13 @@ Defined in: [config.ts:99](https://github.com/pradeepmouli/zod-to-form/blob/1a70
 
 `TComponents` *extends* `Record`\<`string`, `unknown`\> = `Record`\<`string`, `unknown`\>
 
+Shape of the component module (used to type `fields.component`).
+
 ### TSchemas
 
 `TSchemas` *extends* `Record`\<`string`, `unknown`\> = `Record`\<`string`, `unknown`\>
+
+Map of schema export names to their Zod schema types (used to type `schemas.[key].fields`).
 
 ## Properties
 
@@ -26,7 +37,7 @@ Defined in: [config.ts:99](https://github.com/pradeepmouli/zod-to-form/blob/1a70
 
 > **components**: [`ComponentsConfig`](ComponentsConfig.md)\<`TComponents`\>
 
-Defined in: [config.ts:103](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/config.ts#L103)
+Defined in: [config.ts:114](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/config.ts#L114)
 
 ***
 
@@ -34,7 +45,7 @@ Defined in: [config.ts:103](https://github.com/pradeepmouli/zod-to-form/blob/1a7
 
 > `optional` **defaults?**: [`ConfigDefaults`](ConfigDefaults.md)
 
-Defined in: [config.ts:104](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/config.ts#L104)
+Defined in: [config.ts:115](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/config.ts#L115)
 
 ***
 
@@ -42,7 +53,7 @@ Defined in: [config.ts:104](https://github.com/pradeepmouli/zod-to-form/blob/1a7
 
 > `optional` **exclude?**: `string`[]
 
-Defined in: [config.ts:107](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/config.ts#L107)
+Defined in: [config.ts:118](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/config.ts#L118)
 
 ***
 
@@ -50,7 +61,7 @@ Defined in: [config.ts:107](https://github.com/pradeepmouli/zod-to-form/blob/1a7
 
 > `optional` **fields?**: `Record`\<`string`, [`TypedFieldConfig`](TypedFieldConfig.md)\<`TComponents`\>\>
 
-Defined in: [config.ts:108](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/config.ts#L108)
+Defined in: [config.ts:119](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/config.ts#L119)
 
 ***
 
@@ -58,7 +69,7 @@ Defined in: [config.ts:108](https://github.com/pradeepmouli/zod-to-form/blob/1a7
 
 > `optional` **include?**: `string`[]
 
-Defined in: [config.ts:106](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/config.ts#L106)
+Defined in: [config.ts:117](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/config.ts#L117)
 
 ***
 
@@ -66,7 +77,7 @@ Defined in: [config.ts:106](https://github.com/pradeepmouli/zod-to-form/blob/1a7
 
 > `optional` **schemas?**: `{ [K in keyof TSchemas & string]?: ZodTypeConfig<TSchemas[K] extends $ZodType ? SchemaFieldPath<TSchemas[K]> : string, TComponents> }`
 
-Defined in: [config.ts:109](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/config.ts#L109)
+Defined in: [config.ts:120](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/config.ts#L120)
 
 ***
 
@@ -74,4 +85,4 @@ Defined in: [config.ts:109](https://github.com/pradeepmouli/zod-to-form/blob/1a7
 
 > `optional` **types?**: `string`[]
 
-Defined in: [config.ts:105](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/config.ts#L105)
+Defined in: [config.ts:116](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/config.ts#L116)

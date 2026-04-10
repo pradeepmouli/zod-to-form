@@ -8,7 +8,7 @@
 
 > **createOptimizers**(`custom?`): `Record`\<`string`, [`FormOptimizer`](../type-aliases/FormOptimizer.md)[]\>
 
-Defined in: [optimizers/index.ts:49](https://github.com/pradeepmouli/zod-to-form/blob/1a70cba581fa7ba36703637d1cf088e9aa08a4f2/packages/core/src/optimizers/index.ts#L49)
+Defined in: [optimizers/index.ts:49](https://github.com/pradeepmouli/zod-to-form/blob/07a3b2a90ac2fca44ff29a544e6b0db537316968/packages/core/src/optimizers/index.ts#L49)
 
 Create an optimizer registry by merging custom optimizers with builtins.
 Custom optimizers for a type replace the entire chain for that type.
