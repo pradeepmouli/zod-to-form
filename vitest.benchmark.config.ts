@@ -1,5 +1,11 @@
-import { bench, describe } from 'vitest';
+import { defineConfig } from 'vitest/config';
 
-describe('Benchmarks', () => {
-  bench('Example benchmark', () => {});
+export default defineConfig({
+  test: {
+    benchmark: {
+      include: ['packages/**/tests/performance/*.bench.ts'],
+      exclude: ['**/node_modules/**', '**/*.browser.bench.*'],
+      outputJson: 'bench-results.json'
+    }
+  }
 });
