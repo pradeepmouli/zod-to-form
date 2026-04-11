@@ -8,7 +8,7 @@
 
 > **createSchemaLiteCollector**(`options?`): [`SchemaLiteCollector`](../interfaces/SchemaLiteCollector.md)
 
-Defined in: [optimizers/schema-lite.ts:188](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/optimizers/schema-lite.ts#L188)
+Defined in: [optimizers/schema-lite.ts:188](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/optimizers/schema-lite.ts#L188)
 
 Create a new SchemaLiteCollector instance.
 

@@ -8,7 +8,7 @@
 
 > **validateConfig**(`value`, `source?`): [`ZodFormsConfig`](../type-aliases/ZodFormsConfig.md)\<`Record`\<`string`, `unknown`\>\>
 
-Defined in: core/dist/config.d.ts:142
+Defined in: core/dist/config.d.ts:175
 
 Validates an unknown value as a `ZodFormsConfig` at runtime.
 
@@ -39,3 +39,17 @@ The validated configuration cast to `ZodFormsConfig`.
 ## Throws
 
 If `value` does not conform to the config schema.
+
+## Use When
+
+- Loading config from JSON files or dynamic import()
+- You need runtime validation of user-provided config
+
+## Avoid When
+
+- Using TypeScript with defineConfig() — type errors catch most issues at dev time
+
+## Pitfalls
+
+- NEVER use as a type guard — it throws on invalid input, doesn't narrow
+- NEVER assume extra keys cause failures — the schema uses z.object().loose(), extra keys are silently ignored

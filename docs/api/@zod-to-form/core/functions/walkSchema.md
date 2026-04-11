@@ -10,7 +10,7 @@
 
 > **walkSchema**(`schema`, `options`): [`WalkResult`](../interfaces/WalkResult.md)
 
-Defined in: [walker.ts:264](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/walker.ts#L264)
+Defined in: [walker.ts:287](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/walker.ts#L287)
 
 Walk a Zod schema and produce a FormField[] tree.
 When optimization option is set, returns WalkResult with fields + schemaLite.
@@ -29,11 +29,36 @@ When optimization option is set, returns WalkResult with fields + schemaLite.
 
 [`WalkResult`](../interfaces/WalkResult.md)
 
+### Remarks
+
+Recursively walks a Zod schema tree and produces a FormField[] intermediate
+representation. Dispatches by def.type to a processor registry. Each processor
+extracts structure and constraints from _zod.def + _zod.bag.
+Uses WeakSet per top-level field for cycle detection — reused schema instances
+(e.g., z.string() in two fields) don't trigger false positives.
+The walker is STATELESS — call it repeatedly with different formRegistry values.
+
+### Use When
+
+- You need direct schema-to-fields conversion in runtime contexts
+- You're building a custom codegen pipeline on top of FormField[]
+
+### Avoid When
+
+- You just want generated components — use the CLI instead
+- Your schema is not z.object() at the root level
+
+### Pitfalls
+
+- NEVER pass a non-object schema at the root — throws immediately
+- NEVER bypass the processor registry for custom types — extend via options.processors
+- NEVER skip normalizeFormValues() before schema.safeParse() — empty strings from HTML inputs fail optional field validation
+
 ## Call Signature
 
 > **walkSchema**(`schema`, `options?`): [`FormField`](../interfaces/FormField.md)[]
 
-Defined in: [walker.ts:268](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/walker.ts#L268)
+Defined in: [walker.ts:291](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/walker.ts#L291)
 
 Walk a Zod schema and produce a FormField[] tree.
 When optimization option is set, returns WalkResult with fields + schemaLite.
@@ -51,3 +76,28 @@ When optimization option is set, returns WalkResult with fields + schemaLite.
 ### Returns
 
 [`FormField`](../interfaces/FormField.md)[]
+
+### Remarks
+
+Recursively walks a Zod schema tree and produces a FormField[] intermediate
+representation. Dispatches by def.type to a processor registry. Each processor
+extracts structure and constraints from _zod.def + _zod.bag.
+Uses WeakSet per top-level field for cycle detection — reused schema instances
+(e.g., z.string() in two fields) don't trigger false positives.
+The walker is STATELESS — call it repeatedly with different formRegistry values.
+
+### Use When
+
+- You need direct schema-to-fields conversion in runtime contexts
+- You're building a custom codegen pipeline on top of FormField[]
+
+### Avoid When
+
+- You just want generated components — use the CLI instead
+- Your schema is not z.object() at the root level
+
+### Pitfalls
+
+- NEVER pass a non-object schema at the root — throws immediately
+- NEVER bypass the processor registry for custom types — extend via options.processors
+- NEVER skip normalizeFormValues() before schema.safeParse() — empty strings from HTML inputs fail optional field validation

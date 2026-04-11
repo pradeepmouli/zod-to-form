@@ -8,7 +8,7 @@
 
 > **FieldConfig**\<`T`\> = `FieldConfigBase` & `FieldConfigExtras`\<`T`\>
 
-Defined in: packages/core/dist/types.d.ts:149
+Defined in: packages/core/dist/types.d.ts:151
 
 Per-field configuration that customises how a Zod schema field is rendered.
 

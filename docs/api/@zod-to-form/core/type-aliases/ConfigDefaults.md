@@ -8,7 +8,7 @@
 
 > **ConfigDefaults** = `object`
 
-Defined in: [config.ts:76](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L76)
+Defined in: [config.ts:77](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L77)
 
 ## Properties
 
@@ -16,7 +16,7 @@ Defined in: [config.ts:76](https://github.com/pradeepmouli/zod-to-form/blob/f52a
 
 > `optional` **formProvider?**: `boolean`
 
-Defined in: [config.ts:83](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L83)
+Defined in: [config.ts:84](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L84)
 
 Wrap generated form in <FormProvider {...form}>
 
@@ -26,7 +26,7 @@ Wrap generated form in <FormProvider {...form}>
 
 > `optional` **mode?**: `"submit"` \| `"auto-save"`
 
-Defined in: [config.ts:77](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L77)
+Defined in: [config.ts:78](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L78)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [config.ts:77](https://github.com/pradeepmouli/zod-to-form/blob/f52a
 
 > `optional` **optimization?**: [`OptimizationConfig`](OptimizationConfig.md)
 
-Defined in: [config.ts:85](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L85)
+Defined in: [config.ts:86](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L86)
 
 Validation optimization configuration
 
@@ -44,7 +44,7 @@ Validation optimization configuration
 
 > `optional` **out?**: `string`
 
-Defined in: [config.ts:79](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L79)
+Defined in: [config.ts:80](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L80)
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: [config.ts:79](https://github.com/pradeepmouli/zod-to-form/blob/f52a
 
 > `optional` **overwrite?**: `boolean`
 
-Defined in: [config.ts:80](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L80)
+Defined in: [config.ts:81](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L81)
 
 ***
 
@@ -60,7 +60,7 @@ Defined in: [config.ts:80](https://github.com/pradeepmouli/zod-to-form/blob/f52a
 
 > `optional` **serverAction?**: `boolean`
 
-Defined in: [config.ts:81](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L81)
+Defined in: [config.ts:82](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L82)
 
 ***
 
@@ -68,4 +68,4 @@ Defined in: [config.ts:81](https://github.com/pradeepmouli/zod-to-form/blob/f52a
 
 > `optional` **ui?**: `"shadcn"` \| `"html"`
 
-Defined in: [config.ts:78](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L78)
+Defined in: [config.ts:79](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L79)

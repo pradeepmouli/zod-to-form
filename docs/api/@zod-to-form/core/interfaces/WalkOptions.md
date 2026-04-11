@@ -6,7 +6,7 @@
 
 # Interface: WalkOptions
 
-Defined in: [types.ts:210](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L210)
+Defined in: [types.ts:215](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L215)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:210](https://github.com/pradeepmouli/zod-to-form/blob/f52a
 
 > `optional` **formRegistry?**: [`ZodFormRegistry`](../type-aliases/ZodFormRegistry.md)
 
-Defined in: [types.ts:212](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L212)
+Defined in: [types.ts:217](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L217)
 
 Custom form registry for metadata annotations
 
@@ -24,7 +24,7 @@ Custom form registry for metadata annotations
 
 > `optional` **maxDepth?**: `number`
 
-Defined in: [types.ts:216](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L216)
+Defined in: [types.ts:221](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L221)
 
 Maximum recursion depth for lazy/recursive schemas (default: 5)
 
@@ -34,7 +34,7 @@ Maximum recursion depth for lazy/recursive schemas (default: 5)
 
 > `optional` **optimization?**: `object`
 
-Defined in: [types.ts:225](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L225)
+Defined in: [types.ts:230](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L230)
 
 Validation optimization settings.
 
@@ -57,6 +57,6 @@ here as the single source of truth for the walker.
 
 > `optional` **processors?**: `Record`\<`string`, [`FormProcessor`](../type-aliases/FormProcessor.md)\<`$ZodType`\<`unknown`, `unknown`, `$ZodTypeInternals`\<`unknown`, `unknown`\>\>\>\>
 
-Defined in: [types.ts:214](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L214)
+Defined in: [types.ts:219](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L219)
 
 Custom processors to add or override built-in ones

@@ -8,6 +8,6 @@
 
 > **SchemaLiteInfo** = `SchemaLiteInfoBase` & `object` \| `SchemaLiteInfoBase` & `object` \| `SchemaLiteInfoBase` & `object` \| `null`
 
-Defined in: [optimizers/types.ts:16](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/optimizers/types.ts#L16)
+Defined in: [optimizers/types.ts:16](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/optimizers/types.ts#L16)
 
 Metadata for codegen to reconstruct the lite schema in a generated file

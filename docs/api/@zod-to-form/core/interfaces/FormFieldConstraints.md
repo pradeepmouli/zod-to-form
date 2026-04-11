@@ -6,7 +6,7 @@
 
 # Interface: FormFieldConstraints
 
-Defined in: [types.ts:32](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L32)
+Defined in: [types.ts:32](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L32)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:32](https://github.com/pradeepmouli/zod-to-form/blob/f52a0
 
 > `optional` **format?**: `string`
 
-Defined in: [types.ts:38](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L38)
+Defined in: [types.ts:38](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L38)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:38](https://github.com/pradeepmouli/zod-to-form/blob/f52a0
 
 > `optional` **max?**: `number`
 
-Defined in: [types.ts:34](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L34)
+Defined in: [types.ts:34](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L34)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:34](https://github.com/pradeepmouli/zod-to-form/blob/f52a0
 
 > `optional` **maxLength?**: `number`
 
-Defined in: [types.ts:36](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L36)
+Defined in: [types.ts:36](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L36)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types.ts:36](https://github.com/pradeepmouli/zod-to-form/blob/f52a0
 
 > `optional` **min?**: `number`
 
-Defined in: [types.ts:33](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L33)
+Defined in: [types.ts:33](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L33)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [types.ts:33](https://github.com/pradeepmouli/zod-to-form/blob/f52a0
 
 > `optional` **minLength?**: `number`
 
-Defined in: [types.ts:35](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L35)
+Defined in: [types.ts:35](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L35)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [types.ts:35](https://github.com/pradeepmouli/zod-to-form/blob/f52a0
 
 > `optional` **pattern?**: `string`
 
-Defined in: [types.ts:37](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L37)
+Defined in: [types.ts:37](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L37)
 
 ***
 
@@ -62,4 +62,4 @@ Defined in: [types.ts:37](https://github.com/pradeepmouli/zod-to-form/blob/f52a0
 
 > `optional` **step?**: `number`
 
-Defined in: [types.ts:39](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L39)
+Defined in: [types.ts:39](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L39)

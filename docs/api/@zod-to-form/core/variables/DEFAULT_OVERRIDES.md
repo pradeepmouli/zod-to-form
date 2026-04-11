@@ -8,6 +8,6 @@
 
 > `const` **DEFAULT\_OVERRIDES**: `Record`\<`string`, [`ComponentOverride`](../type-aliases/ComponentOverride.md)\> = `{}`
 
-Defined in: [config.ts:385](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L385)
+Defined in: [config.ts:387](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L387)
 
 Default HTML preset — no controlled components by default

@@ -6,7 +6,7 @@
 
 # Interface: ProcessParams
 
-Defined in: [types.ts:168](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L168)
+Defined in: [types.ts:171](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L171)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:168](https://github.com/pradeepmouli/zod-to-form/blob/f52a
 
 > `optional` **index?**: `number`
 
-Defined in: [types.ts:174](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L174)
+Defined in: [types.ts:177](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L177)
 
 Array item index for rendering
 
@@ -24,7 +24,7 @@ Array item index for rendering
 
 > `optional` **isArrayItem?**: `boolean`
 
-Defined in: [types.ts:172](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L172)
+Defined in: [types.ts:175](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L175)
 
 Whether this field is an array item template
 
@@ -34,6 +34,6 @@ Whether this field is an array item template
 
 > `optional` **parentKey?**: `string`
 
-Defined in: [types.ts:170](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L170)
+Defined in: [types.ts:173](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L173)
 
 Parent field path for nested fields

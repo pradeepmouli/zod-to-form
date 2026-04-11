@@ -8,7 +8,7 @@
 
 > **ZodFormsConfig**\<`TComponents`, `TSchemas`\> = `object`
 
-Defined in: core/dist/config.d.ts:82
+Defined in: core/dist/config.d.ts:84
 
 Root configuration type for `zod-to-form` code generation.
 
@@ -37,7 +37,7 @@ Map of schema export names to their Zod schema types (used to type `schemas.[key
 
 > **components**: [`ComponentsConfig`](../../core/type-aliases/ComponentsConfig.md)\<`TComponents`\>
 
-Defined in: core/dist/config.d.ts:83
+Defined in: core/dist/config.d.ts:85
 
 ***
 
@@ -45,7 +45,7 @@ Defined in: core/dist/config.d.ts:83
 
 > `optional` **defaults?**: [`ConfigDefaults`](../../core/type-aliases/ConfigDefaults.md)
 
-Defined in: core/dist/config.d.ts:84
+Defined in: core/dist/config.d.ts:86
 
 ***
 
@@ -53,7 +53,7 @@ Defined in: core/dist/config.d.ts:84
 
 > `optional` **exclude?**: `string`[]
 
-Defined in: core/dist/config.d.ts:87
+Defined in: core/dist/config.d.ts:89
 
 ***
 
@@ -61,7 +61,7 @@ Defined in: core/dist/config.d.ts:87
 
 > `optional` **fields?**: `Record`\<`string`, [`TypedFieldConfig`](../../core/type-aliases/TypedFieldConfig.md)\<`TComponents`\>\>
 
-Defined in: core/dist/config.d.ts:88
+Defined in: core/dist/config.d.ts:90
 
 ***
 
@@ -69,7 +69,7 @@ Defined in: core/dist/config.d.ts:88
 
 > `optional` **include?**: `string`[]
 
-Defined in: core/dist/config.d.ts:86
+Defined in: core/dist/config.d.ts:88
 
 ***
 
@@ -77,7 +77,7 @@ Defined in: core/dist/config.d.ts:86
 
 > `optional` **schemas?**: `{ [K in keyof TSchemas & string]?: ZodTypeConfig<TSchemas[K] extends $ZodType ? SchemaFieldPath<TSchemas[K]> : string, TComponents> }`
 
-Defined in: core/dist/config.d.ts:89
+Defined in: core/dist/config.d.ts:91
 
 ***
 
@@ -85,4 +85,4 @@ Defined in: core/dist/config.d.ts:89
 
 > `optional` **types?**: `string`[]
 
-Defined in: core/dist/config.d.ts:85
+Defined in: core/dist/config.d.ts:87

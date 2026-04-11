@@ -8,6 +8,6 @@
 
 > `const` **SHADCN\_OVERRIDES**: `Record`\<`string`, [`ComponentOverride`](../type-aliases/ComponentOverride.md)\>
 
-Defined in: [config.ts:369](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L369)
+Defined in: [config.ts:371](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L371)
 
 shadcn preset — Radix-based components need controlled mode + field expression props

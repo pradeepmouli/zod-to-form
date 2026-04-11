@@ -1,6 +1,6 @@
 # Types & Enums
 
-## types.d
+## Types
 
 ### `FormField`
 **Properties:**
@@ -28,6 +28,24 @@
 - `zodSchema: $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>` (optional) — Atomic Zod schema for this field, set by L1 optimizer
 - `validation: ValidationStrategy` (optional) — Validation strategy set by optimizers (undefined = use zodResolver)
 
+### `FormMeta`
+```ts
+FieldConfig<T> & { render?: (field: FormField, props: unknown) => unknown }
+```
+
+### `FieldConfig`
+Per-field configuration that customises how a Zod schema field is rendered.
+
+Merges base options (component override, visibility, order, props) with type-aware
+extras: nested `fields` for object schemas, and `arrayItems` for array schemas.
+Use this type when annotating a `ZodFormsConfig.fields` record or a per-schema
+`schemas.[key].fields` map.
+```ts
+FieldConfigBase & FieldConfigExtras<T>
+```
+
+## types.d
+
 ### `FormFieldOption`
 **Properties:**
 - `value: string | number`
@@ -44,21 +62,7 @@
 - `format: string` (optional)
 - `step: number` (optional)
 
-### `FormMeta`
-```ts
-FieldConfig<T> & { render?: (field: FormField, props: unknown) => unknown }
-```
-
-### `FieldConfig`
-Per-field configuration that customises how a Zod schema field is rendered.
-
-Merges base options (component override, visibility, order, props) with type-aware
-extras: nested `fields` for object schemas, and `arrayItems` for array schemas.
-Use this type when annotating a `ZodFormsConfig.fields` record or a per-schema
-`schemas.[key].fields` map.
-```ts
-FieldConfigBase & FieldConfigExtras<T>
-```
+## Schema Walking
 
 ### `WalkOptions`
 **Properties:**

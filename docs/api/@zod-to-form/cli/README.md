@@ -234,15 +234,18 @@ pnpm --filter @zod-to-form/cli run test
 pnpm --filter @zod-to-form/cli run type-check
 ```
 
-## Type Aliases
+## Configuration
+
+- [ZodFormsConfig](type-aliases/ZodFormsConfig.md)
+- [defineConfig](functions/defineConfig.md)
+- [validateConfig](functions/validateConfig.md)
+
+## Other
 
 - [ComponentOverride](type-aliases/ComponentOverride.md)
-- [FieldConfig](type-aliases/FieldConfig.md)
-- [ZodFormsConfig](type-aliases/ZodFormsConfig.md)
-
-## Functions
-
 - [createProgram](functions/createProgram.md)
-- [defineConfig](functions/defineConfig.md)
 - [runGenerate](functions/runGenerate.md)
-- [validateConfig](functions/validateConfig.md)
+
+## Types
+
+- [FieldConfig](type-aliases/FieldConfig.md)

@@ -1,8 +1,15 @@
 # Functions
 
-## `createOptimizers`
+## Optimization
+
+### `createOptimizers`
 Create an optimizer registry by merging custom optimizers with builtins.
 Custom optimizers for a type replace the entire chain for that type.
+
+Creates an optimizer registry by merging custom optimizers with built-in L1/L2 chains.
+L1 stores per-field zodSchema for decomposed validation.
+L2 generates native HTML validation rules (minLength, pattern, etc.).
+Custom optimizers for a type REPLACE the entire chain — they don't append.
 ```ts
 createOptimizers(custom: Record<string, FormOptimizer[]>): Record<string, FormOptimizer[]>
 ```
@@ -26,7 +33,7 @@ createSchemaLiteCollector(options?: { useAnyBase?: boolean }): SchemaLiteCollect
 - `options: { useAnyBase?: boolean }` (optional)
 **Returns:** `SchemaLiteCollector`
 
-## config
+## Configuration
 
 ### `defineConfig`
 Identity helper that returns its argument typed as `ZodFormsConfig`.
@@ -34,6 +41,11 @@ Identity helper that returns its argument typed as `ZodFormsConfig`.
 Merges preset component overrides (e.g. shadcn) into `config.components.overrides`
 so that user-supplied overrides layer on top of the preset defaults. Use this in
 your `z2f.config.ts` to get full TypeScript inference and IDE autocompletion.
+
+Identity helper that returns its argument typed as ZodFormsConfig.
+Applies preset component overrides (e.g., shadcn) — preset defaults
+merge with user overrides, user wins on conflicts. However, the props
+dict is replaced entirely, not merged.
 ```ts
 defineConfig<TComponents, TSchemas>(config: ZodFormsConfig<TComponents, TSchemas>): ZodFormsConfig<TComponents, TSchemas>
 ```
@@ -60,6 +72,8 @@ validateConfig(value: unknown, source: string): ZodFormsConfig<Record<string, un
 - `source: string` — default: `'config'` — Human-readable label for error messages (defaults to `'config'`).
 **Returns:** `ZodFormsConfig<Record<string, unknown>>` — The validated configuration cast to `ZodFormsConfig`.
 **Throws:** If `value` does not conform to the config schema.
+
+## config
 
 ### `resolveFieldConfig`
 ```ts
@@ -165,7 +179,7 @@ collectFieldSections(fields: FormField[], getOverride: (key: string) => { sectio
 - `getOverride: (key: string) => { section?: string } | undefined`
 **Returns:** `Map<string, string[]>`
 
-## normalize
+## Normalization
 
 ### `normalizeFormValues`
 Normalize raw HTML form values for Zod parsing.
@@ -181,6 +195,11 @@ Called unconditionally in the resolver wrapper to ensure consistent
 behavior across all component libraries. While shadcn components handle
 most value conversions natively, normalization provides a safety net for
 edge cases like FileList objects.
+
+Handles two critical HTML-to-Zod mismatches:
+1. Empty strings "" (from unset inputs) → undefined (what Zod .optional() expects)
+2. FileList → File | undefined (assumes single-file inputs)
+Recursively applies to arrays and nested objects.
 ```ts
 normalizeFormValues(value: unknown): unknown
 ```
@@ -188,11 +207,18 @@ normalizeFormValues(value: unknown): unknown
 - `value: unknown`
 **Returns:** `unknown`
 
-## walker
+## Schema Walking
 
 ### `walkSchema`
 Walk a Zod schema and produce a FormField[] tree.
 When optimization option is set, returns WalkResult with fields + schemaLite.
+
+Recursively walks a Zod schema tree and produces a FormField[] intermediate
+representation. Dispatches by def.type to a processor registry. Each processor
+extracts structure and constraints from _zod.def + _zod.bag.
+Uses WeakSet per top-level field for cycle detection — reused schema instances
+(e.g., z.string() in two fields) don't trigger false positives.
+The walker is STATELESS — call it repeatedly with different formRegistry values.
 ```ts
 walkSchema(schema: $ZodType, options: WalkOptions & { optimization: { level: 1 | 2 | 3 } }): WalkResult
 ```
@@ -216,7 +242,7 @@ createProcessors(custom: Record<string, FormProcessor>): Record<string, FormProc
 - `custom: Record<string, FormProcessor>`
 **Returns:** `Record<string, FormProcessor>`
 
-## register
+## Registration
 
 ### `registerDeep`
 Register a schema and all its nested fields in a registry using a
@@ -226,6 +252,11 @@ Only the flat metadata fields (`fieldType`, `order`, `hidden`, `section`,
 `props`, etc.) are passed to `registry.add()` for each schema. The
 structural keys `fields` and `arrayItems` are used purely to drive the
 recursive walk and are never stored in the registry.
+
+Recursively walks a FieldConfig tree, separating traversal keys (fields, arrayItems)
+from flat metadata keys (component, order, hidden). Only flat keys are stored in the
+registry — structural keys drive the recursion. Warns on config keys that don't match
+schema shape (helpful for typo detection).
 ```ts
 registerDeep<S, Meta>(registry: $ZodRegistry<Meta>, schema: S, config: FieldConfig<S>): void
 ```
@@ -272,6 +303,10 @@ the schema structure, calling `registry.add()` for the target schema node.
 This bridges the existing flat config format (used by CLI and
 `ZodFormsConfig.fields`) into the registry so that `walkSchema` can
 consume it uniformly.
+
+Maps flat dot-path keys (e.g., "address.street", "tags[]") to their target schemas
+via resolveSchemaPath(). This bridges the flat config format (used by CLI and global fields)
+into the registry. Warns on unresolved paths — check logs for typo detection.
 ```ts
 registerFlat<Meta>(registry: $ZodRegistry<Meta>, schema: $ZodType, fields: Record<string, FieldConfig>): void
 ```
@@ -495,65 +530,5 @@ processTemplateLiteral(schema: $ZodTemplateLiteral, _ctx: FormProcessorContext, 
 
 ### `processUnion`
 ```ts
-processUnion(schema: $ZodUnion, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
-```
-**Parameters:**
-- `schema: $ZodUnion`
-- `ctx: FormProcessorContext`
-- `field: FormField`
-- `params: ProcessParams`
-
-### `processDiscriminatedUnion`
-```ts
-processDiscriminatedUnion(schema: $ZodDiscriminatedUnion, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
-```
-**Parameters:**
-- `schema: $ZodDiscriminatedUnion`
-- `ctx: FormProcessorContext`
-- `field: FormField`
-- `params: ProcessParams`
-
-## wrappers
-
-### `processDefault`
-```ts
-processDefault(schema: $ZodDefault<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>> | $ZodPrefault<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>>, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
-```
-**Parameters:**
-- `schema: $ZodDefault<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>> | $ZodPrefault<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>>`
-- `ctx: FormProcessorContext`
-- `field: FormField`
-- `params: ProcessParams`
-
-### `processLazy`
-```ts
-processLazy(schema: $ZodLazy, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
-```
-**Parameters:**
-- `schema: $ZodLazy`
-- `ctx: FormProcessorContext`
-- `field: FormField`
-- `params: ProcessParams`
-
-### `processNullable`
-```ts
-processNullable(schema: $ZodNullable, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
-```
-**Parameters:**
-- `schema: $ZodNullable`
-- `ctx: FormProcessorContext`
-- `field: FormField`
-- `params: ProcessParams`
-
-### `processOptional`
-```ts
-processOptional(schema: $ZodOptional, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
-```
-**Parameters:**
-- `schema: $ZodOptional`
-- `ctx: FormProcessorContext`
-- `field: FormField`
-- `params: ProcessParams`
-
 
 <!-- truncated -->

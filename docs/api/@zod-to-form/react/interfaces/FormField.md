@@ -6,7 +6,7 @@
 
 # Interface: FormField
 
-Defined in: packages/core/dist/types.d.ts:44
+Defined in: packages/core/dist/types.d.ts:45
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/core/dist/types.d.ts:44
 
 > `optional` **arrayItem?**: `FormField`
 
-Defined in: packages/core/dist/types.d.ts:78
+Defined in: packages/core/dist/types.d.ts:79
 
 Template for array items
 
@@ -24,7 +24,7 @@ Template for array items
 
 > `optional` **children?**: `FormField`[]
 
-Defined in: packages/core/dist/types.d.ts:76
+Defined in: packages/core/dist/types.d.ts:77
 
 Children for nested objects
 
@@ -34,7 +34,7 @@ Children for nested objects
 
 > **component**: `string`
 
-Defined in: packages/core/dist/types.d.ts:48
+Defined in: packages/core/dist/types.d.ts:49
 
 Component name from ComponentMap, e.g. "Input", "Select", "Textarea"
 
@@ -44,7 +44,7 @@ Component name from ComponentMap, e.g. "Input", "Select", "Textarea"
 
 > **constraints**: [`FormFieldConstraints`](FormFieldConstraints.md)
 
-Defined in: packages/core/dist/types.d.ts:80
+Defined in: packages/core/dist/types.d.ts:81
 
 Validation constraints extracted from Zod v4 constraint bag (_zod.bag)
 
@@ -54,7 +54,7 @@ Validation constraints extracted from Zod v4 constraint bag (_zod.bag)
 
 > `optional` **defaultValue?**: `unknown`
 
-Defined in: packages/core/dist/types.d.ts:60
+Defined in: packages/core/dist/types.d.ts:61
 
 Default value from z.default() or metadata
 
@@ -64,7 +64,7 @@ Default value from z.default() or metadata
 
 > **deprecated**: `boolean`
 
-Defined in: packages/core/dist/types.d.ts:72
+Defined in: packages/core/dist/types.d.ts:73
 
 Whether the field is marked as deprecated in the schema registry
 
@@ -74,7 +74,7 @@ Whether the field is marked as deprecated in the schema registry
 
 > `optional` **description?**: `string`
 
-Defined in: packages/core/dist/types.d.ts:54
+Defined in: packages/core/dist/types.d.ts:55
 
 Help text from .describe() or .meta()
 
@@ -84,7 +84,7 @@ Help text from .describe() or .meta()
 
 > **disabled**: `boolean`
 
-Defined in: packages/core/dist/types.d.ts:68
+Defined in: packages/core/dist/types.d.ts:69
 
 Non-interactive state (greyed out)
 
@@ -94,7 +94,7 @@ Non-interactive state (greyed out)
 
 > `optional` **hasCustomRender?**: `boolean`
 
-Defined in: packages/core/dist/types.d.ts:84
+Defined in: packages/core/dist/types.d.ts:85
 
 Whether a custom render function is registered for this field (runtime only)
 
@@ -104,7 +104,7 @@ Whether a custom render function is registered for this field (runtime only)
 
 > `optional` **helpText?**: `string`
 
-Defined in: packages/core/dist/types.d.ts:70
+Defined in: packages/core/dist/types.d.ts:71
 
 Help text rendered below the input, distinct from description (below label)
 
@@ -114,7 +114,7 @@ Help text rendered below the input, distinct from description (below label)
 
 > **hidden**: `boolean`
 
-Defined in: packages/core/dist/types.d.ts:64
+Defined in: packages/core/dist/types.d.ts:65
 
 Hidden but present in form state
 
@@ -124,7 +124,7 @@ Hidden but present in form state
 
 > **key**: `string`
 
-Defined in: packages/core/dist/types.d.ts:46
+Defined in: packages/core/dist/types.d.ts:47
 
 Field path, e.g. "name", "address.street", "items.0.name"
 
@@ -134,7 +134,7 @@ Field path, e.g. "name", "address.street", "items.0.name"
 
 > **label**: `string`
 
-Defined in: packages/core/dist/types.d.ts:52
+Defined in: packages/core/dist/types.d.ts:53
 
 Display label
 
@@ -144,7 +144,7 @@ Display label
 
 > `optional` **options?**: [`FormFieldOption`](FormFieldOption.md)[]
 
-Defined in: packages/core/dist/types.d.ts:74
+Defined in: packages/core/dist/types.d.ts:75
 
 Options for enum/union select fields
 
@@ -154,7 +154,7 @@ Options for enum/union select fields
 
 > `optional` **order?**: `number`
 
-Defined in: packages/core/dist/types.d.ts:66
+Defined in: packages/core/dist/types.d.ts:67
 
 Display order override from form registry
 
@@ -164,7 +164,7 @@ Display order override from form registry
 
 > `optional` **placeholder?**: `string`
 
-Defined in: packages/core/dist/types.d.ts:56
+Defined in: packages/core/dist/types.d.ts:57
 
 Placeholder from examples[0] or metadata
 
@@ -174,7 +174,7 @@ Placeholder from examples[0] or metadata
 
 > **props**: `Record`\<`string`, `unknown`\>
 
-Defined in: packages/core/dist/types.d.ts:50
+Defined in: packages/core/dist/types.d.ts:51
 
 Pass-through props for the component
 
@@ -184,7 +184,7 @@ Pass-through props for the component
 
 > **readOnly**: `boolean`
 
-Defined in: packages/core/dist/types.d.ts:62
+Defined in: packages/core/dist/types.d.ts:63
 
 Read-only from z.readonly() or metadata
 
@@ -194,7 +194,7 @@ Read-only from z.readonly() or metadata
 
 > `optional` **render?**: (`field`, `props`) => `unknown`
 
-Defined in: packages/core/dist/types.d.ts:86
+Defined in: packages/core/dist/types.d.ts:87
 
 Custom render function from FormMeta (runtime only, not serialisable)
 
@@ -218,7 +218,7 @@ Custom render function from FormMeta (runtime only, not serialisable)
 
 > **required**: `boolean`
 
-Defined in: packages/core/dist/types.d.ts:58
+Defined in: packages/core/dist/types.d.ts:59
 
 Whether the field is required
 
@@ -228,7 +228,7 @@ Whether the field is required
 
 > `optional` **validation?**: [`ValidationStrategy`](../../core/interfaces/ValidationStrategy.md)
 
-Defined in: packages/core/dist/types.d.ts:90
+Defined in: packages/core/dist/types.d.ts:91
 
 Validation strategy set by optimizers (undefined = use zodResolver)
 
@@ -238,7 +238,7 @@ Validation strategy set by optimizers (undefined = use zodResolver)
 
 > `optional` **zodSchema?**: `$ZodType`\<`unknown`, `unknown`, `$ZodTypeInternals`\<`unknown`, `unknown`\>\>
 
-Defined in: packages/core/dist/types.d.ts:88
+Defined in: packages/core/dist/types.d.ts:89
 
 Atomic Zod schema for this field, set by L1 optimizer
 
@@ -248,6 +248,6 @@ Atomic Zod schema for this field, set by L1 optimizer
 
 > **zodType**: `string`
 
-Defined in: packages/core/dist/types.d.ts:82
+Defined in: packages/core/dist/types.d.ts:83
 
 Original Zod def.type for reference

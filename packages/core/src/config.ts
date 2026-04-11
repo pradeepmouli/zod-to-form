@@ -20,6 +20,7 @@ export type ComponentOverride = {
 
 export type ComponentPreset = 'shadcn' | 'html';
 
+/** @category Configuration */
 export type ComponentsConfig<T extends Record<string, unknown> = Record<string, unknown>> = {
   /** Import path for the components module */
   source: string;
@@ -106,6 +107,7 @@ export type ZodTypeConfig<
  *
  * @typeParam TComponents - Shape of the component module (used to type `fields.component`).
  * @typeParam TSchemas - Map of schema export names to their Zod schema types (used to type `schemas.[key].fields`).
+ * @category Configuration
  */
 export type ZodFormsConfig<
   TComponents extends Record<string, unknown> = Record<string, unknown>,
@@ -398,8 +400,24 @@ const PRESET_MAP: Record<ComponentPreset, Record<string, ComponentOverride>> = {
  * so that user-supplied overrides layer on top of the preset defaults. Use this in
  * your `z2f.config.ts` to get full TypeScript inference and IDE autocompletion.
  *
+ * @remarks
+ * Identity helper that returns its argument typed as ZodFormsConfig.
+ * Applies preset component overrides (e.g., shadcn) — preset defaults
+ * merge with user overrides, user wins on conflicts. However, the props
+ * dict is replaced entirely, not merged.
+ *
  * @param config - The raw configuration object.
  * @returns The same configuration with preset overrides applied.
+ *
+ * @useWhen
+ * - Writing z2f.config.ts for CLI codegen (primary use case)
+ * - You want TypeScript inference and IDE autocompletion for config
+ *
+ * @avoidWhen
+ * - Runtime-only usage where you pass config inline to walkSchema
+ *
+ * @pitfalls
+ * - NEVER assume preset props merge with your props — the entire props dict is replaced. If you set component props, you must include ALL props including the ones from the preset
  *
  * @example
  * ```ts
@@ -407,6 +425,8 @@ const PRESET_MAP: Record<ComponentPreset, Record<string, ComponentOverride>> = {
  *   components: { source: '@/components/ui', preset: 'shadcn' },
  * });
  * ```
+ *
+ * @category Configuration
  */
 export function defineConfig<
   TComponents extends Record<string, unknown> = Record<string, unknown>,
@@ -438,6 +458,19 @@ export function defineConfig<
  * @param source - Human-readable label for error messages (defaults to `'config'`).
  * @returns The validated configuration cast to `ZodFormsConfig`.
  * @throws If `value` does not conform to the config schema.
+ *
+ * @useWhen
+ * - Loading config from JSON files or dynamic import()
+ * - You need runtime validation of user-provided config
+ *
+ * @avoidWhen
+ * - Using TypeScript with defineConfig() — type errors catch most issues at dev time
+ *
+ * @pitfalls
+ * - NEVER use as a type guard — it throws on invalid input, doesn't narrow
+ * - NEVER assume extra keys cause failures — the schema uses z.object().loose(), extra keys are silently ignored
+ *
+ * @category Configuration
  */
 export function validateConfig(
   value: unknown,

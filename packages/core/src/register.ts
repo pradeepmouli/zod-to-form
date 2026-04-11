@@ -57,6 +57,26 @@ function stripTraversalKeys(config: Record<string, unknown>): Record<string, unk
  *   },
  * });
  * ```
+ *
+ * @remarks
+ * Recursively walks a FieldConfig tree, separating traversal keys (fields, arrayItems)
+ * from flat metadata keys (component, order, hidden). Only flat keys are stored in the
+ * registry — structural keys drive the recursion. Warns on config keys that don't match
+ * schema shape (helpful for typo detection).
+ *
+ * @useWhen
+ * - You have a deeply-nested FieldConfig mirroring your schema shape
+ * - Recommended for complex schemas with nested objects and arrays
+ *
+ * @avoidWhen
+ * - For simple flat configs — registerFlat() is simpler and more direct
+ * - Don't use if your config comes from dot-path format (CLI global fields)
+ *
+ * @pitfalls
+ * - NEVER mix with registerFlat() on the same schema — registry entries conflict silently
+ * - NEVER forget the structural keys (fields, arrayItems) for nested config — without them, child config is silently ignored
+ *
+ * @category Registration
  */
 export function registerDeep<S extends $ZodType, Meta extends object>(
   registry: $ZodRegistry<Meta>,
@@ -184,6 +204,24 @@ function resolveSchemaPath(schema: $ZodType, path: string): $ZodType | undefined
  *   'address.city':   { component: 'Input', hidden: true },
  * });
  * ```
+ *
+ * @remarks
+ * Maps flat dot-path keys (e.g., "address.street", "tags[]") to their target schemas
+ * via resolveSchemaPath(). This bridges the flat config format (used by CLI and global fields)
+ * into the registry. Warns on unresolved paths — check logs for typo detection.
+ *
+ * @useWhen
+ * - Merging global field configs from z2f.config.ts into a registry
+ * - Your config uses dot-path notation rather than nested structure
+ *
+ * @avoidWhen
+ * - Your config is already nested mirroring schema shape — use registerDeep() instead
+ *
+ * @pitfalls
+ * - NEVER mix with registerDeep() on the same schema — registry entries conflict silently
+ * - NEVER assume numeric path segments matter — "items.0.name" and "items.2.name" resolve to the same target
+ *
+ * @category Registration
  */
 export function registerFlat<Meta extends object>(
   registry: $ZodRegistry<Meta>,

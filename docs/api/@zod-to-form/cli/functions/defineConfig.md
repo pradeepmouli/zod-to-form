@@ -8,7 +8,7 @@
 
 > **defineConfig**\<`TComponents`, `TSchemas`\>(`config`): [`ZodFormsConfig`](../type-aliases/ZodFormsConfig.md)\<`TComponents`, `TSchemas`\>
 
-Defined in: core/dist/config.d.ts:129
+Defined in: core/dist/config.d.ts:149
 
 Identity helper that returns its argument typed as `ZodFormsConfig`.
 
@@ -39,6 +39,26 @@ The raw configuration object.
 [`ZodFormsConfig`](../type-aliases/ZodFormsConfig.md)\<`TComponents`, `TSchemas`\>
 
 The same configuration with preset overrides applied.
+
+## Remarks
+
+Identity helper that returns its argument typed as ZodFormsConfig.
+Applies preset component overrides (e.g., shadcn) — preset defaults
+merge with user overrides, user wins on conflicts. However, the props
+dict is replaced entirely, not merged.
+
+## Use When
+
+- Writing z2f.config.ts for CLI codegen (primary use case)
+- You want TypeScript inference and IDE autocompletion for config
+
+## Avoid When
+
+- Runtime-only usage where you pass config inline to walkSchema
+
+## Pitfalls
+
+- NEVER assume preset props merge with your props — the entire props dict is replaced. If you set component props, you must include ALL props including the ones from the preset
 
 ## Example
 

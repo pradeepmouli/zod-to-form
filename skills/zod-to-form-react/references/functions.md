@@ -21,7 +21,7 @@ useZodForm<TSchema>(schema: TSchema, options?: UseZodFormOptions<TSchema>): { fo
 - `options: UseZodFormOptions<TSchema>` (optional)
 **Returns:** `{ form: UseFormReturn<output<TSchema>, any, output<TSchema>>; fields: FormField[]; schemaError: string | null; schemaLite: $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>> | null }`
 
-## normalize.d
+## Normalization
 
 ### `normalizeFormValues`
 Normalize raw HTML form values for Zod parsing.
@@ -37,6 +37,11 @@ Called unconditionally in the resolver wrapper to ensure consistent
 behavior across all component libraries. While shadcn components handle
 most value conversions natively, normalization provides a safety net for
 edge cases like FileList objects.
+
+Handles two critical HTML-to-Zod mismatches:
+1. Empty strings "" (from unset inputs) → undefined (what Zod .optional() expects)
+2. FileList → File | undefined (assumes single-file inputs)
+Recursively applies to arrays and nested objects.
 ```ts
 normalizeFormValues(value: unknown): unknown
 ```

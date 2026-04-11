@@ -1,6 +1,6 @@
 # Types & Enums
 
-## types
+## Types
 
 ### `FormField`
 **Properties:**
@@ -28,38 +28,10 @@
 - `zodSchema: $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>` (optional) — Atomic Zod schema for this field, set by L1 optimizer
 - `validation: ValidationStrategy` (optional) — Validation strategy set by optimizers (undefined = use zodResolver)
 
-### `FormFieldOption`
-**Properties:**
-- `value: string | number`
-- `label: string`
-- `disabled: boolean` (optional)
-
-### `FormFieldConstraints`
-**Properties:**
-- `min: number` (optional)
-- `max: number` (optional)
-- `minLength: number` (optional)
-- `maxLength: number` (optional)
-- `pattern: string` (optional)
-- `format: string` (optional)
-- `step: number` (optional)
-
 ### `FormProcessor`
 ```ts
 (schema: T, ctx: FormProcessorContext, field: FormField, params: ProcessParams) => void
 ```
-
-### `FormProcessorContext`
-**Properties:**
-- `processors: Record<string, FormProcessor>` — Registry mapping def.type → processor function
-- `formRegistry: ZodFormRegistry` (optional) — Form-specific metadata registry
-- `path: string[]` — Current field path stack
-- `seen: WeakSet<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>>` — Tracks visited schema objects — prevents infinite loops from recursive schemas and avoids re-processing the same reference
-- `maxDepth: number` — Maximum recursion depth (default: 5)
-- `currentDepth: number` — Current recursion depth
-- `processChild: (schema: $ZodType, key: string) => FormField` (optional) — Process a child schema into a FormField.
-Provided by the walker for use in nesting processors (object, array, union).
-Undefined only in unit-test contexts where nesting is not being tested.
 
 ### `FormMeta`
 ```ts
@@ -77,6 +49,36 @@ Use this type when annotating a `ZodFormsConfig.fields` record or a per-schema
 FieldConfigBase & FieldConfigExtras<T>
 ```
 
+## types
+
+### `FormFieldOption`
+**Properties:**
+- `value: string | number`
+- `label: string`
+- `disabled: boolean` (optional)
+
+### `FormFieldConstraints`
+**Properties:**
+- `min: number` (optional)
+- `max: number` (optional)
+- `minLength: number` (optional)
+- `maxLength: number` (optional)
+- `pattern: string` (optional)
+- `format: string` (optional)
+- `step: number` (optional)
+
+### `FormProcessorContext`
+**Properties:**
+- `processors: Record<string, FormProcessor>` — Registry mapping def.type → processor function
+- `formRegistry: ZodFormRegistry` (optional) — Form-specific metadata registry
+- `path: string[]` — Current field path stack
+- `seen: WeakSet<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>>` — Tracks visited schema objects — prevents infinite loops from recursive schemas and avoids re-processing the same reference
+- `maxDepth: number` — Maximum recursion depth (default: 5)
+- `currentDepth: number` — Current recursion depth
+- `processChild: (schema: $ZodType, key: string) => FormField` (optional) — Process a child schema into a FormField.
+Provided by the walker for use in nesting processors (object, array, union).
+Undefined only in unit-test contexts where nesting is not being tested.
+
 ### `FieldExpression`
 Known RHF field expression strings that can be used as values in `props`.
 When a prop value matches one of these strings, it is resolved from the
@@ -90,18 +92,6 @@ RHF controller field at render time instead of being passed as a literal.
 - `parentKey: string` (optional) — Parent field path for nested fields
 - `isArrayItem: boolean` (optional) — Whether this field is an array item template
 - `index: number` (optional) — Array item index for rendering
-
-### `WalkOptions`
-**Properties:**
-- `formRegistry: ZodFormRegistry` (optional) — Custom form registry for metadata annotations
-- `processors: Record<string, FormProcessor<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>>>` (optional) — Custom processors to add or override built-in ones
-- `maxDepth: number` (optional) — Maximum recursion depth for lazy/recursive schemas (default: 5)
-- `optimization: { level: 1 | 2 | 3; optimizers?: Record<string, FormOptimizer[]> }` (optional) — Validation optimization settings.
-
-This is the walker's API surface — callers (useZodForm, CLI codegen) pass
-the optimization config here. The CLI reads `config.defaults.optimization`
-and forwards it; useZodForm accepts it via its own options. Both converge
-here as the single source of truth for the walker.
 
 ### `ZodFormRegistry`
 Zod v4 registry parameterized with FormMeta. Create via `z.registry<FormMeta>()`.
@@ -152,6 +142,20 @@ Metadata for codegen to reconstruct the lite schema in a generated file
 SchemaLiteInfoBase & { type: "checks"; checkCount: number } | SchemaLiteInfoBase & { type: "transform"; hasInnerChecks: boolean; hasOuterChecks: boolean } | SchemaLiteInfoBase & { type: "original" } | null
 ```
 
+## Schema Walking
+
+### `WalkOptions`
+**Properties:**
+- `formRegistry: ZodFormRegistry` (optional) — Custom form registry for metadata annotations
+- `processors: Record<string, FormProcessor<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>>>` (optional) — Custom processors to add or override built-in ones
+- `maxDepth: number` (optional) — Maximum recursion depth for lazy/recursive schemas (default: 5)
+- `optimization: { level: 1 | 2 | 3; optimizers?: Record<string, FormOptimizer[]> }` (optional) — Validation optimization settings.
+
+This is the walker's API surface — callers (useZodForm, CLI codegen) pass
+the optimization config here. The CLI reads `config.defaults.optimization`
+and forwards it; useZodForm accepts it via its own options. Both converge
+here as the single source of truth for the walker.
+
 ## config
 
 ### `ComponentOverride`
@@ -162,8 +166,6 @@ Per-component metadata override. Only components that differ from defaults need 
 "shadcn" | "html"
 ```
 
-### `ComponentsConfig`
-
 ### `TypedFieldConfig`
 Discriminated union over component keys.
 When `component` is set to a known component key, `props` is constrained
@@ -172,14 +174,6 @@ an open `Record<string, unknown>`.
 ```ts
 { [K in keyof TComponents & string]: TypedFieldConfigForComponent<TComponents, K> }[keyof TComponents & string] | UntypedFieldConfig
 ```
-
-### `ZodFormsConfig`
-Root configuration type for `zod-to-form` code generation.
-
-Describes the component library to use, generation defaults, per-schema
-overrides, and global field configuration. Pass this to `defineConfig()` in
-your `z2f.config.ts` for full type inference, or load and validate it at
-runtime with `validateConfig()`.
 
 ### `ZodTypeConfig`
 
@@ -193,3 +187,15 @@ Useful for Zod's `z.output<>` which adds `[x: string]: unknown` index signatures
 ```ts
 T extends readonly (infer U)[] ? StripIndexSignature<U>[] : T extends object ? { [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: StripIndexSignature<T[K]> } : T
 ```
+
+## Configuration
+
+### `ComponentsConfig`
+
+### `ZodFormsConfig`
+Root configuration type for `zod-to-form` code generation.
+
+Describes the component library to use, generation defaults, per-schema
+overrides, and global field configuration. Pass this to `defineConfig()` in
+your `z2f.config.ts` for full type inference, or load and validate it at
+runtime with `validateConfig()`.

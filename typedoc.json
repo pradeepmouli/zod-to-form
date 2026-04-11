@@ -11,5 +11,6 @@
   "treatWarningsAsErrors": false,
   "excludePrivate": true,
   "excludeInternal": true,
-  "hideGenerator": true
+  "hideGenerator": true,
+  "blockTags": ["@useWhen", "@avoidWhen", "@pitfalls"]
 }

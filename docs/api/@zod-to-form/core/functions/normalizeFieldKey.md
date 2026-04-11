@@ -8,7 +8,7 @@
 
 > **normalizeFieldKey**(`key`): `string`
 
-Defined in: [utils.ts:230](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/utils.ts#L230)
+Defined in: [utils.ts:230](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/utils.ts#L230)
 
 Normalise a concrete field key to the bracket notation used in config.
 Replaces `.0.`, `.${index}.`, and any `.<digits>.` segments with `[].`.

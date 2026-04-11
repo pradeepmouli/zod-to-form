@@ -8,7 +8,7 @@
 
 > **ComponentOverride** = `object`
 
-Defined in: [config.ts:8](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L8)
+Defined in: [config.ts:8](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L8)
 
 Per-component metadata override. Only components that differ from defaults need an entry.
 
@@ -18,7 +18,7 @@ Per-component metadata override. Only components that differ from defaults need 
 
 > `optional` **controlled?**: `boolean`
 
-Defined in: [config.ts:10](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L10)
+Defined in: [config.ts:10](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L10)
 
 When true, use Controller/useController instead of register() spread
 
@@ -28,7 +28,7 @@ When true, use Controller/useController instead of register() spread
 
 > `optional` **props?**: `Record`\<`string`, `unknown`\>
 
-Defined in: [config.ts:16](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L16)
+Defined in: [config.ts:16](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L16)
 
 Default props for this component type.
 Values matching a known field expression string are resolved from the RHF controller.

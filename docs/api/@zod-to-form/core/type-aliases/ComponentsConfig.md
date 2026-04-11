@@ -8,7 +8,7 @@
 
 > **ComponentsConfig**\<`T`\> = `object`
 
-Defined in: [config.ts:23](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L23)
+Defined in: [config.ts:24](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L24)
 
 ## Type Parameters
 
@@ -22,7 +22,7 @@ Defined in: [config.ts:23](https://github.com/pradeepmouli/zod-to-form/blob/f52a
 
 > `optional` **fieldTemplate?**: `string`
 
-Defined in: [config.ts:33](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L33)
+Defined in: [config.ts:34](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L34)
 
 Custom field template component path.
 Controls the composition of label + input + description + helpText + error.
@@ -34,7 +34,7 @@ Overrides the preset's default template.
 
 > `optional` **overrides?**: `{ [K in keyof T & string]?: ComponentOverride }`
 
-Defined in: [config.ts:35](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L35)
+Defined in: [config.ts:36](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L36)
 
 Per-component overrides, strongly typed to module export keys
 
@@ -44,7 +44,7 @@ Per-component overrides, strongly typed to module export keys
 
 > `optional` **preset?**: [`ComponentPreset`](ComponentPreset.md)
 
-Defined in: [config.ts:27](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L27)
+Defined in: [config.ts:28](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L28)
 
 Preset that provides base overrides and default field template
 
@@ -54,6 +54,6 @@ Preset that provides base overrides and default field template
 
 > **source**: `string`
 
-Defined in: [config.ts:25](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L25)
+Defined in: [config.ts:26](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L26)
 
 Import path for the components module

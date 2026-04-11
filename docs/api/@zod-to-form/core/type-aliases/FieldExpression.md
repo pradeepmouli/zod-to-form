@@ -8,7 +8,7 @@
 
 > **FieldExpression** = `"field.value"` \| `"field.onChange"` \| `"field.onBlur"` \| `"field.ref"` \| `"field.name"`
 
-Defined in: [types.ts:98](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/types.ts#L98)
+Defined in: [types.ts:99](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L99)
 
 Known RHF field expression strings that can be used as values in `props`.
 When a prop value matches one of these strings, it is resolved from the

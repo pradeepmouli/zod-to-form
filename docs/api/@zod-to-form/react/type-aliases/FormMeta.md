@@ -8,7 +8,7 @@
 
 > **FormMeta**\<`T`\> = [`FieldConfig`](FieldConfig.md)\<`T`\> & `object`
 
-Defined in: packages/core/dist/types.d.ts:150
+Defined in: packages/core/dist/types.d.ts:153
 
 ## Type Declaration
 

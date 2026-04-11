@@ -8,7 +8,7 @@
 
 > **processIntersection**(`schema`, `ctx`, `field`, `params`): `void`
 
-Defined in: [processors/object.ts:33](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/processors/object.ts#L33)
+Defined in: [processors/object.ts:33](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/processors/object.ts#L33)
 
 ## Parameters
 

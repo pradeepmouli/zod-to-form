@@ -6,7 +6,7 @@
 
 # Interface: WalkOptions
 
-Defined in: packages/core/dist/types.d.ts:185
+Defined in: packages/core/dist/types.d.ts:190
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/core/dist/types.d.ts:185
 
 > `optional` **formRegistry?**: [`ZodFormRegistry`](../../core/type-aliases/ZodFormRegistry.md)
 
-Defined in: packages/core/dist/types.d.ts:187
+Defined in: packages/core/dist/types.d.ts:192
 
 Custom form registry for metadata annotations
 
@@ -24,7 +24,7 @@ Custom form registry for metadata annotations
 
 > `optional` **maxDepth?**: `number`
 
-Defined in: packages/core/dist/types.d.ts:191
+Defined in: packages/core/dist/types.d.ts:196
 
 Maximum recursion depth for lazy/recursive schemas (default: 5)
 
@@ -34,7 +34,7 @@ Maximum recursion depth for lazy/recursive schemas (default: 5)
 
 > `optional` **optimization?**: `object`
 
-Defined in: packages/core/dist/types.d.ts:200
+Defined in: packages/core/dist/types.d.ts:205
 
 Validation optimization settings.
 
@@ -57,6 +57,6 @@ here as the single source of truth for the walker.
 
 > `optional` **processors?**: `Record`\<`string`, [`FormProcessor`](../../core/type-aliases/FormProcessor.md)\<`$ZodType`\<`unknown`, `unknown`, `$ZodTypeInternals`\<`unknown`, `unknown`\>\>\>\>
 
-Defined in: packages/core/dist/types.d.ts:189
+Defined in: packages/core/dist/types.d.ts:194
 
 Custom processors to add or override built-in ones

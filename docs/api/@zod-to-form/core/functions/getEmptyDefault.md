@@ -8,7 +8,7 @@
 
 > **getEmptyDefault**(`field`): `unknown`
 
-Defined in: [utils.ts:152](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/utils.ts#L152)
+Defined in: [utils.ts:152](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/utils.ts#L152)
 
 Returns a type-safe empty default value for a FormField based on its zodType
 and structure. Used by codegen for useFieldArray append() defaults and

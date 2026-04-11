@@ -6,7 +6,7 @@
 
 # Interface: WalkResult
 
-Defined in: [optimizers/types.ts:26](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/optimizers/types.ts#L26)
+Defined in: [optimizers/types.ts:26](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/optimizers/types.ts#L26)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [optimizers/types.ts:26](https://github.com/pradeepmouli/zod-to-form
 
 > **fields**: [`FormField`](FormField.md)[]
 
-Defined in: [optimizers/types.ts:27](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/optimizers/types.ts#L27)
+Defined in: [optimizers/types.ts:27](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/optimizers/types.ts#L27)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [optimizers/types.ts:27](https://github.com/pradeepmouli/zod-to-form
 
 > **schemaLite**: `$ZodType`\<`unknown`, `unknown`, `$ZodTypeInternals`\<`unknown`, `unknown`\>\> \| `null`
 
-Defined in: [optimizers/types.ts:28](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/optimizers/types.ts#L28)
+Defined in: [optimizers/types.ts:28](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/optimizers/types.ts#L28)
 
 ***
 
@@ -30,6 +30,6 @@ Defined in: [optimizers/types.ts:28](https://github.com/pradeepmouli/zod-to-form
 
 > **schemaLiteInfo**: [`SchemaLiteInfo`](../type-aliases/SchemaLiteInfo.md)
 
-Defined in: [optimizers/types.ts:30](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/optimizers/types.ts#L30)
+Defined in: [optimizers/types.ts:30](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/optimizers/types.ts#L30)
 
 Codegen metadata — describes how to reconstruct schemaLite in generated code

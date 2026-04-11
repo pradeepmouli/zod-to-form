@@ -8,7 +8,7 @@
 
 > **StripIndexSignature**\<`T`\> = `T` *extends* readonly infer U[] ? `StripIndexSignature`\<`U`\>[] : `T` *extends* `object` ? `{ [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: StripIndexSignature<T[K]> }` : `T`
 
-Defined in: [config.ts:134](https://github.com/pradeepmouli/zod-to-form/blob/f52a0ed6020c1b7e4faaba6683436bbe29928d05/packages/core/src/config.ts#L134)
+Defined in: [config.ts:136](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L136)
 
 Strips index signatures from a type, keeping only explicitly declared keys.
 Useful for Zod's `z.output<>` which adds `[x: string]: unknown` index signatures.
