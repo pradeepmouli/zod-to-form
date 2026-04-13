@@ -2,28 +2,53 @@ import { bench, describe } from 'vitest';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { flushSync } from 'react-dom';
+import { FormProvider } from 'react-hook-form';
 import { walkSchema } from '@zod-to-form/core';
-import { ZodForm, defaultComponentMap } from '../../src/index.js';
+import type { ZodObject } from 'zod';
+import { FieldRenderer } from '../../src/FieldRenderer.js';
+import { defaultComponentMap } from '../../src/index.js';
+import { useZodForm } from '../../src/useZodForm.js';
 import { smallSchema, mediumSchema, largeSchema } from './schemas.js';
 
 const noop = () => {};
 
 /**
- * Render a ZodForm synchronously and unmount.
+ * Test component: renders a form via useZodForm with a specific optimization level.
+ * We render FieldRenderer directly (not <ZodForm>) so we can pass the optimization
+ * option — the ZodForm wrapper doesn't forward it.
+ */
+function BenchForm({
+  schema,
+  level
+}: {
+  schema: ZodObject;
+  level: 1 | 2 | undefined;
+}): React.ReactElement {
+  const { fields, form } = useZodForm(schema, {
+    optimization: level !== undefined ? { level } : undefined
+  });
+
+  return (
+    <FormProvider {...form}>
+      <form>
+        {fields.map((field) => (
+          <FieldRenderer key={field.key} field={field} components={defaultComponentMap} />
+        ))}
+      </form>
+    </FormProvider>
+  );
+}
+
+/**
+ * Render a component synchronously and unmount.
  * Uses flushSync to ensure React commits before we return.
  */
-function renderAndUnmount(schema: unknown): void {
+function renderAndUnmount(element: React.ReactElement): void {
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root = createRoot(container);
   flushSync(() => {
-    root.render(
-      React.createElement(ZodForm, {
-        schema: schema as any,
-        onSubmit: noop,
-        components: defaultComponentMap
-      })
-    );
+    root.render(element);
   });
   flushSync(() => {
     root.unmount();
@@ -37,20 +62,20 @@ const schemas = [
   { name: 'large (50 fields)', schema: largeSchema }
 ] as const;
 
-// Full form render: walkSchema + React mount + unmount (browser only)
+// Full form render: useZodForm (walk + optimizer chain) + React mount + unmount
 describe('browser render (walk + React mount)', () => {
   for (const { name, schema } of schemas) {
     describe(name, () => {
       bench('no optimization', () => {
-        renderAndUnmount(schema);
+        renderAndUnmount(<BenchForm schema={schema as ZodObject} level={undefined} />);
       });
 
       bench('L1', () => {
-        renderAndUnmount(schema);
+        renderAndUnmount(<BenchForm schema={schema as ZodObject} level={1} />);
       });
 
       bench('L2', () => {
-        renderAndUnmount(schema);
+        renderAndUnmount(<BenchForm schema={schema as ZodObject} level={2} />);
       });
     });
   }
