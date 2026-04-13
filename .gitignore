@@ -20,3 +20,5 @@ Thumbs.db
 .claude/settings.local.json
 sgconfig.yml
 docs/html/
+bench-results.json
+bench-browser-results.json
