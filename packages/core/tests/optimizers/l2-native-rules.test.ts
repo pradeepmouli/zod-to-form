@@ -131,9 +131,60 @@ describe('L2 native rules optimizer', () => {
     it('does not add required for optional fields', () => {
       const schema = z.object({ name: z.string().optional() });
       const { fields } = walkL2(schema);
-      // Optional wrapper still gets zodSchema mode from L1
-      // but L2 should handle the inner string
       expect(fields[0]!.required).toBe(false);
+      // L2 unwraps optional and extracts native rules from the inner string
+      expect(fields[0]!.validation?.mode).toBe('native');
+      expect(fields[0]!.validation?.rules?.required).toBeUndefined();
+    });
+  });
+
+  describe('wrapper unwrapping (optional/nullable/default/readonly/prefault)', () => {
+    it('extracts native rules from z.string().min(2).optional()', () => {
+      const schema = z.object({ name: z.string().min(2).max(50).optional() });
+      const { fields } = walkL2(schema);
+      expect(fields[0]!.validation?.mode).toBe('native');
+      expect(fields[0]!.validation?.rules?.minLength?.value).toBe(2);
+      expect(fields[0]!.validation?.rules?.maxLength?.value).toBe(50);
+      expect(fields[0]!.validation?.rules?.required).toBeUndefined();
+    });
+
+    it('extracts native rules from z.number().min(0).max(100).nullable()', () => {
+      const schema = z.object({ age: z.number().min(0).max(100).nullable() });
+      const { fields } = walkL2(schema);
+      expect(fields[0]!.validation?.mode).toBe('native');
+      expect(fields[0]!.validation?.rules?.min?.value).toBe(0);
+      expect(fields[0]!.validation?.rules?.max?.value).toBe(100);
+    });
+
+    it('extracts native rules from z.string().min(3).default("hi")', () => {
+      const schema = z.object({ name: z.string().min(3).default('hi') });
+      const { fields } = walkL2(schema);
+      expect(fields[0]!.validation?.mode).toBe('native');
+      expect(fields[0]!.validation?.rules?.minLength?.value).toBe(3);
+    });
+
+    it('extracts native rules from z.string().email().readonly()', () => {
+      const schema = z.object({ email: z.string().email().readonly() });
+      const { fields } = walkL2(schema);
+      expect(fields[0]!.validation?.mode).toBe('native');
+      expect(fields[0]!.validation?.rules?.pattern).toBeDefined();
+    });
+
+    it('sets component-enforced for wrapped enum', () => {
+      const schema = z.object({ role: z.enum(['admin', 'user']).optional() });
+      const { fields } = walkL2(schema);
+      expect(fields[0]!.validation?.mode).toBe('component-enforced');
+    });
+
+    it('keeps zodSchema mode for wrapped refine', () => {
+      const schema = z.object({
+        code: z
+          .string()
+          .refine((v) => v.startsWith('X'))
+          .optional()
+      });
+      const { fields } = walkL2(schema);
+      expect(fields[0]!.validation?.mode).toBe('zodSchema');
     });
   });
 

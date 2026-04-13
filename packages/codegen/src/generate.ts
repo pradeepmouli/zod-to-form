@@ -566,13 +566,24 @@ function hasAnyZodSchemaOrSchemaLite(
 }
 
 function generateHoistedValidators(fields: FormField[], exportName: string): string[] {
-  // Only hoist validators for top-level fields — nested paths (e.g. "address.street")
-  // can't be accessed via simple .shape.key and would produce invalid code.
-  const zodFields = collectZodSchemaFields(fields).filter((f) => !f.key.includes('.'));
+  // Emit a hoisted validator for each leaf field that needs zodSchema-mode validation.
+  //
+  // For top-level fields: ExportName.shape['field'].safeParse(value)
+  // For nested object paths: ExportName.shape['a'].shape['b'].safeParse(value) — walks segments
+  // For array element template paths (contain numeric segments like "items.0.name"):
+  //   skipped, because `.shape[0]` isn't meaningful on an array.
+  const zodFields = collectZodSchemaFields(fields).filter(
+    (f) => !f.key.split('.').some((seg) => /^\d+$/.test(seg))
+  );
   return zodFields.map((field) => {
     const safeKey = field.key.replace(/[^a-zA-Z0-9_]/g, '_');
-    const keyLiteral = JSON.stringify(field.key);
-    return `const _validate_${safeKey} = (value: unknown) => { const r = ${exportName}.shape[${keyLiteral}].safeParse(value); return r.success ? true : r.error.issues[0]?.message ?? 'Invalid'; };`;
+    const segments = field.key.split('.');
+    // Build the nested shape accessor by stepping through each segment.
+    let accessor = exportName;
+    for (const seg of segments) {
+      accessor += `.shape[${JSON.stringify(seg)}]`;
+    }
+    return `const _validate_${safeKey} = (value: unknown) => { const r = ${accessor}.safeParse(value); return r.success ? true : r.error.issues[0]?.message ?? 'Invalid'; };`;
   });
 }
 
@@ -654,10 +665,10 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
 
   const propsLines: string[] = [];
   if (config.mode === 'auto-save') {
-    propsLines.push(`  onValueChange?: (data: FormData) => void;`);
-    propsLines.push(`  onSubmit?: (data: FormData) => void;`);
+    propsLines.push(`  onValueChange?: (data: FormOutput) => void;`);
+    propsLines.push(`  onSubmit?: (data: FormOutput) => void;`);
   } else {
-    propsLines.push(`  onSubmit: (data: FormData) => void;`);
+    propsLines.push(`  onSubmit: (data: FormOutput) => void;`);
   }
   propsLines.push(`  defaultValues?: Partial<FormData>;`);
   propsLines.push(`  values?: FormData;`);
@@ -667,7 +678,7 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
       ? [
           `  useEffect(() => {`,
           `    const subscription = watch((values) => {`,
-          `      props.onValueChange?.(values as FormData);`,
+          `      props.onValueChange?.(values as unknown as FormOutput);`,
           `    });`,
           ``,
           `    return () => subscription.unsubscribe();`,
@@ -681,7 +692,7 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
       ? `    <form>`
       : hasSchemaLite
         ? `    <form onSubmit={handleSubmit(onSubmitValidated)}>`
-        : `    <form onSubmit={handleSubmit(props.onSubmit)}>`;
+        : `    <form onSubmit={handleSubmit((data) => props.onSubmit(data as unknown as FormOutput))}>`;
 
   const formTail =
     config.mode === 'auto-save' ? [] : [`      <button type="submit">Submit</button>`];
@@ -696,22 +707,33 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
       ]
     : formContent;
 
-  // Build useForm options based on optimization mode
+  // Build useForm options based on optimization mode.
+  //
+  // Resolver hoisting: zodResolver(Schema) is expensive — it builds a resolver
+  // closure from the schema. If called inside the function body it runs on
+  // every render. We hoist it to module scope so it's created once per app
+  // lifetime (schema is a module-level import and never changes).
   let useFormLines: string[];
+  let hoistedResolverLines: string[] = [];
   if (optimized) {
     // Optimized mode never uses zodResolver — per-field validation handles fields,
     // and schemaLite (if present) handles top-level effects in the submit wrapper.
     useFormLines = [`  const form = useForm<FormData>({`];
+  } else if (preset === 'shadcn') {
+    // Shadcn preset skips the normalizeFormValues wrapper (shadcn components
+    // already return plain values). Hoist the resolver directly.
+    hoistedResolverLines = [`const _resolver = zodResolver(${config.exportName});`];
+    useFormLines = [`  const form = useForm<FormData>({`, `    resolver: _resolver,`];
   } else {
-    // Non-optimized (default) — always use zodResolver
-    useFormLines =
-      preset === 'shadcn'
-        ? [`  const form = useForm<FormData>({`, `    resolver: zodResolver(${config.exportName}),`]
-        : [
-            `  const baseResolver = zodResolver(${config.exportName});`,
-            `  const form = useForm<FormData>({`,
-            `    resolver: (values: unknown, ctx: unknown, opts: unknown) => baseResolver(normalizeFormValues(values) as FormData, ctx, opts),`
-          ];
+    // HTML preset wraps the resolver with normalizeFormValues to coerce
+    // FileList/Date-like inputs. Hoist both the base resolver and the wrapper.
+    // Using `typeof _baseResolver` for the wrapper type so TS infers the
+    // correct RHF Resolver signature without needing to import the type.
+    hoistedResolverLines = [
+      `const _baseResolver = zodResolver(${config.exportName});`,
+      `const _resolver: typeof _baseResolver = (values, ctx, opts) => _baseResolver(normalizeFormValues(values) as FormData, ctx, opts);`
+    ];
+    useFormLines = [`  const form = useForm<FormData>({`, `    resolver: _resolver,`];
   }
 
   // Build submit wrapper using the imported schemaLite from the .lite.ts file.
@@ -733,7 +755,7 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
         `      }`,
         `      return;`,
         `    }`,
-        `    props.onSubmit(data);`,
+        `    props.onSubmit(data as unknown as FormOutput);`,
         `  };`
       ]
     : [];
@@ -742,6 +764,7 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
     header,
     ...(schemaLiteImport ? [schemaLiteImport] : []),
     ...(hoistedValidators.length > 0 ? ['', ...hoistedValidators] : []),
+    ...(hoistedResolverLines.length > 0 ? ['', ...hoistedResolverLines] : []),
     '',
     `export function ${config.componentName}(props: {`,
     ...propsLines,

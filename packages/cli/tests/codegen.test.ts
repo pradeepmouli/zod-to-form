@@ -164,7 +164,7 @@ describe('generateFormComponent', () => {
     expect(output).toContain(`const { register, watch } = form;`);
     expect(output).toContain(`mode: 'onChange'`);
     expect(output).toContain(`const subscription = watch((values) => {`);
-    expect(output).toContain(`props.onValueChange?.(values as FormData);`);
+    expect(output).toContain(`props.onValueChange?.(values as unknown as FormOutput);`);
     expect(output).not.toContain(`type="submit"`);
     expect(output).not.toContain(`handleSubmit(props.onSubmit)`);
   });
@@ -270,7 +270,9 @@ describe('generateFormComponent', () => {
     // Zero-dep: StripIndexSignature inlined, not imported
     expect(output).not.toContain('@zod-to-form/core');
     expect(output).toContain('type StripIndexSignature<T>');
-    expect(output).toContain('type FormData = StripIndexSignature<z.output<typeof userSchema>>;');
+    // FormData is input-typed (for RHF form values), FormOutput is output-typed (for onSubmit)
+    expect(output).toContain('type FormData = StripIndexSignature<z.input<typeof userSchema>>;');
+    expect(output).toContain('type FormOutput = StripIndexSignature<z.output<typeof userSchema>>;');
   });
 
   it('generates object-array item paths with template-literal register calls and object append defaults', async () => {

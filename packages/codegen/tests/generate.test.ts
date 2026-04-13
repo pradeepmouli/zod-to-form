@@ -143,7 +143,10 @@ describe('generateFormComponent', () => {
     expect(result).toContain('import { useForm');
     expect(result).toContain('import { zodResolver }');
     expect(result).toContain('export function MyForm');
-    expect(result).toContain('handleSubmit(props.onSubmit)');
+    // handleSubmit wraps onSubmit in an arrow that casts data to FormOutput
+    // (RHF's TFieldValues is input-type; onSubmit receives output-type).
+    expect(result).toContain('handleSubmit(');
+    expect(result).toContain('props.onSubmit(data as unknown as FormOutput)');
     expect(result).toContain("register('name')");
     expect(result).toContain("register('email')");
     expect(result).toContain('<button type="submit">Submit</button>');

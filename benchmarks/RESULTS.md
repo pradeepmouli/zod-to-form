@@ -8,96 +8,153 @@
 
 | Schema | Level | Mean | ops/sec | Samples |
 |--------|-------|------|---------|---------|
-| small (5 fields) | no optimization | 5.15us | 194.3K | 97136 |
-| small (5 fields) | L1 | 7.83us | 127.7K | 63868 |
-| small (5 fields) | L2 | 8.18us | 122.3K | 61164 |
-| medium (18 fields) | no optimization | 29.03us | 34.5K | 17226 |
-| medium (18 fields) | L1 | 69.59us | 14.4K | 7186 |
-| medium (18 fields) | L2 | 71.39us | 14.0K | 7004 |
-| large (50 fields) | no optimization | 74.92us | 13.3K | 6674 |
-| large (50 fields) | L1 | 173.88us | 5.8K | 2876 |
-| large (50 fields) | L2 | 182.54us | 5.5K | 2742 |
+| small (5 fields) | no optimization | 5.14us | 194.5K | 97226 |
+| small (5 fields) | L1 | 8.37us | 119.4K | 59712 |
+| small (5 fields) | L2 | 8.34us | 119.9K | 59959 |
+| medium (18 fields) | no optimization | 28.95us | 34.5K | 17271 |
+| medium (18 fields) | L1 | 72.09us | 13.9K | 6949 |
+| medium (18 fields) | L2 | 67.35us | 14.8K | 7424 |
+| large (50 fields) | no optimization | 77.74us | 12.9K | 6432 |
+| large (50 fields) | L1 | 193.60us | 5.2K | 2594 |
+| large (50 fields) | L2 | 185.46us | 5.4K | 2696 |
 
 #### walkSchema
 
 | Schema | Level | Mean | ops/sec | Samples |
 |--------|-------|------|---------|---------|
-| small (5 fields) | no optimization | 2.78us | 359.1K | 179539 |
-| small (5 fields) | L1 | 3.82us | 261.7K | 130867 |
-| small (5 fields) | L2 | 4.00us | 250.3K | 125145 |
-| medium (18 fields) | no optimization | 17.41us | 57.4K | 28720 |
-| medium (18 fields) | L1 | 53.18us | 18.8K | 9403 |
-| medium (18 fields) | L2 | 49.02us | 20.4K | 10201 |
-| large (50 fields) | no optimization | 52.78us | 18.9K | 9473 |
-| large (50 fields) | L1 | 139.09us | 7.2K | 3595 |
-| large (50 fields) | L2 | 143.49us | 7.0K | 3485 |
+| small (5 fields) | no optimization | 2.80us | 357.3K | 178652 |
+| small (5 fields) | L1 | 3.80us | 263.1K | 131559 |
+| small (5 fields) | L2 | 4.16us | 240.3K | 120139 |
+| medium (18 fields) | no optimization | 18.57us | 53.8K | 26920 |
+| medium (18 fields) | L1 | 53.59us | 18.7K | 9330 |
+| medium (18 fields) | L2 | 50.30us | 19.9K | 9941 |
+| large (50 fields) | no optimization | 54.53us | 18.3K | 9169 |
+| large (50 fields) | L1 | 139.80us | 7.2K | 3577 |
+| large (50 fields) | L2 | 147.51us | 6.8K | 3390 |
 
 ### Browser Benchmarks (Chromium via Playwright)
+
+#### codegen mount (real generated components)
+
+| Schema | Level | Mean | ops/sec | Samples |
+|--------|-------|------|---------|---------|
+| small (5 fields) | no optimization (codegen) | 394.33us | 2.5K | 1269 |
+| small (5 fields) | L1 (codegen) | 393.70us | 2.5K | 1270 |
+| small (5 fields) | L2 (codegen) | 637.83us | 1.6K | 785 |
+| medium (18 fields) | no optimization (codegen) | 1.02ms | 977 | 489 |
+| medium (18 fields) | L1 (codegen) | 1.28ms | 779 | 390 |
+| medium (18 fields) | L2 (codegen) | 860.21us | 1.2K | 583 |
+| large (50 fields) | no optimization (codegen) | 2.83ms | 354 | 177 |
+| large (50 fields) | L1 (codegen) | 1.67ms | 597 | 301 |
+| large (50 fields) | L2 (codegen) | 1.78ms | 560 | 281 |
+
+#### runtime mount (walk every time)
+
+| Schema | Level | Mean | ops/sec | Samples |
+|--------|-------|------|---------|---------|
+| small (5 fields) | no optimization (runtime) | 497.12us | 2.0K | 1006 |
+| small (5 fields) | L1 (runtime) | 637.45us | 1.6K | 785 |
+| small (5 fields) | L2 (runtime) | 796.50us | 1.3K | 628 |
+| medium (18 fields) | no optimization (runtime) | 1.51ms | 662 | 332 |
+| medium (18 fields) | L1 (runtime) | 1.57ms | 636 | 318 |
+| medium (18 fields) | L2 (runtime) | 2.35ms | 426 | 213 |
+| large (50 fields) | no optimization (runtime) | 2.25ms | 444 | 222 |
+| large (50 fields) | L1 (runtime) | 3.29ms | 304 | 153 |
+| large (50 fields) | L2 (runtime) | 4.00ms | 250 | 125 |
 
 #### browser render (walk + React mount)
 
 | Schema | Level | Mean | ops/sec | Samples |
 |--------|-------|------|---------|---------|
-| small (5 fields) | no optimization | 438.00us | 2.3K | 1142 |
-| small (5 fields) | L1 | 670.64us | 1.5K | 746 |
-| small (5 fields) | L2 | 588.47us | 1.7K | 850 |
-| medium (18 fields) | no optimization | 2.02ms | 495 | 249 |
-| medium (18 fields) | L1 | 2.93ms | 341 | 171 |
-| medium (18 fields) | L2 | 1.54ms | 648 | 324 |
-| large (50 fields) | no optimization | 2.86ms | 350 | 175 |
-| large (50 fields) | L1 | 4.45ms | 225 | 113 |
-| large (50 fields) | L2 | 2.86ms | 350 | 175 |
+| small (5 fields) | no optimization | 484.88us | 2.1K | 1032 |
+| small (5 fields) | L1 | 572.31us | 1.7K | 874 |
+| small (5 fields) | L2 | 460.41us | 2.2K | 1086 |
+| medium (18 fields) | no optimization | 2.25ms | 445 | 223 |
+| medium (18 fields) | L1 | 2.32ms | 431 | 216 |
+| medium (18 fields) | L2 | 1.48ms | 677 | 339 |
+| large (50 fields) | no optimization | 3.45ms | 290 | 145 |
+| large (50 fields) | L1 | 3.15ms | 318 | 162 |
+| large (50 fields) | L2 | 2.67ms | 374 | 188 |
 
 #### browser walkSchema
 
 | Schema | Level | Mean | ops/sec | Samples |
 |--------|-------|------|---------|---------|
-| small (5 fields) | no optimization | 2.52us | 396.5K | 198274 |
-| small (5 fields) | L1 | 3.28us | 304.5K | 152274 |
-| small (5 fields) | L2 | 3.69us | 271.0K | 135510 |
-| medium (18 fields) | no optimization | 13.43us | 74.5K | 37239 |
-| medium (18 fields) | L1 | 39.82us | 25.1K | 12556 |
-| medium (18 fields) | L2 | 43.26us | 23.1K | 11558 |
-| large (50 fields) | no optimization | 38.95us | 25.7K | 12836 |
-| large (50 fields) | L1 | 112.79us | 8.9K | 4434 |
-| large (50 fields) | L2 | 117.06us | 8.5K | 4272 |
+| small (5 fields) | no optimization | 2.72us | 367.3K | 183628 |
+| small (5 fields) | L1 | 3.26us | 306.9K | 153468 |
+| small (5 fields) | L2 | 3.62us | 276.5K | 138238 |
+| medium (18 fields) | no optimization | 13.58us | 73.6K | 36825 |
+| medium (18 fields) | L1 | 36.97us | 27.0K | 13527 |
+| medium (18 fields) | L2 | 38.20us | 26.2K | 13090 |
+| large (50 fields) | no optimization | 36.72us | 27.2K | 13619 |
+| large (50 fields) | L1 | 100.22us | 10.0K | 4989 |
+| large (50 fields) | L2 | 104.25us | 9.6K | 4796 |
 
 #### browser keystroke validation (1 field per op)
 
 | Schema | Level | Mean | ops/sec | Samples |
 |--------|-------|------|---------|---------|
-| small (5 fields) | no optimization (zodResolver → full schema) | 216ns | 4.6M | 2312365 |
-| small (5 fields) | L1 (single-field zodSchema.safeParse) | 151ns | 6.6M | 3316725 |
-| small (5 fields) | L2 (single-field native rule check) | 92ns | 10.9M | 5451572 |
-| medium (18 fields) | no optimization (zodResolver → full schema) | 840ns | 1.2M | 595296 |
-| medium (18 fields) | L1 (single-field zodSchema.safeParse) | 117ns | 8.5M | 4264891 |
-| medium (18 fields) | L2 (single-field native rule check) | 106ns | 9.4M | 4721518 |
-| large (50 fields) | no optimization (zodResolver → full schema) | 2.60us | 384.9K | 192470 |
-| large (50 fields) | L1 (single-field zodSchema.safeParse) | 193ns | 5.2M | 2591265 |
-| large (50 fields) | L2 (single-field native rule check) | 111ns | 9.0M | 4494190 |
+| small (5 fields) | no optimization (zodResolver → full schema) | 233ns | 4.3M | 2145739 |
+| small (5 fields) | L1 (single-field zodSchema.safeParse) | 149ns | 6.7M | 3355566 |
+| small (5 fields) | L2 (single-field native rule check) | 95ns | 10.5M | 5261619 |
+| medium (18 fields) | no optimization (zodResolver → full schema) | 781ns | 1.3M | 640454 |
+| medium (18 fields) | L1 (single-field zodSchema.safeParse) | 126ns | 8.0M | 3983766 |
+| medium (18 fields) | L2 (single-field native rule check) | 103ns | 9.7M | 4854130 |
+| large (50 fields) | no optimization (zodResolver → full schema) | 2.60us | 384.4K | 192216 |
+| large (50 fields) | L1 (single-field zodSchema.safeParse) | 191ns | 5.2M | 2612881 |
+| large (50 fields) | L2 (single-field native rule check) | 109ns | 9.2M | 4599245 |
 
 #### browser submit validation (full form per op)
 
 | Schema | Level | Mean | ops/sec | Samples |
 |--------|-------|------|---------|---------|
-| small (5 fields) | no optimization (full schema.safeParse) | 275ns | 3.6M | 1820254 |
-| small (5 fields) | L1 (N field parses + schemaLite) | 409ns | 2.4M | 1221564 |
-| small (5 fields) | L2 (N native checks + schemaLite) | 247ns | 4.1M | 2025800 |
-| medium (18 fields) | no optimization (full schema.safeParse) | 931ns | 1.1M | 536821 |
-| medium (18 fields) | L1 (N field parses + schemaLite) | 2.11us | 473.5K | 236740 |
-| medium (18 fields) | L2 (N native checks + schemaLite) | 1.86us | 536.7K | 268399 |
-| large (50 fields) | no optimization (full schema.safeParse) | 2.56us | 390.2K | 195155 |
-| large (50 fields) | L1 (N field parses + schemaLite) | 6.83us | 146.5K | 73261 |
-| large (50 fields) | L2 (N native checks + schemaLite) | 4.53us | 220.6K | 110279 |
+| small (5 fields) | no optimization (full schema.safeParse) | 275ns | 3.6M | 1818854 |
+| small (5 fields) | L1 (N field parses + schemaLite) | 392ns | 2.6M | 1276241 |
+| small (5 fields) | L2 (N native checks + schemaLite) | 226ns | 4.4M | 2208907 |
+| medium (18 fields) | no optimization (full schema.safeParse) | 908ns | 1.1M | 550897 |
+| medium (18 fields) | L1 (N field parses + schemaLite) | 1.98us | 505.9K | 252947 |
+| medium (18 fields) | L2 (N native checks + schemaLite) | 1.68us | 594.3K | 297233 |
+| large (50 fields) | no optimization (full schema.safeParse) | 2.56us | 390.9K | 195503 |
+| large (50 fields) | L1 (N field parses + schemaLite) | 6.49us | 154.0K | 77026 |
+| large (50 fields) | L2 (N native checks + schemaLite) | 4.07us | 246.0K | 122984 |
 
 #### browser schemaLite (cross-field effects only)
 
 | Schema | Level | Mean | ops/sec | Samples |
 |--------|-------|------|---------|---------|
-| medium (18 fields) | L1 schemaLite.safeParse | 498ns | 2.0M | 1005143 |
-| medium (18 fields) | L2 schemaLite.safeParse | 520ns | 1.9M | 962630 |
-| large (50 fields) | L1 schemaLite.safeParse | 1.28us | 783.5K | 391775 |
-| large (50 fields) | L2 schemaLite.safeParse | 1.27us | 785.7K | 392861 |
+| medium (18 fields) | L1 schemaLite.safeParse | 502ns | 2.0M | 996431 |
+| medium (18 fields) | L2 schemaLite.safeParse | 511ns | 2.0M | 977736 |
+| large (50 fields) | L1 schemaLite.safeParse | 1.24us | 805.3K | 402719 |
+| large (50 fields) | L2 schemaLite.safeParse | 1.27us | 785.3K | 392732 |
+
+### Codegen vs Runtime (Browser Mount)
+
+> Codegen: pre-walked `FormField[]` imported from a generated module — mount pays only React work.
+> Runtime: `useZodForm(schema, ...)` walks + optimizes + mounts on every page load.
+
+#### small (5 fields)
+
+| Level | Codegen mount | Runtime mount | Speedup |
+|-------|---------------|---------------|---------|
+| no optimization | 394.33us | 497.12us | 1.26× |
+| L1 | 393.70us | 637.45us | 1.62× |
+| L2 | 637.83us | 796.50us | 1.25× |
+
+#### medium (18 fields)
+
+| Level | Codegen mount | Runtime mount | Speedup |
+|-------|---------------|---------------|---------|
+| no optimization | 1.02ms | 1.51ms | 1.48× |
+| L1 | 1.28ms | 1.57ms | 1.22× |
+| L2 | 860.21us | 2.35ms | 2.73× |
+
+#### large (50 fields)
+
+| Level | Codegen mount | Runtime mount | Speedup |
+|-------|---------------|---------------|---------|
+| no optimization | 2.83ms | 2.25ms | 0.80× |
+| L1 | 1.67ms | 3.29ms | 1.96× |
+| L2 | 1.78ms | 4.00ms | 2.24× |
 
 ### Amortized Session Cost (Browser)
 
@@ -109,22 +166,22 @@
 
 | Level | Mount only (K=0) | 20 edits | 100 edits |
 |-------|------------------|----------|-----------|
-| no optimization | 438.28us | 442.60us | 459.91us |
-| L1 | 671.05us | 674.07us | 686.13us |
-| L2 | 588.72us | 590.55us | 597.89us |
+| no optimization | 485.16us | 489.82us | 508.46us |
+| L1 | 572.70us | 575.68us | 587.61us |
+| L2 | 460.63us | 462.53us | 470.14us |
 
 #### medium (18 fields)
 
 | Level | Mount only (K=0) | 20 edits | 100 edits |
 |-------|------------------|----------|-----------|
-| no optimization | 2.02ms | 2.04ms | 2.10ms |
-| L1 | 2.93ms | 2.93ms | 2.94ms |
-| L2 | 1.55ms | 1.55ms | 1.56ms |
+| no optimization | 2.25ms | 2.27ms | 2.33ms |
+| L1 | 2.32ms | 2.32ms | 2.33ms |
+| L2 | 1.48ms | 1.48ms | 1.49ms |
 
 #### large (50 fields)
 
 | Level | Mount only (K=0) | 20 edits | 100 edits |
 |-------|------------------|----------|-----------|
-| no optimization | 2.86ms | 2.91ms | 3.12ms |
-| L1 | 4.46ms | 4.46ms | 4.48ms |
-| L2 | 2.87ms | 2.87ms | 2.88ms |
+| no optimization | 3.45ms | 3.50ms | 3.71ms |
+| L1 | 3.15ms | 3.16ms | 3.17ms |
+| L2 | 2.67ms | 2.68ms | 2.69ms |

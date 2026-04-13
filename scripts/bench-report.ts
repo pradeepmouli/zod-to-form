@@ -196,6 +196,72 @@ function extractPrimitives(data: BenchFile, level: string): Primitives {
   return prim;
 }
 
+/**
+ * Codegen vs runtime: compare pre-walked mount cost against walk-on-every-mount.
+ * Reads from the "codegen mount" and "runtime mount" describes.
+ */
+function buildCodegenVsRuntimeTable(browserData: BenchFile): string {
+  const levels = ['no optimization', 'L1', 'L2'] as const;
+  const schemas = ['small (5 fields)', 'medium (18 fields)', 'large (50 fields)'] as const;
+
+  // Map: schema -> level -> { codegen: ms, runtime: ms }
+  const table: Record<string, Record<string, { codegen?: number; runtime?: number }>> = {};
+
+  for (const file of browserData.files) {
+    for (const group of file.groups) {
+      const { scenario, schema } = parseGroupName(group.fullName);
+      const isCodegen = scenario.includes('codegen mount');
+      const isRuntime = scenario.includes('runtime mount');
+      if (!isCodegen && !isRuntime) continue;
+
+      table[schema] ??= {};
+      for (const b of group.benchmarks) {
+        const mean = b.hz > 0 ? 1000 / b.hz : undefined;
+        if (mean === undefined) continue;
+        // bench name is like "L2 (codegen)" or "no optimization (runtime)"
+        const level = levels.find((l) => b.name.startsWith(l));
+        if (!level) continue;
+        table[schema]![level] ??= {};
+        if (isCodegen) table[schema]![level]!.codegen = mean;
+        else table[schema]![level]!.runtime = mean;
+      }
+    }
+  }
+
+  if (Object.keys(table).length === 0) return '';
+
+  const lines: string[] = [];
+  lines.push('### Codegen vs Runtime (Browser Mount)\n');
+  lines.push(
+    '> Codegen: pre-walked `FormField[]` imported from a generated module — mount pays only React work.'
+  );
+  lines.push(
+    '> Runtime: `useZodForm(schema, ...)` walks + optimizes + mounts on every page load.\n'
+  );
+
+  for (const schema of schemas) {
+    const row = table[schema];
+    if (!row) continue;
+    lines.push(`#### ${schema}\n`);
+    lines.push('| Level | Codegen mount | Runtime mount | Speedup |');
+    lines.push('|-------|---------------|---------------|---------|');
+    for (const level of levels) {
+      const cell = row[level];
+      if (!cell || cell.codegen === undefined || cell.runtime === undefined) {
+        lines.push(`| ${level} | n/a | n/a | n/a |`);
+        continue;
+      }
+      const speedup = cell.runtime / cell.codegen;
+      lines.push(
+        `| ${level} | ${formatMs(cell.codegen)} | ${formatMs(cell.runtime)} | ${speedup.toFixed(2)}× |`
+      );
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n');
+}
+
 function buildSessionTable(browserData: BenchFile): string {
   const levels = ['no optimization', 'L1', 'L2'] as const;
   const schemas = ['small (5 fields)', 'medium (18 fields)', 'large (50 fields)'] as const;
@@ -262,6 +328,8 @@ if (existsSync(browserFile)) {
   const rows = collectRows(data);
   output += '\n### Browser Benchmarks (Chromium via Playwright)\n\n';
   output += buildTable(rows);
+  const cvrTable = buildCodegenVsRuntimeTable(data);
+  if (cvrTable) output += '\n' + cvrTable;
   output += '\n' + buildSessionTable(data);
 } else {
   output += `\n*Browser benchmark file not found: ${browserFile}*\n`;

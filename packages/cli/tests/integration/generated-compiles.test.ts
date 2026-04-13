@@ -88,6 +88,7 @@ describe('generated component compilation', () => {
         `declare module 'zod' {`,
         `  export namespace z {`,
         `    export type output<T> = unknown;`,
+        `    export type input<T> = unknown;`,
         `  }`,
         `  export const z: unknown;`,
         `}`,

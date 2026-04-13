@@ -6,6 +6,30 @@ import { extractNativeRules } from './constraint-map.js';
 const COMPONENT_ENFORCED_TYPES = new Set(['enum', 'boolean', 'literal']);
 
 /**
+ * Wrapper types that delegate to an inner schema via def.innerType.
+ * L2 must unwrap these to find the constraint-bearing inner schema —
+ * a wrapped z.string().min(2).optional() has its constraints on the
+ * inner string, not on the outer optional's bag.
+ */
+const WRAPPER_TYPES = new Set(['optional', 'nullable', 'default', 'prefault', 'readonly']);
+
+/**
+ * Walk inward through wrapper types to find the constraint-bearing schema.
+ * Returns the schema itself if it isn't a wrapper.
+ */
+function unwrapToInner(schema: $ZodType): $ZodType {
+  let current = schema;
+  while (true) {
+    const def = current._zod.def as unknown as Record<string, unknown>;
+    const type = def['type'] as string;
+    if (!WRAPPER_TYPES.has(type)) return current;
+    const innerType = def['innerType'] as $ZodType | undefined;
+    if (!innerType) return current;
+    current = innerType;
+  }
+}
+
+/**
  * Level 2 optimizer: Converts simple Zod constraints to native RHF rules.
  *
  * For fields without refine/transform, replaces zodSchema with native
@@ -32,8 +56,13 @@ const l2Optimizer: FormOptimizer = (schema: $ZodType, ctx, field) => {
     return;
   }
 
-  // Try to extract native rules from the schema
-  const nativeRules = extractNativeRules(schema);
+  // Unwrap wrapper types (optional/nullable/default/prefault/readonly) to find
+  // the constraint-bearing inner schema. Constraints on z.string().min(2).optional()
+  // live in the inner string's bag, not the outer optional's bag.
+  const innerSchema = unwrapToInner(schema);
+
+  // Try to extract native rules from the unwrapped schema
+  const nativeRules = extractNativeRules(innerSchema);
 
   if (nativeRules !== null) {
     // All constraints mapped to native rules — switch to native mode
@@ -50,8 +79,13 @@ const l2Optimizer: FormOptimizer = (schema: $ZodType, ctx, field) => {
 
 /**
  * Zod types that L2 handles for native rule extraction.
+ *
+ * Wrapper types (optional/nullable/default/prefault/readonly) are included so
+ * that e.g. z.string().min(2).optional() still gets native rule extraction —
+ * the L2 optimizer unwraps them to find the constraint-bearing inner schema.
  */
 const L2_TYPES = [
+  // Constraint-bearing leaf types
   'string',
   'number',
   'bigint',
@@ -61,7 +95,13 @@ const L2_TYPES = [
   // Component-enforced
   'enum',
   'boolean',
-  'literal'
+  'literal',
+  // Wrapper types — unwrapped before extraction
+  'optional',
+  'nullable',
+  'default',
+  'prefault',
+  'readonly'
 ] as const;
 
 /**

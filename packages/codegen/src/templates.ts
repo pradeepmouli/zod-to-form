@@ -1,19 +1,26 @@
 import type { FormField } from '@zod-to-form/core';
 
 // ─── Inlined type utility (zero-dep codegen) ─────────────────────────
-const STRIP_INDEX_SIGNATURE_TYPE = `type StripIndexSignature<T> = T extends readonly (infer U)[]
-  ? StripIndexSignature<U>[]
-  : T extends object
-    ? {
-        [K in keyof T as string extends K
-          ? never
-          : number extends K
+//
+// StripIndexSignature removes index signatures from a type while preserving
+// known built-in classes (Date, File, FileList, Blob, RegExp) — without the
+// exclusion, the recursion walks into Date's method keys and strips their
+// function signatures, producing nonsensical types.
+const STRIP_INDEX_SIGNATURE_TYPE = `type StripIndexSignature<T> = T extends Date | File | FileList | Blob | RegExp
+  ? T
+  : T extends readonly (infer U)[]
+    ? StripIndexSignature<U>[]
+    : T extends object
+      ? {
+          [K in keyof T as string extends K
             ? never
-            : symbol extends K
+            : number extends K
               ? never
-              : K]: StripIndexSignature<T[K]>;
-      }
-    : T;`;
+              : symbol extends K
+                ? never
+                : K]: StripIndexSignature<T[K]>;
+        }
+      : T;`;
 
 // ─── Inlined normalizeFormValues (zero-dep codegen for html preset) ──
 const NORMALIZE_FORM_VALUES_BLOCK = `function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -95,9 +102,18 @@ export function getFileHeader(
     ``,
     STRIP_INDEX_SIGNATURE_TYPE,
     ``,
+    // FormData: form values as handled by RHF (input side — pre-parse).
+    // FormOutput: parsed values passed to onSubmit (output side — post-transform).
+    // Zod defaults/transforms make input and output differ — RHF uses input.
     ...(includeZod
-      ? [`type FormData = StripIndexSignature<z.output<typeof ${exportName}>>;`]
-      : [`type FormData = StripIndexSignature<import('zod').output<typeof ${exportName}>>;`]),
+      ? [
+          `type FormData = StripIndexSignature<z.input<typeof ${exportName}>>;`,
+          `type FormOutput = StripIndexSignature<z.output<typeof ${exportName}>>;`
+        ]
+      : [
+          `type FormData = StripIndexSignature<import('zod').input<typeof ${exportName}>>;`,
+          `type FormOutput = StripIndexSignature<import('zod').output<typeof ${exportName}>>;`
+        ]),
     ...(!isShadcn ? [``, NORMALIZE_FORM_VALUES_BLOCK] : [])
   ].join('\n');
 }
