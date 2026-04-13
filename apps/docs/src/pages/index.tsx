@@ -9,27 +9,55 @@ function HomepageHeader(): ReactNode {
   const { siteConfig } = useDocusaurusContext();
   return (
     <header className={clsx('hero hero--primary')}>
-      <div className="container">
-        <Heading as="h1" className="hero__title">
+      <div className="container" style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <Heading
+          as="h1"
+          className="hero__title"
+          style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', marginBottom: '1rem' }}
+        >
           {siteConfig.title}
         </Heading>
-        <p className="hero__subtitle">{siteConfig.tagline}</p>
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link className="button button--secondary button--lg" to="/docs/intro">
+        <p
+          className="hero__subtitle"
+          style={{ fontSize: '1.25rem', maxWidth: '680px', margin: '0 auto 2.5rem' }}
+        >
+          {siteConfig.tagline}
+        </p>
+        <div
+          style={{
+            display: 'flex',
+            gap: '1rem',
+            justifyContent: 'center',
+            flexWrap: 'wrap'
+          }}
+        >
+          <Link className="button button--primary button--lg" to="/docs/intro">
             Get Started
           </Link>
-          <Link className="button button--outline button--secondary button--lg" to="/docs/api">
+          <Link className="button button--outline button--lg" to="/docs/api">
             API Reference
           </Link>
           <Link
-            className="button button--outline button--secondary button--lg"
+            className="button button--outline button--lg"
             href="https://github.com/pradeepmouli/zod-to-form"
+            style={{ borderColor: 'var(--z2f-brand)' }}
           >
-            GitHub
+            View on GitHub
           </Link>
         </div>
       </div>
     </header>
+  );
+}
+
+function Feature({ title, children }: { title: string; children: ReactNode }): ReactNode {
+  return (
+    <div className="col col--4" style={{ marginBottom: '1.5rem' }}>
+      <div className="z2f-feature-card">
+        <Heading as="h3">{title}</Heading>
+        <p>{children}</p>
+      </div>
+    </div>
   );
 }
 
@@ -41,27 +69,18 @@ export default function Home(): ReactNode {
       <main>
         <section className="container margin-vert--xl">
           <div className="row">
-            <div className="col col--4">
-              <Heading as="h3">Runtime rendering</Heading>
-              <p>
-                Pass a Zod schema to <code>&lt;ZodForm&gt;</code> and get a validated form
-                immediately. Zero boilerplate.
-              </p>
-            </div>
-            <div className="col col--4">
-              <Heading as="h3">Static codegen</Heading>
-              <p>
-                Run <code>z2f generate</code> at build time to emit hand-readable <code>.tsx</code>{' '}
-                with no zod-to-form runtime.
-              </p>
-            </div>
-            <div className="col col--4">
-              <Heading as="h3">Zod v4 native</Heading>
-              <p>
-                Reads <code>_zod.def</code>, <code>.meta()</code>, and registries directly — no JSON
-                Schema intermediate.
-              </p>
-            </div>
+            <Feature title="Runtime rendering">
+              Pass a Zod schema to <code>&lt;ZodForm&gt;</code> and get a validated form
+              immediately. Zero boilerplate.
+            </Feature>
+            <Feature title="Static codegen">
+              Run <code>z2f generate</code> at build time to emit hand-readable <code>.tsx</code>{' '}
+              with no zod-to-form runtime.
+            </Feature>
+            <Feature title="Zod v4 native">
+              Reads <code>_zod.def</code>, <code>.meta()</code>, and registries directly — no JSON
+              Schema intermediate.
+            </Feature>
           </div>
         </section>
       </main>

@@ -108,7 +108,7 @@ function patchApiFrontmatterPlugin(): Plugin {
 const config: Config = {
   title: 'zod-to-form',
   tagline: 'Schema-driven form generation for Zod v4',
-  favicon: 'img/logo.svg',
+  favicon: 'img/favicon.svg',
 
   url: 'https://pradeepmouli.github.io',
   baseUrl: '/zod-to-form/',
@@ -118,6 +118,28 @@ const config: Config = {
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
+
+  headTags: [
+    {
+      tagName: 'link',
+      attributes: { rel: 'preconnect', href: 'https://fonts.googleapis.com' }
+    },
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'preconnect',
+        href: 'https://fonts.gstatic.com',
+        crossorigin: 'anonymous'
+      }
+    }
+  ],
+
+  stylesheets: [
+    {
+      href: 'https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@500;700&display=swap',
+      type: 'text/css'
+    }
+  ],
 
   i18n: {
     defaultLocale: 'en',
@@ -209,8 +231,10 @@ const config: Config = {
     navbar: {
       title: 'zod-to-form',
       logo: {
-        alt: 'zod-to-form logo',
-        src: 'img/logo.svg'
+        alt: 'zod-to-form',
+        src: 'img/logo.svg',
+        width: 36,
+        height: 30
       },
       items: [
         {
@@ -291,8 +315,8 @@ const config: Config = {
       additionalLanguages: ['bash', 'json', 'tsx', 'typescript']
     },
     colorMode: {
-      defaultMode: 'light',
-      respectPrefersColorScheme: true
+      defaultMode: 'dark',
+      respectPrefersColorScheme: false
     }
   } satisfies Preset.ThemeConfig
 };
