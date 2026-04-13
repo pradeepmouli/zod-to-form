@@ -28,26 +28,44 @@
 - `zodSchema: $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>` (optional) — Atomic Zod schema for this field, set by L1 optimizer
 - `validation: ValidationStrategy` (optional) — Validation strategy set by optimizers (undefined = use zodResolver)
 
-### `FormFieldOption`
-**Properties:**
-- `value: string | number` — 
-- `label: string` — 
-- `disabled: boolean` (optional) — 
-
-### `FormFieldConstraints`
-**Properties:**
-- `min: number` (optional) — 
-- `max: number` (optional) — 
-- `minLength: number` (optional) — 
-- `maxLength: number` (optional) — 
-- `pattern: string` (optional) — 
-- `format: string` (optional) — 
-- `step: number` (optional) — 
-
 ### `FormProcessor`
 ```ts
 (schema: T, ctx: FormProcessorContext, field: FormField, params: ProcessParams) => void
 ```
+
+### `FormMeta`
+```ts
+FieldConfig<T> & { render?: (field: FormField, props: unknown) => unknown }
+```
+
+### `FieldConfig`
+Per-field configuration that customises how a Zod schema field is rendered.
+
+Merges base options (component override, visibility, order, props) with type-aware
+extras: nested `fields` for object schemas, and `arrayItems` for array schemas.
+Use this type when annotating a `ZodFormsConfig.fields` record or a per-schema
+`schemas.[key].fields` map.
+```ts
+FieldConfigBase & FieldConfigExtras<T>
+```
+
+## types
+
+### `FormFieldOption`
+**Properties:**
+- `value: string | number`
+- `label: string`
+- `disabled: boolean` (optional)
+
+### `FormFieldConstraints`
+**Properties:**
+- `min: number` (optional)
+- `max: number` (optional)
+- `minLength: number` (optional)
+- `maxLength: number` (optional)
+- `pattern: string` (optional)
+- `format: string` (optional)
+- `step: number` (optional)
 
 ### `FormProcessorContext`
 **Properties:**
@@ -60,16 +78,6 @@
 - `processChild: (schema: $ZodType, key: string) => FormField` (optional) — Process a child schema into a FormField.
 Provided by the walker for use in nesting processors (object, array, union).
 Undefined only in unit-test contexts where nesting is not being tested.
-
-### `FormMeta`
-```ts
-FieldConfig<T> & { render?: (field: FormField, props: unknown) => unknown }
-```
-
-### `FieldConfig`
-```ts
-FieldConfigBase & FieldConfigExtras<T>
-```
 
 ### `FieldExpression`
 Known RHF field expression strings that can be used as values in `props`.
@@ -85,6 +93,57 @@ RHF controller field at render time instead of being passed as a literal.
 - `isArrayItem: boolean` (optional) — Whether this field is an array item template
 - `index: number` (optional) — Array item index for rendering
 
+### `ZodFormRegistry`
+Zod v4 registry parameterized with FormMeta. Create via `z.registry<FormMeta>()`.
+```ts
+$ZodRegistry<FormMeta>
+```
+
+### `NativeRules`
+**Properties:**
+- `required: string` (optional)
+- `min: { value: number; message: string }` (optional)
+- `max: { value: number; message: string }` (optional)
+- `minLength: { value: number; message: string }` (optional)
+- `maxLength: { value: number; message: string }` (optional)
+- `pattern: { value: RegExp; message: string }` (optional)
+
+### `ValidationStrategy`
+**Properties:**
+- `mode: "zodSchema" | "native" | "component-enforced"`
+- `rules: NativeRules` (optional)
+
+### `FormOptimizer`
+```ts
+(schema: T, ctx: FormOptimizerContext, field: FormField, params: ProcessParams) => void
+```
+
+### `FormOptimizerContext`
+**Properties:**
+- `optimizers: Record<string, FormOptimizer[]>`
+- `schemaLite: SchemaLiteCollector`
+- `level: 1 | 2 | 3`
+- `collectorBasePath: string` — Dot-path prefix of the current collector's scope (empty string at root)
+
+### `WalkResult`
+**Properties:**
+- `fields: FormField[]`
+- `schemaLite: $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>> | null`
+- `schemaLiteInfo: SchemaLiteInfo` — Codegen metadata — describes how to reconstruct schemaLite in generated code
+
+### `SchemaLiteCollector`
+**Properties:**
+- `checks: readonly unknown[]` — Read-only access to collected checks
+- `fields: ReadonlyMap<string, $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>>` — Read-only access to collected fallthrough fields
+
+### `SchemaLiteInfo`
+Metadata for codegen to reconstruct the lite schema in a generated file
+```ts
+SchemaLiteInfoBase & { type: "checks"; checkCount: number } | SchemaLiteInfoBase & { type: "transform"; hasInnerChecks: boolean; hasOuterChecks: boolean } | SchemaLiteInfoBase & { type: "original" } | null
+```
+
+## Schema Walking
+
 ### `WalkOptions`
 **Properties:**
 - `formRegistry: ZodFormRegistry` (optional) — Custom form registry for metadata annotations
@@ -97,25 +156,7 @@ the optimization config here. The CLI reads `config.defaults.optimization`
 and forwards it; useZodForm accepts it via its own options. Both converge
 here as the single source of truth for the walker.
 
-### `ZodFormRegistry`
-Zod v4 registry parameterized with FormMeta. Create via `z.registry<FormMeta>()`.
-```ts
-$ZodRegistry<FormMeta>
-```
-
-### `NativeRules`
-**Properties:**
-- `required: string` (optional) — 
-- `min: { value: number; message: string }` (optional) — 
-- `max: { value: number; message: string }` (optional) — 
-- `minLength: { value: number; message: string }` (optional) — 
-- `maxLength: { value: number; message: string }` (optional) — 
-- `pattern: { value: RegExp; message: string }` (optional) — 
-
-### `ValidationStrategy`
-**Properties:**
-- `mode: "zodSchema" | "native" | "component-enforced"` — 
-- `rules: NativeRules` (optional) — 
+## config
 
 ### `ComponentOverride`
 Per-component metadata override. Only components that differ from defaults need an entry.
@@ -125,8 +166,6 @@ Per-component metadata override. Only components that differ from defaults need 
 "shadcn" | "html"
 ```
 
-### `ComponentsConfig`
-
 ### `TypedFieldConfig`
 Discriminated union over component keys.
 When `component` is set to a known component key, `props` is constrained
@@ -135,8 +174,6 @@ an open `Record<string, unknown>`.
 ```ts
 { [K in keyof TComponents & string]: TypedFieldConfigForComponent<TComponents, K> }[keyof TComponents & string] | UntypedFieldConfig
 ```
-
-### `ZodFormsConfig`
 
 ### `ZodTypeConfig`
 
@@ -151,30 +188,14 @@ Useful for Zod's `z.output<>` which adds `[x: string]: unknown` index signatures
 T extends readonly (infer U)[] ? StripIndexSignature<U>[] : T extends object ? { [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: StripIndexSignature<T[K]> } : T
 ```
 
-### `FormOptimizer`
-```ts
-(schema: T, ctx: FormOptimizerContext, field: FormField, params: ProcessParams) => void
-```
+## Configuration
 
-### `FormOptimizerContext`
-**Properties:**
-- `optimizers: Record<string, FormOptimizer[]>` — 
-- `schemaLite: SchemaLiteCollector` — 
-- `level: 1 | 2 | 3` — 
+### `ComponentsConfig`
 
-### `WalkResult`
-**Properties:**
-- `fields: FormField[]` — 
-- `schemaLite: $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>> | null` — 
-- `schemaLiteInfo: SchemaLiteInfo` — Codegen metadata — describes how to reconstruct schemaLite in generated code
+### `ZodFormsConfig`
+Root configuration type for `zod-to-form` code generation.
 
-### `SchemaLiteCollector`
-**Properties:**
-- `checks: readonly unknown[]` — Read-only access to collected checks
-- `fields: ReadonlyMap<string, $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>>` — Read-only access to collected fallthrough fields
-
-### `SchemaLiteInfo`
-Metadata for codegen to reconstruct the lite schema in a generated file
-```ts
-SchemaLiteInfoBase & { type: "checks"; checkCount: number } | SchemaLiteInfoBase & { type: "transform"; hasInnerChecks: boolean; hasOuterChecks: boolean } | SchemaLiteInfoBase & { type: "original" } | null
-```
+Describes the component library to use, generation defaults, per-schema
+overrides, and global field configuration. Pass this to `defineConfig()` in
+your `z2f.config.ts` for full type inference, or load and validate it at
+runtime with `validateConfig()`.

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { createSchemaLiteCollector } from '../../src/optimizers/schema-lite.js';
+import {
+  collectContainerEffects,
+  createSchemaLiteCollector
+} from '../../src/optimizers/schema-lite.js';
 
 function safeParse(schema: any, data: unknown) {
   return (schema as z.ZodType).safeParse(data);
@@ -220,6 +223,76 @@ describe('SchemaLiteCollector', () => {
       const valid = safeParse(result, { a: 'hello' });
       expect(valid.success).toBe(true);
       expect(valid.data).toHaveProperty('transformed', true);
+    });
+  });
+
+  describe('collectContainerEffects', () => {
+    it('collects superRefine checks from direct container', () => {
+      const schema = z.object({ a: z.string(), b: z.string() }).superRefine((data, ctx) => {
+        if (data.a === data.b) ctx.addIssue({ code: 'custom', message: 'differ', path: ['b'] });
+      });
+
+      const collector = createSchemaLiteCollector();
+      collectContainerEffects(schema as any, collector);
+
+      expect(collector.checks).toHaveLength(1);
+      expect(collector.isEmpty()).toBe(false);
+
+      const result = collector.build();
+      expect(result).not.toBeNull();
+      expect(safeParse(result, { a: 'x', b: 'x' }).success).toBe(false);
+      expect(safeParse(result, { a: 'x', b: 'y' }).success).toBe(true);
+    });
+
+    it('collects chained superRefine checks', () => {
+      const schema = z
+        .object({ a: z.string() })
+        .superRefine((_d, _c) => {})
+        .superRefine((_d, _c) => {});
+
+      const collector = createSchemaLiteCollector();
+      collectContainerEffects(schema as any, collector);
+
+      expect(collector.checks).toHaveLength(2);
+    });
+
+    it('collects transform from pipe-wrapped container', () => {
+      const schema = z
+        .object({ amount: z.number() })
+        .transform((data) => ({ ...data, cents: data.amount * 100 }));
+
+      const collector = createSchemaLiteCollector();
+      collectContainerEffects(schema as any, collector);
+
+      const result = collector.build();
+      expect(result).not.toBeNull();
+
+      const parsed = safeParse(result, { amount: 5 });
+      expect(parsed.success).toBe(true);
+      expect(parsed.data).toHaveProperty('cents', 500);
+    });
+
+    it('collects inner checks + transform from superRefine().transform()', () => {
+      const schema = z
+        .object({ a: z.string(), b: z.string() })
+        .superRefine((data, ctx) => {
+          if (data.a === data.b) ctx.addIssue({ code: 'custom', message: 'differ', path: ['b'] });
+        })
+        .transform((d) => ({ ...d, ok: true }));
+
+      const collector = createSchemaLiteCollector();
+      collectContainerEffects(schema as any, collector);
+
+      const result = collector.build();
+      expect(result).not.toBeNull();
+
+      // Check fires
+      expect(safeParse(result, { a: 'x', b: 'x' }).success).toBe(false);
+
+      // Check passes, transform runs
+      const pass = safeParse(result, { a: 'x', b: 'y' });
+      expect(pass.success).toBe(true);
+      expect(pass.data).toHaveProperty('ok', true);
     });
   });
 

@@ -8,7 +8,7 @@
 
 > **useZodForm**\<`TSchema`\>(`schema`, `options?`): `object`
 
-Defined in: [packages/react/src/useZodForm.ts:22](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/react/src/useZodForm.ts#L22)
+Defined in: [packages/react/src/useZodForm.ts:42](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/react/src/useZodForm.ts#L42)
 
 ## Type Parameters
 
@@ -41,3 +41,9 @@ Defined in: [packages/react/src/useZodForm.ts:22](https://github.com/pradeepmoul
 > **schemaError**: `string` \| `null` = `walkResult.error`
 
 Non-null when walkSchema threw — lets consumers display the error instead of an empty form
+
+### schemaLite
+
+> **schemaLite**: `$ZodType`\<`unknown`, `unknown`, `$ZodTypeInternals`\<`unknown`, `unknown`\>\> \| `null` = `walkResult.schemaLite`
+
+SchemaLite for submit-time validation (non-null when optimization is enabled and top-level effects exist)

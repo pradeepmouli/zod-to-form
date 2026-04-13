@@ -8,8 +8,16 @@
 
 > **createProgram**(): `Command`
 
-Defined in: [cli/src/index.ts:188](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/cli/src/index.ts#L188)
+Defined in: [cli/src/index.ts:237](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/cli/src/index.ts#L237)
+
+Creates the Commander.js CLI program for `zod-to-form`.
+
+Registers the `generate` and `init` sub-commands with all their options and
+action handlers. Consumers can pass the returned `Command` to `.parseAsync()`
+to run the CLI, or use it for testing without spawning a child process.
 
 ## Returns
 
 `Command`
+
+A fully configured `Command` instance ready to be parsed.

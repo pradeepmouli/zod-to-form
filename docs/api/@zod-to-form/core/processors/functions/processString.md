@@ -8,13 +8,13 @@
 
 > **processString**(`schema`, `ctx`, `field`, `_params`): `void`
 
-Defined in: [processors/string.ts:6](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/processors/string.ts#L6)
+Defined in: [processors/string.ts:18](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/processors/string.ts#L18)
 
 ## Parameters
 
 ### schema
 
-`$ZodType`
+`$ZodString`
 
 ### ctx
 

@@ -28,31 +28,41 @@
 - `zodSchema: $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>` (optional) — Atomic Zod schema for this field, set by L1 optimizer
 - `validation: ValidationStrategy` (optional) — Validation strategy set by optimizers (undefined = use zodResolver)
 
-### `FormFieldOption`
-**Properties:**
-- `value: string | number` — 
-- `label: string` — 
-- `disabled: boolean` (optional) — 
-
-### `FormFieldConstraints`
-**Properties:**
-- `min: number` (optional) — 
-- `max: number` (optional) — 
-- `minLength: number` (optional) — 
-- `maxLength: number` (optional) — 
-- `pattern: string` (optional) — 
-- `format: string` (optional) — 
-- `step: number` (optional) — 
-
 ### `FormMeta`
 ```ts
 FieldConfig<T> & { render?: (field: FormField, props: unknown) => unknown }
 ```
 
 ### `FieldConfig`
+Per-field configuration that customises how a Zod schema field is rendered.
+
+Merges base options (component override, visibility, order, props) with type-aware
+extras: nested `fields` for object schemas, and `arrayItems` for array schemas.
+Use this type when annotating a `ZodFormsConfig.fields` record or a per-schema
+`schemas.[key].fields` map.
 ```ts
 FieldConfigBase & FieldConfigExtras<T>
 ```
+
+## types.d
+
+### `FormFieldOption`
+**Properties:**
+- `value: string | number`
+- `label: string`
+- `disabled: boolean` (optional)
+
+### `FormFieldConstraints`
+**Properties:**
+- `min: number` (optional)
+- `max: number` (optional)
+- `minLength: number` (optional)
+- `maxLength: number` (optional)
+- `pattern: string` (optional)
+- `format: string` (optional)
+- `step: number` (optional)
+
+## Schema Walking
 
 ### `WalkOptions`
 **Properties:**
@@ -66,16 +76,18 @@ the optimization config here. The CLI reads `config.defaults.optimization`
 and forwards it; useZodForm accepts it via its own options. Both converge
 here as the single source of truth for the walker.
 
+## FieldRenderer
+
 ### `RuntimeComponentConfig`
 
 ### `FieldTemplateProps`
 **Properties:**
-- `children: ReactNode` — 
-- `label: string` — 
-- `description: string` (optional) — 
-- `helpText: string` (optional) — 
-- `error: string` (optional) — 
-- `name: string` — 
-- `required: boolean` (optional) — 
-- `disabled: boolean` (optional) — 
-- `deprecated: boolean` (optional) — 
+- `children: ReactNode`
+- `label: string`
+- `description: string` (optional)
+- `helpText: string` (optional)
+- `error: string` (optional)
+- `name: string`
+- `required: boolean` (optional)
+- `disabled: boolean` (optional)
+- `deprecated: boolean` (optional)

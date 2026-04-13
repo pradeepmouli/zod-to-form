@@ -36,6 +36,8 @@ export interface FormOptimizerContext {
   optimizers: Record<string, FormOptimizer[]>;
   schemaLite: SchemaLiteCollector;
   level: 1 | 2 | 3;
+  /** Dot-path prefix of the current collector's scope (empty string at root) */
+  collectorBasePath: string;
 }
 
 export type FormOptimizer<T extends $ZodType = $ZodType> = (

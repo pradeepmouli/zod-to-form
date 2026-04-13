@@ -12,26 +12,16 @@ import { createBaseField } from './utils.js';
  */
 type Def = Record<string, unknown>;
 
-/**
- * Container types that render children rather than validating themselves.
- * Used to detect nested container effects for fallthrough collection.
- * Matches the set excluded from L1 in l1-decompose.ts.
- */
-const CONTAINER_TYPES = new Set([
-  'object',
-  'array',
-  'tuple',
-  'union',
-  'intersection',
-  'record',
-  'map',
-  'set'
-]);
-
 import type { FormField, WalkOptions } from './types.js';
 import type { FormOptimizerContext, WalkResult, SchemaLiteInfo } from './optimizers/types.js';
 import { createOptimizers } from './optimizers/index.js';
-import { createSchemaLiteCollector } from './optimizers/schema-lite.js';
+import {
+  CONTAINER_TYPES,
+  collectContainerEffects,
+  createSchemaLiteCollector,
+  hasTopLevelEffects,
+  isPipeWrappedContainer
+} from './optimizers/schema-lite.js';
 
 function processField(
   schema: ZodType,
@@ -54,6 +44,50 @@ function processField(
 
   seen.add(schema);
 
+  // ── Detect container effects BEFORE processing children ──────────
+  //
+  // When a container has effects (superRefine/refine/transform), we create
+  // a child SchemaLiteCollector and swap it into the optimizerCtx so that
+  // children are processed into this collector. After children are done,
+  // we build() the child collector and add the result to the parent.
+  //
+  // This inside-out construction means each level only contains its own
+  // effects plus built results from nested containers — no redundant
+  // child validation, no separate pruning step.
+  //
+  // Keys with numeric segments (e.g. "items.0") are array/tuple element
+  // template paths, not real object properties. Skip them — the collector
+  // would materialize them as z.object wrappers, producing the wrong shape.
+  let childCollector: ReturnType<typeof createSchemaLiteCollector> | undefined;
+  let childOptimizerCtx = optimizerCtx;
+
+  if (optimizerCtx) {
+    const hasArrayIndexSegment = key.split('.').some((segment) => /^\d+$/.test(segment));
+    const containerWithEffects =
+      !hasArrayIndexSegment &&
+      ((CONTAINER_TYPES.has(zodType) && hasTopLevelEffects(schema)) ||
+        (zodType === 'pipe' && isPipeWrappedContainer(schema)));
+
+    if (containerWithEffects) {
+      // Object containers (and pipes wrapping objects) use z.object({}).loose()
+      // as the base; all others (array, tuple, etc.) use z.any().
+      const resolvedType =
+        zodType === 'pipe'
+          ? (((schema._zod.def as unknown as Def)['in'] as ZodType)?._zod?.def?.type ?? zodType)
+          : zodType;
+      childCollector = createSchemaLiteCollector({
+        useAnyBase: resolvedType !== 'object'
+      });
+      collectContainerEffects(schema, childCollector);
+      childOptimizerCtx = {
+        ...optimizerCtx,
+        schemaLite: childCollector,
+        collectorBasePath: key
+      };
+    }
+  }
+
+  // ── Process field (children use child collector if applicable) ────
   const ctx: import('./types.js').FormProcessorContext = {
     processors,
     formRegistry: options?.formRegistry,
@@ -70,7 +104,7 @@ function processField(
         seen,
         maxDepth,
         currentDepth + 1,
-        optimizerCtx
+        childOptimizerCtx
       )
   };
 
@@ -81,6 +115,7 @@ function processField(
     processFallback(schema, ctx, field, { parentKey: key });
   }
 
+  // ── Apply metadata ───────────────────────────────────────────────
   const metadata = resolveMetadata(schema, options?.formRegistry);
 
   if (metadata.title) {
@@ -123,7 +158,7 @@ function processField(
     field.hasCustomRender = true;
   }
 
-  // Run optimizer chain after processor + metadata overlay
+  // ── Run optimizer chain (uses ORIGINAL ctx, not child) ───────────
   if (optimizerCtx) {
     const optimizers = optimizerCtx.optimizers[zodType];
     if (optimizers) {
@@ -131,32 +166,15 @@ function processField(
         optimizer(schema, optimizerCtx, field, { parentKey: key });
       }
     }
+  }
 
-    // Recursive child collectors: capture effects on nested containers.
-    //
-    // L1 intentionally excludes containers (object, array, intersection, etc.)
-    // from zodSchema — calling safeParse on a container would tree-walk the
-    // entire subtree, defeating per-field decomposition.
-    //
-    // But a container CAN have effects: billing: z.object({...}).superRefine(fn).
-    // Without this, the superRefine is silently dropped in the optimized path.
-    //
-    // We detect container-level effects and add the full schema as a fallthrough
-    // field to the collector. The collector materializes dot-paths (e.g.
-    // "address.billing") into nested z.object wrappers so the lite schema's
-    // structure matches the actual data shape during validation.
-    //
-    // Keys with numeric segments (e.g. "items.0", "tuple.1", "map.0.key") are
-    // array/tuple element template paths — NOT real object property paths.
-    // SchemaLiteCollector materializes them into nested z.object wrappers, which
-    // would produce the wrong shape (expecting { items: { "0": ... } } instead of
-    // an array). Skip these paths entirely.
-    const hasArrayIndexSegment = key.split('.').some((segment) => /^\d+$/.test(segment));
-    const isContainerWithEffects =
-      (CONTAINER_TYPES.has(zodType) && hasTopLevelEffects(schema)) ||
-      (zodType === 'pipe' && isPipeWrappedContainer(schema));
-    if (!hasArrayIndexSegment && isContainerWithEffects) {
-      optimizerCtx.schemaLite.addField(key, schema);
+  // ── Build child collector and add to parent ──────────────────────
+  if (childCollector && optimizerCtx) {
+    const built = childCollector.build();
+    if (built) {
+      const basePath = optimizerCtx.collectorBasePath;
+      const relativePath = basePath ? key.slice(basePath.length + 1) : key;
+      optimizerCtx.schemaLite.addField(relativePath, built);
     }
   }
 
@@ -225,9 +243,6 @@ function extractChecksFromSchema(
   const checks = def['checks'] as unknown[] | undefined;
   if (!checks || checks.length === 0) return 0;
 
-  // Walk up to the root parent (base object without effects) to get the
-  // original check count. This handles chained effects like
-  // .superRefine(fn1).superRefine(fn2) where each link adds one check.
   let root: ZodType = schema;
   while (root._zod.parent) {
     root = root._zod.parent as ZodType;
@@ -243,45 +258,31 @@ function extractChecksFromSchema(
 }
 
 /**
- * Detect top-level refines/transforms/superRefines on the schema.
- *
- * In Zod v4, `z.object({}).superRefine(fn)` creates a new object schema
- * with the same def.type="object" but with additional checks in def.checks.
- * The parent chain points to the original (check-free) schema.
- *
- * We detect top-level effects by checking if the schema has checks that
- * differ from its parent, indicating superRefine/refine was applied.
- */
-function hasTopLevelEffects(schema: ZodType): boolean {
-  const def = schema._zod.def as unknown as Def;
-  const checks = def['checks'] as unknown[] | undefined;
-  if (!checks || checks.length === 0) return false;
-
-  // If there's a parent, compare check counts
-  const parent = schema._zod.parent;
-  if (parent) {
-    const parentDef = (parent as ZodType)._zod.def as unknown as Def;
-    const parentChecks = parentDef['checks'] as unknown[] | undefined;
-    return !parentChecks || checks.length > parentChecks.length;
-  }
-
-  return checks.length > 0;
-}
-
-/**
- * Detect if a schema is a pipe whose input is a container type.
- * e.g. z.object({...}).transform(fn) produces a pipe where def.in is an object.
- */
-function isPipeWrappedContainer(schema: ZodType): boolean {
-  const def = schema._zod.def as unknown as Def;
-  if (def['type'] !== 'pipe') return false;
-  const innerDef = (def['in'] as ZodType | undefined)?._zod?.def as unknown as Def | undefined;
-  return innerDef ? CONTAINER_TYPES.has(innerDef['type'] as string) : false;
-}
-
-/**
  * Walk a Zod schema and produce a FormField[] tree.
  * When optimization option is set, returns WalkResult with fields + schemaLite.
+ *
+ * @remarks
+ * Recursively walks a Zod schema tree and produces a FormField[] intermediate
+ * representation. Dispatches by def.type to a processor registry. Each processor
+ * extracts structure and constraints from _zod.def + _zod.bag.
+ * Uses WeakSet per top-level field for cycle detection — reused schema instances
+ * (e.g., z.string() in two fields) don't trigger false positives.
+ * The walker is STATELESS — call it repeatedly with different formRegistry values.
+ *
+ * @useWhen
+ * - You need direct schema-to-fields conversion in runtime contexts
+ * - You're building a custom codegen pipeline on top of FormField[]
+ *
+ * @avoidWhen
+ * - You just want generated components — use the CLI instead
+ * - Your schema is not z.object() at the root level
+ *
+ * @pitfalls
+ * - NEVER pass a non-object schema at the root — throws immediately
+ * - NEVER bypass the processor registry for custom types — extend via options.processors
+ * - NEVER skip normalizeFormValues() before schema.safeParse() — empty strings from HTML inputs fail optional field validation
+ *
+ * @category Schema Walking
  */
 export function walkSchema(
   schema: ZodType,
@@ -295,7 +296,6 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
 
   // If the schema is wrapped in pipes/effects, find the underlying object
   if (topLevelType !== 'object') {
-    // Try to find the inner object schema for pipe/effect wrappers
     const def = schema._zod.def as unknown as Def;
     if (topLevelType === 'pipe' && def['in']) {
       objectSchema = def['in'] as ZodType;
@@ -324,17 +324,11 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
     optimizerCtx = {
       optimizers,
       schemaLite: collector,
-      level: options!.optimization!.level
+      level: options!.optimization!.level,
+      collectorBasePath: ''
     };
 
     // Detect and capture top-level effects for schemaLite.
-    //
-    // Effects come in two forms:
-    // 1. Checks (superRefine/refine): stored in def.checks on the schema
-    // 2. Pipe/transform: wraps schema in def.type="pipe" with def.out holding the transform
-    //
-    // We extract both and replay them onto a lite z.object({}).loose() schema
-    // so submit-time validation skips field-level checks but preserves effects.
     schemaLiteInfo = collectTopLevelEffects(schema, objectSchema, collector);
   }
 
@@ -360,11 +354,6 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
   });
 
   if (isOptimized && collector) {
-    // Attach fallthrough field paths to the info for codegen.
-    // If only nested containers contributed effects (no top-level effects),
-    // reuse the 'checks' variant with checkCount: 0. The existing codegen
-    // for 'checks' creates z.object({...fallthrough}).loose() and replays
-    // checks — with 0 checks, only the fallthrough fields provide validation.
     const fallthroughFields = [...collector.fields.keys()];
     if (schemaLiteInfo) {
       schemaLiteInfo.fallthroughFields = fallthroughFields;

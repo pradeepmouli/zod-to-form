@@ -24,10 +24,12 @@ When true, use Controller/useController instead of register() spread
 
 ***
 
-### propMap?
+### props?
 
-> `optional` **propMap?**: `Record`\<`string`, `string`\>
+> `optional` **props?**: `Record`\<`string`, `unknown`\>
 
-Defined in: core/dist/config.d.ts:9
+Defined in: core/dist/config.d.ts:13
 
-Map RHF field props to component-specific prop names (e.g. { onSelect: 'field.onChange' })
+Default props for this component type.
+Values matching a known field expression string are resolved from the RHF controller.
+Per-field props override these via shallow merge (field config wins).

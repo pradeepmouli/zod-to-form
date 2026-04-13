@@ -8,7 +8,7 @@
 
 > **resolveFieldConfig**(`globalFields`, `schemaFields`): `Record`\<`string`, [`FieldConfig`](../type-aliases/FieldConfig.md)\>
 
-Defined in: [config.ts:423](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/config.ts#L423)
+Defined in: [config.ts:487](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L487)
 
 ## Parameters
 

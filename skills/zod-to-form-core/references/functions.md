@@ -1,16 +1,25 @@
 # Functions
 
-## `createOptimizers`
+## Optimization
+
+### `createOptimizers`
 Create an optimizer registry by merging custom optimizers with builtins.
 Custom optimizers for a type replace the entire chain for that type.
+
+Creates an optimizer registry by merging custom optimizers with built-in L1/L2 chains.
+L1 stores per-field zodSchema for decomposed validation.
+L2 generates native HTML validation rules (minLength, pattern, etc.).
+Custom optimizers for a type REPLACE the entire chain — they don't append.
 ```ts
 createOptimizers(custom: Record<string, FormOptimizer[]>): Record<string, FormOptimizer[]>
 ```
 **Parameters:**
-- `custom: Record<string, FormOptimizer[]>` — default: `{}` — 
+- `custom: Record<string, FormOptimizer[]>` — default: `{}`
 **Returns:** `Record<string, FormOptimizer[]>`
 
-## `createSchemaLiteCollector`
+## schema-lite
+
+### `createSchemaLiteCollector`
 Create a new SchemaLiteCollector instance.
 
 Builds a "lite" schema for submit-time validation:
@@ -18,51 +27,80 @@ Builds a "lite" schema for submit-time validation:
 - Transforms: z.object({}).loose().check(...).transform(fn)
 - Non-decomposable pipes: original schema as-is
 ```ts
-createSchemaLiteCollector(): SchemaLiteCollector
+createSchemaLiteCollector(options?: { useAnyBase?: boolean }): SchemaLiteCollector
 ```
+**Parameters:**
+- `options: { useAnyBase?: boolean }` (optional)
 **Returns:** `SchemaLiteCollector`
 
-## `defineConfig`
+## Configuration
+
+### `defineConfig`
+Identity helper that returns its argument typed as `ZodFormsConfig`.
+
+Merges preset component overrides (e.g. shadcn) into `config.components.overrides`
+so that user-supplied overrides layer on top of the preset defaults. Use this in
+your `z2f.config.ts` to get full TypeScript inference and IDE autocompletion.
+
+Identity helper that returns its argument typed as ZodFormsConfig.
+Applies preset component overrides (e.g., shadcn) — preset defaults
+merge with user overrides, user wins on conflicts. However, the props
+dict is replaced entirely, not merged.
 ```ts
 defineConfig<TComponents, TSchemas>(config: ZodFormsConfig<TComponents, TSchemas>): ZodFormsConfig<TComponents, TSchemas>
 ```
 **Parameters:**
-- `config: ZodFormsConfig<TComponents, TSchemas>` — 
-**Returns:** `ZodFormsConfig<TComponents, TSchemas>`
+- `config: ZodFormsConfig<TComponents, TSchemas>` — The raw configuration object.
+**Returns:** `ZodFormsConfig<TComponents, TSchemas>` — The same configuration with preset overrides applied.
+```ts
+export default defineConfig({
+  components: { source: '@/components/ui', preset: 'shadcn' },
+});
+```
 
-## `validateConfig`
+### `validateConfig`
+Validates an unknown value as a `ZodFormsConfig` at runtime.
+
+Parses `value` using the internal Zod config schema and throws a descriptive
+error if validation fails. Use this when loading config from untrusted sources
+such as JSON files or dynamic `import()` calls.
 ```ts
 validateConfig(value: unknown, source: string): ZodFormsConfig<Record<string, unknown>>
 ```
 **Parameters:**
-- `value: unknown` — 
-- `source: string` — default: `'config'` — 
-**Returns:** `ZodFormsConfig<Record<string, unknown>>`
+- `value: unknown` — The value to validate.
+- `source: string` — default: `'config'` — Human-readable label for error messages (defaults to `'config'`).
+**Returns:** `ZodFormsConfig<Record<string, unknown>>` — The validated configuration cast to `ZodFormsConfig`.
+**Throws:** If `value` does not conform to the config schema.
 
-## `resolveFieldConfig`
+## config
+
+### `resolveFieldConfig`
 ```ts
 resolveFieldConfig(globalFields: Record<string, FieldConfig> | undefined, schemaFields: Partial<Record<string, FieldConfig>> | undefined): Record<string, FieldConfig>
 ```
 **Parameters:**
-- `globalFields: Record<string, FieldConfig> | undefined` — 
-- `schemaFields: Partial<Record<string, FieldConfig>> | undefined` — 
+- `globalFields: Record<string, FieldConfig> | undefined`
+- `schemaFields: Partial<Record<string, FieldConfig>> | undefined`
 **Returns:** `Record<string, FieldConfig>`
 
-## `normalizeConfig`
+### `normalizeConfig`
 ```ts
 normalizeConfig(config: ZodFormsConfig<Record<string, unknown>>): ZodFormsConfig<Record<string, unknown>>
 ```
 **Parameters:**
-- `config: ZodFormsConfig<Record<string, unknown>>` — 
+- `config: ZodFormsConfig<Record<string, unknown>>`
 **Returns:** `ZodFormsConfig<Record<string, unknown>>`
 
-## `inferLabel`
+## utils
+
+### `inferLabel`
 Convert a camelCase or snake_case key to a human-readable Title Case label.
 ```ts
 inferLabel(key: string): string
 ```
 **Parameters:**
-- `key: string` — 
+- `key: string`
 **Returns:** `string`
 ```ts
 inferLabel('firstName') → 'First Name'
@@ -71,27 +109,27 @@ inferLabel('firstName') → 'First Name'
 inferLabel('email_address') → 'Email Address'
 ```
 
-## `joinPath`
+### `joinPath`
 ```ts
 joinPath(parent: string | undefined, key: string): string
 ```
 **Parameters:**
-- `parent: string | undefined` — 
-- `key: string` — 
+- `parent: string | undefined`
+- `key: string`
 **Returns:** `string`
 
-## `createBaseField`
+### `createBaseField`
 Create a base FormField with sensible defaults.
 Processors fill in the specific component and props.
 ```ts
 createBaseField(key: string, zodType: string): FormField
 ```
 **Parameters:**
-- `key: string` — 
-- `zodType: string` — 
+- `key: string`
+- `zodType: string`
 **Returns:** `FormField`
 
-## `getEmptyDefault`
+### `getEmptyDefault`
 Returns a type-safe empty default value for a FormField based on its zodType
 and structure. Used by codegen for useFieldArray append() defaults and
 by runtime for initial values.
@@ -108,17 +146,17 @@ by runtime for initial values.
 getEmptyDefault(field: FormField): unknown
 ```
 **Parameters:**
-- `field: FormField` — 
+- `field: FormField`
 **Returns:** `unknown`
 
-## `normalizeFieldKey`
+### `normalizeFieldKey`
 Normalise a concrete field key to the bracket notation used in config.
 Replaces `.0.`, `.${index}.`, and any `.<digits>.` segments with `[].`.
 ```ts
 normalizeFieldKey(key: string): string
 ```
 **Parameters:**
-- `key: string` — 
+- `key: string`
 **Returns:** `string`
 ```ts
 normalizeFieldKey('items.0.name') → 'items[].name'
@@ -130,18 +168,20 @@ normalizeFieldKey('items.${index}.name') → 'items[].name'
 normalizeFieldKey('tags.2') → 'tags[]'
 ```
 
-## `collectFieldSections`
+### `collectFieldSections`
 Collect section groupings from fields and a config override lookup.
 Returns a Map of section name → array of field keys that belong to it.
 ```ts
 collectFieldSections(fields: FormField[], getOverride: (key: string) => { section?: string } | undefined): Map<string, string[]>
 ```
 **Parameters:**
-- `fields: FormField[]` — 
-- `getOverride: (key: string) => { section?: string } | undefined` — 
+- `fields: FormField[]`
+- `getOverride: (key: string) => { section?: string } | undefined`
 **Returns:** `Map<string, string[]>`
 
-## `normalizeFormValues`
+## Normalization
+
+### `normalizeFormValues`
 Normalize raw HTML form values for Zod parsing.
 
 HTML inputs produce values that don't match Zod's expectations:
@@ -155,38 +195,56 @@ Called unconditionally in the resolver wrapper to ensure consistent
 behavior across all component libraries. While shadcn components handle
 most value conversions natively, normalization provides a safety net for
 edge cases like FileList objects.
+
+Handles two critical HTML-to-Zod mismatches:
+1. Empty strings "" (from unset inputs) → undefined (what Zod .optional() expects)
+2. FileList → File | undefined (assumes single-file inputs)
+Recursively applies to arrays and nested objects.
 ```ts
 normalizeFormValues(value: unknown): unknown
 ```
 **Parameters:**
-- `value: unknown` — 
+- `value: unknown`
 **Returns:** `unknown`
 
-## `walkSchema`
+## Schema Walking
+
+### `walkSchema`
 Walk a Zod schema and produce a FormField[] tree.
 When optimization option is set, returns WalkResult with fields + schemaLite.
+
+Recursively walks a Zod schema tree and produces a FormField[] intermediate
+representation. Dispatches by def.type to a processor registry. Each processor
+extracts structure and constraints from _zod.def + _zod.bag.
+Uses WeakSet per top-level field for cycle detection — reused schema instances
+(e.g., z.string() in two fields) don't trigger false positives.
+The walker is STATELESS — call it repeatedly with different formRegistry values.
 ```ts
 walkSchema(schema: $ZodType, options: WalkOptions & { optimization: { level: 1 | 2 | 3 } }): WalkResult
 ```
 **Parameters:**
-- `schema: $ZodType` — 
-- `options: WalkOptions & { optimization: { level: 1 | 2 | 3 } }` — 
+- `schema: $ZodType`
+- `options: WalkOptions & { optimization: { level: 1 | 2 | 3 } }`
 **Returns:** `WalkResult`
 **Overloads:**
 ```ts
 walkSchema(schema: $ZodType, options?: WalkOptions): FormField[]
 ```
 
-## `createProcessors`
+## registry
+
+### `createProcessors`
 Create a custom processor registry by merging with built-in processors.
 ```ts
 createProcessors(custom: Record<string, FormProcessor>): Record<string, FormProcessor>
 ```
 **Parameters:**
-- `custom: Record<string, FormProcessor>` — 
+- `custom: Record<string, FormProcessor>`
 **Returns:** `Record<string, FormProcessor>`
 
-## `registerDeep`
+## Registration
+
+### `registerDeep`
 Register a schema and all its nested fields in a registry using a
 path-structured FieldConfig tree.
 
@@ -194,13 +252,18 @@ Only the flat metadata fields (`fieldType`, `order`, `hidden`, `section`,
 `props`, etc.) are passed to `registry.add()` for each schema. The
 structural keys `fields` and `arrayItems` are used purely to drive the
 recursive walk and are never stored in the registry.
+
+Recursively walks a FieldConfig tree, separating traversal keys (fields, arrayItems)
+from flat metadata keys (component, order, hidden). Only flat keys are stored in the
+registry — structural keys drive the recursion. Warns on config keys that don't match
+schema shape (helpful for typo detection).
 ```ts
 registerDeep<S, Meta>(registry: $ZodRegistry<Meta>, schema: S, config: FieldConfig<S>): void
 ```
 **Parameters:**
-- `registry: $ZodRegistry<Meta>` — 
-- `schema: S` — 
-- `config: FieldConfig<S>` — 
+- `registry: $ZodRegistry<Meta>`
+- `schema: S`
+- `config: FieldConfig<S>`
 ```ts
 const formRegistry = z.registry<FormMeta>();
 
@@ -229,7 +292,7 @@ registerDeep(formRegistry, schema, {
 });
 ```
 
-## `registerFlat`
+### `registerFlat`
 Register flat dot-path field configs against a schema's registry.
 
 Typically called with the merged output of `resolveFieldConfig()`,
@@ -240,13 +303,17 @@ the schema structure, calling `registry.add()` for the target schema node.
 This bridges the existing flat config format (used by CLI and
 `ZodFormsConfig.fields`) into the registry so that `walkSchema` can
 consume it uniformly.
+
+Maps flat dot-path keys (e.g., "address.street", "tags[]") to their target schemas
+via resolveSchemaPath(). This bridges the flat config format (used by CLI and global fields)
+into the registry. Warns on unresolved paths — check logs for typo detection.
 ```ts
 registerFlat<Meta>(registry: $ZodRegistry<Meta>, schema: $ZodType, fields: Record<string, FieldConfig>): void
 ```
 **Parameters:**
-- `registry: $ZodRegistry<Meta>` — 
-- `schema: $ZodType` — 
-- `fields: Record<string, FieldConfig>` — 
+- `registry: $ZodRegistry<Meta>`
+- `schema: $ZodType`
+- `fields: Record<string, FieldConfig>`
 ```ts
 const formRegistry = z.registry<FormMeta>();
 const schema = z.object({
@@ -261,256 +328,207 @@ registerFlat(formRegistry, schema, {
 });
 ```
 
-## `processArray`
+## array
+
+### `processArray`
 ```ts
 processArray(schema: $ZodArray, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodArray` — 
-- `ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `params: ProcessParams` — 
+- `schema: $ZodArray`
+- `ctx: FormProcessorContext`
+- `field: FormField`
+- `params: ProcessParams`
 
-## `processTuple`
+### `processTuple`
 ```ts
 processTuple(schema: $ZodTuple, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodTuple` — 
-- `ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `params: ProcessParams` — 
+- `schema: $ZodTuple`
+- `ctx: FormProcessorContext`
+- `field: FormField`
+- `params: ProcessParams`
 
-## `processBoolean`
+## boolean
+
+### `processBoolean`
 ```ts
 processBoolean(schema: $ZodBoolean, ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodBoolean` — 
-- `ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `_params: ProcessParams` — 
+- `schema: $ZodBoolean`
+- `ctx: FormProcessorContext`
+- `field: FormField`
+- `_params: ProcessParams`
 
-## `processMap`
+## collections
+
+### `processMap`
 Process z.map() — renders as an array-like repeater of key-value pair fieldsets.
 Each entry has a `key` field and a `value` field derived from the Map's type params.
 ```ts
 processMap(schema: $ZodMap, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodMap` — 
-- `ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `params: ProcessParams` — 
+- `schema: $ZodMap`
+- `ctx: FormProcessorContext`
+- `field: FormField`
+- `params: ProcessParams`
 
-## `processSet`
+### `processSet`
 Process z.set() — renders as an array-like repeater of unique items.
 The value type determines the item template.
 ```ts
 processSet(schema: $ZodSet, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodSet` — 
-- `ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `params: ProcessParams` — 
+- `schema: $ZodSet`
+- `ctx: FormProcessorContext`
+- `field: FormField`
+- `params: ProcessParams`
 
-## `processCrossRef`
+## cross-ref
+
+### `processCrossRef`
 ```ts
 processCrossRef(schema: $ZodType, ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
-- `ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `_params: ProcessParams` — 
+- `schema: $ZodType`
+- `ctx: FormProcessorContext`
+- `field: FormField`
+- `_params: ProcessParams`
 
-## `processDate`
+## date
+
+### `processDate`
 ```ts
 processDate(_schema: $ZodDate<unknown> | $ZodISODate, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `_schema: $ZodDate<unknown> | $ZodISODate` — 
-- `_ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `_params: ProcessParams` — 
+- `_schema: $ZodDate<unknown> | $ZodISODate`
+- `_ctx: FormProcessorContext`
+- `field: FormField`
+- `_params: ProcessParams`
 
-## `processEnum`
+## enum
+
+### `processEnum`
 ```ts
 processEnum(schema: $ZodEnum, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodEnum` — 
-- `_ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `_params: ProcessParams` — 
+- `schema: $ZodEnum`
+- `_ctx: FormProcessorContext`
+- `field: FormField`
+- `_params: ProcessParams`
 
-## `processLiteral`
+### `processLiteral`
 ```ts
 processLiteral(schema: $ZodLiteral, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodLiteral` — 
-- `_ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `_params: ProcessParams` — 
+- `schema: $ZodLiteral`
+- `_ctx: FormProcessorContext`
+- `field: FormField`
+- `_params: ProcessParams`
 
-## `processFallback`
+## fallback
+
+### `processFallback`
 ```ts
 processFallback(schema: $ZodType, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodType` — 
-- `_ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `_params: ProcessParams` — 
+- `schema: $ZodType`
+- `_ctx: FormProcessorContext`
+- `field: FormField`
+- `_params: ProcessParams`
 
-## `processFile`
+## file
+
+### `processFile`
 ```ts
 processFile(_schema: $ZodType, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `_schema: $ZodType` — 
-- `_ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `_params: ProcessParams` — 
+- `_schema: $ZodType`
+- `_ctx: FormProcessorContext`
+- `field: FormField`
+- `_params: ProcessParams`
 
-## `processNumber`
+## number
+
+### `processNumber`
 ```ts
 processNumber(schema: $ZodNumber<unknown> | $ZodBigInt<unknown>, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodNumber<unknown> | $ZodBigInt<unknown>` — 
-- `_ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `_params: ProcessParams` — 
+- `schema: $ZodNumber<unknown> | $ZodBigInt<unknown>`
+- `_ctx: FormProcessorContext`
+- `field: FormField`
+- `_params: ProcessParams`
 
-## `processObject`
+## object
+
+### `processObject`
 ```ts
 processObject(schema: $ZodObject, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodObject` — 
-- `ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `params: ProcessParams` — 
+- `schema: $ZodObject`
+- `ctx: FormProcessorContext`
+- `field: FormField`
+- `params: ProcessParams`
 
-## `processIntersection`
+### `processIntersection`
 ```ts
 processIntersection(schema: $ZodIntersection, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodIntersection` — 
-- `ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `params: ProcessParams` — 
+- `schema: $ZodIntersection`
+- `ctx: FormProcessorContext`
+- `field: FormField`
+- `params: ProcessParams`
 
-## `processRecord`
+## record
+
+### `processRecord`
 ```ts
 processRecord(schema: $ZodRecord, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodRecord` — 
-- `_ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `_params: ProcessParams` — 
+- `schema: $ZodRecord`
+- `_ctx: FormProcessorContext`
+- `field: FormField`
+- `_params: ProcessParams`
 
-## `processString`
+## string
+
+### `processString`
 ```ts
 processString(schema: $ZodString, ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodString` — 
-- `ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `_params: ProcessParams` — 
+- `schema: $ZodString`
+- `ctx: FormProcessorContext`
+- `field: FormField`
+- `_params: ProcessParams`
 
-## `processTemplateLiteral`
+### `processTemplateLiteral`
 ```ts
 processTemplateLiteral(schema: $ZodTemplateLiteral, _ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
 **Parameters:**
-- `schema: $ZodTemplateLiteral` — 
-- `_ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `_params: ProcessParams` — 
+- `schema: $ZodTemplateLiteral`
+- `_ctx: FormProcessorContext`
+- `field: FormField`
+- `_params: ProcessParams`
 
-## `processUnion`
-```ts
-processUnion(schema: $ZodUnion, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
-```
-**Parameters:**
-- `schema: $ZodUnion` — 
-- `ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `params: ProcessParams` — 
+## union
 
-## `processDiscriminatedUnion`
+### `processUnion`
 ```ts
-processDiscriminatedUnion(schema: $ZodDiscriminatedUnion, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
-```
-**Parameters:**
-- `schema: $ZodDiscriminatedUnion` — 
-- `ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `params: ProcessParams` — 
 
-## `processDefault`
-```ts
-processDefault(schema: $ZodDefault<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>> | $ZodPrefault<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>>, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
-```
-**Parameters:**
-- `schema: $ZodDefault<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>> | $ZodPrefault<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>>` — 
-- `ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `params: ProcessParams` — 
-
-## `processLazy`
-```ts
-processLazy(schema: $ZodLazy, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
-```
-**Parameters:**
-- `schema: $ZodLazy` — 
-- `ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `params: ProcessParams` — 
-
-## `processNullable`
-```ts
-processNullable(schema: $ZodNullable, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
-```
-**Parameters:**
-- `schema: $ZodNullable` — 
-- `ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `params: ProcessParams` — 
-
-## `processOptional`
-```ts
-processOptional(schema: $ZodOptional, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
-```
-**Parameters:**
-- `schema: $ZodOptional` — 
-- `ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `params: ProcessParams` — 
-
-## `processPipe`
-```ts
-processPipe(schema: $ZodPipe, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
-```
-**Parameters:**
-- `schema: $ZodPipe` — 
-- `ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `params: ProcessParams` — 
-
-## `processReadonly`
-```ts
-processReadonly(schema: $ZodReadonly, ctx: FormProcessorContext, field: FormField, params: ProcessParams): void
-```
-**Parameters:**
-- `schema: $ZodReadonly` — 
-- `ctx: FormProcessorContext` — 
-- `field: FormField` — 
-- `params: ProcessParams` — 
+<!-- truncated -->

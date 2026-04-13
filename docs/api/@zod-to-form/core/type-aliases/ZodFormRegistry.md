@@ -6,8 +6,8 @@
 
 # Type Alias: ZodFormRegistry
 
-> **ZodFormRegistry** = `$ZodRegistry`\<[`FormMeta`](../interfaces/FormMeta.md)\>
+> **ZodFormRegistry** = `$ZodRegistry`\<[`FormMeta`](FormMeta.md)\>
 
-Defined in: [types.ts:149](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/types.ts#L149)
+Defined in: [types.ts:212](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L212)
 
 Zod v4 registry parameterized with FormMeta. Create via `z.registry<FormMeta>()`.

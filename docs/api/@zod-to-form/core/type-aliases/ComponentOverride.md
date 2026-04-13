@@ -8,7 +8,7 @@
 
 > **ComponentOverride** = `object`
 
-Defined in: [config.ts:8](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/config.ts#L8)
+Defined in: [config.ts:8](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L8)
 
 Per-component metadata override. Only components that differ from defaults need an entry.
 
@@ -18,16 +18,18 @@ Per-component metadata override. Only components that differ from defaults need 
 
 > `optional` **controlled?**: `boolean`
 
-Defined in: [config.ts:10](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/config.ts#L10)
+Defined in: [config.ts:10](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L10)
 
 When true, use Controller/useController instead of register() spread
 
 ***
 
-### propMap?
+### props?
 
-> `optional` **propMap?**: `Record`\<`string`, `string`\>
+> `optional` **props?**: `Record`\<`string`, `unknown`\>
 
-Defined in: [config.ts:12](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/config.ts#L12)
+Defined in: [config.ts:16](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/config.ts#L16)
 
-Map RHF field props to component-specific prop names (e.g. { onSelect: 'field.onChange' })
+Default props for this component type.
+Values matching a known field expression string are resolved from the RHF controller.
+Per-field props override these via shallow merge (field config wins).

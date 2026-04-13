@@ -4,17 +4,23 @@
 
 [Documentation](../../../README.md) / [@zod-to-form/core](../README.md) / [](../README.md) / FormProcessor
 
-# Type Alias: FormProcessor
+# Type Alias: FormProcessor\<T\>
 
-> **FormProcessor** = (`schema`, `ctx`, `field`, `params`) => `void`
+> **FormProcessor**\<`T`\> = (`schema`, `ctx`, `field`, `params`) => `void`
 
-Defined in: [types.ts:139](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/types.ts#L139)
+Defined in: [types.ts:202](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/types.ts#L202)
+
+## Type Parameters
+
+### T
+
+`T` *extends* `$ZodType` = `$ZodType`
 
 ## Parameters
 
 ### schema
 
-`$ZodType`
+`T`
 
 ### ctx
 

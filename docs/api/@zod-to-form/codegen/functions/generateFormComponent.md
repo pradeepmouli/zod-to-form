@@ -8,7 +8,7 @@
 
 > **generateFormComponent**(`fields`, `config`): `string`
 
-Defined in: [generate.ts:517](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/generate.ts#L517)
+Defined in: [generate.ts:579](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/codegen/src/generate.ts#L579)
 
 ## Parameters
 

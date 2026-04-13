@@ -6,7 +6,7 @@
 
 # Interface: FormFieldOption
 
-Defined in: packages/core/dist/types.d.ts:2
+Defined in: packages/core/dist/types.d.ts:30
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/core/dist/types.d.ts:2
 
 > `optional` **disabled?**: `boolean`
 
-Defined in: packages/core/dist/types.d.ts:5
+Defined in: packages/core/dist/types.d.ts:33
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: packages/core/dist/types.d.ts:5
 
 > **label**: `string`
 
-Defined in: packages/core/dist/types.d.ts:4
+Defined in: packages/core/dist/types.d.ts:32
 
 ***
 
@@ -30,4 +30,4 @@ Defined in: packages/core/dist/types.d.ts:4
 
 > **value**: `string` \| `number`
 
-Defined in: packages/core/dist/types.d.ts:3
+Defined in: packages/core/dist/types.d.ts:31

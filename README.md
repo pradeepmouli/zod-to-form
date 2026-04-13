@@ -27,6 +27,17 @@ import { ZodForm } from '@zod-to-form/react';
 | [`@zod-to-form/react`](packages/react) | `<ZodForm>` runtime renderer + shadcn/ui component map |
 | [`@zod-to-form/cli`](packages/cli) | `z2f generate` CLI for static codegen |
 
+## Features
+
+- **Zod v4 native introspection** — reads `_zod.def`, `_zod.bag`, `.meta()`, and `z.registry()` directly
+- **CLI codegen** — `npx zod-to-form generate` produces static `.tsx` files with zero runtime dependency
+- **Runtime rendering** — `<ZodForm>` reads schemas at render time for instant iteration
+- **Shared config** — one `z2f.config.ts` drives both CLI and runtime identically
+- **Per-field optimization** — L1 decomposes validation per-field, L2 extracts native HTML rules
+- **Controlled component support** — `controlled: true` in config generates `<Controller>` wrappers automatically
+- **Section grouping** — group fields into named section components
+- **Zero-dependency core** — `@zod-to-form/core` has no runtime dependencies (Zod is a peer)
+
 ## Get Started
 
 There are two ways to use zod-to-form. Pick one or use both — they share the same core walker and produce identical form behavior.
@@ -642,6 +653,15 @@ The three capabilities no competitor offers are what define zod-to-form:
 1. **Zod v4 native introspection** — reads `def` (with `_zod.def` fallback), reads `_zod.bag`, uses `.meta()` and `z.registry()` — aligned with Zod v4 internals and no invented IR.
 2. **Build-time codegen** — generates readable `.tsx` files you can inspect, modify, and commit. Aligns with the "copy into your project" philosophy (shadcn/ui, Tailwind over CSS-in-JS).
 3. **Zero-dependency core** — `@zod-to-form/core` has zero runtime dependencies (Zod is a peer). The same `FormField[]` drives both runtime rendering and static codegen.
+
+## Pitfalls
+
+- **NEVER use with Zod v3** — accessing `_zod.bag` on v3 schemas throws at runtime with cryptic errors. This library requires Zod v4.
+- **NEVER forget `normalizeFormValues()`** — call it on form values before `schema.safeParse()` in runtime mode. HTML inputs produce empty strings `""` for unset optional fields, which Zod rejects. Generated CLI components handle this internally.
+- **NEVER pass a non-object root schema** — `walkSchema()` requires `z.object({...})` at the top level. Passing `z.string()` or `z.array()` throws immediately.
+- **NEVER mutate `builtinOptimizers`** — it is a module-level singleton. Use `createOptimizers(custom)` to extend.
+- **NEVER mix `registerDeep()` and `registerFlat()`** — calling both on the same schema causes registry entries to conflict silently. Pick one approach per schema.
+- **NEVER assume preset props merge** — when you set component props in config, the entire props dict is replaced, not merged with the preset defaults. Include ALL props you need.
 
 ## FAQ
 

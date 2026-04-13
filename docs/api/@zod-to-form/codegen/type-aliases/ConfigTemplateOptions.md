@@ -8,7 +8,7 @@
 
 > **ConfigTemplateOptions** = `object`
 
-Defined in: [config-template.ts:7](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/config-template.ts#L7)
+Defined in: [config-template.ts:7](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/codegen/src/config-template.ts#L7)
 
 Browser-safe config template generator.
 Produces the defineConfig({...}) source string used by both the CLI
@@ -20,7 +20,7 @@ init command and the playground.
 
 > **componentSource**: `string`
 
-Defined in: [config-template.ts:9](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/config-template.ts#L9)
+Defined in: [config-template.ts:9](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/codegen/src/config-template.ts#L9)
 
 Component module import path (e.g. './components/ui')
 
@@ -30,7 +30,7 @@ Component module import path (e.g. './components/ui')
 
 > `optional` **componentTypeImport?**: `string`
 
-Defined in: [config-template.ts:11](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/config-template.ts#L11)
+Defined in: [config-template.ts:11](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/codegen/src/config-template.ts#L11)
 
 Component type import specifier for generics (e.g. './components/ui')
 
@@ -40,7 +40,7 @@ Component type import specifier for generics (e.g. './components/ui')
 
 > `optional` **defaults?**: `object`
 
-Defined in: [config-template.ts:27](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/config-template.ts#L27)
+Defined in: [config-template.ts:21](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/codegen/src/config-template.ts#L21)
 
 Defaults block
 
@@ -51,6 +51,14 @@ Defaults block
 #### mode?
 
 > `optional` **mode?**: `"submit"` \| `"auto-save"`
+
+#### optimization?
+
+> `optional` **optimization?**: `object`
+
+##### optimization.level?
+
+> `optional` **level?**: `1` \| `2` \| `3`
 
 #### overwrite?
 
@@ -70,31 +78,9 @@ Defaults block
 
 > `optional` **fields?**: `Record`\<`string`, `Record`\<`string`, `unknown`\>\>
 
-Defined in: [config-template.ts:35](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/config-template.ts#L35)
+Defined in: [config-template.ts:30](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/codegen/src/config-template.ts#L30)
 
 Per-field overrides
-
-***
-
-### formPrimitives?
-
-> `optional` **formPrimitives?**: `object`
-
-Defined in: [config-template.ts:21](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/config-template.ts#L21)
-
-Form primitive component names
-
-#### control?
-
-> `optional` **control?**: `string`
-
-#### field?
-
-> `optional` **field?**: `string`
-
-#### label?
-
-> `optional` **label?**: `string`
 
 ***
 
@@ -102,7 +88,7 @@ Form primitive component names
 
 > `optional` **overrides?**: `Record`\<`string`, \{ `controlled?`: `boolean`; \}\>
 
-Defined in: [config-template.ts:19](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/config-template.ts#L19)
+Defined in: [config-template.ts:19](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/codegen/src/config-template.ts#L19)
 
 Component overrides (name → { controlled?: boolean })
 
@@ -112,7 +98,7 @@ Component overrides (name → { controlled?: boolean })
 
 > `optional` **preset?**: `"shadcn"` \| `"html"`
 
-Defined in: [config-template.ts:17](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/config-template.ts#L17)
+Defined in: [config-template.ts:17](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/codegen/src/config-template.ts#L17)
 
 Preset name: 'shadcn' | 'html'
 
@@ -122,7 +108,7 @@ Preset name: 'shadcn' | 'html'
 
 > `optional` **schemaExports?**: `string`[]
 
-Defined in: [config-template.ts:15](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/config-template.ts#L15)
+Defined in: [config-template.ts:15](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/codegen/src/config-template.ts#L15)
 
 Schema export names for the schemas block
 
@@ -132,6 +118,6 @@ Schema export names for the schemas block
 
 > `optional` **schemaTypeImport?**: `string`
 
-Defined in: [config-template.ts:13](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/codegen/src/config-template.ts#L13)
+Defined in: [config-template.ts:13](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/codegen/src/config-template.ts#L13)
 
 Schema type import specifier (e.g. './schema')

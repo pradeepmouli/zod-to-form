@@ -86,6 +86,18 @@ function resolveOutputPath(cwd: string, out: string | undefined, componentName: 
   return path.join(absoluteOut, `${componentName}.tsx`);
 }
 
+/**
+ * Executes the code generation pipeline for a single Zod schema export.
+ *
+ * Loads the config and schema, resolves field overrides, walks the Zod type
+ * tree to produce an intermediate `FormField[]` representation, and writes a
+ * React form component (plus optional server action and schema-lite files) to
+ * disk. When `options.dryRun` is true the generated code is printed to stdout
+ * instead of being written.
+ *
+ * @param options - Generation options including paths for config, schema, and output.
+ * @returns Resolved output paths and the generated code string.
+ */
 export async function runGenerate(options: GenerateOptions): Promise<{
   outputPath: string;
   code: string;
@@ -213,6 +225,15 @@ export async function runGenerate(options: GenerateOptions): Promise<{
   return { outputPath, code, wroteFile: true };
 }
 
+/**
+ * Creates the Commander.js CLI program for `zod-to-form`.
+ *
+ * Registers the `generate` and `init` sub-commands with all their options and
+ * action handlers. Consumers can pass the returned `Command` to `.parseAsync()`
+ * to run the CLI, or use it for testing without spawning a child process.
+ *
+ * @returns A fully configured `Command` instance ready to be parsed.
+ */
 export function createProgram(): Command {
   const program = new Command();
 

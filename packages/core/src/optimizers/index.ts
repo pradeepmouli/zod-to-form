@@ -6,7 +6,13 @@ export type {
   SchemaLiteInfo
 } from './types.js';
 
-export { createSchemaLiteCollector } from './schema-lite.js';
+export {
+  CONTAINER_TYPES,
+  collectContainerEffects,
+  createSchemaLiteCollector,
+  hasTopLevelEffects,
+  isPipeWrappedContainer
+} from './schema-lite.js';
 
 import type { FormOptimizer } from './types.js';
 import { buildL1Optimizers } from './l1-decompose.js';
@@ -39,6 +45,25 @@ export const builtinOptimizers: Record<string, FormOptimizer[]> = buildBuiltinOp
 /**
  * Create an optimizer registry by merging custom optimizers with builtins.
  * Custom optimizers for a type replace the entire chain for that type.
+ *
+ * @remarks
+ * Creates an optimizer registry by merging custom optimizers with built-in L1/L2 chains.
+ * L1 stores per-field zodSchema for decomposed validation.
+ * L2 generates native HTML validation rules (minLength, pattern, etc.).
+ * Custom optimizers for a type REPLACE the entire chain — they don't append.
+ *
+ * @useWhen
+ * - You want per-field validation instead of whole-form validation
+ * - You need native HTML validation attributes (required, minLength, pattern)
+ *
+ * @avoidWhen
+ * - You only need whole-schema validation — omit the optimization option entirely
+ *
+ * @pitfalls
+ * - NEVER mutate builtinOptimizers — it's a module singleton. Always use createOptimizers(custom)
+ * - NEVER assume custom optimizers append — they REPLACE the entire chain for that type
+ *
+ * @category Optimization
  */
 export function createOptimizers(
   custom: Record<string, FormOptimizer[]> = {}

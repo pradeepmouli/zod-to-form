@@ -8,7 +8,7 @@
 
 > **registerFlat**\<`Meta`\>(`registry`, `schema`, `fields`): `void`
 
-Defined in: [register.ts:189](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/register.ts#L189)
+Defined in: [register.ts:226](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/register.ts#L226)
 
 Register flat dot-path field configs against a schema's registry.
 
@@ -60,3 +60,23 @@ registerFlat(formRegistry, schema, {
   'address.city':   { component: 'Input', hidden: true },
 });
 ```
+
+## Remarks
+
+Maps flat dot-path keys (e.g., "address.street", "tags[]") to their target schemas
+via resolveSchemaPath(). This bridges the flat config format (used by CLI and global fields)
+into the registry. Warns on unresolved paths — check logs for typo detection.
+
+## Use When
+
+- Merging global field configs from z2f.config.ts into a registry
+- Your config uses dot-path notation rather than nested structure
+
+## Avoid When
+
+- Your config is already nested mirroring schema shape — use registerDeep() instead
+
+## Pitfalls
+
+- NEVER mix with registerDeep() on the same schema — registry entries conflict silently
+- NEVER assume numeric path segments matter — "items.0.name" and "items.2.name" resolve to the same target

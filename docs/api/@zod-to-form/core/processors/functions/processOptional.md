@@ -8,13 +8,13 @@
 
 > **processOptional**(`schema`, `ctx`, `field`, `params`): `void`
 
-Defined in: [processors/wrappers.ts:26](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/processors/wrappers.ts#L26)
+Defined in: [processors/wrappers.ts:33](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/processors/wrappers.ts#L33)
 
 ## Parameters
 
 ### schema
 
-`$ZodType`
+`$ZodOptional`
 
 ### ctx
 

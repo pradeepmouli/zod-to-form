@@ -12,6 +12,26 @@
  * behavior across all component libraries. While shadcn components handle
  * most value conversions natively, normalization provides a safety net for
  * edge cases like FileList objects.
+ *
+ * @remarks
+ * Handles two critical HTML-to-Zod mismatches:
+ * 1. Empty strings "" (from unset inputs) → undefined (what Zod .optional() expects)
+ * 2. FileList → File | undefined (assumes single-file inputs)
+ * Recursively applies to arrays and nested objects.
+ *
+ * @useWhen
+ * - ALWAYS call on form values before schema.safeParse() in runtime mode
+ * - Critical for optional fields where HTML produces "" but Zod expects undefined
+ *
+ * @avoidWhen
+ * - CLI codegen mode — generated components handle normalization internally
+ * - Your form library already normalizes (but calling it anyway is safe — it's idempotent)
+ *
+ * @pitfalls
+ * - NEVER skip this in runtime mode — optional fields will fail validation with "expected string, received string" errors that are extremely confusing to debug
+ * - NEVER rely on it for custom types (Date, etc.) — only handles strings and FileList
+ *
+ * @category Normalization
  */
 export function normalizeFormValues(value: unknown): unknown {
   if (isFileListLike(value)) {

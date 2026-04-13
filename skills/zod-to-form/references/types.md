@@ -1,8 +1,10 @@
 # Types & Enums
 
-## Types
+## generate
 
 ### `CodegenConfig`
+
+## config-template
 
 ### `ConfigTemplateOptions`
 Browser-safe config template generator.

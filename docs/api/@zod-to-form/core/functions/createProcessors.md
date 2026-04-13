@@ -8,7 +8,7 @@
 
 > **createProcessors**(`custom`): `Record`\<`string`, [`FormProcessor`](../type-aliases/FormProcessor.md)\>
 
-Defined in: [registry.ts:56](https://github.com/pradeepmouli/zod-to-form/blob/8e8d0e9d2ebabb92cb6cb6acb3b41a18a447d1cd/packages/core/src/registry.ts#L56)
+Defined in: [registry.ts:79](https://github.com/pradeepmouli/zod-to-form/blob/e02110b7c9c32323977212ebe4f068adafebd536/packages/core/src/registry.ts#L79)
 
 Create a custom processor registry by merging with built-in processors.
 
@@ -18,10 +18,6 @@ Create a custom processor registry by merging with built-in processors.
 
 `Record`\<`string`, [`FormProcessor`](../type-aliases/FormProcessor.md)\>
 
-Custom processors to add or override
-
 ## Returns
 
 `Record`\<`string`, [`FormProcessor`](../type-aliases/FormProcessor.md)\>
-
-Merged processor registry

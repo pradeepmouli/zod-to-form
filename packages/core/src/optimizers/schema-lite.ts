@@ -11,6 +11,135 @@ interface Chainable {
   transform(fn: (data: unknown) => unknown): Chainable;
 }
 
+// ─── Container Detection ────────────────────────────────────────────
+
+/**
+ * Container types that render children rather than validating themselves.
+ * Used to detect nested container effects for fallthrough collection.
+ * Matches the set excluded from L1 in l1-decompose.ts.
+ */
+export const CONTAINER_TYPES = new Set([
+  'object',
+  'array',
+  'tuple',
+  'union',
+  'intersection',
+  'record',
+  'map',
+  'set'
+]);
+
+/**
+ * Detect top-level refines/transforms/superRefines on the schema.
+ *
+ * In Zod v4, `z.object({}).superRefine(fn)` creates a new object schema
+ * with the same def.type="object" but with additional checks in def.checks.
+ * The parent chain points to the original (check-free) schema.
+ *
+ * We detect top-level effects by checking if the schema has checks that
+ * differ from its parent, indicating superRefine/refine was applied.
+ */
+export function hasTopLevelEffects(schema: $ZodType): boolean {
+  const def = schema._zod.def as unknown as Record<string, unknown>;
+  const checks = def['checks'] as unknown[] | undefined;
+  if (!checks || checks.length === 0) return false;
+
+  const parent = schema._zod.parent;
+  if (parent) {
+    const parentDef = (parent as $ZodType)._zod.def as unknown as Record<string, unknown>;
+    const parentChecks = parentDef['checks'] as unknown[] | undefined;
+    return !parentChecks || checks.length > parentChecks.length;
+  }
+
+  return checks.length > 0;
+}
+
+/**
+ * Detect if a schema is a pipe whose input is a container type.
+ * e.g. z.object({...}).transform(fn) produces a pipe where def.in is an object.
+ */
+export function isPipeWrappedContainer(schema: $ZodType): boolean {
+  const def = schema._zod.def as unknown as Record<string, unknown>;
+  if (def['type'] !== 'pipe') return false;
+  const innerDef = (def['in'] as $ZodType | undefined)?._zod?.def as unknown as
+    | Record<string, unknown>
+    | undefined;
+  return innerDef ? CONTAINER_TYPES.has(innerDef['type'] as string) : false;
+}
+
+// ─── Effect Collection ──────────────────────────────────────────────
+
+/**
+ * Extract extra checks (superRefine/refine) beyond the root schema's
+ * own checks and add them to a collector.
+ */
+function addExtraChecks(schema: $ZodType, collector: SchemaLiteCollector): void {
+  if (!schema._zod.parent) return;
+
+  let root: $ZodType = schema;
+  while (root._zod.parent) {
+    root = root._zod.parent as $ZodType;
+  }
+
+  const def = schema._zod.def as unknown as Record<string, unknown>;
+  const rootDef = root._zod.def as unknown as Record<string, unknown>;
+  const checks = (def['checks'] as unknown[]) ?? [];
+  const rootChecks = (rootDef['checks'] as unknown[]) ?? [];
+
+  for (const check of checks.slice(rootChecks.length)) {
+    collector.addCheck(check);
+  }
+}
+
+/**
+ * Collect effects (checks/transforms) from a container schema into a collector.
+ *
+ * The walker calls this when it detects a container with effects, BEFORE
+ * processing the container's children. Children are then processed with
+ * this collector (via swapped optimizerCtx), so nested containers with
+ * effects recursively create their own child collectors and add their
+ * built results as fields. The collector's build() produces the final
+ * pruned schema — an inside-out construction.
+ *
+ * Handles two forms:
+ * - Direct container (superRefine/refine): extracts extra checks
+ * - Pipe-wrapped container (transform ± checks): extracts inner checks,
+ *   transform function, and pipe-level checks
+ */
+export function collectContainerEffects(schema: $ZodType, collector: SchemaLiteCollector): void {
+  const def = schema._zod.def as unknown as Record<string, unknown>;
+  const schemaType = def['type'] as string;
+
+  if (schemaType === 'pipe') {
+    const innerSchema = def['in'] as $ZodType;
+    const outSchema = def['out'] as $ZodType;
+    const outDef = outSchema._zod.def as unknown as Record<string, unknown>;
+
+    // Inner container effects (superRefine before transform)
+    addExtraChecks(innerSchema, collector);
+
+    // Transform
+    if (outDef['type'] === 'transform' && typeof outDef['transform'] === 'function') {
+      collector.addTransform(outDef['transform'] as (data: unknown) => unknown);
+    }
+
+    // Pipe-level checks (superRefine after transform)
+    const pipeChecks = def['checks'] as unknown[] | undefined;
+    if (pipeChecks && pipeChecks.length > 0) {
+      for (const check of pipeChecks) {
+        collector.addCheck(check);
+      }
+    }
+
+    return;
+  }
+
+  // Direct container with effects
+  addExtraChecks(schema, collector);
+}
+
+// ─── Field Map Materialization ──────────────────────────────────────
+
 /**
  * Recursively materialize a map of dot-paths into a nested object shape,
  * merging all paths that share the same top-level key.
@@ -46,6 +175,8 @@ function materializeFieldMap(fieldMap: ReadonlyMap<string, $ZodType>): Record<st
   return topShape;
 }
 
+// ─── SchemaLite Collector ───────────────────────────────────────────
+
 /**
  * Create a new SchemaLiteCollector instance.
  *
@@ -54,7 +185,12 @@ function materializeFieldMap(fieldMap: ReadonlyMap<string, $ZodType>): Record<st
  * - Transforms: z.object({}).loose().check(...).transform(fn)
  * - Non-decomposable pipes: original schema as-is
  */
-export function createSchemaLiteCollector(): SchemaLiteCollector {
+export function createSchemaLiteCollector(options?: {
+  /** Use z.any() instead of z.object({}).loose() when no fields are present.
+   *  Set for non-object containers (arrays, tuples, etc.) whose data isn't an object. */
+  useAnyBase?: boolean;
+}): SchemaLiteCollector {
+  const useAnyBase = options?.useAnyBase ?? false;
   const collectedChecks: unknown[] = [];
   const collectedTransforms: Array<(data: unknown) => unknown> = [];
   const fieldMap = new Map<string, $ZodType>();
@@ -112,10 +248,14 @@ export function createSchemaLiteCollector(): SchemaLiteCollector {
       // than overwriting each other.
       const shape = materializeFieldMap(fieldMap);
 
-      let result: Chainable =
-        Object.keys(shape).length > 0
-          ? (z.object(shape).loose() as unknown as Chainable)
-          : (z.object({}).loose() as unknown as Chainable);
+      let result: Chainable;
+      if (Object.keys(shape).length > 0) {
+        result = z.object(shape).loose() as unknown as Chainable;
+      } else if (useAnyBase) {
+        result = z.any() as unknown as Chainable;
+      } else {
+        result = z.object({}).loose() as unknown as Chainable;
+      }
 
       // Replay checks (superRefine/refine)
       for (const check of collectedChecks) {

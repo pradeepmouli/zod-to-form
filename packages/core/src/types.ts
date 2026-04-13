@@ -39,6 +39,7 @@ export interface FormFieldConstraints {
   step?: number;
 }
 
+/** @category Types */
 export interface FormField {
   /** Field path, e.g. "name", "address.street", "items.0.name" */
   key: string;
@@ -144,10 +145,22 @@ type FieldConfigExtras<T extends $ZodType> =
         : // leaf schema types (string, number, boolean, etc.) — neither field applies
           Record<never, never>;
 
+/**
+ * Per-field configuration that customises how a Zod schema field is rendered.
+ *
+ * Merges base options (component override, visibility, order, props) with type-aware
+ * extras: nested `fields` for object schemas, and `arrayItems` for array schemas.
+ * Use this type when annotating a `ZodFormsConfig.fields` record or a per-schema
+ * `schemas.[key].fields` map.
+ *
+ * @typeParam T - The Zod schema type of the field, used to constrain nested `fields` and `arrayItems`.
+ * @category Types
+ */
 export type FieldConfig<T extends $ZodType = $ZodType> = FieldConfigBase & FieldConfigExtras<T>;
 
 // ─── FormMeta: Registry Annotation ────────────────────────────────────
 
+/** @category Types */
 export type FormMeta<T extends $ZodType = $ZodType> = FieldConfig<T> & {
   /** Custom render function (runtime only, ignored in codegen) */
   render?: (field: FormField, props: unknown) => unknown;
@@ -185,6 +198,7 @@ export interface FormProcessorContext {
   processChild?: (schema: $ZodType, key: string) => FormField;
 }
 
+/** @category Types */
 export type FormProcessor<T extends $ZodType = $ZodType> = (
   schema: T,
   ctx: FormProcessorContext,
@@ -197,6 +211,7 @@ export type FormProcessor<T extends $ZodType = $ZodType> = (
 /** Zod v4 registry parameterized with FormMeta. Create via `z.registry<FormMeta>()`. */
 export type ZodFormRegistry = $ZodRegistry<FormMeta>;
 
+/** @category Schema Walking */
 export interface WalkOptions {
   /** Custom form registry for metadata annotations */
   formRegistry?: ZodFormRegistry;

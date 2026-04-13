@@ -1,5 +1,11 @@
 # @zod-to-form/codegen
 
+## 0.6.3
+
+### Patch Changes
+
+- [`1784fb4`](https://github.com/pradeepmouli/zod-to-form/commit/1784fb4dc959dac762eac7901734a7ef3a9d3156) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Test OIDC trusted publisher setup for automated npm publishing.
+
 ## 0.6.2
 
 ### Patch Changes
