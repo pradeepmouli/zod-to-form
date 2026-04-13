@@ -106,9 +106,9 @@ const docFiles = [
   'README.md',
   'CONTRIBUTING.md',
   'LICENSE',
-  'docs/WORKSPACE.md',
-  'docs/TESTING.md',
-  'docs/DEVELOPMENT.md'
+  'apps/docs/docs/architecture/workspace.md',
+  'apps/docs/docs/architecture/testing.md',
+  'apps/docs/docs/contributing.md'
 ];
 
 for (const file of docFiles) {

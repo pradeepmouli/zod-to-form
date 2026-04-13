@@ -4,10 +4,10 @@ on:
   push:
     branches: [master]
     paths:
+      - "apps/docs/**"
       - "packages/*/src/**"
-      - "src/**"
+      - "tsconfig.typedoc.json"
       - "typedoc.json"
-      - "typedoc.html.json"
       - "README.md"
       - ".github/workflows/docs.yml"
   workflow_dispatch:
@@ -39,13 +39,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate HTML docs
-        run: pnpm run docs
+      - name: Build Docusaurus site
+        run: pnpm --filter @zod-to-form/docs build
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
-          path: docs/html
+          path: apps/docs/build
 
   deploy:
     needs: build
@@ -56,5 +56,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
-
+        uses: actions/deploy-pages@v5

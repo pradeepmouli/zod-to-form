@@ -43,8 +43,10 @@
     "changeset:version": "changeset version",
     "changeset:publish": "pnpm run build && changeset publish",
     "prepare": "simple-git-hooks",
-    "docs": "typedoc --out docs/html --plugin typedoc-plugin-to-skills",
-    "docs:md": "typedoc"
+    "docs": "typedoc --plugin typedoc-plugin-to-skills",
+    "docs:md": "typedoc",
+    "docs:dev": "pnpm --filter @zod-to-form/docs start",
+    "docs:build": "pnpm --filter @zod-to-form/docs build"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged",
@@ -72,7 +74,7 @@
     "simple-git-hooks": "^2.13.1",
     "typedoc": "^0.28.18",
     "typedoc-plugin-markdown": "^4.11.0",
-    "typedoc-plugin-to-skills": "^0.6.0",
+    "typedoc-plugin-to-skills": "^0.6.2",
     "typescript": "^6.0.2",
     "vitest": "^4.1.4"
   },
@@ -80,5 +82,10 @@
     "node": ">=20.0.0",
     "pnpm": ">=10.0.0"
   },
-  "packageManager": "pnpm@10.26.1"
+  "packageManager": "pnpm@10.26.1",
+  "pnpm": {
+    "overrides": {
+      "webpack": "5.97.1"
+    }
+  }
 }

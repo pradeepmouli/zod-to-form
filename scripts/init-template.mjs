@@ -244,14 +244,14 @@ ${projectName}/
 
 ## Creating Your First Package
 
-See [docs/WORKSPACE.md](docs/WORKSPACE.md) for detailed instructions on adding packages.
+See the Docusaurus site under [apps/docs](apps/docs) for detailed instructions on adding packages.
 
 ## Documentation
 
-- [Workspace Guide](docs/WORKSPACE.md) - Managing packages
-- [Development Workflow](docs/DEVELOPMENT.md) - Development process
-- [Testing Guide](docs/TESTING.md) - Testing setup
-- [Examples](docs/EXAMPLES.md) - Usage examples
+- [Workspace Guide](apps/docs/docs/architecture/workspace.md) - Managing packages
+- [Development Workflow](apps/docs/docs/contributing.md) - Development process
+- [Testing Guide](apps/docs/docs/architecture/testing.md) - Testing setup
+- [Examples](apps/docs/docs/guides/examples.md) - Usage examples
 
 ## Contributing
 
@@ -477,7 +477,7 @@ console.log('');
 console.log(chalk.blue('Next steps:'));
 console.log('  1. Customize your project in README.md');
 console.log('  2. Create your first package: mkdir packages/my-package');
-console.log('  3. See docs/WORKSPACE.md for package structure');
+console.log('  3. See apps/docs/docs/architecture/workspace.md for package structure');
 console.log('  4. Start developing: pnpm run dev');
 console.log('  5. Run tests: pnpm run test');
 console.log('');
@@ -493,9 +493,9 @@ console.log('  specify init . --ai copilot --force --ignore-agent-tools - Non-in
 console.log('  uvx specify-extend --all --agent copilot - Install extensions');
 console.log('');
 console.log(chalk.blue('Documentation:'));
-console.log('  📖 docs/WORKSPACE.md - Workspace management');
-console.log('  📖 docs/DEVELOPMENT.md - Development workflow');
-console.log('  📖 docs/TESTING.md - Testing guide');
+console.log('  📖 apps/docs/docs/architecture/workspace.md - Workspace management');
+console.log('  📖 apps/docs/docs/contributing.md - Development workflow');
+console.log('  📖 apps/docs/docs/architecture/testing.md - Testing guide');
 console.log('  📖 CONTRIBUTING.md - Contributing guidelines');
 console.log('');
 console.log(chalk.green('Happy coding! 🚀'));

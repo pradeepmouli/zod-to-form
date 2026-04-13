@@ -748,15 +748,19 @@ skills/
 └── zod-to-form-runtime/ # Runtime-specific skill
 specs/
 └── 001-zodform/  # Feature spec, plan, tasks, contracts
-docs/
-└── DEVELOPMENT.md · TESTING.md · WORKSPACE.md
+apps/docs/
+└── Docusaurus site (guides · API reference · architecture)
 ```
 
 ## Documentation
 
-- [Development Workflow](docs/DEVELOPMENT.md)
-- [Testing Guide](docs/TESTING.md)
-- [Workspace Guide](docs/WORKSPACE.md)
+Full documentation is published as a Docusaurus site under [`apps/docs/`](apps/docs/). Run `pnpm run docs:dev` locally or `pnpm run docs:build` to build.
+
+- Contributing / Development Workflow — `apps/docs/docs/contributing.md`
+- Testing Guide — `apps/docs/docs/architecture/testing.md`
+- Workspace Layout — `apps/docs/docs/architecture/workspace.md`
+- Examples — `apps/docs/docs/guides/examples.md`
+- Architecture Decision Records — `apps/docs/docs/architecture/decisions/`
 - [Feature Spec](specs/001-zodform/spec.md)
 - [Quickstart](specs/001-zodform/quickstart.md)
 

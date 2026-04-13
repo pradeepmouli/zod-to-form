@@ -1,0 +1,53 @@
+{
+  "name": "@zod-to-form/docs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc)",
+  "scripts": {
+    "start": "docusaurus start",
+    "build": "docusaurus build",
+    "postbuild": "tsx scripts/generate-skill.mts",
+    "clear": "docusaurus clear",
+    "serve": "docusaurus serve",
+    "write-translations": "docusaurus write-translations",
+    "write-heading-ids": "docusaurus write-heading-ids",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@docusaurus/core": "3.7.0",
+    "@docusaurus/preset-classic": "3.7.0",
+    "@mdx-js/react": "^3.0.0",
+    "clsx": "^2.1.1",
+    "prism-react-renderer": "^2.4.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@docusaurus/module-type-aliases": "3.7.0",
+    "@docusaurus/tsconfig": "3.7.0",
+    "@docusaurus/types": "3.7.0",
+    "@to-skills/cli": "^0.2.1",
+    "@to-skills/core": "^0.10.0",
+    "@to-skills/docusaurus": "^0.2.0",
+    "docusaurus-plugin-typedoc": "^1.4.0",
+    "tsx": "^4.21.0",
+    "typedoc": "^0.28.18",
+    "typedoc-plugin-markdown": "^4.11.0",
+    "typescript": "^5.6.3"
+  },
+  "browserslist": {
+    "production": [
+      ">0.5%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 3 chrome version",
+      "last 3 firefox version",
+      "last 5 safari version"
+    ]
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

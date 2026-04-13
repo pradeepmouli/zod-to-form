@@ -37,7 +37,7 @@ Schema-Driven Form Generation for Zod v4 - walks Zod internal type tree using pr
 - For simple flat configs — registerFlat() is simpler and more direct
 - Don't use if your config comes from dot-path format (CLI global fields)
 - Your config is already nested mirroring schema shape — use registerDeep() instead
-- API surface: 42 functions, 27 types, 4 constants
+- API surface: 42 functions, 26 types, 4 constants
 
 ## Pitfalls
 
@@ -56,6 +56,22 @@ Schema-Driven Form Generation for Zod v4 - walks Zod internal type tree using pr
 - NEVER mix with registerDeep() on the same schema — registry entries conflict silently
 - NEVER assume numeric path segments matter — "items.0.name" and "items.2.name" resolve to the same target
 
+## Configuration
+
+### WalkOptions
+
+| Key | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `formRegistry` | `ZodFormRegistry` | no | — | Custom form registry for metadata annotations |
+| `processors` | `Record<string, FormProcessor<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>>>` | no | — | Custom processors to add or override built-in ones |
+| `maxDepth` | `number` | no | — | Maximum recursion depth for lazy/recursive schemas (default: 5) |
+| `optimization` | `{ level: 1 | 2 | 3; optimizers?: Record<string, FormOptimizer[]> }` | no | — | Validation optimization settings.
+
+This is the walker's API surface — callers (useZodForm, CLI codegen) pass
+the optimization config here. The CLI reads `config.defaults.optimization`
+and forwards it; useZodForm accepts it via its own options. Both converge
+here as the single source of truth for the walker. |
+
 ## Quick Reference
 
 **Optimization:** `createOptimizers`
@@ -64,7 +80,7 @@ Schema-Driven Form Generation for Zod v4 - walks Zod internal type tree using pr
 **config:** `resolveFieldConfig`, `normalizeConfig`, `ComponentOverride`, `ComponentPreset`, `TypedFieldConfig`, `ZodTypeConfig`, `ConfigDefaults`, `OptimizationConfig`, `StripIndexSignature`, `SHADCN_OVERRIDES`, `DEFAULT_OVERRIDES`
 **utils:** `inferLabel`, `joinPath`, `createBaseField`, `getEmptyDefault`, `normalizeFieldKey`, `collectFieldSections`
 **Normalization:** `normalizeFormValues`
-**Schema Walking:** `walkSchema`, `WalkOptions`
+**Schema Walking:** `walkSchema`
 **registry:** `createProcessors`, `builtinProcessors`
 **Registration:** `registerDeep`, `registerFlat`
 **array:** `processArray`, `processTuple`
