@@ -556,3 +556,24 @@ a {
   color: var(--ifm-color-primary-light);
   border-bottom-color: var(--z2f-brand-light);
 }
+
+/* ─── Hero banner image (theme-aware) ─────────────────────────────── */
+.z2f-hero-banner {
+  display: block;
+  margin: 0 auto 1.5rem;
+  width: min(720px, 90vw);
+}
+
+.z2f-hero-banner img {
+  width: 100%;
+  height: auto;
+  display: none;
+}
+
+[data-theme='dark'] .z2f-hero-banner__dark {
+  display: block;
+}
+
+:root:not([data-theme='dark']) .z2f-hero-banner__light {
+  display: block;
+}

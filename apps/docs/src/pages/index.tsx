@@ -1,22 +1,28 @@
 import type { ReactNode } from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
+
+function HeroBanner(): ReactNode {
+  const dark = useBaseUrl('img/banner-dark.svg');
+  const light = useBaseUrl('img/banner-light.svg');
+  return (
+    <div className="z2f-hero-banner">
+      <img className="z2f-hero-banner__dark" src={dark} alt="zod-to-form" />
+      <img className="z2f-hero-banner__light" src={light} alt="zod-to-form" />
+    </div>
+  );
+}
 
 function HomepageHeader(): ReactNode {
   const { siteConfig } = useDocusaurusContext();
   return (
     <header className={clsx('hero hero--primary')}>
       <div className="container" style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <Heading
-          as="h1"
-          className="hero__title"
-          style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', marginBottom: '1rem' }}
-        >
-          {siteConfig.title}
-        </Heading>
+        <HeroBanner />
         <p
           className="hero__subtitle"
           style={{ fontSize: '1.25rem', maxWidth: '680px', margin: '0 auto 2.5rem' }}
