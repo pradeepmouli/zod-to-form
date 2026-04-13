@@ -13,6 +13,8 @@ Every feature below is shown twice — once as a runtime `<ZodForm>` snippet, on
 
 New to the library? Start with the [Quick Start](../quickstart.md), then come back here for feature-by-feature recipes. Cross-references: [Runtime](./runtime.md), [CLI](./cli.md), [Core Config](./core-config.md), [Component Config](./component-config.md).
 
+See also: [AOT Optimization](./optimization.md) for validation performance tuning (L1/L2/L3, custom optimizers, typed `FieldConfig`).
+
 ## 1. Basic form
 
 The simplest possible schema rendered as a form.

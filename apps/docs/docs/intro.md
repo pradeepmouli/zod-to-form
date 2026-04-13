@@ -41,7 +41,8 @@ Both paths share `@zod-to-form/core` — the same walker produces the same `Form
 - **Runtime rendering** — `<ZodForm>` reads schemas at render time for instant iteration
 - **CLI codegen** — `npx zodform generate` produces static `.tsx` files with zero runtime dependency
 - **Shared component config** — one config drives both CLI and runtime identically
-- **Supports all major Zod types** — nested objects (fieldsets), arrays (repeaters), discriminated unions (variant reveal)
+- **AOT validation optimization** — progressive L1/L2/L3 rewrites decompose per-field Zod calls, extract native RHF rules, and lift cross-field refines into real-time feedback (see [AOT Optimization](./guides/optimization.md))
+- **Supports all major Zod types** — nested objects (fieldsets), arrays (repeaters), discriminated unions (variant reveal), plus `bigint`, `nativeEnum`, `record`, `map`, `set`, `transform`, and `refine`
 - **Zero-dependency core** — `@zod-to-form/core` has no runtime dependencies (Zod is a peer)
 
 ## Next Steps
@@ -49,4 +50,13 @@ Both paths share `@zod-to-form/core` — the same walker produces the same `Form
 - [Quickstart](./quickstart.md) — install and render your first form
 - [Runtime Rendering](./guides/runtime.md) — `<ZodForm>` and `useZodForm`
 - [CLI Codegen](./guides/cli.md) — `zodform generate` workflow
+- [AOT Optimization](./guides/optimization.md) — L1/L2/L3 validation rewrites and custom optimizers
 - [API Reference](./api/index.md) — auto-generated from source
+
+## Roadmap
+
+- **Vite plugin** — auto-regenerate forms on schema change, HMR-aware, no CLI step
+- **Studio** — four-quadrant IDE: schema editor, live form preview, config editor, code output
+- **Standard Schema adapters** — reuse the processor registry to support Valibot, ArkType, and Standard Schema
+- **zod-aot integration** — `--aot` flag that uses [zod-aot](https://github.com/wakita181009/zod-aot) compiled validators for `schemaLite` submit-time validation
+- **L3 cross-field analysis** — static analysis of `superRefine` bodies to auto-convert to `watch()` + `validate`

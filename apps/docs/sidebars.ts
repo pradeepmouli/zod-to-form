@@ -17,7 +17,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Guides',
       collapsed: false,
-      items: ['guides/examples']
+      items: ['guides/optimization', 'guides/examples']
     },
     {
       type: 'category',
