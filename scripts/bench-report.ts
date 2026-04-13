@@ -262,41 +262,109 @@ function buildCodegenVsRuntimeTable(browserData: BenchFile): string {
   return lines.join('\n');
 }
 
+/**
+ * Read a specific mount scenario's mean for each (schema, level).
+ * scenarioSubstring matches a describe name like "codegen mount" or "runtime mount".
+ */
+function readMountMeans(
+  browserData: BenchFile,
+  scenarioSubstring: string
+): Record<string, Record<string, number>> {
+  const levels = ['no optimization', 'L1', 'L2'] as const;
+  const out: Record<string, Record<string, number>> = {};
+  for (const file of browserData.files) {
+    for (const group of file.groups) {
+      const { scenario, schema } = parseGroupName(group.fullName);
+      if (!scenario.includes(scenarioSubstring)) continue;
+      for (const b of group.benchmarks) {
+        const level = levels.find((l) => b.name.startsWith(l));
+        if (!level) continue;
+        const mean = b.hz > 0 ? 1000 / b.hz : 0;
+        out[schema] ??= {};
+        out[schema]![level] = mean;
+      }
+    }
+  }
+  return out;
+}
+
 function buildSessionTable(browserData: BenchFile): string {
   const levels = ['no optimization', 'L1', 'L2'] as const;
   const schemas = ['small (5 fields)', 'medium (18 fields)', 'large (50 fields)'] as const;
-  const editCounts = [0, 20, 100] as const;
+  const editCounts = [0, 20, 100, 500] as const;
 
+  // Per-level validation primitives (keystroke, submit) — same for codegen & runtime
+  // at a given level, because once mounted the validation path is identical.
   const primsByLevel: Record<string, Primitives> = {};
   for (const level of levels) {
     primsByLevel[level] = extractPrimitives(browserData, level);
   }
 
+  // Mount costs come from the codegen-vs-runtime bench's two describes.
+  const codegenMounts = readMountMeans(browserData, 'codegen mount');
+  const runtimeMounts = readMountMeans(browserData, 'runtime mount');
+
   const lines: string[] = [];
   lines.push('### Amortized Session Cost (Browser)\n');
-  lines.push('> Total time for a session: `walk + render + K × keystroke + submit`.');
-  lines.push('> `render` includes walk, so the formula is `render + K × keystroke + submit`.');
+  lines.push('> Total session time: `mount + K × keystroke + submit`.');
   lines.push(
-    '> onSubmit mode ≈ K=0 (no per-keystroke validation). onChange with light editing ≈ K=20. Heavy editing ≈ K=100.\n'
+    '> `mount` is walk + React render (codegen pre-walks at build time; runtime walks on every mount).'
   );
+  lines.push(
+    '> `keystroke` and `submit` are identical for codegen/runtime at the same level — only mount differs.'
+  );
+  lines.push(
+    '> onSubmit mode ≈ K=0; light editing ≈ K=20; heavy editing ≈ K=100; power users ≈ K=500.\n'
+  );
+  lines.push('> **Bold** = fastest option in that column for that schema.\n');
+
+  type Row = {
+    kind: 'runtime' | 'codegen';
+    level: (typeof levels)[number];
+    costs: number[]; // one per editCount
+  };
 
   for (const schema of schemas) {
     lines.push(`#### ${schema}\n`);
-    lines.push('| Level | Mount only (K=0) | 20 edits | 100 edits |');
-    lines.push('|-------|------------------|----------|-----------|');
-    for (const level of levels) {
-      const p = primsByLevel[level]!;
-      const render = p.render[schema];
-      const keystroke = p.keystroke[schema];
-      const submit = p.submit[schema];
-      if (render === undefined || keystroke === undefined || submit === undefined) {
-        lines.push(`| ${level} | n/a | n/a | n/a |`);
-        continue;
+
+    const rows: Row[] = [];
+    for (const kind of ['runtime', 'codegen'] as const) {
+      for (const level of levels) {
+        const mount =
+          kind === 'codegen' ? codegenMounts[schema]?.[level] : runtimeMounts[schema]?.[level];
+        const p = primsByLevel[level]!;
+        const keystroke = p.keystroke[schema];
+        const submit = p.submit[schema];
+        if (mount === undefined || keystroke === undefined || submit === undefined) {
+          rows.push({ kind, level, costs: editCounts.map(() => NaN) });
+          continue;
+        }
+        rows.push({
+          kind,
+          level,
+          costs: editCounts.map((k) => mount + k * keystroke + submit)
+        });
       }
-      const session = (k: number) => render + k * keystroke + submit;
-      lines.push(
-        `| ${level} | ${formatMs(session(0))} | ${formatMs(session(20))} | ${formatMs(session(100))} |`
-      );
+    }
+
+    // Find the minimum cost per column (for bolding)
+    const columnMins: number[] = editCounts.map((_, colIdx) => {
+      const values = rows.map((r) => r.costs[colIdx]!).filter((v) => !Number.isNaN(v));
+      return values.length > 0 ? Math.min(...values) : NaN;
+    });
+
+    const header = ['Config', ...editCounts.map((k) => `K=${k}`)];
+    lines.push(`| ${header.join(' | ')} |`);
+    lines.push(`|${header.map(() => '---').join('|')}|`);
+    for (const row of rows) {
+      const label = `${row.kind} ${row.level}`;
+      const cells = row.costs.map((c, i) => {
+        if (Number.isNaN(c)) return 'n/a';
+        const isMin = c === columnMins[i];
+        const formatted = formatMs(c);
+        return isMin ? `**${formatted}**` : formatted;
+      });
+      lines.push(`| ${label} | ${cells.join(' | ')} |`);
     }
     lines.push('');
   }

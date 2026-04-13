@@ -158,30 +158,42 @@
 
 ### Amortized Session Cost (Browser)
 
-> Total time for a session: `walk + render + K × keystroke + submit`.
-> `render` includes walk, so the formula is `render + K × keystroke + submit`.
-> onSubmit mode ≈ K=0 (no per-keystroke validation). onChange with light editing ≈ K=20. Heavy editing ≈ K=100.
+> Total session time: `mount + K × keystroke + submit`.
+> `mount` is walk + React render (codegen pre-walks at build time; runtime walks on every mount).
+> `keystroke` and `submit` are identical for codegen/runtime at the same level — only mount differs.
+> onSubmit mode ≈ K=0; light editing ≈ K=20; heavy editing ≈ K=100; power users ≈ K=500.
+
+> **Bold** = fastest option in that column for that schema.
 
 #### small (5 fields)
 
-| Level | Mount only (K=0) | 20 edits | 100 edits |
-|-------|------------------|----------|-----------|
-| no optimization | 485.16us | 489.82us | 508.46us |
-| L1 | 572.70us | 575.68us | 587.61us |
-| L2 | 460.63us | 462.53us | 470.14us |
+| Config | K=0 | K=20 | K=100 | K=500 |
+|---|---|---|---|---|
+| runtime no optimization | 497.39us | 502.05us | 520.69us | 613.90us |
+| runtime L1 | 637.84us | 640.82us | 652.75us | 712.36us |
+| runtime L2 | 796.72us | 798.62us | 806.23us | 844.25us |
+| codegen no optimization | 394.60us | 399.26us | 417.90us | 511.11us |
+| codegen L1 | **394.09us** | **397.07us** | **409.00us** | **468.61us** |
+| codegen L2 | 638.06us | 639.96us | 647.57us | 685.58us |
 
 #### medium (18 fields)
 
-| Level | Mount only (K=0) | 20 edits | 100 edits |
-|-------|------------------|----------|-----------|
-| no optimization | 2.25ms | 2.27ms | 2.33ms |
-| L1 | 2.32ms | 2.32ms | 2.33ms |
-| L2 | 1.48ms | 1.48ms | 1.49ms |
+| Config | K=0 | K=20 | K=100 | K=500 |
+|---|---|---|---|---|
+| runtime no optimization | 1.51ms | 1.53ms | 1.59ms | 1.90ms |
+| runtime L1 | 1.57ms | 1.58ms | 1.59ms | 1.64ms |
+| runtime L2 | 2.35ms | 2.35ms | 2.36ms | 2.40ms |
+| codegen no optimization | 1.02ms | 1.04ms | 1.10ms | 1.41ms |
+| codegen L1 | 1.29ms | 1.29ms | 1.30ms | 1.35ms |
+| codegen L2 | **861.89us** | **863.95us** | **872.19us** | **913.39us** |
 
 #### large (50 fields)
 
-| Level | Mount only (K=0) | 20 edits | 100 edits |
-|-------|------------------|----------|-----------|
-| no optimization | 3.45ms | 3.50ms | 3.71ms |
-| L1 | 3.15ms | 3.16ms | 3.17ms |
-| L2 | 2.67ms | 2.68ms | 2.69ms |
+| Config | K=0 | K=20 | K=100 | K=500 |
+|---|---|---|---|---|
+| runtime no optimization | 2.26ms | 2.31ms | 2.52ms | 3.56ms |
+| runtime L1 | 3.29ms | 3.30ms | 3.31ms | 3.39ms |
+| runtime L2 | 4.01ms | 4.01ms | 4.02ms | 4.06ms |
+| codegen no optimization | 2.83ms | 2.88ms | 3.09ms | 4.13ms |
+| codegen L1 | **1.68ms** | **1.68ms** | **1.70ms** | **1.78ms** |
+| codegen L2 | 1.79ms | 1.79ms | 1.80ms | 1.84ms |
