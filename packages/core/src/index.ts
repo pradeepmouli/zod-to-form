@@ -78,6 +78,12 @@ export type {
   SchemaLiteInfo
 } from './optimizers/index.js';
 
+// CodegenConfig and its canonicalization helper — moved here from
+// @zod-to-form/codegen so the Vite plugin and other consumers can depend
+// on the type without pulling in the codegen package's runtime.
+export type { CodegenConfig } from './config-types.js';
+export { canonicalizeConfig } from './canonicalize-config.js';
+
 export {
   createOptimizers,
   builtinOptimizers,

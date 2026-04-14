@@ -1,6 +1,6 @@
 # zod-to-form Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-03-26
+Auto-generated from all feature plans. Last updated: 2026-04-14
 
 ## Active Technologies
 - TypeScript 5.x (strict mode) + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), commander, jiti, prettier, chokidar (CLI direct) (refactor/001-1-componentconfig-config)
@@ -10,6 +10,7 @@ Auto-generated from all feature plans. Last updated: 2026-03-26
 - TypeScript 5.x (strict mode) + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), @hookform/resolvers (005-api-surface-cleanup)
 - N/A (library) (005-api-surface-cleanup)
 - TypeScript 5.x with strict mode + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), @hookform/resolvers (peer — conditional after optimization) (006-validation-optimization)
+- N/A — plugin is stateless between sessions; in-memory compilation cache only (007-vite-codegen-plugin)
 
 - TypeScript 5.x (strict mode)
 - Zod v4 (v4.0.0+) — `_zod` substrate API
@@ -58,6 +59,7 @@ pnpm run dev           # Dev mode (parallel)
 - Metadata precedence: form registry → global registry → inferred defaults
 
 ## Recent Changes
+- 007-vite-codegen-plugin: Added TypeScript 5.x with strict mode
 - 006-validation-optimization: Added TypeScript 5.x with strict mode + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), @hookform/resolvers (peer — conditional after optimization)
 
 ## Backlog
