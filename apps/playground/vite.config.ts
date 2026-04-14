@@ -144,7 +144,13 @@ function shadcnRegistryPlugin(): Plugin {
 const __dirname = resolve(fileURLToPath(import.meta.url), '..');
 const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8'));
 
+// When deployed under zod.toform.dev/play/ via Cloudflare Pages, assets
+// must resolve from the /play/ subpath. CF_PAGES=1 is set automatically by
+// Cloudflare; PLAYGROUND_BASE can override for other deploy targets.
+const base = process.env.PLAYGROUND_BASE ?? (process.env.CF_PAGES === '1' ? '/play/' : '/');
+
 export default defineConfig({
+  base,
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version)
   },
