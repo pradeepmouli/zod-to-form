@@ -47,6 +47,21 @@ describe('compileTarget', () => {
     expect(result.generatedSource).toContain('SignupForm');
   });
 
+  it('emitted source actually exports the component (not just mentions the name)', () => {
+    // Guard against a regression where the generator emits a comment or
+    // variable that happens to contain the component name — the name must
+    // appear in an `export`, `function`, or `const` declaration.
+    const result = compileTarget({
+      namespace,
+      schemaFile: '/abs/src/schemas/signup.ts',
+      variant: '',
+      config: baseConfig
+    });
+    expect(result.generatedSource).toMatch(
+      /export\s+(default\s+)?(function|const)\s+SignupForm\b|function\s+SignupForm\b|const\s+SignupForm\s*[:=]/
+    );
+  });
+
   it('emitted source references the schema import path the codegen was given', () => {
     const result = compileTarget({
       namespace,

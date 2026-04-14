@@ -15,6 +15,7 @@
 import { createHash } from 'node:crypto';
 import { canonicalizeConfig } from '@zod-to-form/core';
 import type { CodegenConfig } from '@zod-to-form/core';
+import type { $ZodType } from 'zod/v4/core';
 import { Z2FViteError } from '../errors.js';
 import type { Z2FViteConfig } from '../types.js';
 
@@ -28,7 +29,16 @@ import type { Z2FViteConfig } from '../types.js';
  * input). A named variant looks up `config.variants[variant]` and merges
  * it on top of the global fields. Unknown variants throw.
  */
-export function buildEffectiveConfig(config: Z2FViteConfig, variant: string): CodegenConfig {
+/**
+ * The plugin-side effective config — same shape as `CodegenConfig` except
+ * `exportName` may still be empty (auto-detect). `compileTarget` promotes
+ * it to a real name via `selectExport` before handing off to codegen.
+ */
+export type EffectiveZ2FConfig = Omit<CodegenConfig, 'exportName'> & {
+  exportName?: string;
+};
+
+export function buildEffectiveConfig(config: Z2FViteConfig, variant: string): EffectiveZ2FConfig {
   // Strip the plugin-only `variants` field — generateFormComponent doesn't
   // know about it and would copy it through.
   const { variants, ...base } = config;
@@ -61,16 +71,21 @@ export function buildEffectiveConfig(config: Z2FViteConfig, variant: string): Co
 export type ModuleNamespace = Record<string, unknown>;
 
 /**
- * Structural Zod-v4 check: the value has a `_zod` property. We deliberately
- * don't import zod here — the user's project provides it, and the version
- * the plugin sees might differ from the one zod-to-form pins.
+ * Structural Zod-v4 check: the value is a non-null object whose `_zod`
+ * property is itself a non-null object. Zod v4 attaches its internal
+ * machinery under `_zod`, so this is the standard duck-type.
+ *
+ * The predicate narrows to `$ZodType` because `walkSchema` from core and
+ * all downstream codegen helpers consume that interface — tightening here
+ * eliminates `as $ZodType` casts at every call site.
+ *
+ * We deliberately avoid a runtime `import` of zod: the user's project owns
+ * the zod version, and the plugin mustn't couple to a specific copy.
  */
-function isZodSchema(value: unknown): value is { _zod: unknown } {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof (value as { _zod?: unknown })._zod !== 'undefined'
-  );
+function isZodSchema(value: unknown): value is $ZodType {
+  if (typeof value !== 'object' || value === null) return false;
+  const zodInternal = (value as { _zod?: unknown })._zod;
+  return typeof zodInternal === 'object' && zodInternal !== null;
 }
 
 /**
@@ -92,7 +107,7 @@ export function selectExport(
   namespace: ModuleNamespace,
   schemaFile: string,
   expectedName?: string
-): { name: string; schema: unknown } {
+): { name: string; schema: $ZodType } {
   if (expectedName !== undefined) {
     const value = namespace[expectedName];
     if (value === undefined) {
@@ -113,7 +128,7 @@ export function selectExport(
   }
 
   // Auto-detect mode: find every Zod-shaped named export.
-  const candidates: Array<{ name: string; schema: unknown }> = [];
+  const candidates: Array<{ name: string; schema: $ZodType }> = [];
   for (const [name, value] of Object.entries(namespace)) {
     if (name === 'default') continue; // skip default exports per the contract above
     if (isZodSchema(value)) {
@@ -124,7 +139,7 @@ export function selectExport(
   if (candidates.length === 0) {
     throw new Z2FViteError(
       'Z2F_VITE_SCHEMA_NOT_FOUND',
-      `No Zod v4 schema exports found in '${schemaFile}'. Make sure the file exports at least one named Zod schema (e.g. 'export const signupSchema = z.object({ ... });').`,
+      `No Zod v4 schema exports found in '${schemaFile}'. Default exports are not considered — re-export as a named export (e.g. 'export const signupSchema = z.object({ ... });').`,
       { file: schemaFile }
     );
   }
@@ -143,12 +158,18 @@ export function selectExport(
 // ─── Cache key helper ────────────────────────────────────────────────
 
 /**
- * Compute a stable cache key from an effective config. Consumers (the
+ * Compute a stable cache key from a config-shaped value. Consumers (the
  * `CompilationCache` keying logic in `plugin.ts`) should call this rather
  * than canonicalizing themselves so the hashing strategy stays in one
- * place.
+ * place. The parameter is widened beyond `CodegenConfig` because the
+ * plugin hashes its own `Z2FViteConfig` (which adds `variants`) — and
+ * `canonicalizeConfig` walks structurally, so either shape round-trips.
+ *
+ * Truncated to 16 hex chars (64 bits): collision-resistant enough for a
+ * per-project cache keyed by (schemaFile, variant) pairs and keeps the
+ * resulting virtual-module query strings short.
  */
-export function configHash(config: CodegenConfig): string {
-  const canonical = canonicalizeConfig(config);
+export function configHash(config: CodegenConfig | Record<string, unknown>): string {
+  const canonical = canonicalizeConfig(config as CodegenConfig);
   return createHash('sha256').update(canonical).digest('hex').slice(0, 16);
 }

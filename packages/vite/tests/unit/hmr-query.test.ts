@@ -16,7 +16,9 @@ import type { CompilationEntry, GenerationTarget } from '../../src/types.js';
  *   Vite's default HMR behavior")
  */
 
-function makeTarget(overrides: Partial<GenerationTarget> = {}): GenerationTarget {
+type QueryTarget = Extract<GenerationTarget, { sourceKind: 'query' }>;
+
+function makeTarget(overrides: Partial<QueryTarget> = {}): QueryTarget {
   return {
     schemaFile: '/abs/src/schemas/signup.ts',
     exportName: 'signupSchema',
@@ -89,7 +91,11 @@ describe('computeHmrInvalidation', () => {
 
     expect(result).not.toBeNull();
     expect(result?.kind).toBe('schema');
-    expect(result?.evictedKeys.length).toBe(2);
+    // Assert the actual identities, not just the count — a regression that
+    // evicted the wrong pair would still match on length.
+    const evicted = new Set(result?.evictedKeys ?? []);
+    expect(evicted.size).toBe(2);
+    expect([...evicted].every((k) => k.startsWith('/abs/a.ts::'))).toBe(true);
     // The b entry survives
     expect(cache.stats().size).toBe(1);
   });

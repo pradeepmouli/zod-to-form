@@ -21,10 +21,16 @@ export type VariantConfigs = Record<string, Partial<CodegenConfig>>;
 
 /**
  * The full config the Vite plugin operates on: a base `CodegenConfig`
- * plus optional per-variant overrides. This type extends `CodegenConfig`
- * with the plugin-specific `variants` field.
+ * plus optional per-variant overrides.
+ *
+ * `exportName` is relaxed to optional at the plugin boundary — the plugin
+ * auto-detects a single Zod schema export when the user omits it, and
+ * throws `Z2F_VITE_AMBIGUOUS_EXPORT` on ambiguity. The codegen package
+ * still requires it, and the plugin promotes the resolved name before
+ * invoking codegen.
  */
-export type Z2FViteConfig = CodegenConfig & {
+export type Z2FViteConfig = Omit<CodegenConfig, 'exportName'> & {
+  exportName?: string;
   /** Per-variant overrides. Keyed by `?z2f=<name>` query value. */
   variants?: VariantConfigs;
 };
@@ -61,19 +67,21 @@ export interface PluginOptions {
   configOverride?: Partial<Z2FViteConfig>;
 
   /**
-   * When true, scan JSX source for `<ZodForm>` elements and rewrite
+   * Rewrite mode: scan JSX source for `<ZodForm>` elements and rewrite
    * statically resolvable call sites to use generated components.
-   * **OFF by default** (FR-024). Rewrite mode silently changes compiled
-   * output for code the developer didn't explicitly annotate, so it is
-   * a deliberate opt-in.
+   *
+   * **OFF by default** (FR-024): rewrite mode silently changes compiled
+   * output for code the developer didn't explicitly annotate, so it is a
+   * deliberate opt-in. Presence of this object (even empty `{}`) enables
+   * it; omit the field entirely to keep it off. This avoids the invalid
+   * state where `rewriteInclude` is set but rewrite is disabled.
    */
-  rewriteZodForm?: boolean;
-
-  /** Glob patterns for files rewrite mode should consider. */
-  rewriteInclude?: string[];
-
-  /** Glob patterns excluded from rewrite mode. */
-  rewriteExclude?: string[];
+  rewrite?: {
+    /** Glob patterns for files rewrite mode should consider. */
+    include?: string[];
+    /** Glob patterns excluded from rewrite mode. */
+    exclude?: string[];
+  };
 
   /** Optional opt-in to emit generated files to disk. */
   write?: WriteOptions;
@@ -85,21 +93,15 @@ export interface PluginOptions {
 // ─── 2. GenerationTarget ─────────────────────────────────────────────
 
 /**
- * A single (schema, variant, config) triple that produces exactly one
- * generated form. The cache key space.
+ * Shared fields every target carries regardless of origin.
+ * Split into a base type so the discriminated union below stays DRY.
  */
-export interface GenerationTarget {
+interface GenerationTargetBase {
   /** Absolute, normalized path to the schema source file. Identity. */
   schemaFile: string;
 
   /** The named export to pick from the schema module (e.g. `'signupSchema'`). */
   exportName: string;
-
-  /**
-   * Variant name from the `?z2f=<variant>` query, or empty string for the
-   * default variant. Rewrite-mode variants use the `__rewrite_<n>` prefix.
-   */
-  variant: string;
 
   /**
    * SHA-256 hex digest of the canonicalized effective config for this
@@ -110,10 +112,32 @@ export interface GenerationTarget {
 
   /** Derived component name (e.g. `'SignupForm'`, `'SignupEditForm'`). */
   componentName: string;
-
-  /** How this target was introduced. */
-  sourceKind: 'query' | 'rewrite';
 }
+
+/**
+ * A single (schema, variant, config) triple that produces exactly one
+ * generated form. The cache key space.
+ *
+ * Discriminated on `sourceKind`: query-mode targets carry a user-named
+ * variant (or empty string for the default), while rewrite-mode targets
+ * use the reserved `__rewrite_<n>` prefix. Encoding the prefix in the
+ * type system prevents accidentally crossing the streams.
+ */
+export type GenerationTarget =
+  | (GenerationTargetBase & {
+      sourceKind: 'query';
+      /**
+       * Variant name from the `?z2f=<variant>` query, or empty string for
+       * the default variant. MUST NOT start with `__rewrite_` (enforced
+       * at runtime by `parseSpecifier`).
+       */
+      variant: string;
+    })
+  | (GenerationTargetBase & {
+      sourceKind: 'rewrite';
+      /** Synthesized variant name — always `__rewrite_<n>`. */
+      variant: `__rewrite_${string}`;
+    });
 
 // ─── 3. CompilationCache (entries) ───────────────────────────────────
 

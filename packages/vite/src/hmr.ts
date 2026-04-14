@@ -61,20 +61,3 @@ export function computeHmrInvalidation(input: HmrInvalidationInput): HmrInvalida
   }
   return { kind: 'schema', evictedKeys };
 }
-
-/**
- * Convert a cache key (`<schemaFile>::<variant>::<configHash>`) back into
- * the Vite module id Vite uses for that virtual module
- * (`<schemaFile>?z2f[=variant]`).
- *
- * Used by `handleHotUpdate` to map evicted cache keys to the module nodes
- * Vite needs to invalidate.
- */
-export function cacheKeyToModuleId(key: string): string {
-  // Cache key format: schemaFile::variant::configHash
-  const parts = key.split('::');
-  if (parts.length !== 3) return key; // defensive — shouldn't happen
-  const [schemaFile, variant] = parts;
-  const query = variant === '' ? '?z2f' : `?z2f=${variant}`;
-  return `${schemaFile}${query}`;
-}

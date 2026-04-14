@@ -35,18 +35,20 @@ describe('z2fVite() factory', () => {
       z2fVite({
         configPath: '/abs/z2f.config.ts',
         configOverride: { ui: 'shadcn' },
-        rewriteZodForm: true,
-        rewriteInclude: ['src/**/*.tsx'],
-        rewriteExclude: ['**/dist/**'],
+        rewrite: { include: ['src/**/*.tsx'], exclude: ['**/dist/**'] },
         write: { outDir: '/abs/out', filenamePattern: '{schemaBasename}.gen.tsx' },
         logLevel: 'debug'
       })
     ).not.toThrow();
   });
 
+  it('accepts an empty rewrite object (opt-in without explicit globs)', () => {
+    expect(() => z2fVite({ rewrite: {} })).not.toThrow();
+  });
+
   describe('rejects unknown option keys', () => {
     it('throws Z2F_VITE_INVALID_OPTIONS for typos', () => {
-      expect(() => z2fVite({ rewrtieZodForm: true } as never)).toThrow(/Z2F_VITE_INVALID_OPTIONS/);
+      expect(() => z2fVite({ rewirte: {} } as never)).toThrow(/Z2F_VITE_INVALID_OPTIONS/);
     });
 
     it('throws Z2F_VITE_INVALID_OPTIONS for arbitrary unknown keys', () => {
@@ -55,12 +57,18 @@ describe('z2fVite() factory', () => {
 
     it('error message lists allowed keys to help the user fix the typo', () => {
       try {
-        z2fVite({ rewrtieZodForm: true } as never);
+        z2fVite({ rewirte: {} } as never);
         expect.fail('Expected z2fVite to throw');
       } catch (err) {
         expect(err).toBeInstanceOf(Z2FViteError);
-        expect((err as Error).message).toContain('rewriteZodForm');
+        expect((err as Error).message).toContain('rewrite');
       }
+    });
+
+    it('throws Z2F_VITE_INVALID_OPTIONS for unknown keys nested inside rewrite', () => {
+      expect(() => z2fVite({ rewrite: { includ: [] } } as never)).toThrow(
+        /Z2F_VITE_INVALID_OPTIONS/
+      );
     });
   });
 
@@ -80,13 +88,13 @@ describe('z2fVite() factory', () => {
     // Defaults are observable through behavior, not directly inspectable on
     // the returned Plugin object. We verify the factory at least doesn't
     // mutate or crash when each individual option is absent.
-    it('accepts a plain object without rewriteZodForm', () => {
+    it('accepts a plain object without rewrite', () => {
       const plugin = z2fVite({ logLevel: 'silent' });
       expect(plugin.name).toBe('@zod-to-form/vite');
     });
 
     it('accepts a plain object without configPath', () => {
-      const plugin = z2fVite({ rewriteZodForm: false });
+      const plugin = z2fVite({ rewrite: {} });
       expect(plugin.name).toBe('@zod-to-form/vite');
     });
   });

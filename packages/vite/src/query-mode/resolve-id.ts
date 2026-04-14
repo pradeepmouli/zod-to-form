@@ -21,17 +21,16 @@ import { Z2FViteError } from '../errors.js';
 
 /**
  * Check if a child path lives inside a parent root. Both must be
- * absolute. Comparison is byte-level after normalizing trailing slashes;
- * we deliberately don't use `path.relative()` because its `..` heuristic
- * can be wrong on Windows when drives differ.
+ * absolute. We normalize backslashes to forward slashes on both sides
+ * so mixed separators on Windows compare correctly — Vite itself exposes
+ * forward-slash ids in most code paths, but `this.resolve()` sometimes
+ * returns OS-native paths, so the guard needs to survive either shape.
  */
 function isInsideRoot(child: string, root: string): boolean {
-  const normalizedRoot = root.endsWith('/') ? root : root + '/';
-  // Same path is treated as inside (the root itself can be a file in
-  // theoretical edge cases); the normal usage is "child must start with
-  // root + /".
-  if (child === root) return true;
-  return child.startsWith(normalizedRoot);
+  const c = child.replace(/\\/g, '/');
+  const r = root.replace(/\\/g, '/');
+  const normalizedRoot = r.endsWith('/') ? r : r + '/';
+  return c === r || c.startsWith(normalizedRoot);
 }
 
 export function resolveZ2FId(

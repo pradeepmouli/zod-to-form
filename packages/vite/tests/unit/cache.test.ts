@@ -12,7 +12,9 @@ import type { CompilationEntry, GenerationTarget } from '../../src/types.js';
  * across every operation.
  */
 
-function makeTarget(overrides: Partial<GenerationTarget> = {}): GenerationTarget {
+type QueryTarget = Extract<GenerationTarget, { sourceKind: 'query' }>;
+
+function makeTarget(overrides: Partial<QueryTarget> = {}): QueryTarget {
   return {
     schemaFile: '/abs/src/schemas/signup.ts',
     exportName: 'signupSchema',

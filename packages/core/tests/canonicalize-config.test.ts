@@ -186,4 +186,75 @@ describe('canonicalizeConfig', () => {
     expect(typeof out).toBe('string');
     expect(out.length).toBeGreaterThan(0);
   });
+
+  describe('opaque sentinel paths', () => {
+    // Zod schemas are recognized structurally via a non-null `_zod` property
+    // and replaced by a stable sentinel. Cache keys stay deterministic even
+    // when different schema instances are referenced across configs.
+    it('replaces values with a non-null `_zod` property by an opaque sentinel', () => {
+      const fakeSchemaA = { _zod: { def: { type: 'string' } } };
+      const fakeSchemaB = { _zod: { def: { type: 'number' } } };
+      const a = {
+        exportName: 'X',
+        componentName: 'XForm',
+        mode: 'submit',
+        ui: 'html',
+        schemaLite: fakeSchemaA
+      } as unknown as CodegenConfig;
+      const b = {
+        exportName: 'X',
+        componentName: 'XForm',
+        mode: 'submit',
+        ui: 'html',
+        schemaLite: fakeSchemaB
+      } as unknown as CodegenConfig;
+      // Both schemas get the opaque sentinel → identical canonical output.
+      expect(canonicalizeConfig(a)).toBe(canonicalizeConfig(b));
+      // And the sentinel ends up in the output (not the internals).
+      expect(canonicalizeConfig(a)).toContain('__opaque__');
+      expect(canonicalizeConfig(a)).not.toContain('string');
+    });
+
+    it('does not treat `_zod: undefined` as a Zod schema', () => {
+      // Just presence of the property is not enough; the value must be a
+      // non-null object. A user-defined object that happens to have
+      // `_zod: undefined` should serialize normally.
+      const withUndef = {
+        exportName: 'X',
+        componentName: 'XForm',
+        mode: 'submit',
+        ui: 'html',
+        componentConfig: { _zod: undefined, extras: 'kept' }
+      } as unknown as CodegenConfig;
+      const out = canonicalizeConfig(withUndef);
+      expect(out).toContain('kept');
+      // The `_zod: undefined` key is omitted like any other undefined field.
+      expect(out).not.toContain('_zod');
+    });
+
+    it('replaces function values with the opaque sentinel', () => {
+      const cfg = {
+        exportName: 'X',
+        componentName: 'XForm',
+        mode: 'submit',
+        ui: 'html',
+        onChange: () => void 0
+      } as unknown as CodegenConfig;
+      const out = canonicalizeConfig(cfg);
+      expect(out).toContain('__opaque__');
+    });
+
+    it('replaces symbol and bigint values with the opaque sentinel', () => {
+      const cfg = {
+        exportName: 'X',
+        componentName: 'XForm',
+        mode: 'submit',
+        ui: 'html',
+        sym: Symbol('x'),
+        big: 42n
+      } as unknown as CodegenConfig;
+      const out = canonicalizeConfig(cfg);
+      expect(out).toContain('__opaque__');
+    });
+  });
 });

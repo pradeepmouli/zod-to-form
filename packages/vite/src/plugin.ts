@@ -8,17 +8,13 @@
  * - `load`      → `parseZ2FId` + cache lookup + `compileTarget`
  * - `handleHotUpdate` → `computeHmrInvalidation` + module-graph translation
  * - `configureServer` → captures the dev server reference for `load`
- *
- * Phase 5 (US3 config watching) extends this file. Phase 4 (US2 rewrite
- * mode) and Phase 6 (US4 resolver tree-shake) add a `transform` hook
- * alongside the existing ones.
  */
 import type { Plugin, ResolvedConfig, ViteDevServer } from 'vite';
 import { createCompilationCache } from './cache.js';
 import type { CompilationCache } from './cache.js';
 import { configHash } from './config/load.js';
 import { Z2FViteError } from './errors.js';
-import { cacheKeyToModuleId, computeHmrInvalidation } from './hmr.js';
+import { computeHmrInvalidation } from './hmr.js';
 import { createLogger } from './logger.js';
 import type { Logger } from './logger.js';
 import { parseZ2FId, resolveZ2FId } from './query-mode/resolve-id.js';
@@ -29,12 +25,10 @@ const PLUGIN_NAME = '@zod-to-form/vite';
 
 /**
  * Default config used when no `z2f.config.ts` is present and no
- * `configOverride` was supplied. The user can still pass `?z2f=variant`
- * — it will throw UNKNOWN_VARIANT, which is the right error for "you
- * referenced a variant but never declared one anywhere".
+ * `configOverride` was supplied. `exportName` is omitted so the plugin
+ * auto-detects the single Zod schema export.
  */
 const DEFAULT_CONFIG: Z2FViteConfig = {
-  exportName: '',
   componentName: 'Form',
   mode: 'submit',
   ui: 'html'
@@ -104,16 +98,15 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
       if (parsed === null) return null;
 
       const z2fConfig = await ensureConfig(state);
-      const effectiveConfigForHash = {
-        ...z2fConfig,
-        // Variant-specific fields are merged inside compileTarget; the
-        // hash here covers the global config plus the variant slice.
-        _variant: parsed.variant
-      };
-      const hash = configHash(effectiveConfigForHash as never);
+      // Hash the full z2fConfig (including `variants`). The variant name is
+      // carried separately by the cache key, so buildEffectiveConfig's
+      // per-variant merge doesn't need to be reflected in the hash — any
+      // change to the `variants` table bumps the hash for every variant.
+      const hash = configHash(z2fConfig);
 
-      // Build the target for the cache lookup. exportName will be the
-      // user-configured value (or empty string for auto-detect mode).
+      // Build the cache-lookup target. `exportName` is set to the
+      // user-configured value or an empty sentinel — the actually-selected
+      // name lands on `finalTarget` below after compileTarget resolves it.
       const target: GenerationTarget = {
         schemaFile: parsed.schemaFile,
         exportName: z2fConfig.exportName ?? '',
@@ -130,7 +123,7 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
       }
 
       // Cache miss: load the schema module and compile it.
-      const namespace = await loadSchemaModule(state, parsed.schemaFile, this);
+      const namespace = await loadSchemaModule(state, parsed.schemaFile);
       const result = compileTarget({
         namespace,
         schemaFile: parsed.schemaFile,
@@ -138,9 +131,9 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
         config: z2fConfig
       });
 
-      // Update the target with the actually-selected exportName so future
-      // cache lookups with the same `id` hit (the inferred name is part
-      // of the cache identity).
+      // Promote the actually-selected exportName so future cache lookups
+      // with the same `id` hit (the inferred name is part of the cache
+      // entry's identity).
       const finalTarget: GenerationTarget = {
         ...target,
         exportName: result.exportName,
@@ -171,32 +164,61 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
         return undefined;
       }
 
-      // Translate evicted cache keys to Vite module ids and add the
-      // matching ModuleNodes to ctx.modules so Vite invalidates them.
-      const moduleIds = result.evictedKeys.map(cacheKeyToModuleId);
+      // Translate evicted cache keys to the Vite module graph entries that
+      // need invalidation. Each cache key has the form
+      // `<schemaFile>::<variant>::<configHash>` and maps to a virtual module
+      // whose id is `<schemaFile>?z2f[=variant]`. `getModulesByFile` wants
+      // the bare source path (not the id), while `getModuleById` wants the
+      // full id with query — we hit both so whichever index Vite has
+      // populated gets flushed.
       const moduleGraph = state.devServer?.moduleGraph;
       if (moduleGraph !== undefined) {
-        for (const moduleId of moduleIds) {
-          const moduleNodes = moduleGraph.getModulesByFile(moduleId);
-          if (moduleNodes !== undefined) {
-            for (const node of moduleNodes) {
-              ctx.modules.push(node);
+        const seen = new Set<string>();
+        let unmatched = 0;
+        for (const key of result.evictedKeys) {
+          const parts = key.split('::');
+          const schemaFile = parts[0];
+          const variant = parts[1];
+          if (parts.length !== 3 || schemaFile === undefined || variant === undefined) {
+            state.logger.warn(`malformed cache key during HMR: ${key}`);
+            continue;
+          }
+          const query = variant === '' ? '?z2f' : `?z2f=${variant}`;
+          const moduleId = `${schemaFile}${query}`;
+
+          let matched = false;
+          const byFile = moduleGraph.getModulesByFile(schemaFile);
+          if (byFile !== undefined) {
+            for (const node of byFile) {
+              const nodeKey = node.id ?? node.url ?? '';
+              if (!seen.has(nodeKey)) {
+                seen.add(nodeKey);
+                ctx.modules.push(node);
+                matched = true;
+              }
             }
           }
-          // Also try direct id lookup (virtual modules are tracked by id)
-          const node = moduleGraph.getModuleById(moduleId);
-          if (node !== undefined) {
-            ctx.modules.push(node);
+          const byId = moduleGraph.getModuleById(moduleId);
+          if (byId !== undefined) {
+            const nodeKey = byId.id ?? byId.url ?? '';
+            if (!seen.has(nodeKey)) {
+              seen.add(nodeKey);
+              ctx.modules.push(byId);
+              matched = true;
+            }
           }
+          if (!matched) unmatched += 1;
+        }
+        if (unmatched > 0) {
+          state.logger.warn(
+            `HMR: ${unmatched}/${result.evictedKeys.length} evicted cache keys had no matching module in Vite's graph — those consumers may show stale output until the next full reload`
+          );
         }
       }
 
       state.logger.debug(
         `HMR ${result.kind} invalidation for ${ctx.file}: ${result.evictedKeys.length} entries`
       );
-      // Returning ctx.modules tells Vite to invalidate the listed modules.
-      // Returning undefined lets Vite walk the module graph itself based
-      // on the file change — which it will do anyway for the schema file.
       return undefined;
     }
   };
@@ -207,15 +229,7 @@ export default z2fVite;
 // ─── Helpers ─────────────────────────────────────────────────────────
 
 function validateOptions(options: PluginOptions): void {
-  const allowedKeys = new Set([
-    'configPath',
-    'configOverride',
-    'rewriteZodForm',
-    'rewriteInclude',
-    'rewriteExclude',
-    'write',
-    'logLevel'
-  ]);
+  const allowedKeys = new Set(['configPath', 'configOverride', 'rewrite', 'write', 'logLevel']);
   for (const key of Object.keys(options)) {
     if (!allowedKeys.has(key)) {
       throw new Z2FViteError(
@@ -234,17 +248,29 @@ function validateOptions(options: PluginOptions): void {
       );
     }
   }
+
+  if (options.rewrite !== undefined) {
+    const rewriteAllowed = new Set(['include', 'exclude']);
+    for (const key of Object.keys(options.rewrite)) {
+      if (!rewriteAllowed.has(key)) {
+        throw new Z2FViteError(
+          'Z2F_VITE_INVALID_OPTIONS',
+          `Unknown 'rewrite.${key}' option. Allowed: ${Array.from(rewriteAllowed).sort().join(', ')}.`
+        );
+      }
+    }
+  }
 }
 
 /**
  * Load (or return cached) the user's `z2f.config.ts`, merging
- * `options.configOverride` on top.
+ * `options.configOverride` on top. If no `configPath` is set, falls back
+ * to `DEFAULT_CONFIG` merged with `options.configOverride`.
  *
- * Slice 3b ships a minimal version: if the user passed `configPath`, we
- * try to load it via the dev server's `ssrLoadModule` (or a future build-
- * time loader); otherwise we fall back to `DEFAULT_CONFIG` merged with
- * `options.configOverride`. Slice 3c adds proper file discovery and
- * watching — see Phase 5 (US3) for the watching half.
+ * Build-mode config loading (via `this.load` inside a plugin context) is
+ * not yet implemented — if the user explicitly supplied a `configPath`
+ * but there's no dev server, we throw rather than silently dropping the
+ * user's config.
  */
 async function ensureConfig(state: PluginState): Promise<Z2FViteConfig> {
   if (state.z2fConfig !== null) return state.z2fConfig;
@@ -253,19 +279,28 @@ async function ensureConfig(state: PluginState): Promise<Z2FViteConfig> {
 
   if (state.options.configPath !== undefined) {
     state.configFilePath = state.options.configPath;
-    if (state.devServer !== null) {
-      try {
-        const mod = await state.devServer.ssrLoadModule(state.options.configPath);
-        loaded =
-          (mod as { default?: Partial<Z2FViteConfig> }).default ?? (mod as Partial<Z2FViteConfig>);
-      } catch (err) {
-        throw new Z2FViteError(
-          'Z2F_VITE_CONFIG_INVALID',
-          `Failed to load config '${state.options.configPath}': ${(err as Error).message}`,
-          { file: state.options.configPath }
-        );
-      }
+    if (state.devServer === null) {
+      throw new Z2FViteError(
+        'Z2F_VITE_NOT_IMPLEMENTED',
+        `Build-mode loading of 'configPath' is not yet implemented. Pass the config object inline via 'configOverride' until the build-time loader lands.`,
+        { file: state.options.configPath }
+      );
     }
+    try {
+      const mod = await state.devServer.ssrLoadModule(state.options.configPath);
+      loaded =
+        (mod as { default?: Partial<Z2FViteConfig> }).default ?? (mod as Partial<Z2FViteConfig>);
+    } catch (err) {
+      throw new Z2FViteError(
+        'Z2F_VITE_CONFIG_INVALID',
+        `Failed to load config '${state.options.configPath}': ${(err as Error).message}`,
+        { file: state.options.configPath }
+      );
+    }
+  } else {
+    state.logger.info(
+      `no configPath supplied — compiling forms with defaults. Pass 'configPath' or 'configOverride' to customize.`
+    );
   }
 
   state.z2fConfig = {
@@ -277,30 +312,33 @@ async function ensureConfig(state: PluginState): Promise<Z2FViteConfig> {
 }
 
 /**
- * Load a schema module via the appropriate Vite mechanism (dev or build).
+ * Load a schema module via the dev server's SSR pipeline (so TypeScript
+ * and other plugins fire normally). Build-mode loading via the Rollup
+ * `PluginContext.load` path is not yet implemented.
  *
- * Dev: `server.ssrLoadModule(schemaFile)` — respects Vite's transform
- * pipeline so TypeScript and other plugins fire normally.
- *
- * Build: `pluginContext.load({ id: schemaFile })` then evaluate. For
- * slice 3b we keep the dev path only; the build path lands in slice 3c
- * when the integration tests need it.
+ * `ssrLoadModule` can throw for many reasons — TS syntax error, import
+ * failure, evaluation error inside the schema file — so we wrap every
+ * failure in a typed `Z2F_VITE_CODEGEN_FAILURE` with the schema file
+ * attached, rather than letting raw Vite stack traces leak to the user.
  */
 async function loadSchemaModule(
   state: PluginState,
-  schemaFile: string,
-  // The Rollup PluginContext from inside `load`. We don't import its
-  // type because Vite re-exports a wrapped variant; `unknown` keeps the
-  // signature loose without sacrificing safety inside this file.
-  _ctx: unknown
+  schemaFile: string
 ): Promise<Record<string, unknown>> {
-  if (state.devServer !== null) {
-    return state.devServer.ssrLoadModule(schemaFile);
+  if (state.devServer === null) {
+    throw new Z2FViteError(
+      'Z2F_VITE_NOT_IMPLEMENTED',
+      `Build-mode schema loading is not yet implemented. Use 'vite dev' or wait for the build-time loader.`,
+      { file: schemaFile }
+    );
   }
-  // Build mode is implemented in slice 3c (integration tests).
-  throw new Z2FViteError(
-    'Z2F_VITE_CODEGEN_FAILURE',
-    `Build-mode schema loading is not yet implemented in slice 3b. Schema: ${schemaFile}`,
-    { file: schemaFile }
-  );
+  try {
+    return await state.devServer.ssrLoadModule(schemaFile);
+  } catch (err) {
+    throw new Z2FViteError(
+      'Z2F_VITE_CODEGEN_FAILURE',
+      `Failed to load schema module '${schemaFile}': ${(err as Error).message}`,
+      { file: schemaFile }
+    );
+  }
 }

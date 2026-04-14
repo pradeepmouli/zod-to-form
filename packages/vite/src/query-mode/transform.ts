@@ -16,6 +16,12 @@ import { buildEffectiveConfig, selectExport } from '../config/load.js';
 import type { ModuleNamespace } from '../config/load.js';
 import type { Z2FViteConfig } from '../types.js';
 
+function isZodType(value: unknown): value is $ZodType {
+  if (typeof value !== 'object' || value === null) return false;
+  const internal = (value as { _zod?: unknown })._zod;
+  return typeof internal === 'object' && internal !== null;
+}
+
 export interface CompileTargetInput {
   /** The module namespace returned by `ssrLoadModule` / `this.load`. */
   namespace: ModuleNamespace;
@@ -50,12 +56,15 @@ export function compileTarget(input: CompileTargetInput): CompileTargetResult {
   const { namespace, schemaFile, variant, config } = input;
 
   const effectiveConfig = buildEffectiveConfig(config, variant);
-  const expectedName =
-    effectiveConfig.exportName !== '' && effectiveConfig.exportName !== undefined
-      ? effectiveConfig.exportName
-      : undefined;
+  const expectedName = effectiveConfig.exportName || undefined;
 
   const { name, schema } = selectExport(namespace, schemaFile, expectedName);
+  // selectExport's return type is $ZodType, so walkSchema needs no cast.
+  // Runtime guard kept as a belt-and-braces check against a future refactor
+  // accidentally relaxing selectExport's predicate.
+  if (!isZodType(schema)) {
+    throw new Error(`Internal: selectExport returned a non-$ZodType value for '${name}'`);
+  }
 
   // Walk the schema, optionally with the optimization level the user
   // configured. The result type depends on whether optimization is set.
@@ -68,12 +77,12 @@ export function compileTarget(input: CompileTargetInput): CompileTargetResult {
   let schemaLiteInfo: SchemaLiteInfo = null;
 
   if (optimization) {
-    const result = walkSchema(schema as $ZodType, optimization) as WalkResult;
+    const result = walkSchema(schema, optimization) as WalkResult;
     fields = result.fields;
     schemaLite = result.schemaLite;
     schemaLiteInfo = result.schemaLiteInfo;
   } else {
-    fields = walkSchema(schema as $ZodType);
+    fields = walkSchema(schema);
   }
 
   // Build the codegen-facing config: take the effective config but
