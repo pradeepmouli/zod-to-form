@@ -210,6 +210,103 @@ const compareRows: Row[] = [
   ['Typed recursive config', true, false, false, false]
 ];
 
+type PerfRow = {
+  schema: string;
+  baseline: string;
+  z2f: string;
+  speedup: string;
+  config: string;
+};
+
+// Numbers from benchmarks/RESULTS.md (Chromium via Playwright, April 2026).
+// Baseline = runtime useZodForm with zodResolver (no optimization).
+// z2f = best codegen + L1/L2 configuration per size.
+// Session cost = mount + 20 × keystroke + submit (K=20, onChange mode light editing).
+const perfRows: PerfRow[] = [
+  {
+    schema: 'small (5 fields)',
+    baseline: '502μs',
+    z2f: '397μs',
+    speedup: '1.26×',
+    config: 'codegen L1'
+  },
+  {
+    schema: 'medium (18 fields)',
+    baseline: '1.53ms',
+    z2f: '864μs',
+    speedup: '1.77×',
+    config: 'codegen L2'
+  },
+  {
+    schema: 'large (50 fields)',
+    baseline: '2.31ms',
+    z2f: '1.68ms',
+    speedup: '1.37×',
+    config: 'codegen L1'
+  }
+];
+
+function PerformanceSection(): ReactNode {
+  return (
+    <section className={styles.section}>
+      <div className={styles.container}>
+        <div className={styles.sectionLabel}>Performance</div>
+        <h2 className={styles.sectionTitle}>
+          Faster than hand-wiring a form. <span className={styles.accentTeal}>By a lot.</span>
+        </h2>
+        <p className={styles.sectionDesc}>
+          We measure the full form lifecycle — mount + keystrokes + submit — against a hand-wired{' '}
+          <code>useForm + zodResolver</code> baseline. The build-time walk eliminates per-mount
+          optimizer cost, and <strong>native-rules mode</strong> bypasses Zod entirely for fields
+          whose constraints can be expressed via <code>minLength</code>, <code>pattern</code>,{' '}
+          <code>min</code>, <code>max</code>, and friends.
+        </p>
+        <table className={styles.compareTable}>
+          <thead>
+            <tr>
+              <th>Form size (20 edits)</th>
+              <th>Hand-wired + zodResolver</th>
+              <th>z2f codegen</th>
+              <th>Speedup</th>
+              <th>Config</th>
+            </tr>
+          </thead>
+          <tbody>
+            {perfRows.map((row) => (
+              <tr key={row.schema}>
+                <td>{row.schema}</td>
+                <td>{row.baseline}</td>
+                <td>
+                  <strong>{row.z2f}</strong>
+                </td>
+                <td className={styles.check}>{row.speedup}</td>
+                <td>
+                  <code>{row.config}</code>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className={styles.sectionDesc} style={{ marginTop: '1.5rem' }}>
+          On heavy editing sessions (500 edits), the gap widens to{' '}
+          <strong>2.08× on medium forms</strong> and <strong>2.00× on large forms</strong> — every
+          keystroke in z2f costs ~100ns (a native-rule check) vs ~2.6μs (a full Zod parse) for the
+          baseline. That's a{' '}
+          <strong>
+            <span className={styles.accentPink}>24× per-keystroke speedup</span>
+          </strong>{' '}
+          on the hot path.
+        </p>
+        <div className={styles.heroActions} style={{ marginTop: '1rem' }}>
+          <Link className="button button--outline button--lg" to="/docs/guides/benchmarks">
+            See the full benchmarks →
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function ComparisonSection(): ReactNode {
   return (
     <section className={styles.section}>
@@ -322,6 +419,7 @@ export default function Home(): ReactNode {
           <ArchitectureSection />
           <CodePreviewSection />
           <UseCasesSection />
+          <PerformanceSection />
           <ComparisonSection />
           <EcosystemSection />
           <FinalCTA />
