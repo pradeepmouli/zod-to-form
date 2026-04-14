@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import { randomUUID } from 'node:crypto';
+import { gzipSync } from 'node:zlib';
 import { build, type Rollup } from 'vite';
 import { z2fVite } from '../../src/index.js';
 
@@ -121,12 +122,29 @@ describe('resolver tree-shake', () => {
     expect(code).not.toContain('@hookform/resolvers');
   });
 
-  it('optimized build is smaller than the baseline', async () => {
+  it('optimized build is materially smaller than the baseline (uncompressed + gzipped)', async () => {
     const baseline = await runBuild({});
     const optimized = await runBuild({ validationLevel: 2 });
 
-    const baselineSize = joinChunks(baseline.output).length;
-    const optimizedSize = joinChunks(optimized.output).length;
-    expect(optimizedSize).toBeLessThan(baselineSize);
+    const baselineCode = joinChunks(baseline.output);
+    const optimizedCode = joinChunks(optimized.output);
+
+    const rawDelta = baselineCode.length - optimizedCode.length;
+    // Uncompressed delta: in the externalized lib build (where
+    // @hookform/resolvers is treated as a bare specifier and never
+    // bundled), the strip's contribution is only the removed call
+    // expressions and the dropped `import { zodResolver }` line —
+    // ~50-100 bytes. The full SC-004 1.5KB target is observable in a
+    // real app build that inlines the resolver package, but that
+    // requires resolving react/@hookform/resolvers through the
+    // workspace which this fast-running fixture doesn't do.
+    expect(rawDelta).toBeGreaterThan(40);
+
+    // Gzipped delta tracks the same shape — non-zero confirms the
+    // strip actually removed content rather than reshuffling it.
+    const baselineGz = gzipSync(baselineCode).length;
+    const optimizedGz = gzipSync(optimizedCode).length;
+    const gzDelta = baselineGz - optimizedGz;
+    expect(gzDelta).toBeGreaterThan(10);
   });
 });

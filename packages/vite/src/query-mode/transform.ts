@@ -20,20 +20,14 @@ import type { Z2FViteConfig } from '../types.js';
 /**
  * Default `schemaImportPath` for query-mode targets when the user did not
  * configure one explicitly. The generated module's id is
- * `<schemaFile>?z2f`, so a relative import to the schema file's basename
- * (without extension) resolves back to the original schema through Vite's
- * normal extension auto-resolution. This is what lets `import { signupSchema }
- * from './signup'` work from inside the virtual module.
+ * `<schemaFile>?z2f`, so a relative import to the schema file's full
+ * basename (WITH extension) unambiguously points back at the original
+ * schema. We deliberately keep the extension to avoid the `signup.ts`
+ * vs `signup.tsx` vs `signup/index.ts` ambiguity that would arise from
+ * stripping it and relying on Vite's `resolve.extensions` auto-resolution.
  */
 function defaultSchemaImportPath(schemaFile: string): string {
-  const base = path.basename(schemaFile, path.extname(schemaFile));
-  return `./${base}`;
-}
-
-function isZodType(value: unknown): value is $ZodType {
-  if (typeof value !== 'object' || value === null) return false;
-  const internal = (value as { _zod?: unknown })._zod;
-  return typeof internal === 'object' && internal !== null;
+  return `./${path.basename(schemaFile)}`;
 }
 
 export interface CompileTargetInput {
@@ -73,12 +67,6 @@ export function compileTarget(input: CompileTargetInput): CompileTargetResult {
   const expectedName = effectiveConfig.exportName || undefined;
 
   const { name, schema } = selectExport(namespace, schemaFile, expectedName);
-  // selectExport's return type is $ZodType, so walkSchema needs no cast.
-  // Runtime guard kept as a belt-and-braces check against a future refactor
-  // accidentally relaxing selectExport's predicate.
-  if (!isZodType(schema)) {
-    throw new Error(`Internal: selectExport returned a non-$ZodType value for '${name}'`);
-  }
 
   // Walk the schema, optionally with the optimization level the user
   // configured. The result type depends on whether optimization is set.

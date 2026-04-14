@@ -24,7 +24,8 @@ export type Z2FViteErrorCode =
   | 'Z2F_VITE_REWRITE_PARSE_ERROR'
   | 'Z2F_VITE_WOULD_CLOBBER_FILE'
   | 'Z2F_VITE_INVALID_OPTIONS'
-  | 'Z2F_VITE_NOT_IMPLEMENTED';
+  | 'Z2F_VITE_NOT_IMPLEMENTED'
+  | 'Z2F_VITE_RESOLVER_STRIP_FAILED';
 
 export interface Z2FViteErrorLocation {
   file?: string;

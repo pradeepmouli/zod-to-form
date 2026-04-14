@@ -107,6 +107,63 @@ afterEach(async () => {
 });
 
 describe('query-mode build integration', () => {
+  it('build-mode output for a schema is structurally identical to dev-mode compileTarget output (SC-006)', async () => {
+    // Closes the SC-006 parity gap: the build-mode SSR-server loader
+    // path MUST produce equivalent output to the dev-mode ssrLoadModule
+    // path. Both go through `compileTarget` so the TSX source is the
+    // same; the build path additionally runs esbuild to strip JSX. We
+    // run the dev-mode TSX through the SAME esbuild transform here so
+    // the two end states are apples-to-apples comparable.
+    const { z } = await import('zod');
+    const { transformWithEsbuild } = await import('vite');
+    const { compileTarget } = await import('../../src/query-mode/transform.js');
+
+    const namespace = {
+      signupSchema: z.object({
+        name: z.string().min(2),
+        email: z.string().email()
+      })
+    };
+    const devResult = compileTarget({
+      namespace,
+      schemaFile: '/abs/src/schemas/signup.ts',
+      variant: '',
+      config: {
+        componentName: 'GeneratedForm',
+        mode: 'submit',
+        ui: 'html',
+        exportName: 'signupSchema',
+        schemaImportPath: './signup.ts'
+      }
+    });
+    // Mirror the plugin's load hook: run esbuild over the TSX so JSX
+    // and types are stripped just like the build path produces.
+    const devEsbuild = await transformWithEsbuild(
+      devResult.generatedSource,
+      '/abs/src/schemas/signup.ts.tsx',
+      { loader: 'tsx', sourcemap: false }
+    );
+    const devBody = devEsbuild.code.match(/function\s+GeneratedForm[\s\S]*?\n\}/)?.[0];
+    expect(devBody).toBeDefined();
+
+    // Build path: write the matching schema into the fixture and run a
+    // real build. The build-mode SSR loader spins up its transient
+    // server and feeds the schema through the same compileTarget.
+    const rel = await writeUniqueSchema('signup', SIGNUP_SCHEMA);
+    const output = await runBuild(rel);
+    const allCode = output.output
+      .filter((c): c is Rollup.OutputChunk => c.type === 'chunk')
+      .map((c) => c.code)
+      .join('\n');
+    const buildBody = allCode.match(/function\s+GeneratedForm[\s\S]*?\n\}/)?.[0];
+    expect(buildBody).toBeDefined();
+
+    // Both code paths now have the same JSX-stripped form. They MUST be
+    // byte-identical — any drift indicates the build-mode SSR loader
+    // is feeding a different namespace shape than dev mode.
+    expect(buildBody).toBe(devBody);
+  });
+
   it('emits a bundle that contains the generated form component', async () => {
     const rel = await writeUniqueSchema('signup', SIGNUP_SCHEMA);
     const output = await runBuild(rel);

@@ -21,6 +21,7 @@
  * decides WHEN to call it based on file id + config.
  */
 import MagicString from 'magic-string';
+import { Z2FViteError } from './errors.js';
 
 export interface ResolverStripInput {
   /** The source code of the file (typically `useZodForm.{ts,js}`). */
@@ -49,17 +50,81 @@ export function isUseZodFormId(id: string): boolean {
   return /(^|\/)useZodForm\.(?:ts|tsx|js|jsx|mjs|cjs)$/.test(path);
 }
 
+/** A single `zodResolver(...)` call expression located by the scanner. */
+interface CallSite {
+  /** Byte offset of the leading `z` in `zodResolver`. */
+  start: number;
+  /** Byte offset just past the matching close-paren. */
+  end: number;
+}
+
+/**
+ * Locate every `zodResolver(...)` call expression in `source`. Returns
+ * the call sites in source order, or `null` if any candidate is unbalanced
+ * — callers MUST treat `null` as "do not rewrite this file" (we can't
+ * partially rewrite without leaving a corrupt half-edited result).
+ *
+ * The scanner is kept separate from the rewriter so we can run a full
+ * pass before any `magic-string` mutation. That's the contract that
+ * prevents the unbalanced-paren bail from leaving the file half-stripped.
+ */
+function scanCallSites(source: string): CallSite[] | null {
+  const sites: CallSite[] = [];
+  let cursor = 0;
+  const NEEDLE = 'zodResolver(';
+
+  while (cursor < source.length) {
+    const start = source.indexOf(NEEDLE, cursor);
+    if (start === -1) break;
+
+    // Word-boundary guard: reject when the preceding character is part
+    // of an identifier (so `myzodResolver(`, `_zodResolver(`, etc. are
+    // not matched). The previous character is checked DIRECTLY (no
+    // whitespace skip) — `foozodResolver(` should fail even though
+    // there's no whitespace separator.
+    const prev = start === 0 ? '' : source[start - 1]!;
+    const isIdentifierContinuation = prev !== '' && /[A-Za-z0-9_$]/.test(prev);
+    if (isIdentifierContinuation) {
+      cursor = start + NEEDLE.length;
+      continue;
+    }
+
+    // Find the matching close-paren via single-pass depth tracking.
+    let depth = 1;
+    let i = start + NEEDLE.length;
+    while (i < source.length && depth > 0) {
+      const c = source[i]!;
+      if (c === '(') depth += 1;
+      else if (c === ')') depth -= 1;
+      i += 1;
+    }
+    if (depth !== 0) {
+      // Unbalanced. Bail with `null` so the caller refuses to rewrite
+      // anything in this file rather than leaving a half-edited result.
+      return null;
+    }
+
+    sites.push({ start, end: i });
+    cursor = i;
+  }
+
+  return sites;
+}
+
 /**
  * Rewrite every `zodResolver(...)` call expression in `source` to
- * `undefined`. Uses a regex sweep rather than an AST visitor because
- * the call shape in `useZodForm` is fixed and the strip is a one-shot
- * source-level rewrite — pulling babel back in just for two replacements
- * would be massively over-engineered.
+ * `undefined` AND remove the now-unused
+ * `import { zodResolver } from '@hookform/resolvers/zod'` statement.
  *
- * The regex matches `zodResolver(` followed by any balanced argument
- * list up to the matching close-paren. Balance is tracked manually
- * (regex can't handle balanced parens, but we can scan forward from
- * the opening `(` once we've located it).
+ * Two-pass: first locate every call site (validates balanced parens
+ * across the whole file), then apply edits via magic-string. If the
+ * scan reports unbalanced parens we throw `Z2F_VITE_RESOLVER_STRIP_FAILED`
+ * — partial rewrites would corrupt the file silently.
+ *
+ * Uses a regex sweep + manual paren balancing rather than an AST visitor
+ * because the call shape in `useZodForm` is fixed and the strip is a
+ * one-shot source-level rewrite — pulling Babel back in just for two
+ * replacements would be massively over-engineered.
  */
 export function stripResolver(input: ResolverStripInput): ResolverStripOutput {
   const { source } = input;
@@ -71,75 +136,43 @@ export function stripResolver(input: ResolverStripInput): ResolverStripOutput {
     return { code: source, map: ms.generateMap({ hires: true }), rewritten: 0 };
   }
 
+  // Pass 1: locate every call site. Bail BEFORE any magic-string mutation
+  // if the scan can't find a matching close-paren.
+  const sites = scanCallSites(source);
+  if (sites === null) {
+    throw new Z2FViteError(
+      'Z2F_VITE_RESOLVER_STRIP_FAILED',
+      'resolver-strip aborted: an unbalanced zodResolver(...) call was encountered. Refusing to apply a partial rewrite. Check the source for syntax errors.'
+    );
+  }
+
+  if (sites.length === 0) {
+    const ms = new MagicString(source);
+    return { code: source, map: ms.generateMap({ hires: true }), rewritten: 0 };
+  }
+
+  // Pass 2: apply edits.
   const ms = new MagicString(source);
-  let rewritten = 0;
 
   // Drop the `import { zodResolver } from '@hookform/resolvers/zod'`
   // line entirely. Rollup is conservative about side-effect-only
   // imports — even after every call site becomes `undefined`, the
   // bare `import '@hookform/resolvers/zod'` survives in the bundle
-  // unless we remove it ourselves. Match the import statement (with
-  // optional trailing semicolon and newline) and erase it.
+  // unless we remove it ourselves.
   const importRegex =
     /^\s*import\s*\{\s*zodResolver\s*\}\s*from\s*['"]@hookform\/resolvers\/zod['"]\s*;?\s*\n?/m;
   const importMatch = importRegex.exec(source);
-  if (importMatch !== null && importMatch.index !== undefined) {
+  if (importMatch !== null) {
     ms.remove(importMatch.index, importMatch.index + importMatch[0].length);
   }
 
-  // Locate every `zodResolver(` (followed by anything up to the matching
-  // close paren) and replace the entire call expression with `undefined`.
-  // Walk from left to right so each replacement preserves the byte
-  // offsets of unprocessed regions.
-  let cursor = 0;
-  while (cursor < source.length) {
-    const start = source.indexOf('zodResolver(', cursor);
-    if (start === -1) break;
-
-    // Skip occurrences that aren't an actual call expression (e.g. a
-    // string literal or comment containing the substring). Heuristic:
-    // the previous non-whitespace character must be one of the
-    // operators/punctuation that can precede a call: `(`, `:`, `?`,
-    // `,`, `=`, `>`, `[`, `;`, `{`, `}`, `+`, `&`, `|`, `!`, or the
-    // start of the file. This excludes `'zodResolver(' as a string
-    // literal payload`.
-    let prev = start - 1;
-    while (prev >= 0 && /\s/.test(source[prev]!)) prev -= 1;
-    const prevChar = prev >= 0 ? source[prev]! : '';
-    const isCallContext =
-      prev < 0 ||
-      '(:?,=>[;{}+&|!'.includes(prevChar) ||
-      // `return zodResolver(` and `await zodResolver(` are also call sites;
-      // accept any preceding alpha-only keyword via word-boundary match.
-      /[a-z]/.test(prevChar);
-    if (!isCallContext) {
-      cursor = start + 'zodResolver('.length;
-      continue;
-    }
-
-    // Find the matching close-paren via single-pass depth tracking.
-    let depth = 1;
-    let i = start + 'zodResolver('.length;
-    while (i < source.length && depth > 0) {
-      const c = source[i]!;
-      if (c === '(') depth += 1;
-      else if (c === ')') depth -= 1;
-      i += 1;
-    }
-    if (depth !== 0) {
-      // Unbalanced — bail to avoid mangling. The user's normal Vite
-      // pipeline will surface the syntax error elsewhere.
-      break;
-    }
-
-    ms.overwrite(start, i, 'undefined');
-    rewritten += 1;
-    cursor = i;
+  for (const site of sites) {
+    ms.overwrite(site.start, site.end, 'undefined');
   }
 
   return {
     code: ms.toString(),
     map: ms.generateMap({ hires: true }),
-    rewritten
+    rewritten: sites.length
   };
 }

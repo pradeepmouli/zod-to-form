@@ -7,16 +7,12 @@
  * don't contain `'ZodForm'` anywhere, so a single `indexOf` check keeps
  * rewrite-mode's per-file cost at zero for the common case (research R3).
  *
- * Parsing is deliberately scoped to `JSXElement` nodes only — we don't
- * walk the rest of the AST. That means even a 5000-line file with one
- * `<ZodForm>` call site stays cheap to scan.
+ * The Babel visitor only fires on `JSXElement` nodes. The traversal still
+ * walks the full AST — that's how `@babel/traverse` works — but the per-
+ * node cost outside the visitor is just a type check, so even a 5000-line
+ * file with one `<ZodForm>` call site stays cheap to scan in practice.
  */
 import { parse } from '@babel/parser';
-// `@babel/traverse`'s ESM default export is the function itself; the
-// CJS interop adds a `.default` indirection some bundlers preserve and
-// others don't. The published types model it as a namespace, so we
-// import via a value alias and unwrap at runtime through `unknown`.
-import * as traverseModule from '@babel/traverse';
 import type { NodePath } from '@babel/traverse';
 import type {
   JSXAttribute,
@@ -25,21 +21,31 @@ import type {
   JSXIdentifier,
   Node
 } from '@babel/types';
+import { traverse } from './babel-traverse.js';
 
-type TraverseFn = (ast: unknown, visitor: Record<string, unknown>) => void;
-const traverseAny = traverseModule as unknown as TraverseFn | { default: TraverseFn };
-const traverse: TraverseFn = typeof traverseAny === 'function' ? traverseAny : traverseAny.default;
-
-export interface CandidateAttribute {
-  /** `'schema'`, `'onSubmit'`, etc. — `null` for spread attributes. */
-  name: string | null;
-  /** Byte range of the entire attribute, inclusive of name + value. */
-  range: { start: number; end: number };
-  /** The raw source slice for this attribute (used to preserve formatting). */
-  source: string;
-  /** True iff this is a `{...spread}` attribute. */
-  isSpread: boolean;
-}
+/**
+ * One JSX attribute as it appears on a candidate `<ZodForm>` element.
+ *
+ * Discriminated on `kind`: a `'spread'` attribute (`{...rest}`) has no
+ * name; a `'named'` attribute has one. Encoding the distinction in the
+ * type prevents the "name is null when isSpread is true" coupling from
+ * silently drifting.
+ */
+export type CandidateAttribute =
+  | {
+      kind: 'named';
+      /** Attribute identifier (e.g. `'schema'`, `'onSubmit'`). */
+      name: string;
+      /** Byte range of the entire attribute, inclusive of name + value. */
+      range: { start: number; end: number };
+      /** Raw source slice for this attribute (used to preserve formatting). */
+      source: string;
+    }
+  | {
+      kind: 'spread';
+      range: { start: number; end: number };
+      source: string;
+    };
 
 export interface CandidateSite {
   /**
@@ -56,8 +62,8 @@ export interface CandidateSite {
   selfClosing: boolean;
   /** All attributes in source order, including the `schema` attribute. */
   attributes: CandidateAttribute[];
-  /** The identifier name from `schema={identifier}`, or null if non-Identifier. */
-  schemaIdentifier: string | null;
+  /** The identifier name from `schema={identifier}`. */
+  schemaIdentifier: string;
   /** Children source slice (between opening and closing tags), or '' if self-closing. */
   childrenSource: string;
 }
@@ -82,6 +88,12 @@ export interface SkippedSite {
  * Returns `null` (a discriminator distinct from "scanned and found
  * nothing") when the substring fast-path filtered the file out — the
  * caller can short-circuit before allocating anything else.
+ *
+ * On a Babel parse failure, returns a `ScanResult` with zero candidates
+ * and a single skip diagnostic naming the parser error so it surfaces
+ * in the buildEnd summary. We deliberately don't propagate the parse
+ * error — Vite's main pipeline will report the user's syntax problem
+ * elsewhere with better context.
  */
 export function scanJsx(source: string): ScanResult | null {
   // Substring fast-path. Most files won't contain ZodForm at all.
@@ -94,11 +106,16 @@ export function scanJsx(source: string): ScanResult | null {
       plugins: ['jsx', 'typescript'],
       errorRecovery: false
     });
-  } catch {
-    // Parse failures propagate as Vite errors via the caller; here we
-    // return null so the caller knows to leave the file alone. The
-    // user's normal Vite pipeline will surface the syntax error.
-    return null;
+  } catch (err) {
+    // Surface the parse failure as a buffered skip so the user sees one
+    // line in the buildEnd rewrite-mode summary instead of silently
+    // missing the rewrite. The parse error itself still propagates
+    // through Vite's normal pipeline and the user fixes it there.
+    const message = err instanceof Error ? err.message : String(err);
+    return {
+      candidates: [],
+      skipped: [{ loc: { line: 0, column: 0 }, reason: `babel parse failed: ${message}` }]
+    };
   }
 
   const candidates: CandidateSite[] = [];
@@ -135,18 +152,15 @@ export function scanJsx(source: string): ScanResult | null {
         const range = rangeOf(attr);
         const slice = source.slice(range.start, range.end);
         if (attr.type === 'JSXSpreadAttribute') {
-          attributes.push({ name: null, range, source: slice, isSpread: true });
+          attributes.push({ kind: 'spread', range, source: slice });
           continue;
         }
         const jsxAttr = attr as JSXAttribute;
         const attrName = jsxAttr.name.type === 'JSXIdentifier' ? jsxAttr.name.name : null;
-        attributes.push({
-          name: attrName,
-          range,
-          source: slice,
-          isSpread: false
-        });
-        if (attrName === 'schema') schemaAttr = jsxAttr;
+        if (attrName !== null) {
+          attributes.push({ kind: 'named', name: attrName, range, source: slice });
+          if (attrName === 'schema') schemaAttr = jsxAttr;
+        }
       }
 
       if (schemaAttr === null) {

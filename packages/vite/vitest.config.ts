@@ -13,6 +13,15 @@ export default defineConfig({
     // than plain unit tests; give them extra headroom.
     testTimeout: 30_000,
     hookTimeout: 30_000,
+    // Several integration tests write uniquely-named files into the
+    // shared in-monorepo fixture directories (query-minimal,
+    // rewrite-project, etc.) and rely on `afterEach` cleanup. Running
+    // those test files in parallel would race on directory enumeration
+    // even though the per-file UUIDs prevent name collisions. Sequential
+    // file execution is a tiny throughput cost that eliminates an entire
+    // class of flakes — the unit tests are still parallel within each
+    // file via vitest's default in-file concurrency.
+    fileParallelism: false,
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],

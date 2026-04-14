@@ -63,13 +63,18 @@ async function loadJitiModule(): Promise<JitiModule> {
 }
 
 /**
- * Structural Zod-v4 check. Mirrors the one in the Vite plugin's
- * `config/load.ts` — kept duplicated rather than cross-imported because
- * core can't depend on packages that depend on it.
+ * Structural Zod-v4 check. Tightened to require `_zod` be a non-null
+ * object (not just present) so a plain `{ _zod: null }` doesn't slip
+ * past the guard. Kept here as a duplicate of the Vite plugin's
+ * `config/load.ts` version because core can't depend on @zod-to-form/vite,
+ * and lifting the helper into `@zod-to-form/core/index` would expose a
+ * Zod-internals leak through the main entry point. Both implementations
+ * now agree: presence of a non-null `_zod` object is the contract.
  */
 function isZodSchema(value: unknown): boolean {
   if (typeof value !== 'object' || value === null) return false;
-  return '_zod' in (value as Record<string, unknown>);
+  const zodInternal = (value as { _zod?: unknown })._zod;
+  return typeof zodInternal === 'object' && zodInternal !== null;
 }
 
 function getDefaultExport(moduleExports: Record<string, unknown>): unknown {

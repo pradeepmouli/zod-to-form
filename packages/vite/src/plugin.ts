@@ -75,6 +75,15 @@ interface PluginState {
    * back to the previous valid version (FR-010 / SC-008).
    */
   lastValidConfig: Z2FViteConfig | null;
+  /**
+   * Monotonic generation counter bumped by `handleHotUpdate` when the
+   * config file changes. `ensureConfig` captures this at entry and
+   * skips its final `state.z2fConfig = ...` assignment if the counter
+   * advanced mid-load — that's the only way to win the race where a
+   * config-file HMR fires while a load is already inside `ensureConfig`
+   * with the stale config in flight.
+   */
+  configGeneration: number;
   /** Resolved absolute path to z2f.config.ts (or null if none). */
   configFilePath: string | null;
 }
@@ -103,6 +112,7 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
     buildModeServer: null,
     z2fConfig: null,
     lastValidConfig: null,
+    configGeneration: 0,
     configFilePath: null
   };
 
@@ -197,10 +207,26 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
       // returned `code` is valid JavaScript that the rest of Vite's
       // pipeline can treat normally. Source maps from esbuild stack on
       // top of the (currently null) plugin sourcemap.
-      const transformed = await transformWithEsbuild(compiled.generatedSource, `${id}.tsx`, {
-        loader: 'tsx',
-        sourcemap: true
-      });
+      //
+      // Wrap the call in try/catch so an esbuild rejection (a real bug
+      // we'd want to surface) is reported as a typed CODEGEN_FAILURE
+      // with the schema file attached, rather than leaking a raw
+      // esbuild stack with no breadcrumb.
+      let transformed: { code: string };
+      try {
+        transformed = await transformWithEsbuild(compiled.generatedSource, `${id}.tsx`, {
+          loader: 'tsx',
+          sourcemap: true
+        });
+      } catch (err) {
+        throw new Z2FViteError(
+          'Z2F_VITE_CODEGEN_FAILURE',
+          `esbuild failed to transform generated TSX for '${parsed.schemaFile}': ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+          { file: parsed.schemaFile }
+        );
+      }
       const result = {
         ...compiled,
         generatedSource: transformed.code
@@ -325,10 +351,13 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
 
       // On a config-file change, drop the cached effective config so the
       // next `load` call re-reads `z2f.config.ts` through ssrLoadModule.
+      // Bump the generation counter so any in-flight `ensureConfig` call
+      // notices the invalidation and refuses to commit its stale result.
       // `lastValidConfig` is preserved so a syntax error rolls back
       // gracefully (see ensureConfig's catch path).
       if (result.kind === 'config') {
         state.z2fConfig = null;
+        state.configGeneration += 1;
       }
 
       // Translate evicted cache keys to the Vite module graph entries that
@@ -532,7 +561,15 @@ async function discoverConfigPath(root: string): Promise<string | null> {
 async function ensureConfig(state: PluginState): Promise<Z2FViteConfig> {
   if (state.z2fConfig !== null) return state.z2fConfig;
 
-  // Resolve the config file path on first call.
+  // Capture the generation at the start of the load. If a config-file
+  // HMR fires while we're awaiting ssrLoadModule the counter advances,
+  // and we'll skip our final assignment so the next caller re-runs
+  // against the new file. This is the lock-free way to keep a stale
+  // load from overwriting the just-cleared cache.
+  const generationAtStart = state.configGeneration;
+
+  // Resolve the config file path on first call (or after HMR invalidated
+  // it — discoverConfigPath re-runs on every cleared state).
   if (state.configFilePath === null) {
     if (state.options.configPath !== undefined) {
       state.configFilePath = state.options.configPath;
@@ -546,6 +583,35 @@ async function ensureConfig(state: PluginState): Promise<Z2FViteConfig> {
   }
 
   let loaded: Partial<Z2FViteConfig> = {};
+
+  if (state.configFilePath !== null) {
+    // Distinguish "file vanished" (ENOENT — user renamed/deleted the
+    // config) from "file is invalid" (syntax/runtime error inside it).
+    // ENOENT means the discovery was stale and should be re-run; we
+    // can't keep falling back to a previously-valid config indefinitely
+    // because the user might have intentionally migrated the filename.
+    let fileExists = true;
+    try {
+      await fs.access(state.configFilePath);
+    } catch {
+      fileExists = false;
+    }
+    if (!fileExists) {
+      state.logger.warn(
+        `config file '${state.configFilePath}' no longer exists — re-running auto-discovery`
+      );
+      state.configFilePath = null;
+      state.lastValidConfig = null;
+      // Re-discover from the root and continue with the result.
+      const root = state.resolvedConfig?.root ?? process.cwd();
+      state.configFilePath = await discoverConfigPath(root);
+      if (state.configFilePath === null) {
+        state.logger.info(
+          `no z2f.config.* found after re-discovery — compiling forms with defaults`
+        );
+      }
+    }
+  }
 
   if (state.configFilePath !== null) {
     const loader = state.devServer ?? (await ensureBuildModeServer(state));
@@ -568,8 +634,13 @@ async function ensureConfig(state: PluginState): Promise<Z2FViteConfig> {
         state.logger.warn(
           `failed to reload config '${state.configFilePath}' (${(err as Error).message}); keeping previous valid config`
         );
-        state.z2fConfig = state.lastValidConfig;
-        return state.z2fConfig;
+        // Only commit the fallback if no newer HMR has fired. If the
+        // user is in the middle of editing and saves twice quickly,
+        // the second save's HMR must win.
+        if (state.configGeneration === generationAtStart) {
+          state.z2fConfig = state.lastValidConfig;
+        }
+        return state.lastValidConfig;
       }
       throw new Z2FViteError(
         'Z2F_VITE_CONFIG_INVALID',
@@ -583,13 +654,23 @@ async function ensureConfig(state: PluginState): Promise<Z2FViteConfig> {
     );
   }
 
-  state.z2fConfig = {
+  const computed: Z2FViteConfig = {
     ...DEFAULT_CONFIG,
     ...loaded,
     ...state.options.configOverride
   };
-  state.lastValidConfig = state.z2fConfig;
-  return state.z2fConfig;
+
+  // Generation race: if the config file changed underneath us during the
+  // ssrLoadModule await, refuse to commit our stale result. The next
+  // `ensureConfig` call (after the now-cleared state.z2fConfig is read
+  // as null) re-runs against the new file. We still return the computed
+  // value to the current caller so this load completes — but we don't
+  // poison the cache.
+  if (state.configGeneration === generationAtStart) {
+    state.z2fConfig = computed;
+    state.lastValidConfig = computed;
+  }
+  return computed;
 }
 
 /**

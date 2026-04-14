@@ -15,10 +15,15 @@ describe('scanJsx', () => {
     expect(scanJsx('function App() { return <div>hi</div>; }')).toBeNull();
   });
 
-  it('returns null for malformed source (parse failure)', () => {
-    // We deliberately swallow the parse failure here — the user's
-    // normal Vite pipeline will surface the syntax error elsewhere.
-    expect(scanJsx('const ZodForm = ; <ZodForm schema={x} />')).toBeNull();
+  it('surfaces parse failure as a buffered skip diagnostic (not silent null)', () => {
+    // The parse error itself still propagates through Vite's normal
+    // pipeline — but we record one skip line so the buildEnd summary
+    // shows the user that rewrite-mode tried and bailed.
+    const result = scanJsx('const ZodForm = ; <ZodForm schema={x} />');
+    expect(result).not.toBeNull();
+    expect(result?.candidates).toHaveLength(0);
+    expect(result?.skipped).toHaveLength(1);
+    expect(result?.skipped[0]?.reason).toMatch(/babel parse failed/);
   });
 
   it('finds a single <ZodForm> with an Identifier schema prop', () => {
@@ -36,8 +41,8 @@ export function App() {
     expect(result?.candidates[0]?.selfClosing).toBe(true);
     // The schema attribute must appear in the attribute list (so rewrite-source can remove it)
     const attrs = result?.candidates[0]?.attributes ?? [];
-    expect(attrs.some((a) => a.name === 'schema')).toBe(true);
-    expect(attrs.some((a) => a.name === 'onSubmit')).toBe(true);
+    expect(attrs.some((a) => a.kind === 'named' && a.name === 'schema')).toBe(true);
+    expect(attrs.some((a) => a.kind === 'named' && a.name === 'onSubmit')).toBe(true);
   });
 
   it('finds multiple <ZodForm> elements in one file', () => {
@@ -125,8 +130,8 @@ const App = (props) => <ZodForm schema={s} {...props} onSubmit={f} />;
     const result = scanJsx(source);
     expect(result?.candidates).toHaveLength(1);
     const attrs = result?.candidates[0]?.attributes ?? [];
-    expect(attrs.some((a) => a.isSpread)).toBe(true);
-    expect(attrs.filter((a) => a.name === 'onSubmit')).toHaveLength(1);
+    expect(attrs.some((a) => a.kind === 'spread')).toBe(true);
+    expect(attrs.filter((a) => a.kind === 'named' && a.name === 'onSubmit')).toHaveLength(1);
   });
 
   it('records source byte ranges for the opening and closing tags', () => {

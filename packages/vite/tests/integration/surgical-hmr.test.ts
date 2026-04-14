@@ -101,7 +101,18 @@ describe('surgical HMR (20 schemas)', () => {
       for (const node of stale) server.moduleGraph.invalidateModule(node);
     }
     server.watcher.emit('change', form7Path);
-    await new Promise((r) => setImmediate(r));
+
+    // Poll until form7 actually recompiles (its source contains the new
+    // `extraSeven` field). A single setImmediate yield only drains one
+    // tick of HMR work — if `handleHotUpdate` ever grows an async step
+    // the eviction would race with the assertion below. Polling against
+    // an observable side-effect is robust to that change.
+    const deadline = Date.now() + 2_000;
+    while (Date.now() < deadline) {
+      const probe = await loadOne(server, 7);
+      if (probe.includes('extraSeven')) break;
+      await new Promise((r) => setTimeout(r, 10));
+    }
 
     // Re-load all 20 schemas. Forms 1-6 and 8-20 should match the snapshot
     // exactly (cache hits); form7 should differ (recompiled).

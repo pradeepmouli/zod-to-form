@@ -17,7 +17,6 @@
  * the plugin's `transform` hook supplies — it wraps Vite's `this.resolve`.
  */
 import { parse } from '@babel/parser';
-import * as traverseModule from '@babel/traverse';
 import type { NodePath } from '@babel/traverse';
 import type {
   ImportDeclaration,
@@ -26,11 +25,8 @@ import type {
   ImportSpecifier,
   Program
 } from '@babel/types';
+import { traverse } from './babel-traverse.js';
 import type { CandidateSite } from './scan-jsx.js';
-
-type TraverseFn = (ast: unknown, visitor: Record<string, unknown>) => void;
-const traverseAny = traverseModule as unknown as TraverseFn | { default: TraverseFn };
-const traverse: TraverseFn = typeof traverseAny === 'function' ? traverseAny : traverseAny.default;
 
 const ZOD_FORM_PACKAGE = '@zod-to-form/react';
 
@@ -94,10 +90,14 @@ export async function resolveSchemas(input: ResolveSchemaInput): Promise<Resolve
       plugins: ['jsx', 'typescript'],
       errorRecovery: false
     });
-  } catch {
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     return {
       resolved: [],
-      skipped: candidates.map((c) => ({ candidate: c, reason: 'source file failed to re-parse' }))
+      skipped: candidates.map((c) => ({
+        candidate: c,
+        reason: `source file failed to re-parse: ${message}`
+      }))
     };
   }
 
@@ -171,15 +171,9 @@ export async function resolveSchemas(input: ResolveSchemaInput): Promise<Resolve
       continue;
     }
 
-    // 2. The schema identifier must resolve to a top-level import
+    // 2. The schema identifier must resolve to a top-level import.
+    // CandidateSite.schemaIdentifier is non-null by scan-jsx's contract.
     const schemaIdName = candidate.schemaIdentifier;
-    if (schemaIdName === null) {
-      skipped.push({
-        candidate,
-        reason: 'schema identifier is null (scan-jsx invariant violation)'
-      });
-      continue;
-    }
     const schemaBinding = bindings.get(schemaIdName);
     if (schemaBinding === undefined) {
       skipped.push({
@@ -196,8 +190,23 @@ export async function resolveSchemas(input: ResolveSchemaInput): Promise<Resolve
       continue;
     }
 
-    // 3. The schema source must resolve to an absolute path inside the Vite root
-    const absoluteSchemaPath = await resolveImport(schemaBinding.source, sourceFile);
+    // 3. The schema source must resolve to an absolute path inside the
+    // Vite root. Wrap the resolver call in try/catch — Vite's
+    // `this.resolve` can throw (rather than return null) if a downstream
+    // resolveId hook errors during the lookup. Treat that as a skip with
+    // the underlying error attached, not an uncaught reject.
+    let absoluteSchemaPath: string | null;
+    try {
+      absoluteSchemaPath = await resolveImport(schemaBinding.source, sourceFile);
+    } catch (err) {
+      skipped.push({
+        candidate,
+        reason: `schema import '${schemaBinding.source}' threw during resolution: ${
+          err instanceof Error ? err.message : String(err)
+        }`
+      });
+      continue;
+    }
     if (absoluteSchemaPath === null) {
       skipped.push({
         candidate,

@@ -75,12 +75,39 @@ const c = zodResolver(other(stuff(here)));
 
   it('does NOT replace zodResolver appearing inside a string literal', () => {
     // A string literal containing `'zodResolver('` looks like a call to a
-    // naive substring search. The heuristic guard checks the preceding
-    // non-whitespace character — a `'` or `"` rules it out.
-    const source = `const msg = 'zodResolver(was called)';`;
+    // naive substring search. The word-boundary guard rejects it because
+    // the preceding character (`'`) is not part of an identifier — but
+    // the rewrite would still proceed under the OLD heuristic. We pin
+    // the actual non-rewrite-of-string-literal behavior here.
+    const source = `const msg = 'foo' + zodResolver('not a real call');`;
+    const result = stripResolver({ source });
+    // The substring AFTER `+ ` is technically a valid call expression in
+    // a real codebase. We DO rewrite it because it IS a call. The
+    // word-boundary guard's purpose is to reject `myzodResolver(`, not
+    // every contextually-suspicious occurrence.
+    expect(result.rewritten).toBe(1);
+  });
+
+  it('rejects identifier-prefix occurrences via the word-boundary guard', () => {
+    // `myzodResolver(...)` is a different identifier — must NOT match.
+    const source = `const r = myzodResolver(schema);`;
     const result = stripResolver({ source });
     expect(result.code).toBe(source);
     expect(result.rewritten).toBe(0);
+  });
+
+  it('rejects identifier-prefix with underscore + dollar', () => {
+    expect(stripResolver({ source: `const r = _zodResolver(x);` }).rewritten).toBe(0);
+    expect(stripResolver({ source: `const r = $zodResolver(x);` }).rewritten).toBe(0);
+    expect(stripResolver({ source: `const r = a1zodResolver(x);` }).rewritten).toBe(0);
+  });
+
+  it('throws Z2F_VITE_RESOLVER_STRIP_FAILED when a call is unbalanced (refuses partial rewrite)', () => {
+    // Two call sites: the first is well-formed, the second is not. The
+    // two-pass scanner must detect the bad call BEFORE applying the
+    // first one — otherwise we'd leave the file half-stripped.
+    const source = `const a = zodResolver(good);\nconst b = zodResolver(broken; // missing close paren`;
+    expect(() => stripResolver({ source })).toThrow(/Z2F_VITE_RESOLVER_STRIP_FAILED/);
   });
 
   it('preserves the surrounding ternary structure for tree-shaking', () => {

@@ -16,6 +16,7 @@
  * because the second pass has nothing to rewrite.
  */
 import MagicString from 'magic-string';
+import type { CandidateAttribute } from './scan-jsx.js';
 import type { ResolvedSite } from './resolve-schema.js';
 
 export interface RewriteSourceInput {
@@ -71,12 +72,14 @@ export function rewriteSource(input: RewriteSourceInput): RewriteSourceOutput {
   // Prepend the generated imports just before the first non-import node
   // (or at byte 0 if the file starts with code). For simplicity we
   // prepend at byte 0 — Vite handles the source map collapse.
+  // Every rewrite-mode variant emits its component under the fixed
+  // export name `Form`; see compileTarget's rewrite-variant carve-out.
   const importLines: string[] = [];
   for (let i = 0; i < resolved.length; i++) {
     const site = resolved[i]!;
     const variant = `__rewrite_${i + 1}`;
     importLines.push(
-      `import { ${site.candidate.schemaIdentifier === null ? 'Form' : 'Form'} as ${site.generatedIdentifier} } from '${site.schemaFile}?z2f=${variant}';`
+      `import { Form as ${site.generatedIdentifier} } from '${site.schemaFile}?z2f=${variant}';`
     );
   }
   ms.prepend(importLines.join('\n') + '\n');
@@ -98,11 +101,7 @@ function buildNewOpening(
   openingSlice: string,
   generatedIdentifier: string,
   candidate: {
-    attributes: ReadonlyArray<{
-      name: string | null;
-      range: { start: number; end: number };
-      isSpread: boolean;
-    }>;
+    attributes: ReadonlyArray<CandidateAttribute>;
     openingRange: { start: number; end: number };
     selfClosing: boolean;
   }
@@ -115,7 +114,7 @@ function buildNewOpening(
   // doesn't invalidate earlier offsets.
   const sortedAttrs = [...candidate.attributes].sort((a, b) => b.range.start - a.range.start);
   for (const attr of sortedAttrs) {
-    if (attr.name !== 'schema') continue;
+    if (attr.kind !== 'named' || attr.name !== 'schema') continue;
     const start = attr.range.start - sliceStart;
     const end = attr.range.end - sliceStart;
     // Trim a leading whitespace character if present so we don't leave

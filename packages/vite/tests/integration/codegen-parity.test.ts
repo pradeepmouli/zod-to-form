@@ -88,6 +88,53 @@ const CASES: ParityCase[] = [
         lng: z.number()
       })
     })
+  },
+  {
+    name: 'discriminated union (wrapped in object)',
+    exportName: 'shapeSchema',
+    componentName: 'ShapeForm',
+    schema: z.object({
+      shape: z.discriminatedUnion('kind', [
+        z.object({ kind: z.literal('circle'), radius: z.number() }),
+        z.object({ kind: z.literal('square'), side: z.number() }),
+        z.object({ kind: z.literal('rect'), width: z.number(), height: z.number() })
+      ])
+    })
+  },
+  {
+    name: 'array of strings',
+    exportName: 'tagsSchema',
+    componentName: 'TagsForm',
+    schema: z.object({
+      tags: z.array(z.string()).min(1)
+    })
+  },
+  {
+    name: 'array of objects',
+    exportName: 'todoSchema',
+    componentName: 'TodoForm',
+    schema: z.object({
+      items: z.array(
+        z.object({
+          title: z.string(),
+          done: z.boolean()
+        })
+      )
+    })
+  },
+  {
+    name: 'object with refine',
+    exportName: 'pwSchema',
+    componentName: 'PasswordForm',
+    schema: z
+      .object({
+        password: z.string().min(8),
+        confirm: z.string()
+      })
+      .refine((d) => d.password === d.confirm, {
+        message: 'passwords must match',
+        path: ['confirm']
+      })
   }
 ];
 
