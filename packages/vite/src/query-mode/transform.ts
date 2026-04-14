@@ -102,13 +102,20 @@ export function compileTarget(input: CompileTargetInput): CompileTargetResult {
   // Build the codegen-facing config: take the effective config but
   // overwrite exportName with the actually-selected name (so auto-detect
   // mode produces the right import statements), inject the default
-  // schemaImportPath when the user didn't supply one (the virtual module
-  // sits next to the schema file, so a relative import to the basename
-  // resolves correctly), and inject schemaLite info if optimization
-  // produced any effects.
+  // schemaImportPath when the user didn't supply one, and inject
+  // schemaLite info if optimization produced any effects.
+  //
+  // Rewrite-mode variants always emit under the fixed component name
+  // `Form` regardless of `componentName`. The synthesized rewrite-mode
+  // import (`import { Form as _z2fGeneratedForm_<n> }`) is decoupled
+  // from the user's chosen name this way — the rewrite emitter can hard-
+  // code `Form` instead of threading the user's configured name through
+  // the AST visitor.
+  const isRewriteVariant = /^__rewrite_\d+$/.test(variant);
   const codegenConfig: CodegenConfig = {
     ...effectiveConfig,
     exportName: name,
+    componentName: isRewriteVariant ? 'Form' : (effectiveConfig.componentName ?? 'Form'),
     schemaImportPath: effectiveConfig.schemaImportPath ?? defaultSchemaImportPath(schemaFile),
     schemaLite: schemaLite ?? undefined,
     schemaLiteInfo: schemaLiteInfo ?? undefined

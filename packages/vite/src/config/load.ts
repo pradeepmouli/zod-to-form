@@ -43,7 +43,12 @@ export function buildEffectiveConfig(config: Z2FViteConfig, variant: string): Ef
   // know about it and would copy it through.
   const { variants, ...base } = config;
 
-  if (variant === '') {
+  // Default variant + plugin-internal `__rewrite_<n>` variants always
+  // resolve to the base config. Rewrite-mode synthesizes one variant per
+  // `<ZodForm>` site to give each generated component its own cache
+  // entry, but they share the user's global config — there's no per-site
+  // override mechanism in v1.
+  if (variant === '' || /^__rewrite_\d+$/.test(variant)) {
     return base;
   }
 

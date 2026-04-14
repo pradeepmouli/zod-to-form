@@ -25,6 +25,9 @@ import { createLogger } from './logger.js';
 import type { Logger } from './logger.js';
 import { parseZ2FId, resolveZ2FId } from './query-mode/resolve-id.js';
 import { compileTarget } from './query-mode/transform.js';
+import { resolveSchemas } from './rewrite-mode/resolve-schema.js';
+import { rewriteSource } from './rewrite-mode/rewrite-source.js';
+import { scanJsx } from './rewrite-mode/scan-jsx.js';
 import type { GenerationTarget, PluginOptions, Z2FViteConfig } from './types.js';
 
 const PLUGIN_NAME = '@zod-to-form/vite';
@@ -44,6 +47,12 @@ interface PluginState {
   options: PluginOptions;
   logger: Logger;
   cache: CompilationCache;
+  /** Counters for rewrite-mode summary at buildEnd. */
+  rewriteFilesProcessed: number;
+  rewriteSitesRewritten: number;
+  /** Compiled rewrite include/exclude pattern matchers. */
+  rewriteInclude: RegExp[] | null;
+  rewriteExclude: RegExp[];
   /** Captured during configResolved. */
   resolvedConfig: ResolvedConfig | null;
   /** Captured during configureServer. Null in build mode. */
@@ -68,12 +77,26 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
     options,
     logger: createLogger(options.logLevel ?? 'info'),
     cache: createCompilationCache(),
+    rewriteFilesProcessed: 0,
+    rewriteSitesRewritten: 0,
+    // Default include = every TS/JS source file. Defaults set lazily so
+    // the empty `rewrite: {}` case still gets sensible globbing.
+    rewriteInclude:
+      options.rewrite === undefined
+        ? null
+        : compileGlobs(options.rewrite.include ?? ['**/*.{ts,tsx,js,jsx}']),
+    rewriteExclude:
+      options.rewrite === undefined
+        ? []
+        : compileGlobs([...(options.rewrite.exclude ?? []), '**/node_modules/**', '**/dist/**']),
     resolvedConfig: null,
     devServer: null,
     buildModeServer: null,
     z2fConfig: null,
     configFilePath: null
   };
+
+  const isRewriteEnabled = options.rewrite !== undefined;
 
   return {
     name: PLUGIN_NAME,
@@ -88,6 +111,10 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
     },
 
     async buildEnd(): Promise<void> {
+      // Flush the rewrite-mode skip summary at info level (or higher).
+      if (isRewriteEnabled) {
+        state.logger.flushRewriteSummary(state.rewriteFilesProcessed, state.rewriteSitesRewritten);
+      }
       // Tear down the transient SSR loader spun up for build-mode schema
       // evaluation. Safe to call even if it was never created.
       if (state.buildModeServer !== null) {
@@ -190,6 +217,71 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
       return result.generatedSource;
     },
 
+    async transform(code, id) {
+      // Rewrite mode is opt-in (FR-024); when `options.rewrite` is
+      // undefined the hook is a no-op for every file.
+      if (!isRewriteEnabled) return null;
+
+      // Strip the query string before glob-matching so `?z2f` virtual ids
+      // aren't accidentally targeted (the substring check below would also
+      // exclude them, but this saves the parse).
+      const queryIdx = id.indexOf('?');
+      const filePath = queryIdx === -1 ? id : id.slice(0, queryIdx);
+
+      // Glob-filter against include / exclude. Filenames must match at
+      // least one include pattern and zero exclude patterns.
+      if (!matchesAny(filePath, state.rewriteInclude ?? [])) return null;
+      if (matchesAny(filePath, state.rewriteExclude)) return null;
+
+      // Substring fast-path inside scanJsx returns null for files without
+      // ZodForm — keep this hook's overhead at zero for the common case.
+      const scan = scanJsx(code);
+      if (scan === null) return null;
+
+      state.rewriteFilesProcessed += 1;
+
+      // Buffer scan-time skip diagnostics through the logger.
+      for (const skip of scan.skipped) {
+        state.logger.bufferRewriteSkip(filePath, skip.loc.line, skip.loc.column, skip.reason);
+      }
+
+      if (scan.candidates.length === 0) {
+        return null;
+      }
+
+      // Resolve schemas via Vite's resolver so aliases / tsconfig paths fire.
+      const root = state.resolvedConfig?.root ?? process.cwd();
+      const resolvePluginContext = this;
+      const resolved = await resolveSchemas({
+        source: code,
+        candidates: scan.candidates,
+        sourceFile: filePath,
+        viteRoot: root,
+        resolveImport: async (specifier, importer): Promise<string | null> => {
+          const r = await resolvePluginContext.resolve(specifier, importer, { skipSelf: true });
+          return r === null ? null : r.id;
+        }
+      });
+
+      // Buffer resolve-time skip diagnostics.
+      for (const skip of resolved.skipped) {
+        state.logger.bufferRewriteSkip(
+          filePath,
+          skip.candidate.loc.line,
+          skip.candidate.loc.column,
+          skip.reason
+        );
+      }
+
+      if (resolved.resolved.length === 0) {
+        return null;
+      }
+
+      const result = rewriteSource({ source: code, resolved: resolved.resolved });
+      state.rewriteSitesRewritten += result.rewritten;
+      return { code: result.code, map: result.map };
+    },
+
     handleHotUpdate(ctx): undefined {
       const result = computeHmrInvalidation({
         changedFile: ctx.file,
@@ -265,6 +357,68 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
 export default z2fVite;
 
 // ─── Helpers ─────────────────────────────────────────────────────────
+
+/**
+ * Compile a list of glob patterns into RegExps. Supports `**` (any path),
+ * `*` (any segment), and `{a,b}` (alternation) — enough for the rewrite
+ * include/exclude config without pulling in a full glob library.
+ */
+function compileGlobs(patterns: ReadonlyArray<string>): RegExp[] {
+  return patterns.map((p) => globToRegex(p));
+}
+
+function globToRegex(glob: string): RegExp {
+  // Convert glob to regex: handle braces, then `**`, then `*`, then `?`,
+  // escaping every other regex metacharacter.
+  let result = '';
+  let i = 0;
+  while (i < glob.length) {
+    const c = glob[i]!;
+    if (c === '*') {
+      if (glob[i + 1] === '*') {
+        result += '.*';
+        i += 2;
+        continue;
+      }
+      result += '[^/]*';
+      i += 1;
+      continue;
+    }
+    if (c === '?') {
+      result += '[^/]';
+      i += 1;
+      continue;
+    }
+    if (c === '{') {
+      const close = glob.indexOf('}', i);
+      if (close === -1) {
+        result += '\\{';
+        i += 1;
+        continue;
+      }
+      const inner = glob
+        .slice(i + 1, close)
+        .split(',')
+        .map((s) => s.replace(/[.+^$()|[\]\\]/g, '\\$&'));
+      result += '(?:' + inner.join('|') + ')';
+      i = close + 1;
+      continue;
+    }
+    if (/[.+^$(){}|[\]\\]/.test(c)) {
+      result += '\\' + c;
+    } else {
+      result += c;
+    }
+    i += 1;
+  }
+  return new RegExp('^' + result + '$');
+}
+
+function matchesAny(filePath: string, patterns: ReadonlyArray<RegExp>): boolean {
+  // Normalize separators for cross-platform matching.
+  const normalized = filePath.replace(/\\/g, '/');
+  return patterns.some((p) => p.test(normalized));
+}
 
 function validateOptions(options: PluginOptions): void {
   const allowedKeys = new Set(['configPath', 'configOverride', 'rewrite', 'write', 'logLevel']);

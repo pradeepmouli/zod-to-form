@@ -358,6 +358,9 @@ importers:
       '@babel/traverse':
         specifier: ^7.28.0
         version: 7.29.0
+      '@babel/types':
+        specifier: ^7.28.0
+        version: 7.29.0
       '@zod-to-form/codegen':
         specifier: workspace:*
         version: link:../codegen
