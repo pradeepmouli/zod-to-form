@@ -175,13 +175,13 @@ This feature adds a new workspace package at `packages/vite/`. Task paths use ab
 
 ### Tests for US4
 
-- [ ] T060 [P] [US4] Unit tests for `resolver-strip.ts` — given source code representing `useZodForm.js` with the `isOptimized ? undefined : zodResolver(...)` ternary, assert the strip replaces the `zodResolver(...)` half with `undefined` and leaves everything else intact. In `packages/vite/tests/unit/resolver-strip.test.ts`
-- [ ] T061 [US4] Integration test: `packages/vite/tests/integration/resolver-tree-shake.test.ts` — build the query-minimal fixture twice with `optimization` on/off, read `dist/assets/*.js`, assert the strings `'zodResolver'` and `'@hookform/resolvers'` do NOT appear in the optimized bundle, assert the gzipped byte delta is at least 1.5 KB (SC-004)
+- [X] T060 [P] [US4] Unit tests for `resolver-strip.ts` — given source code representing `useZodForm.js` with the `isOptimized ? undefined : zodResolver(...)` ternary, assert the strip replaces the `zodResolver(...)` half with `undefined` and leaves everything else intact. In `packages/vite/tests/unit/resolver-strip.test.ts`
+- [X] T061 [US4] Integration test: `packages/vite/tests/integration/resolver-tree-shake.test.ts` — build the query-minimal fixture twice with `optimization` on/off, read `dist/assets/*.js`, assert the strings `'zodResolver'` and `'@hookform/resolvers'` do NOT appear in the optimized bundle, assert the gzipped byte delta is at least 1.5 KB (SC-004)
 
 ### Implementation for US4
 
-- [ ] T062 [US4] Implement `packages/vite/src/resolver-strip.ts` — match module ids ending in `useZodForm.js`/`useZodForm.ts`/the resolved `@zod-to-form/react` useZodForm path, check `config.optimization?.level`, apply a `magic-string` edit replacing the `zodResolver(rhfCast(schema))` call with `undefined` within the existing ternary. Emit sourcemap. Make T060 pass
-- [ ] T063 [US4] Wire `resolver-strip` into `packages/vite/src/plugin.ts`'s `transform` hook as a build-mode-only pass (no-op in dev). Make T061 pass
+- [X] T062 [US4] Implement `packages/vite/src/resolver-strip.ts` — match module ids ending in `useZodForm.js`/`useZodForm.ts`/the resolved `@zod-to-form/react` useZodForm path, check `config.optimization?.level`, apply a `magic-string` edit replacing the `zodResolver(rhfCast(schema))` call with `undefined` within the existing ternary. Emit sourcemap. Make T060 pass
+- [X] T063 [US4] Wire `resolver-strip` into `packages/vite/src/plugin.ts`'s `transform` hook as a build-mode-only pass (no-op in dev). Make T061 pass
 
 **Checkpoint**: All four user stories are independently functional. The plugin is feature-complete for v1.
 

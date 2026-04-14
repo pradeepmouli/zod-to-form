@@ -30,6 +30,7 @@ import { compileTarget } from './query-mode/transform.js';
 import { resolveSchemas } from './rewrite-mode/resolve-schema.js';
 import { rewriteSource } from './rewrite-mode/rewrite-source.js';
 import { scanJsx } from './rewrite-mode/scan-jsx.js';
+import { isUseZodFormId, stripResolver } from './resolver-strip.js';
 import type { GenerationTarget, PluginOptions, Z2FViteConfig } from './types.js';
 
 const PLUGIN_NAME = '@zod-to-form/vite';
@@ -227,6 +228,25 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
     },
 
     async transform(code, id) {
+      // Resolver tree-shake (FR-013): when the user's effective config
+      // has validation optimization enabled, replace every
+      // `zodResolver(...)` call in `useZodForm` with `undefined` so
+      // Rollup can tree-shake the @hookform/resolvers import. Build-mode
+      // only (state.resolvedConfig?.command === 'build') so dev keeps
+      // the runtime resolver path for fast iteration.
+      if (state.resolvedConfig?.command === 'build' && isUseZodFormId(id)) {
+        const z2fConfig = await ensureConfig(state);
+        if (z2fConfig.validationLevel !== undefined) {
+          const stripped = stripResolver({ source: code });
+          if (stripped.rewritten > 0) {
+            state.logger.debug(
+              `resolver-strip removed ${stripped.rewritten} zodResolver call(s) from ${id}`
+            );
+            return { code: stripped.code, map: stripped.map };
+          }
+        }
+      }
+
       // Rewrite mode is opt-in (FR-024); when `options.rewrite` is
       // undefined the hook is a no-op for every file.
       if (!isRewriteEnabled) return null;
