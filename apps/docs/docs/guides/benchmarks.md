@@ -160,25 +160,6 @@ At large size, **codegen L1 is 2.00× faster** than runtime no-opt at K=500. Cod
 | Production form, static schema, heavy refines/transforms | **codegen L1** | L2 falls back for refined fields; L1 handles them uniformly |
 | Large form (50+ fields) in a long-running UI | **codegen L1** | Winner at large size, K=500 |
 
-## Comparison with `zod-aot`
-
-[`zod-aot`](https://github.com/wakita181009/zod-aot) is a Vite plugin that compiles Zod v4 schemas into flat inlined validation functions at build time, claiming up to **64×** speedup on whole-schema `.parse()` calls.
-
-**Both projects pre-walk the schema at build time — they differ on what they optimize:**
-
-| Axis | z2f | zod-aot |
-|---|---|---|
-| Whole-schema `.parse()` throughput | untouched (~2.6μs/parse on 50 fields) | **~40ns/parse** (64× faster) |
-| Per-keystroke validation cost | **~100ns** (L2 native rule) | N/A — zod-aot is schema-level |
-| Form field generation | **yes** — emits `FieldRenderer`/generated JSX | no — zod-aot is validation-only |
-| Handles `.refine()` / `.transform()` | yes (falls back to `zodSchema` mode per field) | partial — falls back to runtime Zod |
-
-**For form lifecycles, L2 beats zod-aot on the keystroke axis** because per-field validation is inherently less work than whole-form validation when only one field changed. Even zod-aot's flat 40ns compiled parse has to visit all 50 fields on every invocation.
-
-**Where zod-aot wins: submit.** A 40ns compiled parse saves ~2.5μs per submit on large forms vs z2f's L2 submit (~4.5μs). Once per session, so this matters at ~1000+ submits per second — not typical for forms.
-
-**Where the two could stack:** Using zod-aot's compiled output to speed up L1's per-field `safeParse` fallback (the `refine`/`transform` path) would give L1 near-L2 performance. This is a future enhancement; it doesn't help L2 at all.
-
 ## Methodology notes
 
 - **Harness**: [`vitest bench`](https://vitest.dev/guide/features.html#benchmarking) in Chromium via Playwright. Each bench gets ~1000ms of wall time + warmup. Reported means use `1 / hz` (per-op time derived from throughput), not `median` — Chrome clamps `performance.now()` resolution to `~100μs` for fingerprinting protection, so median becomes unreliable for sub-ms operations.
