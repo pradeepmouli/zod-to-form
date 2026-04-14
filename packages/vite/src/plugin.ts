@@ -9,6 +9,8 @@
  * - `handleHotUpdate` → `computeHmrInvalidation` + module-graph translation
  * - `configureServer` → captures the dev server reference for `load`
  */
+import path from 'node:path';
+import { promises as fs } from 'node:fs';
 import {
   createServer,
   transformWithEsbuild,
@@ -66,6 +68,12 @@ interface PluginState {
   buildModeServer: ViteDevServer | null;
   /** The plugin's effective Z2FViteConfig — populated lazily on first load. */
   z2fConfig: Z2FViteConfig | null;
+  /**
+   * The most recent successfully-loaded config. Survives across config
+   * reloads so a syntax error in `z2f.config.ts` mid-session can fall
+   * back to the previous valid version (FR-010 / SC-008).
+   */
+  lastValidConfig: Z2FViteConfig | null;
   /** Resolved absolute path to z2f.config.ts (or null if none). */
   configFilePath: string | null;
 }
@@ -93,6 +101,7 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
     devServer: null,
     buildModeServer: null,
     z2fConfig: null,
+    lastValidConfig: null,
     configFilePath: null
   };
 
@@ -294,6 +303,14 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
         return undefined;
       }
 
+      // On a config-file change, drop the cached effective config so the
+      // next `load` call re-reads `z2f.config.ts` through ssrLoadModule.
+      // `lastValidConfig` is preserved so a syntax error rolls back
+      // gracefully (see ensureConfig's catch path).
+      if (result.kind === 'config') {
+        state.z2fConfig = null;
+      }
+
       // Translate evicted cache keys to the Vite module graph entries that
       // need invalidation. Each cache key has the form
       // `<schemaFile>::<variant>::<configHash>` and maps to a virtual module
@@ -455,37 +472,94 @@ function validateOptions(options: PluginOptions): void {
 }
 
 /**
+ * Standard `z2f.config.*` filenames probed by auto-discovery, in priority
+ * order. The first existing one wins.
+ */
+const CONFIG_CANDIDATES = ['z2f.config.ts', 'z2f.config.mts', 'z2f.config.js', 'z2f.config.mjs'];
+
+/**
+ * Walk the candidate config filenames in `root` and return the absolute
+ * path of the first one that exists, or `null` if none do.
+ */
+async function discoverConfigPath(root: string): Promise<string | null> {
+  for (const name of CONFIG_CANDIDATES) {
+    const candidate = path.join(root, name);
+    try {
+      await fs.access(candidate);
+      return candidate;
+    } catch {
+      // Not present — try the next.
+    }
+  }
+  return null;
+}
+
+/**
  * Load (or return cached) the user's `z2f.config.ts`, merging
- * `options.configOverride` on top. If no `configPath` is set, falls back
- * to `DEFAULT_CONFIG` merged with `options.configOverride`.
+ * `options.configOverride` on top.
  *
- * Build-mode config loading (via `this.load` inside a plugin context) is
- * not yet implemented — if the user explicitly supplied a `configPath`
- * but there's no dev server, we throw rather than silently dropping the
- * user's config.
+ * Resolution order:
+ *   1. `options.configPath` if explicitly set
+ *   2. Auto-discovery of `z2f.config.{ts,mts,js,mjs}` in the Vite root
+ *   3. Fall back to `DEFAULT_CONFIG` merged with `options.configOverride`
+ *
+ * If a load attempt FAILS and we already had a previously-valid config
+ * (from before an HMR-triggered reload), we keep the old config and log
+ * a warning. This is the FR-010 / SC-008 "dev server stays alive when
+ * the config has a syntax error" contract — the user can fix the file
+ * and the next save will retry.
  */
 async function ensureConfig(state: PluginState): Promise<Z2FViteConfig> {
   if (state.z2fConfig !== null) return state.z2fConfig;
 
+  // Resolve the config file path on first call.
+  if (state.configFilePath === null) {
+    if (state.options.configPath !== undefined) {
+      state.configFilePath = state.options.configPath;
+    } else {
+      const root = state.resolvedConfig?.root ?? process.cwd();
+      state.configFilePath = await discoverConfigPath(root);
+      if (state.configFilePath !== null) {
+        state.logger.debug(`auto-discovered config at ${state.configFilePath}`);
+      }
+    }
+  }
+
   let loaded: Partial<Z2FViteConfig> = {};
 
-  if (state.options.configPath !== undefined) {
-    state.configFilePath = state.options.configPath;
+  if (state.configFilePath !== null) {
     const loader = state.devServer ?? (await ensureBuildModeServer(state));
     try {
-      const mod = await loader.ssrLoadModule(state.options.configPath);
+      // Force re-read after a config-file HMR by invalidating Vite's
+      // own SSR module cache for the file. Without this the loader hands
+      // back the stale namespace.
+      const moduleNode = loader.moduleGraph.getModuleById(state.configFilePath);
+      if (moduleNode !== undefined) {
+        loader.moduleGraph.invalidateModule(moduleNode);
+      }
+      const mod = await loader.ssrLoadModule(state.configFilePath);
       loaded =
         (mod as { default?: Partial<Z2FViteConfig> }).default ?? (mod as Partial<Z2FViteConfig>);
     } catch (err) {
+      // If we have a previously-valid config (this is an HMR-triggered
+      // reload after the user introduced a syntax error), log and keep
+      // the old one so the dev server stays serving.
+      if (state.lastValidConfig !== null) {
+        state.logger.warn(
+          `failed to reload config '${state.configFilePath}' (${(err as Error).message}); keeping previous valid config`
+        );
+        state.z2fConfig = state.lastValidConfig;
+        return state.z2fConfig;
+      }
       throw new Z2FViteError(
         'Z2F_VITE_CONFIG_INVALID',
-        `Failed to load config '${state.options.configPath}': ${(err as Error).message}`,
-        { file: state.options.configPath }
+        `Failed to load config '${state.configFilePath}': ${(err as Error).message}`,
+        { file: state.configFilePath }
       );
     }
-  } else {
+  } else if (state.options.configOverride === undefined) {
     state.logger.info(
-      `no configPath supplied — compiling forms with defaults. Pass 'configPath' or 'configOverride' to customize.`
+      `no z2f.config.* found in project root and no configOverride supplied — compiling forms with defaults`
     );
   }
 
@@ -494,6 +568,7 @@ async function ensureConfig(state: PluginState): Promise<Z2FViteConfig> {
     ...loaded,
     ...state.options.configOverride
   };
+  state.lastValidConfig = state.z2fConfig;
   return state.z2fConfig;
 }
 

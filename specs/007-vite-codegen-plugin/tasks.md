@@ -150,18 +150,18 @@ This feature adds a new workspace package at `packages/vite/`. Task paths use ab
 
 ### Tests for US3
 
-- [ ] T052 [P] [US3] Unit tests for `config/cache.ts` — `canonicalizeConfig` + SHA-256 wrapper, assert two different configs produce different hashes and two canonically-equal configs produce identical hashes. In `packages/vite/tests/unit/config-cache.test.ts`
-- [ ] T053 [P] [US3] Unit tests for variant merging — global `{ ui: 'shadcn' }` + variant `{ componentName: 'UserEditForm' }` yields the expected effective config; unknown variant throws `Z2F_VITE_UNKNOWN_VARIANT`. In `packages/vite/tests/unit/variant-merge.test.ts`
-- [ ] T054 [US3] Create fixture project `packages/vite/tests/fixtures/config-watch/` with a `z2f.config.ts` declaring two variants and a `src/App.tsx` using both `?z2f=edit` and `?z2f=create`
-- [ ] T055 [US3] Integration test: `packages/vite/tests/integration/config-watch.test.ts` — start dev server, edit the config file, assert HMR invalidates every cached entry within two seconds (FR-009) and the regenerated modules reflect the new config
-- [ ] T055a [US3] Integration test: `packages/vite/tests/integration/config-error-recovery.test.ts` — start dev server with a valid `z2f.config.ts`, generate a form, then introduce a syntax error in the config file. Assert: (a) dev server does not crash, (b) plugin reports the config error via the dev server's error collector, (c) the previously-valid cached forms still serve correctly, (d) fixing the config file restores normal behavior. Closes Edge Case "Config file with syntax errors" (finding H5) and completes SC-008 coverage
+- [X] T052 [P] [US3] Unit tests for `config/cache.ts` — `canonicalizeConfig` + SHA-256 wrapper, assert two different configs produce different hashes and two canonically-equal configs produce identical hashes. In `packages/vite/tests/unit/config-cache.test.ts`
+- [X] T053 [P] [US3] Unit tests for variant merging — global `{ ui: 'shadcn' }` + variant `{ componentName: 'UserEditForm' }` yields the expected effective config; unknown variant throws `Z2F_VITE_UNKNOWN_VARIANT`. In `packages/vite/tests/unit/variant-merge.test.ts`
+- [X] T054 [US3] Create fixture project `packages/vite/tests/fixtures/config-watch/` with a `z2f.config.ts` declaring two variants and a `src/App.tsx` using both `?z2f=edit` and `?z2f=create`
+- [X] T055 [US3] Integration test: `packages/vite/tests/integration/config-watch.test.ts` — start dev server, edit the config file, assert HMR invalidates every cached entry within two seconds (FR-009) and the regenerated modules reflect the new config
+- [X] T055a [US3] Integration test: `packages/vite/tests/integration/config-error-recovery.test.ts` — start dev server with a valid `z2f.config.ts`, generate a form, then introduce a syntax error in the config file. Assert: (a) dev server does not crash, (b) plugin reports the config error via the dev server's error collector, (c) the previously-valid cached forms still serve correctly, (d) fixing the config file restores normal behavior. Closes Edge Case "Config file with syntax errors" (finding H5) and completes SC-008 coverage
 
 ### Implementation for US3
 
-- [ ] T056 [US3] Implement `packages/vite/src/config/cache.ts` — wraps `canonicalizeConfig` with SHA-256 via Node's `crypto` module. Make T052 pass
-- [ ] T057 [US3] Extend `packages/vite/src/config/load.ts` with variant-merging logic matching the `CliConfig` semantics. Make T053 pass
-- [ ] T058 [US3] Extend `packages/vite/src/hmr.ts` `handleHotUpdate` to recognize the config file path, call `CompilationCache.invalidateAll()`, and return every cached virtual id so Vite can HMR them in one sweep. Make T055 pass
-- [ ] T059 [US3] Exercise the `config-watch` fixture end-to-end
+- [X] T056 [US3] Implement `packages/vite/src/config/cache.ts` — wraps `canonicalizeConfig` with SHA-256 via Node's `crypto` module. Make T052 pass
+- [X] T057 [US3] Extend `packages/vite/src/config/load.ts` with variant-merging logic matching the `CliConfig` semantics. Make T053 pass
+- [X] T058 [US3] Extend `packages/vite/src/hmr.ts` `handleHotUpdate` to recognize the config file path, call `CompilationCache.invalidateAll()`, and return every cached virtual id so Vite can HMR them in one sweep. Make T055 pass
+- [X] T059 [US3] Exercise the `config-watch` fixture end-to-end
 
 **Checkpoint**: Config-driven customization works. Users can iterate on their `z2f.config.ts` with HMR feedback.
 
