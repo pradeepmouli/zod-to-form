@@ -68,11 +68,12 @@ function ArchitectureSection(): ReactNode {
     <section className={styles.section}>
       <div className={styles.container}>
         <div className={styles.sectionLabel}>Architecture</div>
-        <h2 className={styles.sectionTitle}>One walker. Two outputs.</h2>
+        <h2 className={styles.sectionTitle}>One walker. Three integration paths.</h2>
         <p className={styles.sectionDesc}>
-          Walk your Zod schema once. Render at runtime with <code>&lt;ZodForm&gt;</code> or generate
-          a static <code>.tsx</code> file with the CLI. Same config, same behavior, zero runtime
-          dependency on zod-to-form in generated code.
+          Walk your Zod schema once. Render at runtime with <code>&lt;ZodForm&gt;</code>, generate a
+          static <code>.tsx</code> file with the CLI, or import via <code>?z2f</code> through the
+          Vite plugin and let HMR keep the form in sync with the schema. Same config, same behavior,
+          zero runtime dependency on zod-to-form in generated code.
         </p>
         <div className={styles.whyGrid}>
           <div className={styles.featureCard}>
