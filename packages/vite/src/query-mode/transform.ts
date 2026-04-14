@@ -8,6 +8,7 @@
  * No I/O. No Vite context. No caching. The dispatching `load` hook in
  * `plugin.ts` handles all of that.
  */
+import path from 'node:path';
 import { walkSchema } from '@zod-to-form/core';
 import type { CodegenConfig, SchemaLiteInfo, WalkResult } from '@zod-to-form/core';
 import { generateFormComponent, generateSchemaLiteFile } from '@zod-to-form/codegen';
@@ -15,6 +16,19 @@ import type { $ZodType } from 'zod/v4/core';
 import { buildEffectiveConfig, selectExport } from '../config/load.js';
 import type { ModuleNamespace } from '../config/load.js';
 import type { Z2FViteConfig } from '../types.js';
+
+/**
+ * Default `schemaImportPath` for query-mode targets when the user did not
+ * configure one explicitly. The generated module's id is
+ * `<schemaFile>?z2f`, so a relative import to the schema file's basename
+ * (without extension) resolves back to the original schema through Vite's
+ * normal extension auto-resolution. This is what lets `import { signupSchema }
+ * from './signup'` work from inside the virtual module.
+ */
+function defaultSchemaImportPath(schemaFile: string): string {
+  const base = path.basename(schemaFile, path.extname(schemaFile));
+  return `./${base}`;
+}
 
 function isZodType(value: unknown): value is $ZodType {
   if (typeof value !== 'object' || value === null) return false;
@@ -87,11 +101,15 @@ export function compileTarget(input: CompileTargetInput): CompileTargetResult {
 
   // Build the codegen-facing config: take the effective config but
   // overwrite exportName with the actually-selected name (so auto-detect
-  // mode produces the right import statements) and inject schemaLite
-  // info if optimization produced any effects.
+  // mode produces the right import statements), inject the default
+  // schemaImportPath when the user didn't supply one (the virtual module
+  // sits next to the schema file, so a relative import to the basename
+  // resolves correctly), and inject schemaLite info if optimization
+  // produced any effects.
   const codegenConfig: CodegenConfig = {
     ...effectiveConfig,
     exportName: name,
+    schemaImportPath: effectiveConfig.schemaImportPath ?? defaultSchemaImportPath(schemaFile),
     schemaLite: schemaLite ?? undefined,
     schemaLiteInfo: schemaLiteInfo ?? undefined
   };

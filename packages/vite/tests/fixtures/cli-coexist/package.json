@@ -1,0 +1,7 @@
+{
+  "name": "cli-coexist-fixture",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Fixture verifying the plugin doesn't touch CLI-emitted files (FR-007/FR-019)"
+}

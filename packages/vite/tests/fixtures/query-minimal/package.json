@@ -1,0 +1,14 @@
+{
+  "name": "query-minimal-fixture",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Minimal Vite + ?z2f fixture used by integration tests",
+  "dependencies": {
+    "@zod-to-form/core": "workspace:*",
+    "@zod-to-form/codegen": "workspace:*",
+    "@zod-to-form/vite": "workspace:*",
+    "vite": "^7.0.0",
+    "zod": "^4.3.6"
+  }
+}

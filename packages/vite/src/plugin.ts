@@ -9,7 +9,13 @@
  * - `handleHotUpdate` → `computeHmrInvalidation` + module-graph translation
  * - `configureServer` → captures the dev server reference for `load`
  */
-import type { Plugin, ResolvedConfig, ViteDevServer } from 'vite';
+import {
+  createServer,
+  transformWithEsbuild,
+  type Plugin,
+  type ResolvedConfig,
+  type ViteDevServer
+} from 'vite';
 import { createCompilationCache } from './cache.js';
 import type { CompilationCache } from './cache.js';
 import { configHash } from './config/load.js';
@@ -42,6 +48,13 @@ interface PluginState {
   resolvedConfig: ResolvedConfig | null;
   /** Captured during configureServer. Null in build mode. */
   devServer: ViteDevServer | null;
+  /**
+   * In build mode, a transient middleware-mode dev server spun up to
+   * provide `ssrLoadModule` for schema evaluation. Lazily created on the
+   * first build-mode load and torn down at `buildEnd`. Null in dev mode
+   * (where `devServer` does the same job).
+   */
+  buildModeServer: ViteDevServer | null;
   /** The plugin's effective Z2FViteConfig — populated lazily on first load. */
   z2fConfig: Z2FViteConfig | null;
   /** Resolved absolute path to z2f.config.ts (or null if none). */
@@ -57,6 +70,7 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
     cache: createCompilationCache(),
     resolvedConfig: null,
     devServer: null,
+    buildModeServer: null,
     z2fConfig: null,
     configFilePath: null
   };
@@ -71,6 +85,15 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
 
     configureServer(server): void {
       state.devServer = server;
+    },
+
+    async buildEnd(): Promise<void> {
+      // Tear down the transient SSR loader spun up for build-mode schema
+      // evaluation. Safe to call even if it was never created.
+      if (state.buildModeServer !== null) {
+        await state.buildModeServer.close();
+        state.buildModeServer = null;
+      }
     },
 
     async resolveId(source, importer): Promise<string | null> {
@@ -124,12 +147,27 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
 
       // Cache miss: load the schema module and compile it.
       const namespace = await loadSchemaModule(state, parsed.schemaFile);
-      const result = compileTarget({
+      const compiled = compileTarget({
         namespace,
         schemaFile: parsed.schemaFile,
         variant: parsed.variant,
         config: z2fConfig
       });
+
+      // generateFormComponent emits TSX, but the virtual module id keeps
+      // the schema's `.ts` extension — esbuild won't apply JSX parsing
+      // unless we tell it. Run the source through esbuild here so the
+      // returned `code` is valid JavaScript that the rest of Vite's
+      // pipeline can treat normally. Source maps from esbuild stack on
+      // top of the (currently null) plugin sourcemap.
+      const transformed = await transformWithEsbuild(compiled.generatedSource, `${id}.tsx`, {
+        loader: 'tsx',
+        sourcemap: true
+      });
+      const result = {
+        ...compiled,
+        generatedSource: transformed.code
+      };
 
       // Promote the actually-selected exportName so future cache lookups
       // with the same `id` hit (the inferred name is part of the cache
@@ -279,15 +317,9 @@ async function ensureConfig(state: PluginState): Promise<Z2FViteConfig> {
 
   if (state.options.configPath !== undefined) {
     state.configFilePath = state.options.configPath;
-    if (state.devServer === null) {
-      throw new Z2FViteError(
-        'Z2F_VITE_NOT_IMPLEMENTED',
-        `Build-mode loading of 'configPath' is not yet implemented. Pass the config object inline via 'configOverride' until the build-time loader lands.`,
-        { file: state.options.configPath }
-      );
-    }
+    const loader = state.devServer ?? (await ensureBuildModeServer(state));
     try {
-      const mod = await state.devServer.ssrLoadModule(state.options.configPath);
+      const mod = await loader.ssrLoadModule(state.options.configPath);
       loaded =
         (mod as { default?: Partial<Z2FViteConfig> }).default ?? (mod as Partial<Z2FViteConfig>);
     } catch (err) {
@@ -312,12 +344,19 @@ async function ensureConfig(state: PluginState): Promise<Z2FViteConfig> {
 }
 
 /**
- * Load a schema module via the dev server's SSR pipeline (so TypeScript
- * and other plugins fire normally). Build-mode loading via the Rollup
- * `PluginContext.load` path is not yet implemented.
+ * Load a schema module via the appropriate SSR loader.
+ *
+ * In dev mode we use the captured `state.devServer.ssrLoadModule`. In
+ * build mode there is no dev server, so we lazily spin up a transient
+ * middleware-mode server with a near-empty config (no plugins beyond
+ * the user's config-resolved root) and use IT for `ssrLoadModule`. The
+ * transient server inherits the user's `resolve`, `define`, and
+ * tsconfig-paths plumbing through Vite's normal config discovery, so
+ * the schema evaluation matches what dev mode would see — guaranteeing
+ * SC-006 byte-for-byte parity.
  *
  * `ssrLoadModule` can throw for many reasons — TS syntax error, import
- * failure, evaluation error inside the schema file — so we wrap every
+ * failure, runtime error inside the schema file — so we wrap every
  * failure in a typed `Z2F_VITE_CODEGEN_FAILURE` with the schema file
  * attached, rather than letting raw Vite stack traces leak to the user.
  */
@@ -325,15 +364,9 @@ async function loadSchemaModule(
   state: PluginState,
   schemaFile: string
 ): Promise<Record<string, unknown>> {
-  if (state.devServer === null) {
-    throw new Z2FViteError(
-      'Z2F_VITE_NOT_IMPLEMENTED',
-      `Build-mode schema loading is not yet implemented. Use 'vite dev' or wait for the build-time loader.`,
-      { file: schemaFile }
-    );
-  }
+  const loader = state.devServer ?? (await ensureBuildModeServer(state));
   try {
-    return await state.devServer.ssrLoadModule(schemaFile);
+    return await loader.ssrLoadModule(schemaFile);
   } catch (err) {
     throw new Z2FViteError(
       'Z2F_VITE_CODEGEN_FAILURE',
@@ -341,4 +374,32 @@ async function loadSchemaModule(
       { file: schemaFile }
     );
   }
+}
+
+/**
+ * Lazily create the transient build-mode SSR server. Reuses the user's
+ * resolved Vite config (root, resolve aliases, tsconfig paths) but skips
+ * the plugin pipeline — including this plugin itself — so we don't
+ * recursively trigger `?z2f` resolution while loading user schemas.
+ */
+async function ensureBuildModeServer(state: PluginState): Promise<ViteDevServer> {
+  if (state.buildModeServer !== null) return state.buildModeServer;
+
+  const root = state.resolvedConfig?.root ?? process.cwd();
+  const userResolve = state.resolvedConfig?.resolve;
+
+  const server = await createServer({
+    root,
+    configFile: false,
+    server: { middlewareMode: true },
+    appType: 'custom',
+    logLevel: 'silent',
+    optimizeDeps: { noDiscovery: true },
+    // Inherit the user's resolve config (aliases, tsconfig paths) so the
+    // transient server sees imports the same way the real build does.
+    ...(userResolve !== undefined ? { resolve: userResolve } : {})
+  });
+
+  state.buildModeServer = server;
+  return server;
 }
