@@ -36,7 +36,10 @@ export class Z2FViteError extends Error {
   public readonly location?: Z2FViteErrorLocation;
 
   constructor(code: Z2FViteErrorCode, message: string, location?: Z2FViteErrorLocation) {
-    super(message);
+    // Prefix the message with the code so error.message, error.toString(),
+    // and Vitest's `expect.toThrow(/CODE/)` matchers all surface the code
+    // without callers having to inspect `error.code` separately.
+    super(`[${code}] ${message}`);
     this.name = 'Z2FViteError';
     this.code = code;
     if (location !== undefined) {
@@ -47,10 +50,11 @@ export class Z2FViteError extends Error {
 
 /**
  * Format an error for inclusion in a Vite error overlay or terminal output.
- * Includes the code and location when available.
+ * The error's `message` already includes the code prefix; this function
+ * appends the location line when available.
  */
 export function formatZ2FViteError(error: Z2FViteError): string {
-  const parts: string[] = [`[${error.code}] ${error.message}`];
+  const parts: string[] = [error.message];
   if (error.location?.file) {
     const line = error.location.line ?? 0;
     const column = error.location.column ?? 0;
