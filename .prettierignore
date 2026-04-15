@@ -15,3 +15,10 @@ coverage/
 pnpm-lock.yaml
 yarn.lock
 package-lock.json
+
+# Docusaurus build output and CSS assets
+apps/docs/build/**
+apps/docs/.docusaurus/**
+apps/docs/src/css/**
+apps/docs/src/pages/**/*.css
+apps/docs/src/pages/**/*.module.css
