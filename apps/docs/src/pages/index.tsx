@@ -1,10 +1,180 @@
-import type { ReactNode } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 import Link from '@docusaurus/Link';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import CodeBlock from '@theme/CodeBlock';
 import Layout from '@theme/Layout';
 import styles from './index.module.css';
+
+// ── Architecture section: tabbed snippets ────────────────────────────
+// Each tab pairs the left (config) and right (code) side of a single
+// integration path. The shape is deliberately uniform across tabs:
+//
+//   left-top:    z2f.config (or absent for runtime)
+//   left-bottom: build-time config (CLI command or vite.config)
+//   right-top:   user source
+//   right-bottom: what the user actually sees at runtime
+//
+// Runtime is the simplest case — no build step — so its bottom-left
+// cell is empty and its bottom-right is the rendered form preview.
+
+const Z2F_CONFIG_SHADCN = `// z2f.config.ts
+import { defineConfig } from '@zod-to-form/cli';
+
+export default defineConfig({
+  components: {
+    SignupForm: {
+      ui: 'shadcn',
+      mode: 'submit',
+    },
+  },
+});`;
+
+const RUNTIME_APP = `// src/App.tsx
+import { ZodForm } from '@zod-to-form/react';
+import { signupSchema } from './schemas/signup';
+
+export default function App() {
+  return (
+    <ZodForm
+      schema={signupSchema}
+      onSubmit={(data) => console.log(data)}
+    />
+  );
+}`;
+
+const CODEGEN_GENERATED = `// src/generated/SignupForm.tsx (committed to source control)
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { signupSchema } from '../schemas/signup';
+
+export default function SignupForm(props) {
+  const form = useForm({
+    resolver: zodResolver(signupSchema),
+  });
+  return (
+    <form onSubmit={form.handleSubmit(props.onSubmit)}>
+      <input {...form.register('name')} />
+      <input {...form.register('email')} type="email" />
+      <select {...form.register('role')}>
+        <option>admin</option>
+        <option>editor</option>
+        <option>viewer</option>
+      </select>
+      <button type="submit">Submit</button>
+    </form>
+  );
+}`;
+
+const PLUGIN_VITE_CONFIG = `// vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import z2fVite from '@zod-to-form/vite';
+
+export default defineConfig({
+  plugins: [
+    // Presence of \`generate\` opts in to JSX scanning:
+    // the plugin finds <ZodForm schema={X}/> call sites
+    // and compiles them away at build time.
+    z2fVite({ generate: {} }),
+    react(),
+  ],
+});`;
+
+const PLUGIN_GENERATED = `// Compiled on the fly by @zod-to-form/vite
+// (virtual module — never hits disk, cached per schema)
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { signupSchema } from './schemas/signup.ts';
+
+export default function Form(props) {
+  const form = useForm({
+    resolver: zodResolver(signupSchema),
+  });
+  return (
+    <form onSubmit={form.handleSubmit(props.onSubmit)}>
+      {/* <input>s generated from signupSchema … */}
+    </form>
+  );
+}`;
+
+type PathKey = 'runtime' | 'codegen' | 'plugin';
+
+interface SnippetCell {
+  title: string;
+  language: string;
+  source: string;
+}
+
+/**
+ * A column holds either 1 cell (runtime/codegen — single row) or 2
+ * cells (plugin — two rows joined by a connector). The tuple union
+ * makes the "1 or 2, nothing else" invariant structurally enforced:
+ * `[]` and `[a, b, c]` literals won't type-check.
+ */
+type PathColumnCells = readonly [SnippetCell] | readonly [SnippetCell, SnippetCell];
+
+interface IntegrationPath {
+  key: PathKey;
+  label: string;
+  tagline: string;
+  bullets: string[];
+  left: PathColumnCells;
+  right: PathColumnCells;
+}
+
+const PATHS: IntegrationPath[] = [
+  {
+    key: 'runtime',
+    label: 'Runtime',
+    tagline: 'Quick iteration',
+    bullets: [
+      'Drop in `<ZodForm>`, get a form. No build step.',
+      'Schema change → form updates on the next render.',
+      'Smallest mental model — perfect for admin panels and prototypes.'
+    ],
+    left: [{ title: 'z2f.config.ts', language: 'tsx', source: Z2F_CONFIG_SHADCN }],
+    right: [{ title: 'src/App.tsx', language: 'tsx', source: RUNTIME_APP }]
+  },
+  {
+    key: 'codegen',
+    label: 'Codegen',
+    tagline: 'Production code you own',
+    bullets: [
+      'Run `zod-to-form generate`, get a static `.tsx` file you commit.',
+      'Zero runtime dependency on zod-to-form in the emitted code.',
+      'Hand-editable output — review diffs, apply custom tweaks, move on.'
+    ],
+    left: [{ title: 'z2f.config.ts', language: 'tsx', source: Z2F_CONFIG_SHADCN }],
+    right: [{ title: 'src/generated/SignupForm.tsx', language: 'tsx', source: CODEGEN_GENERATED }]
+  },
+  {
+    key: 'plugin',
+    label: 'Build-time (Plugin)',
+    tagline: 'Best of both worlds',
+    bullets: [
+      'Keep writing `<ZodForm>` — the plugin scans your JSX and compiles it.',
+      'HMR keeps the form in sync with the schema — no commit, no CLI step.',
+      'Same generated code as the CLI path; zero runtime overhead in prod.'
+    ],
+    left: [
+      { title: 'z2f.config.ts', language: 'tsx', source: Z2F_CONFIG_SHADCN },
+      { title: 'vite.config.ts', language: 'tsx', source: PLUGIN_VITE_CONFIG }
+    ],
+    // right[0] = original runtime source the user wrote;
+    // right[1] = what the plugin emits in its place at build time.
+    // The ↓ connector between them (rendered in <PathColumn/>) makes
+    // the transform visible at a glance.
+    right: [
+      { title: 'src/App.tsx (original)', language: 'tsx', source: RUNTIME_APP },
+      {
+        title: 'Virtual module (compiled by plugin)',
+        language: 'tsx',
+        source: PLUGIN_GENERATED
+      }
+    ]
+  }
+];
 
 const signupFormCode = `import { z } from 'zod';
 import { ZodForm } from '@zod-to-form/react';
@@ -64,58 +234,106 @@ function HomepageHeader(): ReactNode {
 }
 
 function ArchitectureSection(): ReactNode {
+  const [activeKey, setActiveKey] = useState<PathKey>('plugin');
+  const active = PATHS.find((p) => p.key === activeKey) ?? PATHS[0]!;
+
   return (
     <section className={styles.section}>
       <div className={styles.container}>
         <div className={styles.sectionLabel}>Architecture</div>
         <h2 className={styles.sectionTitle}>One walker. Three integration paths.</h2>
         <p className={styles.sectionDesc}>
-          Walk your Zod schema once. Render at runtime with <code>&lt;ZodForm&gt;</code>, generate a
-          static <code>.tsx</code> file with the CLI, or import via <code>?z2f</code> through the
-          Vite plugin and let HMR keep the form in sync with the schema. Same config, same behavior,
-          zero runtime dependency on zod-to-form in generated code.
+          Walk your Zod schema once. Pick the path that fits: render at runtime, generate static
+          code with the CLI, or let the Vite plugin compile on demand. Same config, same output —
+          zero runtime dependency on <code>@zod-to-form/*</code> in the code you ship.
         </p>
-        <div className={styles.whyGrid}>
-          <div className={styles.featureCard}>
-            <div className={`${styles.featureIcon} ${styles.featureIconTeal}`}>{'{}'}</div>
-            <h3>Unified props</h3>
-            <p>
-              Literal values and RHF field bindings coexist in one <code>props</code> Record. The
-              resolver auto-detects <code>field.onChange</code> vs string literals. One API surface
-              for everything — grid classes, icons, event handlers.
-            </p>
-          </div>
-          <div className={styles.featureCard}>
-            <div className={`${styles.featureIcon} ${styles.featureIconPink}`}>⎋</div>
-            <h3>Zero-dependency eject</h3>
-            <p>
-              Generated code depends only on react, react-hook-form, zod, and your own components.
-              The shadcn preset needs no normalizer. The html preset inlines one (~30 lines). No{' '}
-              <code>@zod-to-form/*</code> at runtime.
-            </p>
-          </div>
-          <div className={styles.featureCard}>
-            <div className={`${styles.featureIcon} ${styles.featureIconPink}`}>⟁</div>
-            <h3>Schema-driven conditionals</h3>
-            <p>
-              Discriminated unions are first-class. The walker resolves variants, the renderer
-              toggles fields, validation stays in sync. No parallel rule system that can drift from
-              your schema.
-            </p>
-          </div>
-          <div className={styles.featureCard}>
-            <div className={`${styles.featureIcon} ${styles.featureIconTeal}`}>⇄</div>
-            <h3>Codegen ↔ runtime parity</h3>
-            <p>
-              The same <code>FieldConfig</code> drives both CLI output and{' '}
-              <code>&lt;ZodForm&gt;</code>. Start with runtime rendering. Eject to generated code.
-              Component names and prop overrides carry over.
-            </p>
-          </div>
+
+        <div className={styles.pathTabs} role="tablist" aria-label="Integration paths">
+          {PATHS.map((path) => {
+            const isActive = path.key === activeKey;
+            return (
+              <button
+                type="button"
+                key={path.key}
+                role="tab"
+                aria-selected={isActive}
+                className={`${styles.pathTab} ${isActive ? styles.pathTabActive : ''}`}
+                onClick={() => setActiveKey(path.key)}
+              >
+                <div className={styles.pathTabLabel}>{path.label}</div>
+                <div className={styles.pathTabTagline}>{path.tagline}</div>
+                <ol className={styles.pathTabBullets}>
+                  {path.bullets.map((b, i) => (
+                    <li key={i}>{renderInlineCode(b)}</li>
+                  ))}
+                </ol>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className={styles.pathContent} role="tabpanel" aria-label={active.label}>
+          <PathColumn role="config" cells={active.left} />
+          <PathColumn role="code" cells={active.right} />
         </div>
       </div>
     </section>
   );
+}
+
+/**
+ * Renders one column of the architecture content panel. The `role`
+ * drives both the header label and the connector symbol: "config"
+ * columns join their cells with `+` (configs combine), "code" columns
+ * join them with `↓` (transform direction).
+ */
+function PathColumn({
+  role,
+  cells
+}: {
+  role: 'config' | 'code';
+  cells: PathColumnCells;
+}): ReactNode {
+  const header = role === 'config' ? 'Config' : 'Code';
+  const connector = role === 'config' ? '+' : '↓';
+  return (
+    <div className={styles.pathColumn}>
+      <div className={styles.pathColumnHeader}>{header}</div>
+      {cells.map((cell, i) => (
+        <Fragment key={cell.title}>
+          {i > 0 && (
+            <div className={styles.pathConnector} data-kind={role} aria-hidden>
+              {connector}
+            </div>
+          )}
+          <PathSnippet snippet={cell} />
+        </Fragment>
+      ))}
+    </div>
+  );
+}
+
+function PathSnippet({ snippet }: { snippet: SnippetCell }): ReactNode {
+  return (
+    <div className={styles.pathSnippet}>
+      <div className={styles.pathSnippetTitle}>{snippet.title}</div>
+      <CodeBlock language={snippet.language}>{snippet.source}</CodeBlock>
+    </div>
+  );
+}
+
+/**
+ * Render a string with single-backtick segments as <code> spans so the
+ * tab bullets can have inline monospace highlights without needing MDX.
+ * Non-code parts are wrapped in keyed Fragments so React's array
+ * reconciliation stays stable under any future reordering.
+ */
+function renderInlineCode(text: string): ReactNode[] {
+  return text
+    .split('`')
+    .map((part, i) =>
+      i % 2 === 1 ? <code key={i}>{part}</code> : <Fragment key={i}>{part}</Fragment>
+    );
 }
 
 function CodePreviewSection(): ReactNode {

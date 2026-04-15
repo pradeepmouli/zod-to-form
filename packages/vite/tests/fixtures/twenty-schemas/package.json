@@ -3,5 +3,6 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "20-schema fixture used by surgical-HMR integration test"
+  "description": "20-schema fixture used by surgical-HMR integration test",
+  "author": "Pradeep Mouli <pmouli@mac.com> (https://github.com/pradeepmouli)"
 }

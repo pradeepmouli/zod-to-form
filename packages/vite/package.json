@@ -1,7 +1,7 @@
 {
   "name": "@zod-to-form/vite",
   "version": "0.1.0",
-  "description": "Vite plugin for zod-to-form — transforms ?z2f imports into generated form components and optionally rewrites <ZodForm> call sites at build time",
+  "description": "Vite plugin for zod-to-form — transforms ?z2f imports into generated form components and optionally replaces <ZodForm> JSX call sites with generated components at build time",
   "license": "MIT",
   "homepage": "https://github.com/pradeepmouli/zod-to-form#readme",
   "repository": {
@@ -42,23 +42,24 @@
     "type-check": "tsgo --noEmit"
   },
   "peerDependencies": {
-    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0"
+    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
   },
   "dependencies": {
-    "@babel/parser": "^7.28.0",
-    "@babel/traverse": "^7.28.0",
-    "@babel/types": "^7.28.0",
+    "@babel/parser": "^7.29.2",
+    "@babel/traverse": "^7.29.0",
+    "@babel/types": "^7.29.0",
     "@zod-to-form/codegen": "workspace:*",
     "@zod-to-form/core": "workspace:*",
-    "magic-string": "^0.30.0",
-    "pathe": "^2.0.0"
+    "magic-string": "^0.30.21",
+    "pathe": "^2.0.3"
   },
   "devDependencies": {
-    "@types/babel__traverse": "^7.20.0",
-    "vite": "^7.0.0",
+    "@types/babel__traverse": "^7.28.0",
+    "vite": "^8.0.8",
     "zod": "^4.3.6"
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "author": "Pradeep Mouli <pmouli@mac.com> (https://github.com/pradeepmouli)"
 }

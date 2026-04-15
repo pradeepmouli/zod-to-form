@@ -93,10 +93,10 @@ export function compileTarget(input: CompileTargetInput): CompileTargetResult {
   // schemaImportPath when the user didn't supply one, and inject
   // schemaLite info if optimization produced any effects.
   //
-  // Rewrite-mode variants always emit under the fixed component name
+  // Generate-mode variants always emit under the fixed component name
   // `Form` regardless of `componentName`. The synthesized generate-mode
   // import (`import { Form as _z2fGeneratedForm_<n> }`) is decoupled
-  // from the user's chosen name this way — the rewrite emitter can hard-
+  // from the user's chosen name this way — the generate emitter can hard-
   // code `Form` instead of threading the user's configured name through
   // the AST visitor.
   const isGenerateVariant = /^__generate_\d+$/.test(variant);

@@ -17,7 +17,7 @@ const documents = extractDocusaurusDocs({
   projectRoot,
   docsDir: 'docs',
   excludeApi: true,
-  maxDocs: 20,
+  maxDocs: 20
 });
 
 const skill: ExtractedSkill = {
@@ -35,7 +35,7 @@ const skill: ExtractedSkill = {
   types: [],
   enums: [],
   variables: [],
-  examples: [],
+  examples: []
 };
 
 const rendered = renderSkill(skill);
@@ -49,7 +49,7 @@ const outPath = resolve(buildDir, 'SKILL.md');
 writeFileSync(outPath, rendered.skill.content, 'utf8');
 
 console.log(
-  `[generate-skill] Wrote ${outPath} (${rendered.skill.content.length} bytes, ${documents.length} docs)`,
+  `[generate-skill] Wrote ${outPath} (${rendered.skill.content.length} bytes, ${documents.length} docs)`
 );
 
 if (rendered.references.length > 0) {

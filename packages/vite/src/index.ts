@@ -13,7 +13,7 @@ export type {
   WriteOptions,
   GenerationTarget,
   CompilationEntry,
-  RewriteSite,
+  GenerateSite,
   HMRInvalidationMap
 } from './types.js';
 export { Z2FViteError, formatZ2FViteError } from './errors.js';

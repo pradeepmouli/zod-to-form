@@ -34,7 +34,7 @@ export interface Logger {
   flushGenerateSummary(processed: number, rewritten: number): number;
 }
 
-interface RewriteSkip {
+interface GenerateSkip {
   file: string;
   line: number;
   column: number;
@@ -43,7 +43,7 @@ interface RewriteSkip {
 
 export function createLogger(level: LogLevel = 'info'): Logger {
   const rank = LEVEL_RANK[level];
-  const skips: RewriteSkip[] = [];
+  const skips: GenerateSkip[] = [];
 
   const shouldLog = (target: LogLevel): boolean => LEVEL_RANK[target] <= rank;
 

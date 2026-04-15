@@ -23,7 +23,7 @@ The plugin coexists with the CLI: a project may commit some generated forms via 
 
 - Node.js >= 20
 - Zod v4 (`zod@^4.0.0`) — Zod v3 is **not** supported
-- A Vite project (`vite@^5 || ^6 || ^7`)
+- A Vite project (`vite@^5 || ^6 || ^7 || ^8`)
 - React 18+ with `react-hook-form` and `@hookform/resolvers`
 
 ## Install

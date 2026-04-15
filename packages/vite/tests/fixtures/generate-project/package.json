@@ -3,5 +3,6 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "Fixture for generate-mode integration test (Phase 4)"
+  "description": "Fixture for generate-mode integration test (Phase 4)",
+  "author": "Pradeep Mouli <pmouli@mac.com> (https://github.com/pradeepmouli)"
 }

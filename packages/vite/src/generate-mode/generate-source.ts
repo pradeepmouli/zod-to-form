@@ -11,10 +11,13 @@
  *      '<schemaPath>?z2f=__generate_<n>'` after the existing imports.
  *
  * Idempotent by construction: the substring fast-path in `scan-jsx`
- * checks for `'ZodForm'`, which the rewrite removes — running the
+ * checks for `'ZodForm'`, which this transform removes — running the
  * pipeline twice on the same source produces byte-identical output
- * because the second pass has nothing to rewrite.
+ * because the second pass has nothing to transform.
  */
+import type { ParseResult } from '@babel/parser';
+import { parse as parseBabel } from '@babel/parser';
+import type { ExpressionStatement, File } from '@babel/types';
 import MagicString from 'magic-string';
 import type { CandidateAttribute } from './scan-jsx.js';
 import type { ResolvedSite } from './resolve-schema.js';
@@ -22,6 +25,15 @@ import type { ResolvedSite } from './resolve-schema.js';
 export interface GenerateSourceInput {
   source: string;
   resolved: ResolvedSite[];
+  /**
+   * Optional diagnostic callback. Called with an error message (never
+   * an Error object) when an internal invariant is violated — e.g., the
+   * insertion-point scanner's Babel re-parse fails even though scanJsx
+   * already parsed the same source successfully. Wired to the plugin's
+   * logger at the call site so these land in the buildEnd summary
+   * instead of being lost.
+   */
+  onWarn?: (message: string) => void;
 }
 
 export interface GenerateSourceOutput {
@@ -34,7 +46,7 @@ export interface GenerateSourceOutput {
 }
 
 export function generateSource(input: GenerateSourceInput): GenerateSourceOutput {
-  const { source, resolved } = input;
+  const { source, resolved, onWarn } = input;
 
   if (resolved.length === 0) {
     // Nothing to do — but still hand back a valid magic-string sourcemap
@@ -77,7 +89,7 @@ export function generateSource(input: GenerateSourceInput): GenerateSourceOutput
   // header comments below the generated block.
   //
   // Every generate-mode variant emits its component under the fixed
-  // export name `Form`; see compileTarget's rewrite-variant carve-out.
+  // export name `Form`; see `isGenerateVariant` in query-mode/transform.ts.
   const importLines: string[] = [];
   for (let i = 0; i < resolved.length; i++) {
     const site = resolved[i]!;
@@ -86,8 +98,20 @@ export function generateSource(input: GenerateSourceInput): GenerateSourceOutput
       `import { Form as ${site.generatedIdentifier} } from '${site.schemaFile}?z2f=${variant}';`
     );
   }
-  const insertAt = findImportInsertionPoint(source);
-  ms.appendLeft(insertAt, importLines.join('\n') + '\n');
+  const insertAt = findImportInsertionPoint(source, onWarn);
+  // When the scanner can't find a trailing newline after the preamble
+  // (e.g. a preamble-only file, or a shebang file with no final `\n`),
+  // prepend one to the inserted text so `#!/usr/bin/env node` + generated
+  // import can't collapse to `#!/usr/bin/env nodeimport { … }` on the
+  // same line. No-op in the common case where `insertAt` already points
+  // at the start of a line.
+  const needsLeadingNewline =
+    insertAt > 0 &&
+    insertAt < source.length &&
+    source[insertAt - 1] !== '\n' &&
+    source[insertAt - 1] !== '\r';
+  const prefix = needsLeadingNewline ? '\n' : '';
+  ms.appendLeft(insertAt, prefix + importLines.join('\n') + '\n');
 
   return {
     code: ms.toString(),
@@ -98,117 +122,103 @@ export function generateSource(input: GenerateSourceInput): GenerateSourceOutput
 
 /**
  * Find the byte offset at which to insert generated imports. The target
- * is "immediately after the last thing that must come first": shebang,
- * leading block/line comments, string directives, and any existing
- * top-level `import` statements. If none of those exist, the result is
- * byte 0 (the file starts with user code and the generated imports go
- * at the very top).
+ * is "immediately after the last thing that must come first": the file's
+ * shebang, its leading string directives (`'use client'`, `'use strict'`),
+ * and any existing top-level `import` statements. If none of those exist,
+ * the result is byte 0 (the file starts with user code and the generated
+ * imports go at the very top).
  *
- * This is a lightweight textual scan rather than a Babel traversal —
- * the scanner only needs to skip over syntactically "boring" prefix
- * tokens, and the tokens it cares about are all locally recognizable.
- * False negatives (e.g. a directive the scanner doesn't recognize) are
- * safe: the generated imports land slightly earlier than optimal, not
- * in an invalid position.
+ * Uses Babel's parser — the same dependency scan-jsx and resolve-schema
+ * already rely on — so directive detection, multi-line imports,
+ * TypeScript-specific forms (`import type`), side-effect-only imports,
+ * BOM handling, and escape sequences inside string literals are all
+ * handled by the production-grade parser instead of a hand-rolled
+ * textual walker.
+ *
+ * On parse failure (e.g. the user is mid-save with broken syntax) we
+ * warn via `onWarn` and return 0. This is defense-in-depth: `scanJsx`'s
+ * upstream parse normally filters broken sources before this code runs,
+ * but a future Babel plugin-flag drift between the two parsers could
+ * make them disagree, and silent corruption is worse than a warn line.
+ *
+ * `onWarn` MUST NOT throw — exceptions in the callback would kill the
+ * transform and turn a recoverable warning into a hard build failure.
+ * Any throw is caught and ignored below.
  */
-function findImportInsertionPoint(source: string): number {
-  let cursor = 0;
-  const n = source.length;
+// Exported for direct unit testing. Not part of the plugin's public API —
+// callers outside this file should go through `generateSource`.
+export function findImportInsertionPoint(
+  source: string,
+  onWarn?: (message: string) => void
+): number {
+  const safeWarn = (message: string): void => {
+    if (onWarn === undefined) return;
+    try {
+      onWarn(message);
+    } catch {
+      // A throwing logger must not mask the fallback return path.
+    }
+  };
 
-  const skipWhitespace = (): void => {
-    while (cursor < n && /\s/.test(source[cursor]!)) cursor += 1;
-  };
-  const skipLineComment = (): boolean => {
-    if (source.slice(cursor, cursor + 2) !== '//') return false;
-    const eol = source.indexOf('\n', cursor);
-    cursor = eol === -1 ? n : eol + 1;
-    return true;
-  };
-  const skipBlockComment = (): boolean => {
-    if (source.slice(cursor, cursor + 2) !== '/*') return false;
-    const end = source.indexOf('*/', cursor + 2);
-    cursor = end === -1 ? n : end + 2;
-    return true;
-  };
-  const skipDirective = (): boolean => {
-    // Match a single string literal followed by optional semicolon +
-    // end-of-line — that's what a directive looks like at the top of
-    // a module (`'use client';`, `"use strict";`). We're not parsing
-    // JavaScript; we only need to recognize the idiomatic form.
-    const quote = source[cursor];
-    if (quote !== "'" && quote !== '"') return false;
-    let i = cursor + 1;
-    while (i < n && source[i] !== quote) {
-      if (source[i] === '\\') i += 2;
-      else i += 1;
+  let ast: ParseResult<File>;
+  try {
+    ast = parseBabel(source, {
+      sourceType: 'module',
+      plugins: ['jsx', 'typescript'],
+      errorRecovery: false
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    safeWarn(
+      `generate-mode: re-parse failed inside findImportInsertionPoint (${msg}); ` +
+        'inserting at byte 0 as a safety fallback'
+    );
+    return 0;
+  }
+
+  // Seed from the furthest end across every preamble-flavored node:
+  // - `program.interpreter` holds the shebang (`#!...`). Babel models it
+  //   outside `body`, so a shebang would otherwise slip past the walk.
+  // - `program.directives` holds every leading string-literal directive.
+  //   Babel lifts them out of `body` under `sourceType: 'module'`.
+  let lastPreambleEnd = Math.max(
+    0,
+    ast.program.interpreter?.end ?? 0,
+    ...ast.program.directives.map((d) => d.end ?? 0)
+  );
+
+  // Walk top-level statements. Imports always extend the preamble. For
+  // defense-in-depth against Babel versions (< 7.21) that may leave a
+  // hashbang-following directive as a body `ExpressionStatement` instead
+  // of lifting it to `program.directives`, also treat a leading
+  // `ExpressionStatement` whose expression is a `StringLiteral` as
+  // preamble and keep walking.
+  for (const stmt of ast.program.body) {
+    if (stmt.type === 'ImportDeclaration' && stmt.end != null) {
+      lastPreambleEnd = stmt.end;
+      continue;
     }
-    if (i >= n) return false;
-    i += 1; // past the closing quote
-    // Optional semicolon + newline before the next meaningful token.
-    while (i < n && (source[i] === ' ' || source[i] === '\t')) i += 1;
-    if (source[i] === ';') i += 1;
-    // Require the directive to end at a line break — otherwise it's
-    // not a statement-level string.
-    const rest = source.slice(i);
-    if (!/^\s*(?:\r?\n|$)/.test(rest)) return false;
-    cursor = i;
-    return true;
-  };
-  const skipImportStatement = (): boolean => {
-    if (
-      source.slice(cursor, cursor + 7) !== 'import ' &&
-      source.slice(cursor, cursor + 7) !== 'import{'
-    ) {
-      return false;
-    }
-    // Naive: walk forward until we find the end of the statement.
-    // An import can span multiple lines (`import {\n  a,\n  b\n} from 'x'`),
-    // so we can't just indexOf('\n'). Look for the closing quote of
-    // the `from '...'` source literal + optional semicolon.
-    let i = cursor + 6;
-    // Find the from-source quote. An import can also be side-effect
-    // only: `import 'polyfill';` — in which case the first quote IS
-    // the source quote.
-    while (i < n) {
-      const c = source[i]!;
-      if (c === "'" || c === '"') {
-        const quote = c;
-        i += 1;
-        while (i < n && source[i] !== quote) {
-          if (source[i] === '\\') i += 2;
-          else i += 1;
-        }
-        i += 1; // past the closing quote
-        break;
+    if (stmt.type === 'ExpressionStatement') {
+      const expr = (stmt as ExpressionStatement).expression;
+      if (expr.type === 'StringLiteral' && stmt.end != null) {
+        lastPreambleEnd = Math.max(lastPreambleEnd, stmt.end);
+        continue;
       }
-      i += 1;
     }
-    // Optional semicolon + newline.
-    while (i < n && (source[i] === ' ' || source[i] === '\t')) i += 1;
-    if (source[i] === ';') i += 1;
-    cursor = i;
-    return true;
-  };
-
-  // Shebang (only at byte 0).
-  if (source.startsWith('#!')) {
-    const eol = source.indexOf('\n', 2);
-    cursor = eol === -1 ? n : eol + 1;
+    // Anything else stops the preamble.
+    break;
   }
 
-  // Now alternate: skip whitespace, then try each prefix form. Stop as
-  // soon as none match.
-  while (cursor < n) {
-    const before = cursor;
-    skipWhitespace();
-    if (skipLineComment()) continue;
-    if (skipBlockComment()) continue;
-    if (skipDirective()) continue;
-    if (skipImportStatement()) continue;
-    if (cursor === before) break;
+  // Babel ranges don't include a trailing newline. Advance past any
+  // horizontal whitespace followed by a single line terminator (any of
+  // `\n`, `\r\n`, or bare `\r`) so the inserted imports land on their
+  // own line rather than appended to the last preamble statement.
+  const match = /^[ \t]*(?:\r\n|\n|\r)/.exec(source.slice(lastPreambleEnd));
+  if (match !== null) {
+    lastPreambleEnd += match[0].length;
   }
 
-  return cursor;
+  return lastPreambleEnd;
 }
 
 /**

@@ -7,7 +7,7 @@
  *   2. The `schema` identifier resolves to a named import whose source
  *      module path is inside the Vite root.
  *
- * Returns a fully-resolved `RewriteSite` on success, or a `SkipReason`
+ * Returns a fully-resolved `GenerateSite` on success, or a `SkipReason`
  * string on failure. The caller buffers the skip reason through the
  * logger.
  *
@@ -46,7 +46,7 @@ export interface ResolvedSite {
   schemaFile: string;
   /** Imported name of the schema from the source module. */
   schemaExportName: string;
-  /** The local identifier the rewrite will introduce (`_z2fGeneratedForm_<n>`). */
+  /** The local identifier that will replace `ZodForm` at this site ( (`_z2fGeneratedForm_<n>`). */
   generatedIdentifier: string;
 }
 

@@ -53,7 +53,7 @@ interface PluginState {
   /** Counters for generate-mode summary at buildEnd. */
   generateFilesProcessed: number;
   generateSitesRewritten: number;
-  /** Compiled rewrite include/exclude pattern matchers. */
+  /** Compiled generate-mode include/exclude pattern matchers. */
   generateInclude: RegExp[] | null;
   generateExclude: RegExp[];
   /** Captured during configResolved. */
@@ -98,7 +98,7 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
     generateFilesProcessed: 0,
     generateSitesRewritten: 0,
     // Default include = every TS/JS source file. Defaults set lazily so
-    // the empty `rewrite: {}` case still gets sensible globbing.
+    // the empty `generate: {}` case still gets sensible globbing.
     generateInclude:
       options.generate === undefined
         ? null
@@ -335,7 +335,11 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
         return null;
       }
 
-      const result = generateSource({ source: code, resolved: resolved.resolved });
+      const result = generateSource({
+        source: code,
+        resolved: resolved.resolved,
+        onWarn: (message) => state.logger.warn(`${filePath}: ${message}`)
+      });
       state.generateSitesRewritten += result.rewritten;
       return { code: result.code, map: result.map };
     },
@@ -429,7 +433,7 @@ export default z2fVite;
 
 /**
  * Compile a list of glob patterns into RegExps. Supports `**` (any path),
- * `*` (any segment), and `{a,b}` (alternation) — enough for the rewrite
+ * `*` (any segment), and `{a,b}` (alternation) — enough for the generate-mode
  * include/exclude config without pulling in a full glob library.
  */
 function compileGlobs(patterns: ReadonlyArray<string>): RegExp[] {
@@ -511,12 +515,12 @@ function validateOptions(options: PluginOptions): void {
   }
 
   if (options.generate !== undefined) {
-    const rewriteAllowed = new Set(['include', 'exclude']);
+    const generateAllowed = new Set(['include', 'exclude']);
     for (const key of Object.keys(options.generate)) {
-      if (!rewriteAllowed.has(key)) {
+      if (!generateAllowed.has(key)) {
         throw new Z2FViteError(
           'Z2F_VITE_INVALID_OPTIONS',
-          `Unknown 'rewrite.${key}' option. Allowed: ${Array.from(rewriteAllowed).sort().join(', ')}.`
+          `Unknown 'generate.${key}' option. Allowed: ${Array.from(generateAllowed).sort().join(', ')}.`
         );
       }
     }

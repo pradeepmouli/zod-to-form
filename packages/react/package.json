@@ -62,5 +62,9 @@
   },
   "dependencies": {
     "@zod-to-form/core": "workspace:*"
+  },
+  "author": "Pradeep Mouli <pmouli@mac.com> (https://github.com/pradeepmouli)",
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -44,7 +44,7 @@ export function buildEffectiveConfig(config: Z2FViteConfig, variant: string): Ef
   const { variants, ...base } = config;
 
   // Default variant + plugin-internal `__generate_<n>` variants always
-  // resolve to the base config. Rewrite-mode synthesizes one variant per
+  // resolve to the base config. Generate-mode synthesizes one variant per
   // `<ZodForm>` site to give each generated component its own cache
   // entry, but they share the user's global config — there's no per-site
   // override mechanism in v1.

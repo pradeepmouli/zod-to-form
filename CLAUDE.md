@@ -30,7 +30,7 @@ packages/
 ├── react/    # @zod-to-form/react — runtime <ZodForm> renderer (peer deps only)
 ├── codegen/  # @zod-to-form/codegen — TSX form component generator
 ├── cli/      # @zod-to-form/cli — build-time codegen CLI
-└── vite/     # @zod-to-form/vite — Vite plugin (?z2f imports + rewrite mode + tree-shake)
+└── vite/     # @zod-to-form/vite — Vite plugin (?z2f imports + generate mode + tree-shake)
 
 specs/
 └── <feature>/  # Feature specification, plan, and design artifacts (one dir per feature)
@@ -62,7 +62,7 @@ pnpm run dev           # Dev mode (parallel)
 - Metadata precedence: form registry → global registry → inferred defaults
 
 ## Recent Changes
-- 007-vite-codegen-plugin: New `@zod-to-form/vite` package shipping the Vite plugin (query mode `?z2f`, rewrite mode, config auto-discovery + watch, resolver tree-shake). `@zod-to-form/core/loader` subpath added (jiti as optional peer); `@zod-to-form/cli/loader` is now a thin re-export. CodegenConfig + canonicalizeConfig moved to core.
+- 007-vite-codegen-plugin: New `@zod-to-form/vite` package shipping the Vite plugin (query mode `?z2f`, generate mode, config auto-discovery + watch, resolver tree-shake). `@zod-to-form/core/loader` subpath added (jiti as optional peer); `@zod-to-form/cli/loader` is now a thin re-export. CodegenConfig + canonicalizeConfig moved to core.
 - 006-validation-optimization: Added TypeScript 5.x with strict mode + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), @hookform/resolvers (peer — conditional after optimization)
 - 005-api-surface-cleanup: Added TypeScript 5.x (strict mode) + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), @hookform/resolvers
 - 004-studio-layout-redesign: Added TypeScript 5.x (strict mode) + React 18+, CodeMirror 6, Zod v4, React Hook Form 7+, @zod-to-form/core, @zod-to-form/react, fflate (new — zip for export)
