@@ -7,7 +7,7 @@
  *   2. The `schema` identifier resolves to a named import whose source
  *      module path is inside the Vite root.
  *
- * Returns a fully-resolved `RewriteSite` on success, or a `SkipReason`
+ * Returns a fully-resolved `GenerateSite` on success, or a `SkipReason`
  * string on failure. The caller buffers the skip reason through the
  * logger.
  *

@@ -169,6 +169,77 @@ const App = () => <ZodForm schema={s} />;
     expect(out.startsWith('#!/usr/bin/env node')).toBe(true);
   });
 
+  it('handles side-effect-only imports (`import "polyfill";`)', async () => {
+    const source = `import 'polyfill';
+import { ZodForm } from '@zod-to-form/react';
+import { s } from './s';
+const App = () => <ZodForm schema={s} />;
+`;
+    const out = await pipeline(source, { './s': '/abs/project/src/s.ts' });
+    expect(out.indexOf("import 'polyfill';")).toBeLessThan(out.indexOf('_z2fGeneratedForm_1'));
+  });
+
+  it('handles TypeScript `import type` forms', async () => {
+    const source = `import type { FC } from 'react';
+import { ZodForm } from '@zod-to-form/react';
+import { s } from './s';
+const App: FC = () => <ZodForm schema={s} />;
+`;
+    const out = await pipeline(source, { './s': '/abs/project/src/s.ts' });
+    expect(out.indexOf('import type { FC }')).toBeLessThan(out.indexOf('_z2fGeneratedForm_1'));
+  });
+
+  it('handles multi-line `import {\\n  a,\\n  b\\n} from ...` statements', async () => {
+    const source = `import {
+  ZodForm
+} from '@zod-to-form/react';
+import { s } from './s';
+const App = () => <ZodForm schema={s} />;
+`;
+    const out = await pipeline(source, { './s': '/abs/project/src/s.ts' });
+    expect(out.indexOf("from '@zod-to-form/react'")).toBeLessThan(
+      out.indexOf('_z2fGeneratedForm_1')
+    );
+  });
+
+  it('handles multiple sequential directives', async () => {
+    const source = `'use client';
+'use strict';
+import { ZodForm } from '@zod-to-form/react';
+import { s } from './s';
+const App = () => <ZodForm schema={s} />;
+`;
+    const out = await pipeline(source, { './s': '/abs/project/src/s.ts' });
+    expect(out.startsWith("'use client';")).toBe(true);
+    expect(out.indexOf("'use strict';")).toBeLessThan(out.indexOf('_z2fGeneratedForm_1'));
+  });
+
+  it('handles a block-comment inside an import statement without corrupting it', async () => {
+    // Block comment contains a quote that a naive textual scanner
+    // would mistake for the import source literal. The AST scanner
+    // handles this correctly because @babel/parser owns the tokenizer.
+    const source = `import { /* "quoted" */ ZodForm } from '@zod-to-form/react';
+import { s } from './s';
+const App = () => <ZodForm schema={s} />;
+`;
+    const out = await pipeline(source, { './s': '/abs/project/src/s.ts' });
+    expect(out.indexOf("from '@zod-to-form/react'")).toBeLessThan(
+      out.indexOf('_z2fGeneratedForm_1')
+    );
+    expect(out).toContain('/* "quoted" */');
+  });
+
+  it('does not crash when a candidate site is followed by an unparseable region', async () => {
+    // scanJsx's own parse-failure path short-circuits the pipeline,
+    // so a truly broken source produces zero candidates and nothing
+    // to rewrite. The pipeline returns the source unchanged.
+    const source = `import { ZodForm } from '@zod-to-form/react
+// unclosed import specifier above — no closing quote
+`;
+    const out = await pipeline(source, {});
+    expect(typeof out).toBe('string');
+  });
+
   it('produces a sourcemap with hires: true', async () => {
     const source = `
 import { ZodForm } from '@zod-to-form/react';

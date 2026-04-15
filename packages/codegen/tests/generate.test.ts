@@ -143,6 +143,11 @@ describe('generateFormComponent', () => {
     expect(result).toContain('import { useForm');
     expect(result).toContain('import { zodResolver }');
     expect(result).toContain('export function MyForm');
+    // Default export MUST also appear, so `import MyForm from './x'`
+    // works alongside `import { MyForm } from './x'`. The Vite plugin's
+    // `@zod-to-form/vite/client` ambient declarations type the default
+    // export; the named export is the runtime alias.
+    expect(result).toContain('export default MyForm;');
     // handleSubmit wraps onSubmit in an arrow that casts data to FormOutput
     // (RHF's TFieldValues is input-type; onSubmit receives output-type).
     expect(result).toContain('handleSubmit(');

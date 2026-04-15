@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 import Link from '@docusaurus/Link';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
@@ -97,15 +97,28 @@ export default function Form(props) {
 
 type PathKey = 'runtime' | 'codegen' | 'plugin';
 
+/** One cell in a tab's content grid — a titled code snippet. */
+interface SnippetCell {
+  title: string;
+  language: string;
+  source: string;
+}
+
+/**
+ * `left` and `right` carry 1 or 2 cells. Encoding the row count as an
+ * array length (rather than a pair of nullable fields) makes the JSX
+ * trivially map-able and keeps asymmetric column heights from creeping
+ * in as a bug surface. Each tab either has one row (runtime/codegen)
+ * or two (plugin), and the column-level invariant "both columns have
+ * the same row count" falls out naturally from the shared array length.
+ */
 interface IntegrationPath {
   key: PathKey;
   label: string;
   tagline: string;
   bullets: string[];
-  leftTop: { title: string; language: string; source: string };
-  leftBottom: { title: string; language: string; source: string } | null;
-  rightTop: { title: string; language: string; source: string };
-  rightBottom: { title: string; language: string; source: string } | null;
+  left: SnippetCell[];
+  right: SnippetCell[];
 }
 
 const PATHS: IntegrationPath[] = [
@@ -118,10 +131,8 @@ const PATHS: IntegrationPath[] = [
       'Schema change → form updates on the next render.',
       'Smallest mental model — perfect for admin panels and prototypes.'
     ],
-    leftTop: { title: 'z2f.config.ts', language: 'tsx', source: Z2F_CONFIG_SHADCN },
-    leftBottom: null,
-    rightTop: { title: 'src/App.tsx', language: 'tsx', source: RUNTIME_APP },
-    rightBottom: null
+    left: [{ title: 'z2f.config.ts', language: 'tsx', source: Z2F_CONFIG_SHADCN }],
+    right: [{ title: 'src/App.tsx', language: 'tsx', source: RUNTIME_APP }]
   },
   {
     key: 'codegen',
@@ -132,14 +143,8 @@ const PATHS: IntegrationPath[] = [
       'Zero runtime dependency on zod-to-form in the emitted code.',
       'Hand-editable output — review diffs, apply custom tweaks, move on.'
     ],
-    leftTop: { title: 'z2f.config.ts', language: 'tsx', source: Z2F_CONFIG_SHADCN },
-    leftBottom: null,
-    rightTop: {
-      title: 'src/generated/SignupForm.tsx',
-      language: 'tsx',
-      source: CODEGEN_GENERATED
-    },
-    rightBottom: null
+    left: [{ title: 'z2f.config.ts', language: 'tsx', source: Z2F_CONFIG_SHADCN }],
+    right: [{ title: 'src/generated/SignupForm.tsx', language: 'tsx', source: CODEGEN_GENERATED }]
   },
   {
     key: 'plugin',
@@ -150,17 +155,22 @@ const PATHS: IntegrationPath[] = [
       'HMR keeps the form in sync with the schema — no commit, no CLI step.',
       'Same generated code as the CLI path; zero runtime overhead in prod.'
     ],
-    leftTop: { title: 'z2f.config.ts', language: 'tsx', source: Z2F_CONFIG_SHADCN },
-    leftBottom: { title: 'vite.config.ts', language: 'tsx', source: PLUGIN_VITE_CONFIG },
-    // Top = original runtime source the user wrote; bottom = what the
-    // plugin emits in its place at build time. The ↓ connector between
-    // the two makes the transform visible.
-    rightTop: { title: 'src/App.tsx (original)', language: 'tsx', source: RUNTIME_APP },
-    rightBottom: {
-      title: 'Virtual module (compiled by plugin)',
-      language: 'tsx',
-      source: PLUGIN_GENERATED
-    }
+    left: [
+      { title: 'z2f.config.ts', language: 'tsx', source: Z2F_CONFIG_SHADCN },
+      { title: 'vite.config.ts', language: 'tsx', source: PLUGIN_VITE_CONFIG }
+    ],
+    // right[0] = original runtime source the user wrote;
+    // right[1] = what the plugin emits in its place at build time.
+    // The ↓ connector between them (rendered in <PathColumn/>) makes
+    // the transform visible at a glance.
+    right: [
+      { title: 'src/App.tsx (original)', language: 'tsx', source: RUNTIME_APP },
+      {
+        title: 'Virtual module (compiled by plugin)',
+        language: 'tsx',
+        source: PLUGIN_GENERATED
+      }
+    ]
   }
 ];
 
@@ -261,43 +271,46 @@ function ArchitectureSection(): ReactNode {
         </div>
 
         <div className={styles.pathContent} role="tabpanel" aria-label={active.label}>
-          <div className={styles.pathColumn}>
-            <div className={styles.pathColumnHeader}>Config</div>
-            <PathSnippet snippet={active.leftTop} />
-            {active.leftBottom !== null && (
-              <>
-                <div className={styles.pathConnector}>
-                  <span className={styles.pathConnectorPlus}>+</span>
-                </div>
-                <PathSnippet snippet={active.leftBottom} />
-              </>
-            )}
-          </div>
-          <div className={styles.pathColumn}>
-            <div className={styles.pathColumnHeader}>Code</div>
-            <PathSnippet snippet={active.rightTop} />
-            {active.rightBottom !== null && (
-              <>
-                <div className={styles.pathConnector}>
-                  <span className={styles.pathConnectorArrow} aria-hidden>
-                    ↓
-                  </span>
-                </div>
-                <PathSnippet snippet={active.rightBottom} />
-              </>
-            )}
-          </div>
+          <PathColumn header="Config" cells={active.left} connectorKind="plus" />
+          <PathColumn header="Code" cells={active.right} connectorKind="arrow" />
         </div>
       </div>
     </section>
   );
 }
 
-function PathSnippet({
-  snippet
+/**
+ * Renders one column of the architecture content panel. `cells` is
+ * 1 or 2 entries; when 2, a connector (either `+` for the config column
+ * or `↓` for the code column) is drawn between them.
+ */
+function PathColumn({
+  header,
+  cells,
+  connectorKind
 }: {
-  snippet: { title: string; language: string; source: string };
+  header: string;
+  cells: SnippetCell[];
+  connectorKind: 'plus' | 'arrow';
 }): ReactNode {
+  return (
+    <div className={styles.pathColumn}>
+      <div className={styles.pathColumnHeader}>{header}</div>
+      {cells.map((cell, i) => (
+        <Fragment key={cell.title}>
+          {i > 0 && (
+            <div className={styles.pathConnector} data-kind={connectorKind} aria-hidden>
+              {connectorKind === 'plus' ? '+' : '↓'}
+            </div>
+          )}
+          <PathSnippet snippet={cell} />
+        </Fragment>
+      ))}
+    </div>
+  );
+}
+
+function PathSnippet({ snippet }: { snippet: SnippetCell }): ReactNode {
   return (
     <div className={styles.pathSnippet}>
       <div className={styles.pathSnippetTitle}>{snippet.title}</div>
@@ -309,12 +322,10 @@ function PathSnippet({
 /**
  * Render a string with single-backtick segments as <code> spans so the
  * tab bullets can have inline monospace highlights without needing MDX.
+ * Non-code parts are returned as plain strings (no wrapping <span>).
  */
-function renderInlineCode(text: string): ReactNode {
-  const parts = text.split('`');
-  return parts.map((part, i) =>
-    i % 2 === 1 ? <code key={i}>{part}</code> : <span key={i}>{part}</span>
-  );
+function renderInlineCode(text: string): ReactNode[] {
+  return text.split('`').map((part, i) => (i % 2 === 1 ? <code key={i}>{part}</code> : part));
 }
 
 function CodePreviewSection(): ReactNode {

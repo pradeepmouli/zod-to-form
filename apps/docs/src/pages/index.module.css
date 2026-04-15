@@ -360,45 +360,32 @@
   max-height: 320px;
 }
 
-/* Connector between the top and bottom cell of a column. The left
-   column gets a "+" to signal that the two configs combine; the right
-   column gets a "↓" to signal the transform direction (src → output). */
+/* Connector between the top and bottom cell of a column. The Config
+   column gets a "+" (configs combine); the Code column gets a "↓"
+   (transform direction: src → compiled output). Single class with a
+   `data-kind` attribute picks the color — everything else is shared. */
 .pathConnector {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 1.5rem;
+  font-weight: 700;
+  width: 32px;
+  height: 32px;
+  margin: 0.75rem auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 0;
+  border: 1px solid var(--z2f-border-default);
+  border-radius: 50%;
+  background: var(--z2f-bg-surface);
   color: var(--z2f-text-muted);
 }
 
-.pathConnectorPlus {
-  font-family: var(--ifm-font-family-monospace);
-  font-size: 1.5rem;
-  font-weight: 700;
+.pathConnector[data-kind='plus'] {
   color: var(--z2f-teal);
-  width: 32px;
-  height: 32px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--z2f-border-default);
-  border-radius: 50%;
-  background: var(--z2f-bg-surface);
 }
 
-.pathConnectorArrow {
-  font-family: var(--ifm-font-family-monospace);
-  font-size: 1.5rem;
-  font-weight: 700;
+.pathConnector[data-kind='arrow'] {
   color: var(--z2f-brand);
-  width: 32px;
-  height: 32px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--z2f-border-default);
-  border-radius: 50%;
-  background: var(--z2f-bg-surface);
 }
 
 @media (max-width: 960px) {

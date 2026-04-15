@@ -511,12 +511,12 @@ function validateOptions(options: PluginOptions): void {
   }
 
   if (options.generate !== undefined) {
-    const rewriteAllowed = new Set(['include', 'exclude']);
+    const generateAllowed = new Set(['include', 'exclude']);
     for (const key of Object.keys(options.generate)) {
-      if (!rewriteAllowed.has(key)) {
+      if (!generateAllowed.has(key)) {
         throw new Z2FViteError(
           'Z2F_VITE_INVALID_OPTIONS',
-          `Unknown 'rewrite.${key}' option. Allowed: ${Array.from(rewriteAllowed).sort().join(', ')}.`
+          `Unknown 'generate.${key}' option. Allowed: ${Array.from(generateAllowed).sort().join(', ')}.`
         );
       }
     }

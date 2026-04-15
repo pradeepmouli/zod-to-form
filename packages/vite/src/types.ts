@@ -3,7 +3,7 @@
  *
  * Shapes are derived directly from `specs/007-vite-codegen-plugin/data-model.md`
  * — entities #1 (PluginOptions), #2 (GenerationTarget), #3 (CompilationCache
- * via CompilationEntry), #4 (RewriteSite), #5 (HMRInvalidationMap).
+ * via CompilationEntry), #4 (GenerateSite), #5 (HMRInvalidationMap).
  *
  * The `CodegenConfig` referenced here is the canonical type from
  * `@zod-to-form/core` (moved there during this feature so the Vite plugin
@@ -168,13 +168,13 @@ export interface CompilationEntry {
   emittedAt: number;
 }
 
-// ─── 4. RewriteSite ──────────────────────────────────────────────────
+// ─── 4. GenerateSite ──────────────────────────────────────────────────
 
 /**
  * A single `<ZodForm>` JSX element matched by generate mode.
  * Lives only during a single `transform` call — not persisted.
  */
-export interface RewriteSite {
+export interface GenerateSite {
   /** Absolute path to the source file containing the rewrite. */
   sourceFile: string;
 
