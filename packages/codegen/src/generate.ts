@@ -1,4 +1,4 @@
-import type { FormField } from '@zod-to-form/core';
+import type { CodegenConfig, FormField } from '@zod-to-form/core';
 import { getEmptyDefault } from '@zod-to-form/core';
 import type { ComponentOverride, FieldConfig, ZodFormsConfig } from '@zod-to-form/core';
 import {
@@ -9,27 +9,10 @@ import {
 } from './templates.js';
 import { PRESET_TEMPLATE_IMPORTS } from './field-templates.js';
 
-export type CodegenConfig = {
-  /** Optional pre-computed import path for the schema (e.g., './schema.js'). Defaults to './schema'. The CLI typically computes this from file paths; the browser playground can pass it explicitly. */
-  schemaImportPath?: string;
-  exportName: string;
-  componentName: string;
-  mode: 'submit' | 'auto-save';
-  componentConfig?: ZodFormsConfig<Record<string, unknown>>;
-  ui: 'shadcn' | 'html';
-  /** @deprecated Currently unused. Reserved for future server action codegen support. */
-  serverAction?: boolean;
-  /** Force FormProvider wrapper in submit mode. Auto-save mode always uses FormProvider regardless. */
-  formProvider?: boolean;
-  /** Validation optimization level. When set, generated code uses per-field validation instead of zodResolver. */
-  validationLevel?: 1 | 2 | 3;
-  /** SchemaLite for submit-time validation of top-level effects (null when no effects exist) */
-  schemaLite?: import('zod/v4/core').$ZodType | null;
-  /** Codegen metadata for generating the .lite.ts file */
-  schemaLiteInfo?: import('@zod-to-form/core').SchemaLiteInfo;
-  /** Output path of the form component — used to compute the .lite.ts import path */
-  outputPath?: string;
-};
+// `CodegenConfig` moved to @zod-to-form/core during feature 007-vite-codegen-plugin.
+// Re-exported below for backward compatibility so existing consumers of
+// `import { CodegenConfig } from '@zod-to-form/codegen'` keep working.
+export type { CodegenConfig } from '@zod-to-form/core';
 
 function renderLiteralProp(value: unknown): string | undefined {
   if (typeof value === 'string') {
@@ -782,6 +765,13 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
     `  return (`,
     ...wrappedContent,
     `  );`,
-    `}`
+    `}`,
+    '',
+    // Emit a default export alongside the named one so either import
+    // style works: `import Form from './x'` and `import { Form } from
+    // './x'`. The Vite plugin's `?z2f` virtual modules and the CLI's
+    // `.generated.tsx` files both benefit — matches the convention
+    // every React component-library generator uses.
+    `export default ${config.componentName};`
   ].join('\n');
 }

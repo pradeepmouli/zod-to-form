@@ -255,8 +255,12 @@ const config: Config = {
           position: 'left'
         },
         {
-          // TODO: replace with the hosted playground URL once deployed.
-          href: 'https://pradeepmouli.github.io/zod-to-form-playground/',
+          // Under Cloudflare Pages (zod.toform.dev), the playground is
+          // deployed as a subpath at /play/ by build-combined.mts.
+          // On GitHub Pages the playground is not deployed — link to the dev URL.
+          href: isCloudflarePages
+            ? '/play/'
+            : 'https://github.com/pradeepmouli/zod-to-form/tree/master/apps/playground',
           label: 'Playground',
           position: 'left'
         },
