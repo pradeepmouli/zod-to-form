@@ -35,7 +35,7 @@ Examples:
 ## Variant name constraints
 
 - MUST match `/^[A-Za-z_][A-Za-z0-9_]*$/` — JavaScript identifier rules. No hyphens, no unicode.
-- Reserved internally: names starting with `__rewrite_` are reserved for rewrite mode's synthesized variants. A user-authored `?z2f=__rewrite_foo` MUST be rejected with a clear error.
+- Reserved internally: names starting with `__generate_` are reserved for generate mode's synthesized variants. A user-authored `?z2f=__generate_foo` MUST be rejected with a clear error.
 - The empty variant (`?z2f` with no `=value`) is the default target. Config-level `variants.default` is a legal way to describe its settings, but is not required — the default target falls back to the top-level config.
 
 ## Resolution behavior

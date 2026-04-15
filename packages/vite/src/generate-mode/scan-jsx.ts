@@ -5,7 +5,7 @@
  *
  * The substring fast-path is critical: most files in a typical project
  * don't contain `'ZodForm'` anywhere, so a single `indexOf` check keeps
- * rewrite-mode's per-file cost at zero for the common case (research R3).
+ * generate-mode's per-file cost at zero for the common case (research R3).
  *
  * The Babel visitor only fires on `JSXElement` nodes. The traversal still
  * walks the full AST — that's how `@babel/traverse` works — but the per-
@@ -108,7 +108,7 @@ export function scanJsx(source: string): ScanResult | null {
     });
   } catch (err) {
     // Surface the parse failure as a buffered skip so the user sees one
-    // line in the buildEnd rewrite-mode summary instead of silently
+    // line in the buildEnd generate-mode summary instead of silently
     // missing the rewrite. The parse error itself still propagates
     // through Vite's normal pipeline and the user fixes it there.
     const message = err instanceof Error ? err.message : String(err);

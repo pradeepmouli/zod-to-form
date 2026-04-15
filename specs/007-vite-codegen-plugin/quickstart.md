@@ -14,7 +14,7 @@ pnpm add -D @zod-to-form/vite
 # or yarn add --dev @zod-to-form/vite
 ```
 
-The package pulls `@zod-to-form/codegen` as a dependency automatically. You also need `zod` and `@zod-to-form/react` (the latter provides `ZodForm` types and, in rewrite mode, the runtime entry point).
+The package pulls `@zod-to-form/codegen` as a dependency automatically. You also need `zod` and `@zod-to-form/react` (the latter provides `ZodForm` types and, in generate mode, the runtime entry point).
 
 ## 2. Register the plugin
 
@@ -26,7 +26,7 @@ import z2fVite from '@zod-to-form/vite';
 
 export default defineConfig({
   plugins: [
-    z2fVite(),       // default: query-string mode only, rewrite mode OFF
+    z2fVite(),       // default: query-string mode only, generate mode OFF
     react(),
   ],
 });
@@ -125,7 +125,7 @@ pnpm build
 
 Inspect `dist/assets/*.js`: the generated form is inlined in the bundle. No `@zod-to-form/react` or `@zod-to-form/core` code is present.
 
-## 8. (Optional) Enable rewrite mode — "zero-source-change upgrade"
+## 8. (Optional) Enable generate mode — "zero-source-change upgrade"
 
 Suppose you already have an app that uses `<ZodForm>`:
 
@@ -144,9 +144,9 @@ You want the production benefits of codegen without rewriting your source. Flip 
 ```ts
 // vite.config.ts
 plugins: [
-  // Presence of the `rewrite` object — even empty — enables rewrite mode.
-  // Pass `rewrite: { include: [...], exclude: [...] }` to constrain scanning.
-  z2fVite({ rewrite: {} }),
+  // Presence of the `generate` object — even empty — enables generate mode.
+  // Pass `generate: { include: [...], exclude: [...] }` to constrain scanning.
+  z2fVite({ generate: {} }),
   react(),
 ],
 ```
@@ -209,12 +209,12 @@ With `write` set, the plugin still serves virtual modules at dev time but also w
 | "Cannot find module './schemas/signup.ts?z2f'" in IDE | Missing TypeScript declarations | Add `"types": ["@zod-to-form/vite/client"]` to `tsconfig.json` |
 | Dev server hangs after saving a schema | Config file has a syntax error | Check the Vite terminal output and the browser overlay — the plugin keeps the last-good config visible until the file is valid |
 | Generated form doesn't reflect my config | Plugin can't find `z2f.config.ts` | Pass `configPath: '/absolute/path'` to the plugin options, or move the config to the project root |
-| Rewrite mode skipped a `<ZodForm>` call | Schema identifier isn't statically resolvable | Check the DEBUG log output after the build — each skipped site gets a reason line |
+| Generate mode skipped a `<ZodForm>` call | Schema identifier isn't statically resolvable | Check the DEBUG log output after the build — each skipped site gets a reason line |
 | `?z2f=edit` throws `Z2F_VITE_UNKNOWN_VARIANT` | The variant name isn't declared in `config.variants` | Add an entry to `variants` in `z2f.config.ts` or change the query value |
 
 ## What's next
 
 - [Plugin options reference](./contracts/plugin-options.md)
 - [Query-specifier grammar](./contracts/query-specifier.md)
-- [Rewrite-mode rules](./contracts/rewrite-mode.md)
+- [Rewrite-mode rules](./contracts/generate-mode.md)
 - [Benchmarks — why codegen is faster than runtime](../../apps/docs/docs/guides/benchmarks.md)

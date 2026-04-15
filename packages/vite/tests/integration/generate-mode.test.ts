@@ -7,14 +7,14 @@ import { build, type Rollup } from 'vite';
 import { z2fVite } from '../../src/index.js';
 
 /**
- * Integration: rewrite-mode end-to-end via Vite's programmatic `build()`.
+ * Integration: generate-mode end-to-end via Vite's programmatic `build()`.
  *
  * We use `build()` rather than `createServer()` because the dev-server
  * transform pipeline wraps `pluginContainer.transform` with import
  * analysis + dep optimization, which fights us when the test feeds raw
  * source in. `build()` runs the same transform hook as part of a real
  * Rollup build — it's the actual code path users hit when they `vite
- * build` with rewrite mode enabled.
+ * build` with generate mode enabled.
  *
  * The fixture's `App.tsx` contains a happy-path `<ZodForm schema={X}>`
  * site. We externalize react / react-hook-form / @zod-to-form/react so
@@ -23,14 +23,14 @@ import { z2fVite } from '../../src/index.js';
  */
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const FIXTURE_ROOT = path.resolve(__dirname, '../fixtures/rewrite-project');
+const FIXTURE_ROOT = path.resolve(__dirname, '../fixtures/generate-project');
 const APP_PATH = path.join(FIXTURE_ROOT, 'src/App.tsx');
 const ORIGINAL_APP = await fs.readFile(APP_PATH, 'utf8');
 
 let createdFiles: string[] = [];
 
 async function runBuild(options: {
-  rewrite: boolean;
+  generate: boolean;
   logLevel?: 'silent' | 'info' | 'debug';
 }): Promise<{ output: Rollup.RollupOutput; entryFile: string }> {
   // Each build gets a unique entry file so parallel runs don't collide.
@@ -43,7 +43,7 @@ async function runBuild(options: {
     configFile: false,
     plugins: [
       z2fVite({
-        ...(options.rewrite ? { rewrite: {} } : {}),
+        ...(options.generate ? { generate: {} } : {}),
         configOverride: {
           componentName: 'SignupForm',
           mode: 'submit',
@@ -93,9 +93,9 @@ function joinChunks(output: Rollup.RollupOutput): string {
     .join('\n');
 }
 
-describe('rewrite-mode integration', () => {
+describe('generate-mode integration', () => {
   it('rewrites <ZodForm schema={X}> into a generated component when rewrite is enabled', async () => {
-    const { output } = await runBuild({ rewrite: true });
+    const { output } = await runBuild({ generate: true });
     const code = joinChunks(output);
 
     // Original ZodForm JSX element gone.
@@ -112,7 +112,7 @@ describe('rewrite-mode integration', () => {
   });
 
   it('leaves <ZodForm> alone when rewrite is NOT enabled', async () => {
-    const { output } = await runBuild({ rewrite: false });
+    const { output } = await runBuild({ generate: false });
     const code = joinChunks(output);
     // Without rewrite, no synthesized identifier is added and no
     // generated `function Form` body appears in the bundle.
@@ -122,10 +122,10 @@ describe('rewrite-mode integration', () => {
   it('emits a build-end summary at info level', async () => {
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
     try {
-      await runBuild({ rewrite: true, logLevel: 'info' });
+      await runBuild({ generate: true, logLevel: 'info' });
       const summaryLines = infoSpy.mock.calls
         .map((call) => String(call[0] ?? ''))
-        .filter((s) => s.includes('Rewrite mode processed'));
+        .filter((s) => s.includes('Generate mode processed'));
       expect(summaryLines.length).toBeGreaterThan(0);
       expect(summaryLines[0]).toMatch(/processed\s+\d+\s+files,\s+rewrote\s+\d+\s+call sites/);
     } finally {
@@ -136,10 +136,10 @@ describe('rewrite-mode integration', () => {
   it('does not emit a summary when rewrite is disabled', async () => {
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
     try {
-      await runBuild({ rewrite: false, logLevel: 'info' });
+      await runBuild({ generate: false, logLevel: 'info' });
       const summaryLines = infoSpy.mock.calls
         .map((call) => String(call[0] ?? ''))
-        .filter((s) => s.includes('Rewrite mode processed'));
+        .filter((s) => s.includes('Generate mode processed'));
       expect(summaryLines.length).toBe(0);
     } finally {
       infoSpy.mockRestore();

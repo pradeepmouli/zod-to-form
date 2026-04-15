@@ -17,16 +17,16 @@ User-provided plugin configuration, passed to the factory function.
 |---|---|---|---|
 | `configPath` | `string \| undefined` | auto-discover | Path to `z2f.config.ts`. If undefined, walks up from the Vite `root` looking for `z2f.config.{ts,js,mjs}`. |
 | `configOverride` | `Partial<Z2FConfig> \| undefined` | `undefined` | Shallow override merged on top of the loaded config. Useful for CI or multi-mode builds. |
-| `rewriteZodForm` | `boolean` | `false` | FR-024: rewrite mode is OFF by default. When true, enables JSX scanning and `<ZodForm>` replacement. |
-| `rewriteInclude` | `string[] \| undefined` | `['**/*.{ts,tsx,js,jsx}']` | Glob patterns for files the rewrite scanner should consider. Only consulted when `rewriteZodForm` is true. |
-| `rewriteExclude` | `string[] \| undefined` | `['**/node_modules/**', '**/dist/**']` | Glob exclusions for the rewrite scanner. Always includes `node_modules` regardless of user setting (safety). |
+| `generate` | `boolean` | `false` | FR-024: generate mode is OFF by default. When true, enables JSX scanning and `<ZodForm>` replacement. |
+| `include (inside `generate`)` | `string[] \| undefined` | `['**/*.{ts,tsx,js,jsx}']` | Glob patterns for files the rewrite scanner should consider. Only consulted when `generate` is true. |
+| `exclude (inside `generate`)` | `string[] \| undefined` | `['**/node_modules/**', '**/dist/**']` | Glob exclusions for the rewrite scanner. Always includes `node_modules` regardless of user setting (safety). |
 | `write` | `WriteOptions \| undefined` | `undefined` (virtual only) | Optional opt-in to emit generated files to disk. When set, the plugin writes `*.generated.tsx` alongside the schema file or into `write.outDir`. |
 | `logLevel` | `'silent' \| 'warn' \| 'info' \| 'debug'` | `'info'` | Controls plugin-specific logging. Independent of Vite's own log level. |
 
 **Validation**:
 
 - `configPath`, if provided, MUST resolve to an existing file at plugin registration time; otherwise throw with a clear error.
-- `rewriteInclude` / `rewriteExclude` are only consulted when `rewriteZodForm` is true; providing them with rewrite disabled is a warning, not an error.
+- `include (inside `generate`)` / `exclude (inside `generate`)` are only consulted when `generate` is true; providing them with rewrite disabled is a warning, not an error.
 - `write.outDir`, if provided, MUST be inside the Vite `root`; otherwise refuse with a clear error (prevents accidentally writing to system paths).
 
 **Lifecycle**: Constructed once when the user calls `z2fVite(options)`. Immutable for the life of the plugin instance.
@@ -41,21 +41,21 @@ A single `(schema, variant, config)` triple that produces exactly one generated 
 |---|---|---|
 | `schemaFile` | `string` | Absolute, normalized path to the schema source file. Identity. |
 | `exportName` | `string` | The named export to pick from the schema module (e.g., `'signupSchema'`). Default: the first export whose `_zod` matches. |
-| `variant` | `string` | Variant name from the `?z2f=<variant>` query, or `''` for the default variant. Rewrite-mode variants use the `__rewrite_<n>` prefix. |
+| `variant` | `string` | Variant name from the `?z2f=<variant>` query, or `''` for the default variant. Rewrite-mode variants use the `__generate_<n>` prefix. |
 | `configHash` | `string` | SHA-256 of the serialized effective config (global + per-variant). Changes invalidate the cache. |
 | `componentName` | `string` | Derived from `exportName` + variant (e.g., `SignupForm`, `SignupEditForm`). Used as the exported React component name. |
 | `sourceKind` | `'query' \| 'rewrite'` | How this target was introduced. `'query'` means an explicit `?z2f` import; `'rewrite'` means JSX scanner found a `<ZodForm>` call site. |
 
 **Validation**:
 
-- `schemaFile` MUST be an absolute path and MUST be inside the Vite `root` (schemas in `node_modules` are rejected with a clear error unless `rewriteZodForm` is false, in which case they can't be reached anyway because no `?z2f` import will be written for them).
+- `schemaFile` MUST be an absolute path and MUST be inside the Vite `root` (schemas in `node_modules` are rejected with a clear error unless `generate` is false, in which case they can't be reached anyway because no `?z2f` import will be written for them).
 - `exportName` MUST exist on the schema module namespace after dynamic load, and the value at that export MUST have a `_zod` property (structural Zod-v4 check).
 - `configHash` MUST be recomputed from the canonical serialization of the resolved config, not from any intermediate form. Two targets with equal configs MUST produce equal hashes.
 - `componentName` MUST be a valid JavaScript identifier. If the derived name collides with a reserved word or a JSX built-in, append a numeric suffix.
 
 **Lifecycle**:
 
-1. **Created** during `resolveId` (query mode) or `transform` (rewrite mode) when the plugin first encounters the target.
+1. **Created** during `resolveId` (query mode) or `transform` (generate mode) when the plugin first encounters the target.
 2. **Compiled** during `load` → `generateFormComponent` call.
 3. **Cached** in the `CompilationCache` keyed by `(schemaFile, variant, configHash)`.
 4. **Invalidated** when any of the following change: the schema file content, the config file content, or the plugin options. Invalidation evicts the cache entry; next `load` recompiles.
@@ -97,7 +97,7 @@ Where `CompilationEntry` is:
 
 ### 4. `RewriteSite`
 
-A single `<ZodForm>` JSX element that rewrite mode has matched and will replace.
+A single `<ZodForm>` JSX element that generate mode has matched and will replace.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -106,7 +106,7 @@ A single `<ZodForm>` JSX element that rewrite mode has matched and will replace.
 | `schemaFile` | `string` | Absolute path to the schema file the `schema={X}` identifier resolves to. |
 | `exportName` | `string` | The export name of the identifier in the schema module. |
 | `generatedIdentifier` | `string` | The local name that replaces `ZodForm` at this call site (e.g., `_GeneratedForm_1`). Unique within the source file. |
-| `variant` | `string` | Always `__rewrite_<n>` where `<n>` is a per-source-file counter. Keeps rewrite-mode variants from colliding with user-declared variants. |
+| `variant` | `string` | Always `__generate_<n>` where `<n>` is a per-source-file counter. Keeps generate-mode variants from colliding with user-declared variants. |
 
 **Validation**:
 

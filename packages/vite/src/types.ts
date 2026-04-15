@@ -67,19 +67,22 @@ export interface PluginOptions {
   configOverride?: Partial<Z2FViteConfig>;
 
   /**
-   * Rewrite mode: scan JSX source for `<ZodForm>` elements and rewrite
-   * statically resolvable call sites to use generated components.
+   * Generate mode: scan JSX source for `<ZodForm>` elements and replace
+   * statically resolvable call sites with generated form components at
+   * build time. The name mirrors the CLI's `zod-to-form generate`
+   * command — it's the same codegen, driven by static analysis of your
+   * JSX instead of explicit CLI invocation.
    *
-   * **OFF by default** (FR-024): rewrite mode silently changes compiled
+   * **OFF by default** (FR-024): generate mode silently changes compiled
    * output for code the developer didn't explicitly annotate, so it is a
    * deliberate opt-in. Presence of this object (even empty `{}`) enables
    * it; omit the field entirely to keep it off. This avoids the invalid
-   * state where `rewriteInclude` is set but rewrite is disabled.
+   * state where `include` is set but the mode is disabled.
    */
-  rewrite?: {
-    /** Glob patterns for files rewrite mode should consider. */
+  generate?: {
+    /** Glob patterns for files generate mode should consider. */
     include?: string[];
-    /** Glob patterns excluded from rewrite mode. */
+    /** Glob patterns excluded from generate mode. */
     exclude?: string[];
   };
 
@@ -119,8 +122,8 @@ interface GenerationTargetBase {
  * generated form. The cache key space.
  *
  * Discriminated on `sourceKind`: query-mode targets carry a user-named
- * variant (or empty string for the default), while rewrite-mode targets
- * use the reserved `__rewrite_<n>` prefix. Encoding the prefix in the
+ * variant (or empty string for the default), while generate-mode targets
+ * use the reserved `__generate_<n>` prefix. Encoding the prefix in the
  * type system prevents accidentally crossing the streams.
  */
 export type GenerationTarget =
@@ -128,15 +131,15 @@ export type GenerationTarget =
       sourceKind: 'query';
       /**
        * Variant name from the `?z2f=<variant>` query, or empty string for
-       * the default variant. MUST NOT start with `__rewrite_` (enforced
+       * the default variant. MUST NOT start with `__generate_` (enforced
        * at runtime by `parseSpecifier`).
        */
       variant: string;
     })
   | (GenerationTargetBase & {
-      sourceKind: 'rewrite';
-      /** Synthesized variant name — always `__rewrite_<n>`. */
-      variant: `__rewrite_${string}`;
+      sourceKind: 'generate';
+      /** Synthesized variant name — always `__generate_<n>`. */
+      variant: `__generate_${string}`;
     });
 
 // ─── 3. CompilationCache (entries) ───────────────────────────────────
@@ -168,7 +171,7 @@ export interface CompilationEntry {
 // ─── 4. RewriteSite ──────────────────────────────────────────────────
 
 /**
- * A single `<ZodForm>` JSX element matched by rewrite mode.
+ * A single `<ZodForm>` JSX element matched by generate mode.
  * Lives only during a single `transform` call — not persisted.
  */
 export interface RewriteSite {
@@ -191,7 +194,7 @@ export interface RewriteSite {
   generatedIdentifier: string;
 
   /**
-   * Synthesized variant name for cache keying. Always `__rewrite_<n>` where
+   * Synthesized variant name for cache keying. Always `__generate_<n>` where
    * `<n>` is a per-source-file counter.
    */
   variant: string;

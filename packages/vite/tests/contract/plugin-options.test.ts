@@ -35,7 +35,7 @@ describe('z2fVite() factory', () => {
       z2fVite({
         configPath: '/abs/z2f.config.ts',
         configOverride: { ui: 'shadcn' },
-        rewrite: { include: ['src/**/*.tsx'], exclude: ['**/dist/**'] },
+        generate: { include: ['src/**/*.tsx'], exclude: ['**/dist/**'] },
         write: { outDir: '/abs/out', filenamePattern: '{schemaBasename}.gen.tsx' },
         logLevel: 'debug'
       })
@@ -43,7 +43,7 @@ describe('z2fVite() factory', () => {
   });
 
   it('accepts an empty rewrite object (opt-in without explicit globs)', () => {
-    expect(() => z2fVite({ rewrite: {} })).not.toThrow();
+    expect(() => z2fVite({ generate: {} })).not.toThrow();
   });
 
   describe('rejects unknown option keys', () => {
@@ -57,16 +57,16 @@ describe('z2fVite() factory', () => {
 
     it('error message lists allowed keys to help the user fix the typo', () => {
       try {
-        z2fVite({ rewirte: {} } as never);
+        z2fVite({ generte: {} } as never);
         expect.fail('Expected z2fVite to throw');
       } catch (err) {
         expect(err).toBeInstanceOf(Z2FViteError);
-        expect((err as Error).message).toContain('rewrite');
+        expect((err as Error).message).toContain('generate');
       }
     });
 
-    it('throws Z2F_VITE_INVALID_OPTIONS for unknown keys nested inside rewrite', () => {
-      expect(() => z2fVite({ rewrite: { includ: [] } } as never)).toThrow(
+    it('throws Z2F_VITE_INVALID_OPTIONS for unknown keys nested inside generate', () => {
+      expect(() => z2fVite({ generate: { includ: [] } } as never)).toThrow(
         /Z2F_VITE_INVALID_OPTIONS/
       );
     });
@@ -94,7 +94,7 @@ describe('z2fVite() factory', () => {
     });
 
     it('accepts a plain object without configPath', () => {
-      const plugin = z2fVite({ rewrite: {} });
+      const plugin = z2fVite({ generate: {} });
       expect(plugin.name).toBe('@zod-to-form/vite');
     });
   });

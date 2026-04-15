@@ -84,18 +84,18 @@ export function parseSpecifier(specifier: string): ParsedSpecifier | null {
     );
   }
 
-  // `__rewrite_` prefix is reserved for rewrite mode's internal use.
-  // The plugin's own rewrite-mode emitter produces ids of the form
-  // `__rewrite_<positive-int>` (counter scoped per source file), and
+  // `__generate_` prefix is reserved for generate mode's internal use.
+  // The plugin's own generate-mode emitter produces ids of the form
+  // `__generate_<positive-int>` (counter scoped per source file), and
   // those round-trip back through this parser when the synthesized
-  // import hits the load hook. Allow the strict `__rewrite_<digits>`
+  // import hits the load hook. Allow the strict `__generate_<digits>`
   // form, reject anything else with the prefix as a user-collision
   // attempt.
-  if (variant.startsWith('__rewrite_')) {
-    if (!/^__rewrite_\d+$/.test(variant)) {
+  if (variant.startsWith('__generate_')) {
+    if (!/^__generate_\d+$/.test(variant)) {
       throw new Z2FViteError(
         'Z2F_VITE_INVALID_VARIANT_NAME',
-        `Variant name '${variant}' uses the reserved '__rewrite_' prefix. The '__rewrite_<n>' form is plugin-internal — pick a different name.`
+        `Variant name '${variant}' uses the reserved '__generate_' prefix. The '__generate_<n>' form is plugin-internal — pick a different name.`
       );
     }
     return { kind: 'z2f', path, variant };

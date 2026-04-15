@@ -33,7 +33,7 @@ export default function App() {
 ## Modes
 
 - **Query-string mode** (default): imports carrying `?z2f` become generated form components.
-- **Rewrite mode** (opt-in via `rewrite: {}`): scans source for `<ZodForm schema={X}>` usages and replaces statically resolvable ones with generated components at build time. Unresolvable sites are left alone and fall through to the runtime path. Presence of the `rewrite` object — even empty — enables the mode; pass `rewrite: { include: [...], exclude: [...] }` to constrain which files are scanned.
+- **Generate mode** (opt-in via `generate: {}`): scans source for `<ZodForm schema={X}>` usages and replaces statically resolvable ones with generated components at build time. Unresolvable sites are left alone and fall through to the runtime path. Presence of the `generate` object — even empty — enables the mode; pass `generate: { include: [...], exclude: [...] }` to constrain which files are scanned. The name mirrors the CLI's `zod-to-form generate` command: same codegen, driven by static analysis instead of an explicit CLI step.
 
 ## License
 

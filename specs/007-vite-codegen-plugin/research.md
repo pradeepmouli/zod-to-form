@@ -37,7 +37,7 @@ Implement the `?z2f` query-string transform using the `resolveId` + `load` + `ha
 
 ### Decision
 
-The plugin loads TWO kinds of TypeScript/JavaScript modules at runtime: user-authored Zod schemas (during `load` for query mode and during `transform` for rewrite mode), and the `z2f.config.ts` file (during `configResolved` and on config-file-changed HMR events). Both use a single mechanism — Vite's own module loaders — so the plugin has no `jiti` dependency and no direct dependency on `@zod-to-form/cli`.
+The plugin loads TWO kinds of TypeScript/JavaScript modules at runtime: user-authored Zod schemas (during `load` for query mode and during `transform` for generate mode), and the `z2f.config.ts` file (during `configResolved` and on config-file-changed HMR events). Both use a single mechanism — Vite's own module loaders — so the plugin has no `jiti` dependency and no direct dependency on `@zod-to-form/cli`.
 
 **Dev mode (`vite dev`)**:
 
@@ -70,28 +70,28 @@ Either path returns a module namespace whose named exports are either Zod schema
 
 ---
 
-## R3 — JSX scanning strategy for rewrite mode
+## R3 — JSX scanning strategy for generate mode
 
 ### Decision
 
-In rewrite mode, scan each `.tsx` / `.jsx` / `.ts` / `.js` source module during the `transform` hook (not `load` — we're modifying existing content). Steps:
+In generate mode, scan each `.tsx` / `.jsx` / `.ts` / `.js` source module during the `transform` hook (not `load` — we're modifying existing content). Steps:
 
-1. **Early exit via substring check**: if the source does not contain `'ZodForm'`, return early. No parse, no traverse. This cheap guard keeps rewrite mode's cost at zero for files that don't use `<ZodForm>`.
-2. **Parse with `@babel/parser`** using `{ sourceType: 'module', plugins: ['jsx', 'typescript'] }`. Parse failures propagate as Vite errors — rewrite mode assumes the file was already valid before the plugin ran.
+1. **Early exit via substring check**: if the source does not contain `'ZodForm'`, return early. No parse, no traverse. This cheap guard keeps generate mode's cost at zero for files that don't use `<ZodForm>`.
+2. **Parse with `@babel/parser`** using `{ sourceType: 'module', plugins: ['jsx', 'typescript'] }`. Parse failures propagate as Vite errors — generate mode assumes the file was already valid before the plugin ran.
 3. **Traverse with `@babel/traverse`**, looking for `JSXElement` nodes whose `openingElement.name.name === 'ZodForm'`. For each match:
    - Walk up the scope to find the `Import` node for `ZodForm`. If the import source is not `@zod-to-form/react`, skip (it's a different `ZodForm`).
    - Find the `schema={X}` attribute. If it's not a `JSXExpressionContainer` wrapping an `Identifier`, skip (dynamic schema — per FR-022, leave as runtime).
    - Use `path.scope.getBinding(identifierName)` to find the binding. If the binding is itself an `ImportDeclaration` pointing to a project-local file (not `node_modules`), record this as a `RewriteSite`. Otherwise skip.
-4. **Apply rewrites with `magic-string`**: for each resolved `RewriteSite`, replace the opening tag `<ZodForm schema={X} ... />` (preserving props) with `<GeneratedForm_<id> ... />` where `GeneratedForm_<id>` is a freshly generated unique local identifier. Prepend an `import { GeneratedForm_<id> } from '<schema>?z2f=__rewrite_<id>'` near the top of the file (after existing imports).
-5. **Emit the `?z2f=__rewrite_<id>'` module via the same query-mode pipeline**. Rewrite mode reuses query mode — the two share a single code path for the actual codegen step. Internal variant names use the `__rewrite_` prefix to distinguish them from user-declared variants and avoid collisions.
+4. **Apply rewrites with `magic-string`**: for each resolved `RewriteSite`, replace the opening tag `<ZodForm schema={X} ... />` (preserving props) with `<GeneratedForm_<id> ... />` where `GeneratedForm_<id>` is a freshly generated unique local identifier. Prepend an `import { GeneratedForm_<id> } from '<schema>?z2f=__generate_<id>'` near the top of the file (after existing imports).
+5. **Emit the `?z2f=__generate_<id>'` module via the same query-mode pipeline**. Generate mode reuses query mode — the two share a single code path for the actual codegen step. Internal variant names use the `__generate_` prefix to distinguish them from user-declared variants and avoid collisions.
 6. **Attach sourcemap** via `magic-string.generateMap({ hires: true })` and return it from the `transform` hook so debugger line numbers match the original source.
 
 ### Rationale
 
-- The substring fast path is critical: most files in a typical project won't contain `ZodForm`, and parsing every TSX module for rewrite mode would dominate build time. A single `indexOf` check costs microseconds per file.
-- Reusing the query-mode pipeline for rewrite-mode outputs keeps the codegen logic in one place. Only the *entry path* differs (declared `?z2f` vs synthesized `?z2f=__rewrite_N`).
+- The substring fast path is critical: most files in a typical project won't contain `ZodForm`, and parsing every TSX module for generate mode would dominate build time. A single `indexOf` check costs microseconds per file.
+- Reusing the query-mode pipeline for generate-mode outputs keeps the codegen logic in one place. Only the *entry path* differs (declared `?z2f` vs synthesized `?z2f=__generate_N`).
 - `path.scope.getBinding` is the standard Babel pattern for resolving imported identifiers, handles shadowing and aliases correctly, and is what every production AST-rewriting tool uses.
-- Using a `__rewrite_` prefix for synthesized variant names (instead of anonymous temporary names) keeps the cache keys human-readable in error messages and debug output.
+- Using a `__generate_` prefix for synthesized variant names (instead of anonymous temporary names) keeps the cache keys human-readable in error messages and debug output.
 
 ### Alternatives considered
 
@@ -105,7 +105,7 @@ In rewrite mode, scan each `.tsx` / `.jsx` / `.ts` / `.js` source module during 
 
 ### Decision
 
-FR-013 requires stripping `@hookform/resolvers/zod` from the production bundle when `optimization.level` is set. Implement this as a separate module transform in the plugin, not as a Rollup external or a rewrite-mode side effect.
+FR-013 requires stripping `@hookform/resolvers/zod` from the production bundle when `optimization.level` is set. Implement this as a separate module transform in the plugin, not as a Rollup external or a generate-mode side effect.
 
 During `transform`:
 

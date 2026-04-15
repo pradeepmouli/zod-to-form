@@ -1,5 +1,5 @@
 /**
- * rewriteSource — apply magic-string edits for each ResolvedSite.
+ * generateSource — apply magic-string edits for each ResolvedSite.
  *
  * Three operations per site:
  *
@@ -8,7 +8,7 @@
  *      removed; all other attributes and children are preserved verbatim.
  *   2. Replace the closing tag's identifier (if any).
  *   3. Append a single `import { Form as <generatedId> } from
- *      '<schemaPath>?z2f=__rewrite_<n>'` after the existing imports.
+ *      '<schemaPath>?z2f=__generate_<n>'` after the existing imports.
  *
  * Idempotent by construction: the substring fast-path in `scan-jsx`
  * checks for `'ZodForm'`, which the rewrite removes — running the
@@ -19,12 +19,12 @@ import MagicString from 'magic-string';
 import type { CandidateAttribute } from './scan-jsx.js';
 import type { ResolvedSite } from './resolve-schema.js';
 
-export interface RewriteSourceInput {
+export interface GenerateSourceInput {
   source: string;
   resolved: ResolvedSite[];
 }
 
-export interface RewriteSourceOutput {
+export interface GenerateSourceOutput {
   /** The transformed source (or the original, if there was nothing to do). */
   code: string;
   /** Hi-res sourcemap from magic-string, suitable for Vite. */
@@ -33,7 +33,7 @@ export interface RewriteSourceOutput {
   rewritten: number;
 }
 
-export function rewriteSource(input: RewriteSourceInput): RewriteSourceOutput {
+export function generateSource(input: GenerateSourceInput): GenerateSourceOutput {
   const { source, resolved } = input;
 
   if (resolved.length === 0) {
@@ -76,12 +76,12 @@ export function rewriteSource(input: RewriteSourceInput): RewriteSourceOutput {
   // directive past the first import, invalidating it, and would push
   // header comments below the generated block.
   //
-  // Every rewrite-mode variant emits its component under the fixed
+  // Every generate-mode variant emits its component under the fixed
   // export name `Form`; see compileTarget's rewrite-variant carve-out.
   const importLines: string[] = [];
   for (let i = 0; i < resolved.length; i++) {
     const site = resolved[i]!;
-    const variant = `__rewrite_${i + 1}`;
+    const variant = `__generate_${i + 1}`;
     importLines.push(
       `import { Form as ${site.generatedIdentifier} } from '${site.schemaFile}?z2f=${variant}';`
     );

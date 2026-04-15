@@ -106,8 +106,8 @@ describe('parseSpecifier', () => {
       expect(() => parseSpecifier('./x.ts?z2f=')).toThrow(/Z2F_VITE_INVALID_VARIANT_NAME/);
     });
 
-    it('rejects user-authored __rewrite_ prefixed variants (reserved internally)', () => {
-      expect(() => parseSpecifier('./x.ts?z2f=__rewrite_foo')).toThrow(
+    it('rejects user-authored __generate_ prefixed variants (reserved internally)', () => {
+      expect(() => parseSpecifier('./x.ts?z2f=__generate_foo')).toThrow(
         /Z2F_VITE_INVALID_VARIANT_NAME/
       );
     });

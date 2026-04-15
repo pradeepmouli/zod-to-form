@@ -27,9 +27,9 @@ import { createLogger } from './logger.js';
 import type { Logger } from './logger.js';
 import { parseZ2FId, resolveZ2FId } from './query-mode/resolve-id.js';
 import { compileTarget } from './query-mode/transform.js';
-import { resolveSchemas } from './rewrite-mode/resolve-schema.js';
-import { rewriteSource } from './rewrite-mode/rewrite-source.js';
-import { scanJsx } from './rewrite-mode/scan-jsx.js';
+import { resolveSchemas } from './generate-mode/resolve-schema.js';
+import { generateSource } from './generate-mode/generate-source.js';
+import { scanJsx } from './generate-mode/scan-jsx.js';
 import { isUseZodFormId, stripResolver } from './resolver-strip.js';
 import type { GenerationTarget, PluginOptions, Z2FViteConfig } from './types.js';
 
@@ -50,12 +50,12 @@ interface PluginState {
   options: PluginOptions;
   logger: Logger;
   cache: CompilationCache;
-  /** Counters for rewrite-mode summary at buildEnd. */
-  rewriteFilesProcessed: number;
-  rewriteSitesRewritten: number;
+  /** Counters for generate-mode summary at buildEnd. */
+  generateFilesProcessed: number;
+  generateSitesRewritten: number;
   /** Compiled rewrite include/exclude pattern matchers. */
-  rewriteInclude: RegExp[] | null;
-  rewriteExclude: RegExp[];
+  generateInclude: RegExp[] | null;
+  generateExclude: RegExp[];
   /** Captured during configResolved. */
   resolvedConfig: ResolvedConfig | null;
   /** Captured during configureServer. Null in build mode. */
@@ -95,18 +95,18 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
     options,
     logger: createLogger(options.logLevel ?? 'info'),
     cache: createCompilationCache(),
-    rewriteFilesProcessed: 0,
-    rewriteSitesRewritten: 0,
+    generateFilesProcessed: 0,
+    generateSitesRewritten: 0,
     // Default include = every TS/JS source file. Defaults set lazily so
     // the empty `rewrite: {}` case still gets sensible globbing.
-    rewriteInclude:
-      options.rewrite === undefined
+    generateInclude:
+      options.generate === undefined
         ? null
-        : compileGlobs(options.rewrite.include ?? ['**/*.{ts,tsx,js,jsx}']),
-    rewriteExclude:
-      options.rewrite === undefined
+        : compileGlobs(options.generate.include ?? ['**/*.{ts,tsx,js,jsx}']),
+    generateExclude:
+      options.generate === undefined
         ? []
-        : compileGlobs([...(options.rewrite.exclude ?? []), '**/node_modules/**', '**/dist/**']),
+        : compileGlobs([...(options.generate.exclude ?? []), '**/node_modules/**', '**/dist/**']),
     resolvedConfig: null,
     devServer: null,
     buildModeServer: null,
@@ -116,7 +116,7 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
     configFilePath: null
   };
 
-  const isRewriteEnabled = options.rewrite !== undefined;
+  const isGenerateEnabled = options.generate !== undefined;
 
   return {
     name: PLUGIN_NAME,
@@ -131,9 +131,12 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
     },
 
     async buildEnd(): Promise<void> {
-      // Flush the rewrite-mode skip summary at info level (or higher).
-      if (isRewriteEnabled) {
-        state.logger.flushRewriteSummary(state.rewriteFilesProcessed, state.rewriteSitesRewritten);
+      // Flush the generate-mode skip summary at info level (or higher).
+      if (isGenerateEnabled) {
+        state.logger.flushGenerateSummary(
+          state.generateFilesProcessed,
+          state.generateSitesRewritten
+        );
       }
       // Tear down the transient SSR loader spun up for build-mode schema
       // evaluation. Safe to call even if it was never created.
@@ -273,9 +276,9 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
         }
       }
 
-      // Rewrite mode is opt-in (FR-024); when `options.rewrite` is
+      // Generate mode is opt-in (FR-024); when `options.generate` is
       // undefined the hook is a no-op for every file.
-      if (!isRewriteEnabled) return null;
+      if (!isGenerateEnabled) return null;
 
       // Strip the query string before glob-matching so `?z2f` virtual ids
       // aren't accidentally targeted (the substring check below would also
@@ -285,19 +288,19 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
 
       // Glob-filter against include / exclude. Filenames must match at
       // least one include pattern and zero exclude patterns.
-      if (!matchesAny(filePath, state.rewriteInclude ?? [])) return null;
-      if (matchesAny(filePath, state.rewriteExclude)) return null;
+      if (!matchesAny(filePath, state.generateInclude ?? [])) return null;
+      if (matchesAny(filePath, state.generateExclude)) return null;
 
       // Substring fast-path inside scanJsx returns null for files without
       // ZodForm — keep this hook's overhead at zero for the common case.
       const scan = scanJsx(code);
       if (scan === null) return null;
 
-      state.rewriteFilesProcessed += 1;
+      state.generateFilesProcessed += 1;
 
       // Buffer scan-time skip diagnostics through the logger.
       for (const skip of scan.skipped) {
-        state.logger.bufferRewriteSkip(filePath, skip.loc.line, skip.loc.column, skip.reason);
+        state.logger.bufferGenerateSkip(filePath, skip.loc.line, skip.loc.column, skip.reason);
       }
 
       if (scan.candidates.length === 0) {
@@ -320,7 +323,7 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
 
       // Buffer resolve-time skip diagnostics.
       for (const skip of resolved.skipped) {
-        state.logger.bufferRewriteSkip(
+        state.logger.bufferGenerateSkip(
           filePath,
           skip.candidate.loc.line,
           skip.candidate.loc.column,
@@ -332,8 +335,8 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
         return null;
       }
 
-      const result = rewriteSource({ source: code, resolved: resolved.resolved });
-      state.rewriteSitesRewritten += result.rewritten;
+      const result = generateSource({ source: code, resolved: resolved.resolved });
+      state.generateSitesRewritten += result.rewritten;
       return { code: result.code, map: result.map };
     },
 
@@ -487,7 +490,7 @@ function matchesAny(filePath: string, patterns: ReadonlyArray<RegExp>): boolean 
 }
 
 function validateOptions(options: PluginOptions): void {
-  const allowedKeys = new Set(['configPath', 'configOverride', 'rewrite', 'write', 'logLevel']);
+  const allowedKeys = new Set(['configPath', 'configOverride', 'generate', 'write', 'logLevel']);
   for (const key of Object.keys(options)) {
     if (!allowedKeys.has(key)) {
       throw new Z2FViteError(
@@ -507,9 +510,9 @@ function validateOptions(options: PluginOptions): void {
     }
   }
 
-  if (options.rewrite !== undefined) {
+  if (options.generate !== undefined) {
     const rewriteAllowed = new Set(['include', 'exclude']);
-    for (const key of Object.keys(options.rewrite)) {
+    for (const key of Object.keys(options.generate)) {
       if (!rewriteAllowed.has(key)) {
         throw new Z2FViteError(
           'Z2F_VITE_INVALID_OPTIONS',

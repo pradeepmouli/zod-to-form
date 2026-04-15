@@ -1,6 +1,6 @@
 # Contract: Rewrite Mode
 
-**Interface**: the runtime `<ZodForm>` JSX surface that rewrite mode matches, and the transformed source the plugin produces
+**Interface**: the runtime `<ZodForm>` JSX surface that generate mode matches, and the transformed source the plugin produces
 **Consumers**: users' source code authored for `@zod-to-form/react`'s runtime renderer
 **Stability**: semver-public; changes to match criteria or replacement shape bump MINOR
 
@@ -8,10 +8,10 @@
 
 ## Activation
 
-Rewrite mode is OFF by default (FR-024). It activates when the user passes `{ rewriteZodForm: true }` to the plugin factory. When active, the plugin's `transform` hook processes files that:
+Generate mode is OFF by default (FR-024). It activates when the user passes `{ generate: true }` to the plugin factory. When active, the plugin's `transform` hook processes files that:
 
-1. Match at least one pattern in `options.rewriteInclude` (default: `['**/*.{ts,tsx,js,jsx}']`)
-2. Do NOT match any pattern in `options.rewriteExclude` (always includes `node_modules` and `dist`)
+1. Match at least one pattern in `options.include (inside `generate`)` (default: `['**/*.{ts,tsx,js,jsx}']`)
+2. Do NOT match any pattern in `options.exclude (inside `generate`)` (always includes `node_modules` and `dist`)
 3. Contain the literal substring `'ZodForm'` (cheap early-exit — see research R3)
 
 Files that fail any check are returned unchanged in O(1) time.
@@ -29,7 +29,7 @@ A `<ZodForm>` JSX element qualifies for rewriting if and only if ALL of the foll
 | Binding resolves | `path.scope.getBinding(identifier.name)` returns a binding whose originating `ImportDeclaration` source path resolves (via Vite's resolver) to a file inside the Vite `root` |
 | Binding is the schema itself | The imported binding is NOT an alias chain through multiple re-exports — one hop only in v1 |
 
-If ANY check fails, the element is left unchanged and a DEBUG-level diagnostic is emitted naming the file, line, column, and failure reason (FR-022). No warning, no error — rewrite mode is silently advisory for sites it can't handle.
+If ANY check fails, the element is left unchanged and a DEBUG-level diagnostic is emitted naming the file, line, column, and failure reason (FR-022). No warning, no error — generate mode is silently advisory for sites it can't handle.
 
 ## Replacement shape
 
@@ -38,7 +38,7 @@ For each matched `RewriteSite`, the plugin generates a unique local identifier (
 1. **Append an import** near the top of the source file (after existing `import` statements):
 
     ```tsx
-    import { Form as _z2fGeneratedForm_1 } from '<originalSchemaPath>?z2f=__rewrite_1';
+    import { Form as _z2fGeneratedForm_1 } from '<originalSchemaPath>?z2f=__generate_1';
     ```
 
 2. **Replace the opening tag**:
@@ -64,19 +64,19 @@ For each matched `RewriteSite`, the plugin generates a unique local identifier (
 
 ## Variant name for rewrite sites
 
-Rewrite sites produce synthesized variants of the form `__rewrite_<n>` where `<n>` is a counter scoped to the source file. Different source files use independent counters — `App.tsx` may produce `__rewrite_1`, `__rewrite_2`; `Dashboard.tsx` starts over at `__rewrite_1`.
+Rewrite sites produce synthesized variants of the form `__generate_<n>` where `<n>` is a counter scoped to the source file. Different source files use independent counters — `App.tsx` may produce `__generate_1`, `__generate_2`; `Dashboard.tsx` starts over at `__generate_1`.
 
-This matters for the cache key: two different source files may rewrite the same schema with effectively the same config, and they MUST share a cache entry. The cache key is `(schemaFile, effectiveVariantConfigHash)`, not `(sourceFile, __rewrite_N)`. The `__rewrite_` name is a display-only label; the cache deduplicates automatically.
+This matters for the cache key: two different source files may rewrite the same schema with effectively the same config, and they MUST share a cache entry. The cache key is `(schemaFile, effectiveVariantConfigHash)`, not `(sourceFile, __generate_N)`. The `__generate_` name is a display-only label; the cache deduplicates automatically.
 
 ## Interaction with query-mode imports
 
-- A project MAY use both query-mode (`?z2f`) and rewrite mode simultaneously.
-- Rewrite mode MUST NOT transform files that only contain `?z2f` imports (the substring check `'ZodForm'` naturally excludes them).
-- Rewrite mode MUST NOT touch a file that contains `<ZodForm>` JSX AND a `?z2f` import — both mechanisms coexist, and each import/element is handled by its own path.
+- A project MAY use both query-mode (`?z2f`) and generate mode simultaneously.
+- Generate mode MUST NOT transform files that only contain `?z2f` imports (the substring check `'ZodForm'` naturally excludes them).
+- Generate mode MUST NOT touch a file that contains `<ZodForm>` JSX AND a `?z2f` import — both mechanisms coexist, and each import/element is handled by its own path.
 
 ## Excluded constructs (silently skipped)
 
-Rewrite mode MUST silently skip (with DEBUG diagnostics) all of these:
+Generate mode MUST silently skip (with DEBUG diagnostics) all of these:
 
 | Construct | Example | Reason |
 |---|---|---|
@@ -100,14 +100,14 @@ The `transform` hook MUST return a sourcemap generated by `magic-string` with `h
 
 ## Idempotency
 
-Running rewrite mode on an already-rewritten source file (e.g., during HMR after a non-schema edit) MUST produce identical output bytes and sourcemap, not an increasing chain of edits. The substring check `'ZodForm'` on the rewritten output naturally ensures no further rewrites occur (because `ZodForm` is removed by rewriting), but even if it did, the transform MUST be a no-op on its own output.
+Running generate mode on an already-rewritten source file (e.g., during HMR after a non-schema edit) MUST produce identical output bytes and sourcemap, not an increasing chain of edits. The substring check `'ZodForm'` on the rewritten output naturally ensures no further rewrites occur (because `ZodForm` is removed by rewriting), but even if it did, the transform MUST be a no-op on its own output.
 
 ## Diagnostic API
 
 Skipped sites emit DEBUG logs through the plugin's logger. The logger MUST also expose these diagnostics through a build-end summary at `logLevel === 'info'` or higher:
 
 ```
-[@zod-to-form/vite] Rewrite mode processed 42 files, rewrote 38 call sites, skipped 4:
+[@zod-to-form/vite] Generate mode processed 42 files, rewrote 38 call sites, skipped 4:
   src/App.tsx:22:5 — schema prop is dynamic (JSXExpressionContainer not an Identifier)
   src/Admin.tsx:8:3 — schema identifier resolves to node_modules package '@acme/schemas'
   src/Page.tsx:14:5 — ZodForm import origin is './local-wrapper', not '@zod-to-form/react'

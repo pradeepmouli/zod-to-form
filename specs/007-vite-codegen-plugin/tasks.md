@@ -113,32 +113,32 @@ This feature adds a new workspace package at `packages/vite/`. Task paths use ab
 
 ---
 
-## Phase 4: User Story 2 — Transparent `<ZodForm>` rewrite mode (Priority: P2)
+## Phase 4: User Story 2 — Transparent `<ZodForm>` generate mode (Priority: P2)
 
-**Goal**: Rewrite mode. Enabling `{ rewriteZodForm: true }` scans source for `<ZodForm schema={X}>` JSX elements and replaces statically-resolvable call sites with generated components. Unresolvable sites are left alone and fall through to the runtime path.
+**Goal**: Generate mode. Enabling `{ generate: true }` scans source for `<ZodForm schema={X}>` JSX elements and replaces statically-resolvable call sites with generated components. Unresolvable sites are left alone and fall through to the runtime path.
 
-**Independent Test**: Start from an app that uses `<ZodForm schema={signupSchema} onSubmit={fn} />` with no query-string import. Enable rewrite mode. Run `vite build`. Verify the production bundle has no runtime-renderer code for that call site; verify the `<ZodForm>` that references a dynamic schema is left untouched. Source file on disk is unchanged.
+**Independent Test**: Start from an app that uses `<ZodForm schema={signupSchema} onSubmit={fn} />` with no query-string import. Enable generate mode. Run `vite build`. Verify the production bundle has no runtime-renderer code for that call site; verify the `<ZodForm>` that references a dynamic schema is left untouched. Source file on disk is unchanged.
 
 ### Tests for US2 (TDD — write and fail before implementation)
 
-- [X] T039 [P] [US2] Contract test matrix for the match criteria in `contracts/rewrite-mode.md`: for each row of the "Match criteria" table, assert the scanner accepts/rejects correctly. In `packages/vite/tests/contract/rewrite-matching.test.ts`
+- [X] T039 [P] [US2] Contract test matrix for the match criteria in `contracts/generate-mode.md`: for each row of the "Match criteria" table, assert the scanner accepts/rejects correctly. In `packages/vite/tests/contract/rewrite-matching.test.ts`
 - [X] T040 [P] [US2] Unit tests for `scanJsx` — fixtures with `<ZodForm>`, aliased imports, namespaced imports, inline schemas, dynamic schema props, conditional schemas, destructured imports, `node_modules` schemas. Each asserts the scanner's output matches the expected skip / match result. In `packages/vite/tests/unit/scan-jsx.test.ts`
 - [X] T041 [P] [US2] Unit tests for `resolveSchema` — binding resolution through `path.scope.getBinding`, import source path validation, inside-root check. In `packages/vite/tests/unit/resolve-schema.test.ts`
 - [X] T042 [P] [US2] Unit tests for `rewriteSource` — given a matched `RewriteSite`, assert the `magic-string` edits produce the expected opening-tag replacement, preserve all other props, preserve children, handle self-closing elements, prepend the generated import near existing imports. In `packages/vite/tests/unit/rewrite-source.test.ts`
 - [X] T043 [P] [US2] Idempotency test — running the transform twice on the same source produces byte-identical output and sourcemap. In `packages/vite/tests/unit/rewrite-idempotent.test.ts`
 - [X] T044 [P] [US2] Create fixture project `packages/vite/tests/fixtures/rewrite-project/` with multiple `<ZodForm>` call sites: one happy path (static local import), one aliased element name, one dynamic schema, one import from `node_modules`, one explicit `?z2f` import coexisting in the same file
-- [X] T045 [US2] Integration test: `packages/vite/tests/integration/rewrite-mode-build.test.ts` — programmatically build the rewrite-project fixture with `rewriteZodForm: true`, inspect the emitted bundle to assert (a) the happy-path site produces inlined generated JSX, (b) the dynamic-schema site is left as a runtime `<ZodForm>` call, (c) the DEBUG log summary reports the skipped sites with the expected reasons, (d) the coexisting `?z2f` import path continues to work unchanged
+- [X] T045 [US2] Integration test: `packages/vite/tests/integration/generate-mode-build.test.ts` — programmatically build the rewrite-project fixture with `generate: true`, inspect the emitted bundle to assert (a) the happy-path site produces inlined generated JSX, (b) the dynamic-schema site is left as a runtime `<ZodForm>` call, (c) the DEBUG log summary reports the skipped sites with the expected reasons, (d) the coexisting `?z2f` import path continues to work unchanged
 
 ### Implementation for US2
 
-- [X] T046 [P] [US2] Implement `packages/vite/src/rewrite-mode/scan-jsx.ts` — substring fast-path check for `'ZodForm'`, `@babel/parser` parse with `['jsx', 'typescript']` plugins, `@babel/traverse` visitor for `JSXElement` nodes. Returns an array of candidate sites with byte ranges and attribute info. Make T040 pass
-- [X] T047 [P] [US2] Implement `packages/vite/src/rewrite-mode/resolve-schema.ts` — given a candidate site, walk the scope chain via `path.scope.getBinding`, validate the import origin is `@zod-to-form/react` for the `ZodForm` identifier AND the schema binding resolves to a file inside the Vite root. Returns a fully-resolved `RewriteSite` or a skip reason. Make T041 pass
-- [X] T048 [US2] Implement `packages/vite/src/rewrite-mode/rewrite-source.ts` — apply `magic-string` edits for each resolved `RewriteSite`: replace `ZodForm` with the generated identifier, remove the `schema={X}` attribute, preserve everything else, prepend the `?z2f=__rewrite_N` import near existing imports, emit a hi-res sourcemap. Make T042 and T043 pass
-- [X] T049 [US2] Extend `packages/vite/src/plugin.ts` `transform` hook to: gate on `options.rewriteZodForm`, apply the include/exclude glob filter, call `scanJsx` → `resolveSchema` → `rewriteSource`, and register the synthesized `?z2f=__rewrite_N` variants through the same `CompilationCache` used by US1. Make T039 pass
+- [X] T046 [P] [US2] Implement `packages/vite/src/generate-mode/scan-jsx.ts` — substring fast-path check for `'ZodForm'`, `@babel/parser` parse with `['jsx', 'typescript']` plugins, `@babel/traverse` visitor for `JSXElement` nodes. Returns an array of candidate sites with byte ranges and attribute info. Make T040 pass
+- [X] T047 [P] [US2] Implement `packages/vite/src/generate-mode/resolve-schema.ts` — given a candidate site, walk the scope chain via `path.scope.getBinding`, validate the import origin is `@zod-to-form/react` for the `ZodForm` identifier AND the schema binding resolves to a file inside the Vite root. Returns a fully-resolved `RewriteSite` or a skip reason. Make T041 pass
+- [X] T048 [US2] Implement `packages/vite/src/generate-mode/rewrite-source.ts` — apply `magic-string` edits for each resolved `RewriteSite`: replace `ZodForm` with the generated identifier, remove the `schema={X}` attribute, preserve everything else, prepend the `?z2f=__generate_N` import near existing imports, emit a hi-res sourcemap. Make T042 and T043 pass
+- [X] T049 [US2] Extend `packages/vite/src/plugin.ts` `transform` hook to: gate on `options.generate`, apply the include/exclude glob filter, call `scanJsx` → `resolveSchema` → `rewriteSource`, and register the synthesized `?z2f=__generate_N` variants through the same `CompilationCache` used by US1. Make T039 pass
 - [X] T050 [P] [US2] Implement the DEBUG logger summary in `packages/vite/src/logger.ts` that accumulates skipped sites during a build and emits a single multi-line report at `buildEnd`. Make the diagnostic assertions in T045 pass
 - [X] T051 [US2] Exercise T045 end-to-end against the `rewrite-project` fixture; confirm coexistence with query-mode imports (FR-025)
 
-**Checkpoint**: Both query-string mode and rewrite mode work. Users can opt into transparent upgrade with a single plugin flag.
+**Checkpoint**: Both query-string mode and generate mode work. Users can opt into transparent upgrade with a single plugin flag.
 
 ---
 
@@ -197,7 +197,7 @@ This feature adds a new workspace package at `packages/vite/`. Task paths use ab
 - [X] T067 [P] Update the root `CLAUDE.md` Active Technologies section to reflect the completed plugin (currently shows "Added TypeScript 5.x with strict mode" placeholder from plan.md)
 - [X] T068 Run `pnpm run type-check` and `pnpm test` across the entire monorepo; assert zero errors, zero failing tests, zero new oxlint warnings in `packages/vite/`
 - [ ] T069 Run the quickstart walkthrough (`specs/007-vite-codegen-plugin/quickstart.md`) end-to-end against a fresh Vite + React project created from `pnpm create vite`; time it and confirm under five minutes (SC-001)
-- [ ] T070 Measure and record: plugin cold-start overhead on a 20-schema fixture (SC target: ≤500ms), HMR latency on a 50-field schema (SC-002 target: ≤1s), bundle parity between plugin and CLI output (SC-003), resolver-strip byte savings (SC-004). **Additionally assert** (hard-fail the task, not advisory): with rewrite mode enabled on the `medium (18 fields)` fixture, the browser mount-cost reduction vs. runtime baseline is ≥ 40% — closes SC-009 explicit-assertion gap (finding M5). Commit the results to `benchmarks/PLUGIN.md`
+- [ ] T070 Measure and record: plugin cold-start overhead on a 20-schema fixture (SC target: ≤500ms), HMR latency on a 50-field schema (SC-002 target: ≤1s), bundle parity between plugin and CLI output (SC-003), resolver-strip byte savings (SC-004). **Additionally assert** (hard-fail the task, not advisory): with generate mode enabled on the `medium (18 fields)` fixture, the browser mount-cost reduction vs. runtime baseline is ≥ 40% — closes SC-009 explicit-assertion gap (finding M5). Commit the results to `benchmarks/PLUGIN.md`
 - [X] T070a Codegen parity sweep: for every schema fixture currently exercised by `packages/codegen/tests/generate.test.ts` and `packages/codegen/tests/codegen-optimization.test.ts`, run the same schema through the plugin's `query-mode/transform.ts` and assert the emitted source is byte-equivalent (or AST-equivalent after ignoring formatter noise) to the CLI's output. Failing even one fixture is a blocker per SC-006. In `packages/vite/tests/integration/codegen-parity.test.ts`. **Closes finding C1 (CRITICAL)**
 - [ ] T071 Plugin benchmark integration: add `packages/vite` mount and HMR measurements to the root `pnpm run bench:report` pipeline, and add an SC-011 row to the benchmarks report that tracks plugin cold-start overhead alongside the existing codegen-vs-runtime numbers. Scope: plugin-specific benchmarks only — not a rewrite of the existing benchmark harness
 - [ ] T072 Smoke-test SC-005 (zero manual `.d.ts` required): open the query-minimal fixture in VS Code, confirm `import { SignupForm } from './schemas/signup.ts?z2f'` resolves with no red squiggles, confirm `onSubmit` parameter autocomplete fires, and then intentionally break the schema file (remove the expected export) — confirm the TypeScript language service shows an inline error in the importing file within 2 seconds, NOT only in the Vite terminal. Closes FR-016 coverage gap (finding M2) together with SC-005
@@ -211,7 +211,7 @@ This feature adds a new workspace package at `packages/vite/`. Task paths use ab
 - **Phase 1 (Setup)** — no dependencies, starts immediately
 - **Phase 2 (Foundational)** — depends on Phase 1; **BLOCKS** all user stories
 - **Phase 3 (US1, P1 MVP)** — depends on Phase 2; no dependencies on other stories
-- **Phase 4 (US2, P2)** — depends on Phase 2; consumes US1's `CompilationCache` + query-mode pipeline via the `__rewrite_N` variant path, so US1 must be largely complete (at least T032–T034) for US2 to integrate cleanly
+- **Phase 4 (US2, P2)** — depends on Phase 2; consumes US1's `CompilationCache` + query-mode pipeline via the `__generate_N` variant path, so US1 must be largely complete (at least T032–T034) for US2 to integrate cleanly
 - **Phase 5 (US3, P2)** — depends on Phase 2; can proceed fully in parallel with US1 and US2 since config-watching touches a different hook path
 - **Phase 6 (US4, P3)** — depends on Phase 2; fully independent of US1/US2/US3 — touches only the `resolver-strip.ts` pass on the `useZodForm` module
 - **Phase 7 (Polish)** — depends on all desired user stories being complete
@@ -270,7 +270,7 @@ Task: "T036 [P] [US1] Create virtual-types.d.ts"
 1. MVP above → `@zod-to-form/vite@0.1.0`
 2. Add User Story 3 (config watching) — small, orthogonal → `0.2.0`
 3. Add User Story 4 (resolver strip) — small, isolated build-time win → `0.3.0`
-4. Add User Story 2 (rewrite mode) — largest story, most risk; ship behind the opt-in flag → `0.4.0`
+4. Add User Story 2 (generate mode) — largest story, most risk; ship behind the opt-in flag → `0.4.0`
 5. Polish (Phase 7) → `1.0.0`
 
 Note that the priority ordering (P1 → P2 → P2 → P3) in the spec is intentional: US2 and US3 are both P2, but US3 is technically smaller and less risky, so this delivery order ships it earlier. US2 and US3 are fully independent so the order is flexible.

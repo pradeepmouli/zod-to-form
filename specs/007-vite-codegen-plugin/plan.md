@@ -8,11 +8,11 @@
 A new workspace package `@zod-to-form/vite` exposes a Vite plugin factory that wires the existing `@zod-to-form/codegen` pipeline into Vite's dev server and build hooks. The plugin operates in two complementary modes:
 
 1. **Query-string mode (default)** — transforms imports that carry the `?z2f` suffix into generated form components via Vite's module resolution + `load` hooks, emitting the same source `generateFormComponent` already produces. HMR is driven by the Vite `handleHotUpdate` hook, keyed off the underlying schema file.
-2. **Rewrite mode (opt-in)** — scans JSX source files for `<ZodForm schema={X}>` elements where `X` is a statically-resolvable identifier, replaces each matched element with an invocation of a generated component, and leaves unresolvable sites as runtime `<ZodForm>` calls. This mode also applies a build-only transform that strips the `zodResolver` import from `useZodForm` when `optimization.level` is set in the config.
+2. **Generate mode (opt-in)** — scans JSX source files for `<ZodForm schema={X}>` elements where `X` is a statically-resolvable identifier, replaces each matched element with an invocation of a generated component, and leaves unresolvable sites as runtime `<ZodForm>` calls. This mode also applies a build-only transform that strips the `zodResolver` import from `useZodForm` when `optimization.level` is set in the config.
 
 Both modes share a single `CompilationCache` keyed by `(schemaFilePath, configHash, variant)`, invalidated surgically when a schema or config changes so only affected forms regenerate.
 
-The plugin is a thin layer: all actual code generation happens via `generateFormComponent` and `generateSchemaLiteFile` from `@zod-to-form/codegen`, and config loading reuses `loadConfig` from `@zod-to-form/cli`. The plugin contributes (a) Vite lifecycle glue, (b) JSX scanning + rewriting for rewrite mode, (c) the query-string specifier parser, and (d) HMR invalidation logic.
+The plugin is a thin layer: all actual code generation happens via `generateFormComponent` and `generateSchemaLiteFile` from `@zod-to-form/codegen`, and config loading reuses `loadConfig` from `@zod-to-form/cli`. The plugin contributes (a) Vite lifecycle glue, (b) JSX scanning + rewriting for generate mode, (c) the query-string specifier parser, and (d) HMR invalidation logic.
 
 ## Technical Context
 
@@ -22,8 +22,8 @@ The plugin is a thin layer: all actual code generation happens via `generateForm
 - `@zod-to-form/core` (workspace, internal dep) — `walkSchema`, `CodegenConfig` types, and a new `canonicalizeConfig(raw)` helper for cache-key hashing. Config *types* and canonicalization live here; config *file loading* does not.
 - `@zod-to-form/codegen` (workspace, internal dep) — emits `.tsx` source strings via `generateFormComponent`
 - `zod` (peer, ^4.0.0) — must be resolvable from the user's project for schemas to load
-- `magic-string` (direct, ^0.30) — surgical source transformations for rewrite mode
-- `@babel/parser` + `@babel/traverse` (direct) — JSX AST scanning for rewrite mode
+- `magic-string` (direct, ^0.30) — surgical source transformations for generate mode
+- `@babel/parser` + `@babel/traverse` (direct) — JSX AST scanning for generate mode
 - `pathe` (direct) — cross-platform path handling matching Vite's own
 
 **NOT a dependency**: `@zod-to-form/cli`. The plugin deliberately does NOT depend on the CLI package. File-loading for both schemas AND the `z2f.config.ts` uses Vite's own `ssrLoadModule` (dev) and programmatic build loader (build) — the same mechanism already chosen for schema loading in research R2. The CLI package stays Node-specific (`jiti`, `commander`, `chokidar`, `prettier`), and the plugin stays free of those transitive deps.
@@ -76,7 +76,7 @@ The plugin is a thin layer: all actual code generation happens via `generateForm
 
 | Dependency | Type | Size (gzipped) | Why needed | Simpler alternative considered |
 |---|---|---|---|---|
-| `magic-string` | direct | ~2KB | Surgical source-code edits with accurate sourcemaps for rewrite mode. Vite itself depends on it, so it's already in every Vite project's graph — zero marginal install cost. | String splicing by hand: rejected because source-map correctness is non-negotiable for IDE-friendly errors (FR-010, FR-016). |
+| `magic-string` | direct | ~2KB | Surgical source-code edits with accurate sourcemaps for generate mode. Vite itself depends on it, so it's already in every Vite project's graph — zero marginal install cost. | String splicing by hand: rejected because source-map correctness is non-negotiable for IDE-friendly errors (FR-010, FR-016). |
 | `@babel/parser` | direct | ~35KB | Parse TSX source to find `<ZodForm>` JSX elements and resolve the `schema={X}` identifier. Vite already depends on `@babel/*` for React plugin ecosystems, so not a new runtime cost for most projects. | Regex-based scanning: rejected because JSX inside template strings, comments, and conditionals makes regex unsound and produces silent miscompilations. |
 | `@babel/traverse` | direct | ~17KB | Walk the AST produced by `@babel/parser` with scope tracking so we can resolve imported identifiers safely. | Hand-written recursive walker: rejected because scope tracking (handling `const` shadowing, import aliases) is ~300 LOC of error-prone code. |
 | `pathe` | direct | ~2KB | Path handling that matches Vite's own normalized-POSIX convention across Windows, macOS, Linux. | Node's `path` module: rejected because Windows path mismatches are a known source of plugin HMR bugs (Vite's own guidance is to use `pathe`). |
@@ -108,7 +108,7 @@ specs/007-vite-codegen-plugin/
 ├── contracts/           # Phase 1 output
 │   ├── plugin-options.md
 │   ├── query-specifier.md
-│   └── rewrite-mode.md
+│   └── generate-mode.md
 ├── checklists/
 │   └── requirements.md  # Created by /speckit.specify
 └── tasks.md             # Phase 2 output (/speckit.tasks)
@@ -131,7 +131,7 @@ packages/
     │   ├── query-mode/
     │   │   ├── parse-specifier.ts     # "./foo.ts?z2f" and "./foo.ts?z2f=edit" parsing
     │   │   └── transform.ts           # build the generated module source for a (schema, variant) pair
-    │   ├── rewrite-mode/
+    │   ├── generate-mode/
     │   │   ├── scan-jsx.ts            # @babel/parser + traverse → rewrite sites
     │   │   ├── resolve-schema.ts      # "is this identifier statically resolvable?"
     │   │   └── rewrite-source.ts      # magic-string edits + sourcemap output
@@ -158,14 +158,14 @@ packages/
     │   ├── integration/
     │   │   ├── query-mode-dev.test.ts      # programmatic createServer, validate FR-008
     │   │   ├── query-mode-build.test.ts    # programmatic build, validate FR-012
-    │   │   ├── rewrite-mode-build.test.ts  # validate FR-020, FR-021, FR-022
+    │   │   ├── generate-mode-build.test.ts  # validate FR-020, FR-021, FR-022
     │   │   ├── config-watch.test.ts        # validate FR-009
     │   │   ├── error-recovery.test.ts      # validate FR-010, SC-008
     │   │   └── cli-coexistence.test.ts     # validate FR-019
     │   └── fixtures/
     │       ├── small-project/              # minimal Vite + React + one schema
     │       ├── medium-project/             # multi-schema + config file
-    │       └── rewrite-project/            # uses <ZodForm> + rewrite mode
+    │       └── rewrite-project/            # uses <ZodForm> + generate mode
     ├── package.json
     ├── tsconfig.json
     ├── tsconfig.build.json
@@ -180,6 +180,6 @@ No unjustified violations. One item worth noting for transparency:
 
 | Item | Why Needed | Simpler Alternative Rejected Because |
 |---|---|---|
-| JSX AST scanning in rewrite mode | Required by FR-020 to find `<ZodForm>` call sites reliably across TS/TSX files with comments, template strings, and conditionals. | Regex scanning: rejected in the dependency justification table above. Leaving rewrite mode out of v1: rejected because Story 2 is P2, expected by the user, and solves a real DX problem. |
+| JSX AST scanning in generate mode | Required by FR-020 to find `<ZodForm>` call sites reliably across TS/TSX files with comments, template strings, and conditionals. | Regex scanning: rejected in the dependency justification table above. Leaving generate mode out of v1: rejected because Story 2 is P2, expected by the user, and solves a real DX problem. |
 
 **Resolved during Phase 1 redesign (not a complexity item any more):** An earlier draft had the plugin depending on `@zod-to-form/cli` to reuse `loadConfig`. That pulled `jiti`/`commander`/`chokidar`/`prettier` into the plugin's transitive dep graph. The cleaner path — adopted — is to (a) move the `CodegenConfig` type and a new `canonicalizeConfig` helper into `@zod-to-form/core`, and (b) have the plugin load `z2f.config.ts` via Vite's own `ssrLoadModule`, exactly the same mechanism it already needs for schema loading. The plugin has zero dependency on `@zod-to-form/cli`, `@zod-to-form/core` gains one pure-TypeScript function with no new dependencies (Principle IV preserved), and the CLI's standalone `loadConfig` is untouched.

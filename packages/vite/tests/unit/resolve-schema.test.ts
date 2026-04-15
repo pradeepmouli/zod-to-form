@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { scanJsx } from '../../src/rewrite-mode/scan-jsx.js';
-import { resolveSchemas } from '../../src/rewrite-mode/resolve-schema.js';
+import { scanJsx } from '../../src/generate-mode/scan-jsx.js';
+import { resolveSchemas } from '../../src/generate-mode/resolve-schema.js';
 
 /**
  * Contract: resolveSchemas validates that each candidate's ZodForm

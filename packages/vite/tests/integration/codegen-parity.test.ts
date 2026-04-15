@@ -21,7 +21,7 @@ import { compileTarget } from '../../src/query-mode/transform.js';
  *     user didn't supply one)
  *   - exportName (auto-detected from the namespace when the user didn't
  *     supply one)
- *   - componentName='Form' for `__rewrite_<n>` variants (the rewrite-
+ *   - componentName='Form' for `__generate_<n>` variants (the rewrite-
  *     mode hard-coded export name)
  *
  * We hold those constant in the test so the comparison stays apples-to-
@@ -218,8 +218,8 @@ describe('codegen parity (plugin compileTarget ↔ CLI generateFormComponent)', 
     expect(pluginResult.generatedSource).toBe(cliSource);
   });
 
-  it('rewrite-mode variants emit under the fixed component name `Form` (parity carve-out)', () => {
-    // Documented divergence: rewrite-mode variants override
+  it('generate-mode variants emit under the fixed component name `Form` (parity carve-out)', () => {
+    // Documented divergence: generate-mode variants override
     // componentName to `'Form'` so the synthesized
     // `import { Form as _z2fGeneratedForm_<n> }` stays decoupled from
     // the user's chosen name. Pin that override here so a refactor
@@ -228,7 +228,7 @@ describe('codegen parity (plugin compileTarget ↔ CLI generateFormComponent)', 
     const result = compileTarget({
       namespace: { mySchema: schema },
       schemaFile: '/abs/x.ts',
-      variant: '__rewrite_1',
+      variant: '__generate_1',
       config: {
         componentName: 'UserChoice',
         mode: 'submit',

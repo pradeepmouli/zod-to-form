@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { scanJsx } from '../../src/rewrite-mode/scan-jsx.js';
+import { scanJsx } from '../../src/generate-mode/scan-jsx.js';
 
 /**
  * Contract: scanJsx finds candidate <ZodForm> JSX elements with an
@@ -18,7 +18,7 @@ describe('scanJsx', () => {
   it('surfaces parse failure as a buffered skip diagnostic (not silent null)', () => {
     // The parse error itself still propagates through Vite's normal
     // pipeline — but we record one skip line so the buildEnd summary
-    // shows the user that rewrite-mode tried and bailed.
+    // shows the user that generate-mode tried and bailed.
     const result = scanJsx('const ZodForm = ; <ZodForm schema={x} />');
     expect(result).not.toBeNull();
     expect(result?.candidates).toHaveLength(0);

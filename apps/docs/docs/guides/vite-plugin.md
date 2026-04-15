@@ -184,9 +184,9 @@ export default {
 
 In dev mode the resolver path stays intact for fast iteration; the strip only fires during `vite build`.
 
-## Rewrite mode (opt-in)
+## Generate mode (opt-in)
 
-Rewrite mode scans your JSX for `<ZodForm schema={X} />` runtime call sites and rewrites them at build time into the generated component for `X`. You get static codegen with zero source-code changes:
+Generate mode scans your JSX for `<ZodForm schema={X} />` runtime call sites and rewrites them at build time into the generated component for `X`. You get static codegen with zero source-code changes:
 
 ```ts
 // vite.config.ts
@@ -195,23 +195,23 @@ import z2fVite from '@zod-to-form/vite';
 export default {
   plugins: [
     z2fVite({
-      rewrite: {} // presence opts in
+      generate: {} // presence opts in
     })
   ]
 };
 ```
 
-Rewrite mode is **off by default** because it silently changes compiled output. The transform hook only matches `<ZodForm>` JSX whose `schema={...}` prop is an Identifier resolvable to a top-level named import inside the Vite root. Anything dynamic, conditional, aliased, or imported from `node_modules` is left as a runtime call and reported in the build-end summary.
+Generate mode is **off by default** because it silently changes compiled output. The transform hook only matches `<ZodForm>` JSX whose `schema={...}` prop is an Identifier resolvable to a top-level named import inside the Vite root. Anything dynamic, conditional, aliased, or imported from `node_modules` is left as a runtime call and reported in the build-end summary.
 
 A typical summary at info level:
 
 ```
-[@zod-to-form/vite] Rewrite mode processed 42 files, rewrote 38 call sites, skipped 4:
+[@zod-to-form/vite] Generate mode processed 42 files, rewrote 38 call sites, skipped 4:
   src/App.tsx:22:5 — schema prop is dynamic (JSXExpressionContainer not an Identifier)
   src/Admin.tsx:8:3 — schema identifier resolves to node_modules package '@acme/schemas'
 ```
 
-See [the rewrite-mode contract](https://github.com/pradeepmouli/zod-to-form/blob/master/specs/007-vite-codegen-plugin/contracts/rewrite-mode.md) for the full match-criteria table.
+See [the generate-mode contract](https://github.com/pradeepmouli/zod-to-form/blob/master/specs/007-vite-codegen-plugin/contracts/generate-mode.md) for the full match-criteria table.
 
 ## Plugin options
 
@@ -219,20 +219,20 @@ See [the rewrite-mode contract](https://github.com/pradeepmouli/zod-to-form/blob
 |---|---|---|---|
 | `configPath` | `string` | (auto-discover) | Explicit path to a `z2f.config.{ts,mts,js,mjs}` file |
 | `configOverride` | `Partial<Z2FViteConfig>` | `{}` | Shallow override merged on top of the loaded config |
-| `rewrite` | `{ include?, exclude? }` | `undefined` | Presence enables rewrite mode; include/exclude are glob patterns |
+| `generate` | `{ include?, exclude? }` | `undefined` | Presence enables generate mode; include/exclude are glob patterns |
 | `write` | `{ outDir?, filenamePattern? }` | `undefined` | Persist generated files to disk in addition to the virtual modules |
 | `logLevel` | `'silent' \| 'warn' \| 'info' \| 'debug'` | `'info'` | Plugin-specific log level |
 
 ## Coexistence with the CLI
 
-A project may use both the CLI (committed `*.generated.tsx` files) and the Vite plugin (`?z2f` virtual modules) simultaneously. The plugin only handles imports that carry `?z2f` (or, in rewrite mode, JSX call sites that match the strict `<ZodForm schema={X}>` shape); CLI-emitted files are never touched.
+A project may use both the CLI (committed `*.generated.tsx` files) and the Vite plugin (`?z2f` virtual modules) simultaneously. The plugin only handles imports that carry `?z2f` (or, in generate mode, JSX call sites that match the strict `<ZodForm schema={X}>` shape); CLI-emitted files are never touched.
 
 ## Troubleshooting
 
 - **`Z2F_VITE_AMBIGUOUS_EXPORT`** — the schema file has multiple Zod schema exports. Set `exportName` in your `z2f.config.ts` (or in a variant) to pick one.
 - **`Z2F_VITE_SCHEMA_OUTSIDE_ROOT`** — the resolved schema path is outside your Vite root. Move it into the project, or use the CLI for cross-project schemas.
 - **`Z2F_VITE_UNKNOWN_VARIANT`** — you imported `?z2f=foo` but `foo` isn't declared in `config.variants`. Add it, or drop the variant suffix.
-- **A specific JSX site isn't being rewritten** — run dev with `logLevel: 'debug'` or build with `logLevel: 'info'` and check the rewrite summary for the per-site reason.
+- **A specific JSX site isn't being rewritten** — run dev with `logLevel: 'debug'` or build with `logLevel: 'info'` and check the generate-mode summary for the per-site reason.
 
 ## What's next
 

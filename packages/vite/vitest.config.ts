@@ -15,7 +15,7 @@ export default defineConfig({
     hookTimeout: 30_000,
     // Several integration tests write uniquely-named files into the
     // shared in-monorepo fixture directories (query-minimal,
-    // rewrite-project, etc.) and rely on `afterEach` cleanup. Running
+    // generate-project, etc.) and rely on `afterEach` cleanup. Running
     // those test files in parallel would race on directory enumeration
     // even though the per-file UUIDs prevent name collisions. Sequential
     // file execution is a tiny throughput cost that eliminates an entire

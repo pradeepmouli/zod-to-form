@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { scanJsx } from '../../src/rewrite-mode/scan-jsx.js';
-import { resolveSchemas } from '../../src/rewrite-mode/resolve-schema.js';
-import { rewriteSource } from '../../src/rewrite-mode/rewrite-source.js';
+import { scanJsx } from '../../src/generate-mode/scan-jsx.js';
+import { resolveSchemas } from '../../src/generate-mode/resolve-schema.js';
+import { generateSource } from '../../src/generate-mode/generate-source.js';
 
 /**
- * Contract: rewriteSource produces a magic-string-based transform that
+ * Contract: generateSource produces a magic-string-based transform that
  * (a) replaces <ZodForm> with the generated identifier, (b) removes the
  * schema attribute, (c) preserves all other attributes and children
  * verbatim, (d) prepends a synthesized import, (e) is idempotent.
@@ -26,10 +26,10 @@ async function pipeline(
     resolveImport: async (specifier) => table[specifier] ?? null,
     viteRoot: VITE_ROOT
   });
-  return rewriteSource({ source, resolved: resolved.resolved }).code;
+  return generateSource({ source, resolved: resolved.resolved }).code;
 }
 
-describe('rewriteSource', () => {
+describe('generateSource', () => {
   it('rewrites a happy-path <ZodForm schema={X} />', async () => {
     const source = `
 import { ZodForm } from '@zod-to-form/react';
@@ -44,7 +44,7 @@ const App = () => <ZodForm schema={signupSchema} />;
     expect(out).not.toContain('schema={signupSchema}');
     // synthesized import prepended
     expect(out).toMatch(
-      /import\s+\{[^}]*as\s+_z2fGeneratedForm_1[^}]*\}\s+from\s+'.*signup\.ts\?z2f=__rewrite_1'/
+      /import\s+\{[^}]*as\s+_z2fGeneratedForm_1[^}]*\}\s+from\s+'.*signup\.ts\?z2f=__generate_1'/
     );
   });
 
@@ -183,7 +183,7 @@ const App = () => <ZodForm schema={s} />;
       resolveImport: async (specifier) => (specifier === './s' ? '/abs/project/src/s.ts' : null),
       viteRoot: VITE_ROOT
     });
-    const result = rewriteSource({ source, resolved: resolved.resolved });
+    const result = generateSource({ source, resolved: resolved.resolved });
     expect(result.map).toBeDefined();
     expect(typeof result.map.toString()).toBe('string');
     // hires sourcemaps have one entry per character; the mappings string

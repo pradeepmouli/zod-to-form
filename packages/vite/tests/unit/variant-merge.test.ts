@@ -5,7 +5,7 @@ import type { Z2FViteConfig } from '../../src/types.js';
 /**
  * Contract: buildEffectiveConfig merges per-variant overrides on top of
  * the global config and rejects unknown variants. The plugin-internal
- * `__rewrite_<n>` variants always resolve to the base config (they
+ * `__generate_<n>` variants always resolve to the base config (they
  * synthesize per-site cache entries; there's no per-site override).
  */
 describe('buildEffectiveConfig', () => {
@@ -65,19 +65,19 @@ describe('buildEffectiveConfig', () => {
     expect(() => buildEffectiveConfig(noVariants, 'edit')).toThrow(/Z2F_VITE_UNKNOWN_VARIANT/);
   });
 
-  it('returns the base config for plugin-internal __rewrite_<n> variants', () => {
+  it('returns the base config for plugin-internal __generate_<n> variants', () => {
     // Rewrite-mode synthesizes one variant per site for cache keying;
     // they must NOT trigger UNKNOWN_VARIANT regardless of whether the
     // user declared any variants table.
-    const result = buildEffectiveConfig(base, '__rewrite_1');
+    const result = buildEffectiveConfig(base, '__generate_1');
     expect(result.componentName).toBe('UserForm');
     expect(result.ui).toBe('html');
-    const result2 = buildEffectiveConfig(base, '__rewrite_42');
+    const result2 = buildEffectiveConfig(base, '__generate_42');
     expect(result2.componentName).toBe('UserForm');
   });
 
-  it('still rejects __rewrite_<non-digits> as an unknown variant', () => {
-    expect(() => buildEffectiveConfig(base, '__rewrite_abc')).toThrow(/Z2F_VITE_UNKNOWN_VARIANT/);
+  it('still rejects __generate_<non-digits> as an unknown variant', () => {
+    expect(() => buildEffectiveConfig(base, '__generate_abc')).toThrow(/Z2F_VITE_UNKNOWN_VARIANT/);
   });
 
   it('does not deep-merge nested objects (variant fully replaces componentConfig)', () => {

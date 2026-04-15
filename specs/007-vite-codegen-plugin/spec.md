@@ -10,8 +10,8 @@
 ### Session 2026-04-13
 
 - Q: How does a developer declare which schemas should become forms? → A: Query-string annotation — `import { Form } from './schemas/signup.ts?z2f'`. The plugin transforms only imports that carry the `?z2f` suffix; no explicit targets list, no convention-based scanning.
-- Added (user follow-up): The plugin MUST also support an opt-in "rewrite mode" that scans source for `<ZodForm>` JSX usages and replaces statically-resolvable ones with generated-form invocations at build time. This gives developers a transparent upgrade path from runtime to codegen without editing source. The two modes (query-string and rewrite) coexist.
-- Q: Should rewrite mode be enabled by default? → A: No — off by default. Developers enable it via an explicit plugin option. The plugin ships as a query-string-first tool; rewrite mode is a deliberate opt-in because it silently changes compiled output for code the developer didn't annotate.
+- Added (user follow-up): The plugin MUST also support an opt-in "generate mode" that scans source for `<ZodForm>` JSX usages and replaces statically-resolvable ones with generated-form invocations at build time. This gives developers a transparent upgrade path from runtime to codegen without editing source. The two modes (query-string and rewrite) coexist.
+- Q: Should generate mode be enabled by default? → A: No — off by default. Developers enable it via an explicit plugin option. The plugin ships as a query-string-first tool; generate mode is a deliberate opt-in because it silently changes compiled output for code the developer didn't annotate.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -38,19 +38,19 @@ A developer using Vite writes a Zod schema in their app source, installs the Vit
 
 A developer has a working app that uses `<ZodForm schema={signupSchema} onSubmit={handleSubmit} />` at the call site — they built it with the runtime renderer for speed of iteration. When they ship to production they want the codegen benefits (smaller bundle, faster mount, no runtime walking) without having to rewrite any source code. They enable a plugin option, and at build time every `<ZodForm>` element that references a statically resolvable schema is replaced by a call to a generated form component. Call sites that cannot be statically resolved (dynamic schemas, conditional composition) are left as runtime `<ZodForm>` calls and continue to work.
 
-> **"Statically resolvable" means**: the `schema` prop is a bare identifier (not an inline expression, not a member access, not a conditional) whose binding resolves through normal scope analysis to a named import from a file inside the project's own source tree. The exact match-criteria table — import origin, binding kind, scope resolution rules — lives in `contracts/rewrite-mode.md` and is the authoritative definition.
+> **"Statically resolvable" means**: the `schema` prop is a bare identifier (not an inline expression, not a member access, not a conditional) whose binding resolves through normal scope analysis to a named import from a file inside the project's own source tree. The exact match-criteria table — import origin, binding kind, scope resolution rules — lives in `contracts/generate-mode.md` and is the authoritative definition.
 
 **Why this priority**: This is the "free upgrade" story. It lets developers stay in runtime mode during iteration and flip a single plugin flag to reap codegen benefits without touching source — which is exactly the kind of "progressive optimization" DX that separates a plugin from the CLI. It is P2 rather than P1 because developers can always migrate manually via the explicit `?z2f` mechanism (P1); this is an ergonomic win, not a correctness win.
 
-**Independent Test**: Can be fully tested by starting from a working Vite app that imports and renders `<ZodForm schema={signupSchema} />` with no query suffix, enabling the rewrite mode in plugin options, running `vite build`, and verifying that the production bundle contains neither `@zod-to-form/react` code nor a runtime walk for `signupSchema` — the build output must include the same inlined JSX a CLI-generated form would produce, while the source file on disk remains unchanged.
+**Independent Test**: Can be fully tested by starting from a working Vite app that imports and renders `<ZodForm schema={signupSchema} />` with no query suffix, enabling the generate mode in plugin options, running `vite build`, and verifying that the production bundle contains neither `@zod-to-form/react` code nor a runtime walk for `signupSchema` — the build output must include the same inlined JSX a CLI-generated form would produce, while the source file on disk remains unchanged.
 
 **Acceptance Scenarios**:
 
-1. **Given** rewrite mode is enabled and `<ZodForm schema={signupSchema} onSubmit={handleSubmit} />` exists in `src/App.tsx` where `signupSchema` is a named import from a local module, **When** the project is built, **Then** the emitted bundle MUST contain the generated form code inlined (no `@zod-to-form/react` code for this call site) and the `signupSchema` identifier MUST NOT cause a runtime walk.
-2. **Given** rewrite mode is enabled and the schema passed to `<ZodForm>` cannot be statically resolved (e.g., `<ZodForm schema={schemas[key]} />` with a dynamic key), **When** the project is built, **Then** the plugin MUST leave the `<ZodForm>` call site untouched, emit a DEBUG-level diagnostic explaining why it was skipped, and the runtime `<ZodForm>` path MUST continue to work.
-3. **Given** rewrite mode is enabled during `vite dev`, **When** the developer edits a schema file referenced by a rewritten `<ZodForm>` call, **Then** HMR MUST apply the same way it does for query-string imports — within one second, preserving form state when structure is unchanged.
+1. **Given** generate mode is enabled and `<ZodForm schema={signupSchema} onSubmit={handleSubmit} />` exists in `src/App.tsx` where `signupSchema` is a named import from a local module, **When** the project is built, **Then** the emitted bundle MUST contain the generated form code inlined (no `@zod-to-form/react` code for this call site) and the `signupSchema` identifier MUST NOT cause a runtime walk.
+2. **Given** generate mode is enabled and the schema passed to `<ZodForm>` cannot be statically resolved (e.g., `<ZodForm schema={schemas[key]} />` with a dynamic key), **When** the project is built, **Then** the plugin MUST leave the `<ZodForm>` call site untouched, emit a DEBUG-level diagnostic explaining why it was skipped, and the runtime `<ZodForm>` path MUST continue to work.
+3. **Given** generate mode is enabled during `vite dev`, **When** the developer edits a schema file referenced by a rewritten `<ZodForm>` call, **Then** HMR MUST apply the same way it does for query-string imports — within one second, preserving form state when structure is unchanged.
 4. **Given** the source file contains both a rewritable `<ZodForm>` and an explicit `?z2f` import, **When** the project is built, **Then** both paths MUST produce correct output and MUST NOT conflict.
-5. **Given** rewrite mode is DISABLED (the default), **When** the project is built, **Then** `<ZodForm>` call sites MUST be left alone and continue to execute the runtime renderer.
+5. **Given** generate mode is DISABLED (the default), **When** the project is built, **Then** `<ZodForm>` call sites MUST be left alone and continue to execute the runtime renderer.
 
 ---
 
@@ -101,7 +101,7 @@ A developer has enabled validation optimization (L1 or L2) in their `z2f.config.
 
 ### Functional Requirements
 
-> **Numbering note**: Requirement IDs are stable and non-sequential. FR-001–007 (registration, discovery) and FR-008–019 (dev server, build, type safety, operational) predate the rewrite-mode addition; FR-020–025 (rewrite mode) were added after clarification (see the Clarifications section). IDs are preserved to keep traceability in task and test references.
+> **Numbering note**: Requirement IDs are stable and non-sequential. FR-001–007 (registration, discovery) and FR-008–019 (dev server, build, type safety, operational) predate the generate-mode addition; FR-020–025 (generate mode) were added after clarification (see the Clarifications section). IDs are preserved to keep traceability in task and test references.
 
 #### Plugin registration and configuration
 
@@ -118,14 +118,14 @@ A developer has enabled validation optimization (L1 or L2) in their `z2f.config.
 - **FR-006**: The system MUST produce functionally equivalent output to the existing codegen CLI given the same schema and config inputs, so that behavior is identical whether the developer uses the CLI or the plugin.
 - **FR-007**: The system MUST NOT clobber or overwrite any pre-existing `*.generated.tsx` files committed to the project source unless the developer explicitly opts in to writing generated output to disk.
 
-#### Transparent `<ZodForm>` rewrite mode
+#### Transparent `<ZodForm>` generate mode
 
-- **FR-020**: The system MUST support an opt-in "rewrite mode" in which the plugin scans source modules for JSX elements that reference the `ZodForm` component from `@zod-to-form/react` and replaces statically resolvable call sites with generated-form invocations at build time.
-- **FR-021**: In rewrite mode, the system MUST only replace call sites where the `schema` prop is a statically resolvable identifier that refers to a Zod schema declared in the project's own source (not in `node_modules`).
-- **FR-022**: In rewrite mode, the system MUST leave any `<ZodForm>` call site untouched when the schema cannot be statically resolved (dynamic keys, conditional composition, runtime-constructed schemas), emit a DEBUG-level diagnostic, and allow the runtime path to continue working.
-- **FR-023**: In rewrite mode, the system MUST preserve every prop, event handler, child, AND JSX spread attribute (`{...rest}`) passed to `<ZodForm>` — the rewritten call site MUST accept the same surface API so the developer's source remains unchanged. Spread attributes are preserved verbatim; any prop-shape mismatch between the spread source and the generated component surfaces as a normal TypeScript type error at the call site, which is the user's responsibility.
-- **FR-024**: Rewrite mode MUST be DISABLED by default. Developers enable it via plugin options.
-- **FR-025**: Rewrite mode MUST coexist with the query-string mode (FR-004). A single project MAY use both mechanisms without conflict.
+- **FR-020**: The system MUST support an opt-in "generate mode" in which the plugin scans source modules for JSX elements that reference the `ZodForm` component from `@zod-to-form/react` and replaces statically resolvable call sites with generated-form invocations at build time.
+- **FR-021**: In generate mode, the system MUST only replace call sites where the `schema` prop is a statically resolvable identifier that refers to a Zod schema declared in the project's own source (not in `node_modules`).
+- **FR-022**: In generate mode, the system MUST leave any `<ZodForm>` call site untouched when the schema cannot be statically resolved (dynamic keys, conditional composition, runtime-constructed schemas), emit a DEBUG-level diagnostic, and allow the runtime path to continue working.
+- **FR-023**: In generate mode, the system MUST preserve every prop, event handler, child, AND JSX spread attribute (`{...rest}`) passed to `<ZodForm>` — the rewritten call site MUST accept the same surface API so the developer's source remains unchanged. Spread attributes are preserved verbatim; any prop-shape mismatch between the spread source and the generated component surfaces as a normal TypeScript type error at the call site, which is the user's responsibility.
+- **FR-024**: Generate mode MUST be DISABLED by default. Developers enable it via plugin options.
+- **FR-025**: Generate mode MUST coexist with the query-string mode (FR-004). A single project MAY use both mechanisms without conflict.
 
 #### Dev server integration
 
@@ -155,10 +155,10 @@ A developer has enabled validation optimization (L1 or L2) in their `z2f.config.
 
 - **Vite plugin instance**: The runtime object registered in `vite.config.ts`, responsible for wiring into Vite's dev server, build pipeline, and HMR machinery. Stateless across projects but stateful during a single build or dev session.
 - **Project config (`z2f.config.ts`)**: Declarative settings that describe which UI preset, component module, field templates, validation level, and variant mappings the plugin should apply. Shared with the CLI.
-- **Source schema**: A developer-authored Zod schema file that becomes the input to a generated form, either because (a) some import references it with the `?z2f` query suffix, or (b) a `<ZodForm>` JSX element references it as a statically-resolvable identifier and rewrite mode is enabled. Owned by the developer, read-only from the plugin's perspective.
-- **Generated form component**: The output of compiling a source schema through the codegen pipeline. Exists either as a virtual module served to Vite or (optionally) as a file on disk. Consumed by developer application code via query-suffix import, or substituted in place of a `<ZodForm>` JSX call by rewrite mode.
+- **Source schema**: A developer-authored Zod schema file that becomes the input to a generated form, either because (a) some import references it with the `?z2f` query suffix, or (b) a `<ZodForm>` JSX element references it as a statically-resolvable identifier and generate mode is enabled. Owned by the developer, read-only from the plugin's perspective.
+- **Generated form component**: The output of compiling a source schema through the codegen pipeline. Exists either as a virtual module served to Vite or (optionally) as a file on disk. Consumed by developer application code via query-suffix import, or substituted in place of a `<ZodForm>` JSX call by generate mode.
 - **Generation target**: A (schema, variant name, config) triple that produces exactly one generated form. The default target has an empty variant name; named variants are expressed via `?z2f=name`.
-- **Rewrite site**: A single `<ZodForm>` JSX element in developer source that rewrite mode has matched and will replace with a generated-form invocation at build time. Tracked per source file so HMR knows which source to invalidate when the referenced schema changes.
+- **Rewrite site**: A single `<ZodForm>` JSX element in developer source that generate mode has matched and will replace with a generated-form invocation at build time. Tracked per source file so HMR knows which source to invalidate when the referenced schema changes.
 
 ## Success Criteria *(mandatory)*
 
@@ -172,8 +172,8 @@ A developer has enabled validation optimization (L1 or L2) in their `z2f.config.
 - **SC-006**: The plugin produces the same form fields, validation rules, component mapping, and generated code structure as the CLI for 100% of schemas in the existing codegen test suite. Failing even one is a blocker.
 - **SC-007**: On a project with 20 generated forms, a single schema file change triggers regeneration only for the forms that depend on that schema — not all 20 — as measured by counting HMR update events.
 - **SC-008**: The plugin handles an invalid schema or config without crashing the dev server; the server remains responsive and serves the previously-valid state until the error is fixed.
-- **SC-009**: With rewrite mode enabled, a developer can flip a single plugin option on an existing runtime-only project (one where every form uses `<ZodForm>` with no query-string imports) and see the production bundle shrink by the codegen-vs-runtime delta from the benchmarks (at least 40% mount-cost reduction on a medium 18-field form) — with zero source-code changes.
-- **SC-010**: Rewrite mode correctly identifies and leaves alone 100% of `<ZodForm>` call sites where the `schema` prop is not statically resolvable, producing a diagnostic instead of silently breaking the runtime path.
+- **SC-009**: With generate mode enabled, a developer can flip a single plugin option on an existing runtime-only project (one where every form uses `<ZodForm>` with no query-string imports) and see the production bundle shrink by the codegen-vs-runtime delta from the benchmarks (at least 40% mount-cost reduction on a medium 18-field form) — with zero source-code changes.
+- **SC-010**: Generate mode correctly identifies and leaves alone 100% of `<ZodForm>` call sites where the `schema` prop is not statically resolvable, producing a diagnostic instead of silently breaking the runtime path.
 - **SC-011**: Plugin cold-start overhead, HMR latency, and production bundle size deltas are continuously tracked in the repository's benchmark suite (`benchmarks/RESULTS.md`) alongside the existing runtime vs. codegen numbers. A regression in any tracked metric is visible in the report on the next run — no manual measurement required.
 
 ## Assumptions

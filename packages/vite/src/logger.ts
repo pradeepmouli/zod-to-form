@@ -3,7 +3,7 @@
  *
  * A small level-based logger independent of Vite's own logger. Used so the
  * plugin can stay quiet by default but emit DEBUG-level diagnostics for
- * rewrite-mode skipped sites and cache misses without polluting Vite's
+ * generate-mode skipped sites and cache misses without polluting Vite's
  * normal output.
  */
 export type LogLevel = 'silent' | 'warn' | 'info' | 'debug';
@@ -22,16 +22,16 @@ export interface Logger {
   info(message: string): void;
   debug(message: string): void;
   /**
-   * Buffer a rewrite-mode skip diagnostic for end-of-build summary output.
-   * Diagnostics are flushed via `flushRewriteSummary()`.
+   * Buffer a generate-mode skip diagnostic for end-of-build summary output.
+   * Diagnostics are flushed via `flushGenerateSummary()`.
    */
-  bufferRewriteSkip(file: string, line: number, column: number, reason: string): void;
+  bufferGenerateSkip(file: string, line: number, column: number, reason: string): void;
   /**
-   * Emit the buffered rewrite-mode skip summary at INFO level (or higher),
-   * matching the format documented in `contracts/rewrite-mode.md`. Returns
+   * Emit the buffered generate-mode skip summary at INFO level (or higher),
+   * matching the format documented in `contracts/generate-mode.md`. Returns
    * the number of skips that were summarized.
    */
-  flushRewriteSummary(processed: number, rewritten: number): number;
+  flushGenerateSummary(processed: number, rewritten: number): number;
 }
 
 interface RewriteSkip {
@@ -57,17 +57,17 @@ export function createLogger(level: LogLevel = 'info'): Logger {
     debug(message: string): void {
       if (shouldLog('debug')) console.debug(`${PREFIX} ${message}`);
     },
-    bufferRewriteSkip(file, line, column, reason): void {
+    bufferGenerateSkip(file, line, column, reason): void {
       skips.push({ file, line, column, reason });
     },
-    flushRewriteSummary(processed, rewritten): number {
+    flushGenerateSummary(processed, rewritten): number {
       const count = skips.length;
       if (!shouldLog('info')) {
         skips.length = 0;
         return count;
       }
       const lines: string[] = [
-        `${PREFIX} Rewrite mode processed ${processed} files, rewrote ${rewritten} call sites, skipped ${count}:`
+        `${PREFIX} Generate mode processed ${processed} files, rewrote ${rewritten} call sites, skipped ${count}:`
       ];
       for (const skip of skips) {
         lines.push(`  ${skip.file}:${skip.line}:${skip.column} — ${skip.reason}`);

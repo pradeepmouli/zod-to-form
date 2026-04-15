@@ -152,7 +152,7 @@ export async function resolveSchemas(input: ResolveSchemaInput): Promise<Resolve
     if (zodFormBinding === undefined) {
       skipped.push({
         candidate,
-        reason: `<ZodForm> at ${candidate.loc.line}:${candidate.loc.column} has no in-scope import; rewrite mode requires a top-level 'import { ZodForm }' statement`
+        reason: `<ZodForm> at ${candidate.loc.line}:${candidate.loc.column} has no in-scope import; generate mode requires a top-level 'import { ZodForm }' statement`
       });
       continue;
     }
@@ -178,7 +178,7 @@ export async function resolveSchemas(input: ResolveSchemaInput): Promise<Resolve
     if (schemaBinding === undefined) {
       skipped.push({
         candidate,
-        reason: `schema identifier '${schemaIdName}' is not a top-level import (rewrite mode only handles imported schemas)`
+        reason: `schema identifier '${schemaIdName}' is not a top-level import (generate mode only handles imported schemas)`
       });
       continue;
     }

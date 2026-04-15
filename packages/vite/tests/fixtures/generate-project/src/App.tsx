@@ -1,4 +1,4 @@
-// Fixture source for rewrite-mode integration test.
+// Fixture source for generate-mode integration test.
 //
 // Contains:
 //   1. A happy-path <ZodForm schema={signupSchema}> that the plugin

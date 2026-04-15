@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { scanJsx } from '../../src/rewrite-mode/scan-jsx.js';
-import { resolveSchemas } from '../../src/rewrite-mode/resolve-schema.js';
+import { scanJsx } from '../../src/generate-mode/scan-jsx.js';
+import { resolveSchemas } from '../../src/generate-mode/resolve-schema.js';
 
 /**
  * Contract: every row of the "Match criteria" table in
- * `specs/007-vite-codegen-plugin/contracts/rewrite-mode.md` is
+ * `specs/007-vite-codegen-plugin/contracts/generate-mode.md` is
  * exercised here. Each row asserts whether a particular `<ZodForm>`
  * shape ends up in `resolved` (matched) or `skipped` (rejected).
  *
@@ -33,7 +33,7 @@ async function pipeline(
   };
 }
 
-describe('rewrite-mode match criteria contract', () => {
+describe('generate-mode match criteria contract', () => {
   it('row: element name <ZodForm> + bare identifier schema → MATCH', async () => {
     const result = await pipeline(
       `import { ZodForm } from '@zod-to-form/react';

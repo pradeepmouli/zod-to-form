@@ -31,7 +31,7 @@ The returned `Plugin.name` MUST equal `'@zod-to-form/vite'`. Vite uses plugin na
 | `configureServer` | required | Capture the dev server reference for programmatic `ssrLoadModule` calls in `load` | Log warning if server shape is unexpected; do not throw |
 | `resolveId` | required | Recognize `?z2f` specifiers and return a resolved id | Return `null` on unrelated ids (standard Vite plugin convention) |
 | `load` | required | Compile the schema into the generated form module source | Throw with a clear error that names the schema file and the failure reason (FR-010) |
-| `transform` | required when `rewrite` is present | Scan JSX for `<ZodForm>` and rewrite statically resolvable sites; strip `zodResolver` when optimization is enabled | Buffer parse failures as skip diagnostics; silently skip unmatched sites |
+| `transform` | required when `generate` is present | Scan JSX for `<ZodForm>` and replace statically resolvable sites with generated components; strip `zodResolver` when optimization is enabled | Buffer parse failures as skip diagnostics; silently skip unmatched sites |
 | `handleHotUpdate` | required | Invalidate affected cached entries and return the module set Vite should HMR | Fall through to default behavior on any error — never break the dev server |
 | `buildEnd` | optional | Flush the compilation cache and log stats if `logLevel === 'debug'` | No-op on error |
 
@@ -46,17 +46,18 @@ export interface PluginOptions {
   configOverride?: Partial<import('@zod-to-form/core').CodegenConfig>;
 
   /**
-   * Rewrite mode — scan JSX source for `<ZodForm>` elements and rewrite
-   * statically resolvable call sites to use generated components. OFF by
-   * default (FR-024). PRESENCE of this object — even empty `{}` — enables
-   * the mode; `include` and `exclude` constrain which files are scanned.
-   * This shape eliminates the invalid state where `include` is set but
-   * rewrite is disabled.
+   * Generate mode — scan JSX source for `<ZodForm>` elements and replace
+   * statically resolvable call sites with generated form components at
+   * build time. OFF by default (FR-024). PRESENCE of this object — even
+   * empty `{}` — enables the mode; `include` and `exclude` constrain
+   * which files are scanned. This shape eliminates the invalid state
+   * where `include` is set but the mode is disabled. The name mirrors
+   * the CLI's `zod-to-form generate` command.
    */
-  rewrite?: {
-    /** Glob patterns for files rewrite mode scans. Default: `['**\/*.{ts,tsx,js,jsx}']`. */
+  generate?: {
+    /** Glob patterns for files generate mode scans. Default: `['**\/*.{ts,tsx,js,jsx}']`. */
     include?: string[];
-    /** Glob patterns excluded from rewrite mode. Always excludes node_modules + dist. */
+    /** Glob patterns excluded from generate mode. Always excludes node_modules + dist. */
     exclude?: string[];
   };
 
@@ -80,7 +81,7 @@ export interface PluginOptions {
 
 - If `configPath` is provided, resolve it to an absolute path and confirm it exists synchronously. Fail fast if not found.
 - If `write.outDir` is provided, resolve it to an absolute path and confirm it is inside the project's resolved Vite root (checked during `configResolved`). Fail fast if outside.
-- Unknown keys in `options` (or inside `options.rewrite`) MUST throw `Z2F_VITE_INVALID_OPTIONS` at factory invocation. No runtime tolerance for typos.
+- Unknown keys in `options` (or inside `options.generate`) MUST throw `Z2F_VITE_INVALID_OPTIONS` at factory invocation. No runtime tolerance for typos.
 
 ### Default values
 
@@ -88,9 +89,9 @@ export interface PluginOptions {
 |---|---|
 | `configPath` | auto-discovered walking up from Vite `root` |
 | `configOverride` | `undefined` (no override) |
-| `rewrite` | `undefined` (mode disabled) |
-| `rewrite.include` | `['**/*.{ts,tsx,js,jsx}']` (when `rewrite` is present) |
-| `rewrite.exclude` | `['**/node_modules/**', '**/dist/**']` (when `rewrite` is present) |
+| `generate` | `undefined` (mode disabled) |
+| `generate.include` | `['**/*.{ts,tsx,js,jsx}']` (when `generate` is present) |
+| `generate.exclude` | `['**/node_modules/**', '**/dist/**']` (when `generate` is present) |
 | `write` | `undefined` (virtual-module only) |
 | `logLevel` | `'info'` |
 
@@ -106,7 +107,7 @@ Errors thrown by the plugin MUST carry a stable `code` string and a `location` (
 | `Z2F_VITE_SCHEMA_NOT_ZOD` | Resolved file's default (or named) export is not a Zod v4 schema | Developer exports a schema or fixes the name |
 | `Z2F_VITE_UNKNOWN_VARIANT` | `?z2f=name` uses a variant name not declared in `config.variants` | Developer adds the variant to the config |
 | `Z2F_VITE_CODEGEN_FAILURE` | `generateFormComponent` throws while processing a resolved schema | Dev server preserves last-known-good generated module |
-| `Z2F_VITE_REWRITE_PARSE_ERROR` | Babel fails to parse a TSX file targeted by rewrite mode | Propagates as a normal Vite parse error |
+| `Z2F_VITE_GENERATE_PARSE_ERROR` | Babel fails to parse a TSX file targeted by generate mode | Propagates as a normal Vite parse error |
 
 All errors MUST be recoverable during `vite dev` — the dev server never dies because of a plugin error. On `vite build`, errors abort the build with a non-zero exit code.
 
