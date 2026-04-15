@@ -27,15 +27,6 @@ export default defineConfig({
   componentName: 'SignupForm',
 });`;
 
-const SCHEMA_SOURCE = `// src/schemas/signup.ts
-import { z } from 'zod';
-
-export const signupSchema = z.object({
-  name:  z.string().min(2),
-  email: z.string().email(),
-  role:  z.enum(['admin', 'editor', 'viewer']),
-});`;
-
 const RUNTIME_APP = `// src/App.tsx
 import { ZodForm } from '@zod-to-form/react';
 import { signupSchema } from './schemas/signup';
@@ -46,20 +37,6 @@ export default function App() {
       schema={signupSchema}
       onSubmit={(data) => console.log(data)}
     />
-  );
-}`;
-
-const CODEGEN_CLI_COMMAND = `# Build-time CLI invocation
-pnpm zod-to-form generate \\
-  --schema src/schemas/signup.ts \\
-  --out    src/generated`;
-
-const CODEGEN_APP = `// src/App.tsx
-import SignupForm from './generated/SignupForm';
-
-export default function App() {
-  return (
-    <SignupForm onSubmit={(data) => console.log(data)} />
   );
 }`;
 
@@ -92,31 +69,28 @@ import react from '@vitejs/plugin-react';
 import z2fVite from '@zod-to-form/vite';
 
 export default defineConfig({
-  plugins: [z2fVite(), react()],
+  plugins: [
+    // Presence of \`generate\` opts in to JSX scanning:
+    // the plugin finds <ZodForm schema={X}/> call sites
+    // and compiles them away at build time.
+    z2fVite({ generate: {} }),
+    react(),
+  ],
 });`;
 
-const PLUGIN_APP = `// src/App.tsx
-import SignupForm from './schemas/signup.ts?z2f';
-
-export default function App() {
-  return (
-    <SignupForm onSubmit={(data) => console.log(data)} />
-  );
-}`;
-
-const PLUGIN_GENERATED = `// Virtual module served by @zod-to-form/vite
-// (never hits disk — compiled on demand, cached per schema)
+const PLUGIN_GENERATED = `// Compiled on the fly by @zod-to-form/vite
+// (virtual module — never hits disk, cached per schema)
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signupSchema } from './schemas/signup.ts';
 
-export default function SignupForm(props) {
+export default function Form(props) {
   const form = useForm({
     resolver: zodResolver(signupSchema),
   });
   return (
     <form onSubmit={form.handleSubmit(props.onSubmit)}>
-      {/* fields generated from signupSchema … */}
+      {/* <input>s generated from signupSchema … */}
     </form>
   );
 }`;
@@ -147,39 +121,46 @@ const PATHS: IntegrationPath[] = [
     leftTop: { title: 'z2f.config.ts', language: 'tsx', source: Z2F_CONFIG_SHADCN },
     leftBottom: null,
     rightTop: { title: 'src/App.tsx', language: 'tsx', source: RUNTIME_APP },
-    rightBottom: { title: 'src/schemas/signup.ts', language: 'tsx', source: SCHEMA_SOURCE }
+    rightBottom: null
   },
   {
     key: 'codegen',
     label: 'Codegen',
     tagline: 'Production code you own',
     bullets: [
-      'Generate static `.tsx` files from the CLI, commit them to git.',
+      'Run `zod-to-form generate`, get a static `.tsx` file you commit.',
       'Zero runtime dependency on zod-to-form in the emitted code.',
       'Hand-editable output — review diffs, apply custom tweaks, move on.'
     ],
     leftTop: { title: 'z2f.config.ts', language: 'tsx', source: Z2F_CONFIG_SHADCN },
-    leftBottom: { title: 'CLI command', language: 'bash', source: CODEGEN_CLI_COMMAND },
-    rightTop: { title: 'src/App.tsx', language: 'tsx', source: CODEGEN_APP },
-    rightBottom: {
+    leftBottom: null,
+    rightTop: {
       title: 'src/generated/SignupForm.tsx',
       language: 'tsx',
       source: CODEGEN_GENERATED
-    }
+    },
+    rightBottom: null
   },
   {
     key: 'plugin',
     label: 'Build-time (Plugin)',
     tagline: 'Best of both worlds',
     bullets: [
-      'Import `./schema.ts?z2f`, the Vite plugin compiles it on demand.',
+      'Keep writing `<ZodForm>` — the plugin scans your JSX and compiles it.',
       'HMR keeps the form in sync with the schema — no commit, no CLI step.',
       'Same generated code as the CLI path; zero runtime overhead in prod.'
     ],
     leftTop: { title: 'z2f.config.ts', language: 'tsx', source: Z2F_CONFIG_SHADCN },
     leftBottom: { title: 'vite.config.ts', language: 'tsx', source: PLUGIN_VITE_CONFIG },
-    rightTop: { title: 'src/App.tsx', language: 'tsx', source: PLUGIN_APP },
-    rightBottom: { title: 'Virtual module (compiled)', language: 'tsx', source: PLUGIN_GENERATED }
+    // Top = original runtime source the user wrote; bottom = what the
+    // plugin emits in its place at build time. The ↓ connector between
+    // the two makes the transform visible.
+    rightTop: { title: 'src/App.tsx (original)', language: 'tsx', source: RUNTIME_APP },
+    rightBottom: {
+      title: 'Virtual module (compiled by plugin)',
+      language: 'tsx',
+      source: PLUGIN_GENERATED
+    }
   }
 ];
 
