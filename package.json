@@ -68,6 +68,8 @@
   "devDependencies": {
     "@changesets/changelog-github": "^0.6.0",
     "@changesets/cli": "^2.30.0",
+    "@to-skills/cli": "^0.2.1",
+    "@to-skills/vitepress": "^0.2.0",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
