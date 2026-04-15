@@ -22,9 +22,12 @@ const Z2F_CONFIG_SHADCN = `// z2f.config.ts
 import { defineConfig } from '@zod-to-form/cli';
 
 export default defineConfig({
-  ui: 'shadcn',
-  mode: 'submit',
-  componentName: 'SignupForm',
+  components: {
+    SignupForm: {
+      ui: 'shadcn',
+      mode: 'submit',
+    },
+  },
 });`;
 
 const RUNTIME_APP = `// src/App.tsx
