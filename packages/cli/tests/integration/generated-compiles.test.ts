@@ -41,6 +41,10 @@ describe('generated component compilation', () => {
     expect(output).not.toContain(`from '@app/components'`);
   });
 
+  // 30s timeout: `pnpm exec tsc --noEmit` spin-up + cold startup takes
+  // 3-4s locally and 8-12s on GitHub Actions runners, well past the
+  // 5s vitest default. Matches the analogous test in
+  // `packages/vite/tests/integration/generated-compiles.test.ts`.
   it('passes tsc --noEmit in strict mode', async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), 'zodform-generated-compile-'));
     const outputPath = path.join(tempDir, 'UserForm.tsx');
@@ -143,5 +147,5 @@ describe('generated component compilation', () => {
           : '';
       throw new Error([stdout, stderr, String(error)].filter(Boolean).join('\n'));
     }
-  });
+  }, 30_000);
 });
