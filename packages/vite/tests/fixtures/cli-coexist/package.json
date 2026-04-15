@@ -3,5 +3,6 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "Fixture verifying the plugin doesn't touch CLI-emitted files (FR-007/FR-019)"
+  "description": "Fixture verifying the plugin doesn't touch CLI-emitted files (FR-007/FR-019)",
+  "author": "Pradeep Mouli <pmouli@mac.com> (https://github.com/pradeepmouli)"
 }

@@ -21,6 +21,8 @@ zod-to-form reads a Zod v4 schema and produces a complete React form — either 
 
 ---
 
+> **⚠️ Pre-1.0 software** — APIs are subject to change between minor versions. Pin to exact versions in production. See the [CHANGELOG](./CHANGELOG.md) for breaking changes between releases.
+
 ## Quick Start
 
 ### Runtime — iterate on forms instantly
