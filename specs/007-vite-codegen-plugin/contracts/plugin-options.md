@@ -31,7 +31,7 @@ The returned `Plugin.name` MUST equal `'@zod-to-form/vite'`. Vite uses plugin na
 | `configureServer` | required | Capture the dev server reference for programmatic `ssrLoadModule` calls in `load` | Log warning if server shape is unexpected; do not throw |
 | `resolveId` | required | Recognize `?z2f` specifiers and return a resolved id | Return `null` on unrelated ids (standard Vite plugin convention) |
 | `load` | required | Compile the schema into the generated form module source | Throw with a clear error that names the schema file and the failure reason (FR-010) |
-| `transform` | required when `rewriteZodForm` is true | Scan JSX for `<ZodForm>` and rewrite statically resolvable sites; strip `zodResolver` when optimization is enabled | Throw only for actual parse failures; silently skip unmatched sites |
+| `transform` | required when `rewrite` is present | Scan JSX for `<ZodForm>` and rewrite statically resolvable sites; strip `zodResolver` when optimization is enabled | Buffer parse failures as skip diagnostics; silently skip unmatched sites |
 | `handleHotUpdate` | required | Invalidate affected cached entries and return the module set Vite should HMR | Fall through to default behavior on any error — never break the dev server |
 | `buildEnd` | optional | Flush the compilation cache and log stats if `logLevel === 'debug'` | No-op on error |
 
@@ -46,16 +46,19 @@ export interface PluginOptions {
   configOverride?: Partial<import('@zod-to-form/core').CodegenConfig>;
 
   /**
-   * When true, scan JSX source for `<ZodForm>` elements and rewrite statically
-   * resolvable call sites to use generated components. OFF by default (FR-024).
+   * Rewrite mode — scan JSX source for `<ZodForm>` elements and rewrite
+   * statically resolvable call sites to use generated components. OFF by
+   * default (FR-024). PRESENCE of this object — even empty `{}` — enables
+   * the mode; `include` and `exclude` constrain which files are scanned.
+   * This shape eliminates the invalid state where `include` is set but
+   * rewrite is disabled.
    */
-  rewriteZodForm?: boolean;
-
-  /** Glob patterns for files rewrite mode scans. Default: ['** /*.{ts,tsx,js,jsx}']. */
-  rewriteInclude?: string[];
-
-  /** Glob patterns excluded from rewrite mode. Always excludes node_modules. */
-  rewriteExclude?: string[];
+  rewrite?: {
+    /** Glob patterns for files rewrite mode scans. Default: `['**\/*.{ts,tsx,js,jsx}']`. */
+    include?: string[];
+    /** Glob patterns excluded from rewrite mode. Always excludes node_modules + dist. */
+    exclude?: string[];
+  };
 
   /**
    * Optional opt-in to emit generated files to disk alongside schemas or into
@@ -77,8 +80,7 @@ export interface PluginOptions {
 
 - If `configPath` is provided, resolve it to an absolute path and confirm it exists synchronously. Fail fast if not found.
 - If `write.outDir` is provided, resolve it to an absolute path and confirm it is inside the project's resolved Vite root (checked during `configResolved`). Fail fast if outside.
-- If `rewriteZodForm` is false and `rewriteInclude`/`rewriteExclude` are provided, emit a warning via the plugin's logger.
-- Unknown keys in `options` MUST produce a typed error at the TypeScript level (via strict object typing). No runtime tolerance for typos.
+- Unknown keys in `options` (or inside `options.rewrite`) MUST throw `Z2F_VITE_INVALID_OPTIONS` at factory invocation. No runtime tolerance for typos.
 
 ### Default values
 
@@ -86,9 +88,9 @@ export interface PluginOptions {
 |---|---|
 | `configPath` | auto-discovered walking up from Vite `root` |
 | `configOverride` | `undefined` (no override) |
-| `rewriteZodForm` | `false` |
-| `rewriteInclude` | `['**/*.{ts,tsx,js,jsx}']` |
-| `rewriteExclude` | `['**/node_modules/**', '**/dist/**']` |
+| `rewrite` | `undefined` (mode disabled) |
+| `rewrite.include` | `['**/*.{ts,tsx,js,jsx}']` (when `rewrite` is present) |
+| `rewrite.exclude` | `['**/node_modules/**', '**/dist/**']` (when `rewrite` is present) |
 | `write` | `undefined` (virtual-module only) |
 | `logLevel` | `'info'` |
 

@@ -84,7 +84,7 @@ export const signupSchema = z.object({
 
 ```tsx
 // src/App.tsx
-import { SignupForm } from './schemas/signup.ts?z2f';
+import SignupForm from './schemas/signup.ts?z2f';
 
 export default function App() {
   return (
@@ -97,6 +97,11 @@ export default function App() {
   );
 }
 ```
+
+> Use a **default import**. The `?z2f` virtual module exports the
+> generated component both as `default` and as a named export, but
+> only the default export is typed by the `@zod-to-form/vite/client`
+> ambient declarations. The runtime supports either style.
 
 Start the dev server with `pnpm dev`. The form renders immediately — no codegen CLI step, no committed generated files.
 
@@ -144,8 +149,8 @@ export default {
 Then import each variant via `?z2f=<variant>`:
 
 ```tsx
-import { UserEditForm } from './schemas/user.ts?z2f=edit';
-import { UserCreateForm } from './schemas/user.ts?z2f=create';
+import UserEditForm from './schemas/user.ts?z2f=edit';
+import UserCreateForm from './schemas/user.ts?z2f=create';
 ```
 
 The plugin auto-discovers `z2f.config.{ts,mts,js,mjs}` in the Vite root. When the config file changes, the plugin's HMR hook invalidates every cached form so the next request reflects the new config. A syntax error in the config keeps the previous valid version serving — the dev server stays alive.

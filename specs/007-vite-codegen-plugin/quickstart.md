@@ -66,7 +66,7 @@ export const signupSchema = z.object({
 
 ```tsx
 // src/App.tsx
-import { SignupForm } from './schemas/signup.ts?z2f';
+import SignupForm from './schemas/signup.ts?z2f';
 
 export default function App() {
   return (
@@ -79,6 +79,12 @@ export default function App() {
   );
 }
 ```
+
+> Use a **default import**. The `?z2f` virtual module exports the
+> generated component both as `default` and as a named export matching
+> `componentName`, but only the default export is typed via the
+> `@zod-to-form/vite/client` ambient declarations — named imports would
+> type-check as `any`. The runtime supports either style.
 
 Start the dev server:
 
@@ -138,7 +144,9 @@ You want the production benefits of codegen without rewriting your source. Flip 
 ```ts
 // vite.config.ts
 plugins: [
-  z2fVite({ rewriteZodForm: true }),
+  // Presence of the `rewrite` object — even empty — enables rewrite mode.
+  // Pass `rewrite: { include: [...], exclude: [...] }` to constrain scanning.
+  z2fVite({ rewrite: {} }),
   react(),
 ],
 ```
@@ -173,7 +181,7 @@ With `optimization.level: 2`, the plugin also strips the `@hookform/resolvers/zo
 Import a variant via the query:
 
 ```tsx
-import { UserEditForm } from './schemas/user.ts?z2f=edit';
+import UserEditForm from './schemas/user.ts?z2f=edit';
 ```
 
 The plugin picks up config changes automatically during dev — edit `z2f.config.ts` and all affected forms regenerate within two seconds.

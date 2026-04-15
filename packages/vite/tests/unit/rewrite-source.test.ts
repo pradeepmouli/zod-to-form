@@ -127,6 +127,48 @@ const App = () => <ZodForm schema={s} />;
     expect(second).toBe(first);
   });
 
+  it('preserves a leading `use client` directive — generated imports go AFTER it', async () => {
+    const source = `'use client';
+import { ZodForm } from '@zod-to-form/react';
+import { s } from './s';
+const App = () => <ZodForm schema={s} />;
+`;
+    const out = await pipeline(source, { './s': '/abs/project/src/s.ts' });
+    // The directive must still be the first thing in the file.
+    expect(out.startsWith("'use client';")).toBe(true);
+    // The synthesized import appears after the directive, not before.
+    const directiveIdx = out.indexOf("'use client';");
+    const generatedIdx = out.indexOf('_z2fGeneratedForm_1');
+    expect(generatedIdx).toBeGreaterThan(directiveIdx);
+  });
+
+  it('inserts generated imports AFTER existing top-level imports', async () => {
+    const source = `import React from 'react';
+import { ZodForm } from '@zod-to-form/react';
+import { s } from './s';
+const App = () => <ZodForm schema={s} />;
+`;
+    const out = await pipeline(source, { './s': '/abs/project/src/s.ts' });
+    // Both user imports must precede the synthesized one.
+    const reactIdx = out.indexOf("from 'react'");
+    const userSchemaIdx = out.indexOf("from './s'");
+    const generatedIdx = out.indexOf('_z2fGeneratedForm_1');
+    expect(reactIdx).toBeGreaterThan(-1);
+    expect(userSchemaIdx).toBeGreaterThan(-1);
+    expect(generatedIdx).toBeGreaterThan(reactIdx);
+    expect(generatedIdx).toBeGreaterThan(userSchemaIdx);
+  });
+
+  it('preserves a leading shebang line', async () => {
+    const source = `#!/usr/bin/env node
+import { ZodForm } from '@zod-to-form/react';
+import { s } from './s';
+const App = () => <ZodForm schema={s} />;
+`;
+    const out = await pipeline(source, { './s': '/abs/project/src/s.ts' });
+    expect(out.startsWith('#!/usr/bin/env node')).toBe(true);
+  });
+
   it('produces a sourcemap with hires: true', async () => {
     const source = `
 import { ZodForm } from '@zod-to-form/react';

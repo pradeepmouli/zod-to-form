@@ -23,7 +23,7 @@ export default defineConfig({
 
 ```tsx
 // src/App.tsx
-import { SignupForm } from './schemas/signup.ts?z2f';
+import SignupForm from './schemas/signup.ts?z2f';
 
 export default function App() {
   return <SignupForm onSubmit={(data) => console.log(data)} />;
@@ -33,7 +33,7 @@ export default function App() {
 ## Modes
 
 - **Query-string mode** (default): imports carrying `?z2f` become generated form components.
-- **Rewrite mode** (opt-in via `rewriteZodForm: true`): scans source for `<ZodForm schema={X}>` usages and replaces statically resolvable ones with generated components at build time. Unresolvable sites are left alone and fall through to the runtime path.
+- **Rewrite mode** (opt-in via `rewrite: {}`): scans source for `<ZodForm schema={X}>` usages and replaces statically resolvable ones with generated components at build time. Unresolvable sites are left alone and fall through to the runtime path. Presence of the `rewrite` object — even empty — enables the mode; pass `rewrite: { include: [...], exclude: [...] }` to constrain which files are scanned.
 
 ## License
 

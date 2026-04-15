@@ -765,6 +765,13 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
     `  return (`,
     ...wrappedContent,
     `  );`,
-    `}`
+    `}`,
+    '',
+    // Emit a default export alongside the named one so either import
+    // style works: `import Form from './x'` and `import { Form } from
+    // './x'`. The Vite plugin's `?z2f` virtual modules and the CLI's
+    // `.generated.tsx` files both benefit — matches the convention
+    // every React component-library generator uses.
+    `export default ${config.componentName};`
   ].join('\n');
 }

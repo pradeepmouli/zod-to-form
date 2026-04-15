@@ -69,9 +69,13 @@ export function rewriteSource(input: RewriteSourceInput): RewriteSourceOutput {
     }
   }
 
-  // Prepend the generated imports just before the first non-import node
-  // (or at byte 0 if the file starts with code). For simplicity we
-  // prepend at byte 0 — Vite handles the source map collapse.
+  // Insert the generated imports AFTER any leading shebang / block
+  // comments / string directives (`'use client'`, `'use strict'`) and
+  // AFTER the last existing top-level `import` statement — not blindly
+  // at byte 0. Prepending at byte 0 would demote a `'use client'`
+  // directive past the first import, invalidating it, and would push
+  // header comments below the generated block.
+  //
   // Every rewrite-mode variant emits its component under the fixed
   // export name `Form`; see compileTarget's rewrite-variant carve-out.
   const importLines: string[] = [];
@@ -82,13 +86,129 @@ export function rewriteSource(input: RewriteSourceInput): RewriteSourceOutput {
       `import { Form as ${site.generatedIdentifier} } from '${site.schemaFile}?z2f=${variant}';`
     );
   }
-  ms.prepend(importLines.join('\n') + '\n');
+  const insertAt = findImportInsertionPoint(source);
+  ms.appendLeft(insertAt, importLines.join('\n') + '\n');
 
   return {
     code: ms.toString(),
     map: ms.generateMap({ hires: true }),
     rewritten: resolved.length
   };
+}
+
+/**
+ * Find the byte offset at which to insert generated imports. The target
+ * is "immediately after the last thing that must come first": shebang,
+ * leading block/line comments, string directives, and any existing
+ * top-level `import` statements. If none of those exist, the result is
+ * byte 0 (the file starts with user code and the generated imports go
+ * at the very top).
+ *
+ * This is a lightweight textual scan rather than a Babel traversal —
+ * the scanner only needs to skip over syntactically "boring" prefix
+ * tokens, and the tokens it cares about are all locally recognizable.
+ * False negatives (e.g. a directive the scanner doesn't recognize) are
+ * safe: the generated imports land slightly earlier than optimal, not
+ * in an invalid position.
+ */
+function findImportInsertionPoint(source: string): number {
+  let cursor = 0;
+  const n = source.length;
+
+  const skipWhitespace = (): void => {
+    while (cursor < n && /\s/.test(source[cursor]!)) cursor += 1;
+  };
+  const skipLineComment = (): boolean => {
+    if (source.slice(cursor, cursor + 2) !== '//') return false;
+    const eol = source.indexOf('\n', cursor);
+    cursor = eol === -1 ? n : eol + 1;
+    return true;
+  };
+  const skipBlockComment = (): boolean => {
+    if (source.slice(cursor, cursor + 2) !== '/*') return false;
+    const end = source.indexOf('*/', cursor + 2);
+    cursor = end === -1 ? n : end + 2;
+    return true;
+  };
+  const skipDirective = (): boolean => {
+    // Match a single string literal followed by optional semicolon +
+    // end-of-line — that's what a directive looks like at the top of
+    // a module (`'use client';`, `"use strict";`). We're not parsing
+    // JavaScript; we only need to recognize the idiomatic form.
+    const quote = source[cursor];
+    if (quote !== "'" && quote !== '"') return false;
+    let i = cursor + 1;
+    while (i < n && source[i] !== quote) {
+      if (source[i] === '\\') i += 2;
+      else i += 1;
+    }
+    if (i >= n) return false;
+    i += 1; // past the closing quote
+    // Optional semicolon + newline before the next meaningful token.
+    while (i < n && (source[i] === ' ' || source[i] === '\t')) i += 1;
+    if (source[i] === ';') i += 1;
+    // Require the directive to end at a line break — otherwise it's
+    // not a statement-level string.
+    const rest = source.slice(i);
+    if (!/^\s*(?:\r?\n|$)/.test(rest)) return false;
+    cursor = i;
+    return true;
+  };
+  const skipImportStatement = (): boolean => {
+    if (
+      source.slice(cursor, cursor + 7) !== 'import ' &&
+      source.slice(cursor, cursor + 7) !== 'import{'
+    ) {
+      return false;
+    }
+    // Naive: walk forward until we find the end of the statement.
+    // An import can span multiple lines (`import {\n  a,\n  b\n} from 'x'`),
+    // so we can't just indexOf('\n'). Look for the closing quote of
+    // the `from '...'` source literal + optional semicolon.
+    let i = cursor + 6;
+    // Find the from-source quote. An import can also be side-effect
+    // only: `import 'polyfill';` — in which case the first quote IS
+    // the source quote.
+    while (i < n) {
+      const c = source[i]!;
+      if (c === "'" || c === '"') {
+        const quote = c;
+        i += 1;
+        while (i < n && source[i] !== quote) {
+          if (source[i] === '\\') i += 2;
+          else i += 1;
+        }
+        i += 1; // past the closing quote
+        break;
+      }
+      i += 1;
+    }
+    // Optional semicolon + newline.
+    while (i < n && (source[i] === ' ' || source[i] === '\t')) i += 1;
+    if (source[i] === ';') i += 1;
+    cursor = i;
+    return true;
+  };
+
+  // Shebang (only at byte 0).
+  if (source.startsWith('#!')) {
+    const eol = source.indexOf('\n', 2);
+    cursor = eol === -1 ? n : eol + 1;
+  }
+
+  // Now alternate: skip whitespace, then try each prefix form. Stop as
+  // soon as none match.
+  while (cursor < n) {
+    const before = cursor;
+    skipWhitespace();
+    if (skipLineComment()) continue;
+    if (skipBlockComment()) continue;
+    if (skipDirective()) continue;
+    if (skipImportStatement()) continue;
+    if (cursor === before) break;
+  }
+
+  return cursor;
 }
 
 /**
