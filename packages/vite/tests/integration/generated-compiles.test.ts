@@ -108,7 +108,7 @@ describe('plugin-generated component compilation', () => {
     await writeFile(tsconfigPath, TSCONFIG, 'utf8');
 
     try {
-      execFileSync('pnpm', ['exec', 'tsc', '--noEmit', '-p', tsconfigPath], {
+      execFileSync('pnpm', ['exec', 'tsgo', '--noEmit', '-p', tsconfigPath], {
         cwd: workspaceRoot,
         stdio: 'pipe'
       });
@@ -161,7 +161,7 @@ describe('plugin-generated component compilation', () => {
     await writeFile(tsconfigPath, TSCONFIG, 'utf8');
 
     try {
-      execFileSync('pnpm', ['exec', 'tsc', '--noEmit', '-p', tsconfigPath], {
+      execFileSync('pnpm', ['exec', 'tsgo', '--noEmit', '-p', tsconfigPath], {
         cwd: workspaceRoot,
         stdio: 'pipe'
       });
