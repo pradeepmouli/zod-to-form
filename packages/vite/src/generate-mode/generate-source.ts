@@ -17,7 +17,7 @@
  */
 import type { ParseResult } from '@babel/parser';
 import { parse as parseBabel } from '@babel/parser';
-import type { File, ImportDeclaration, Statement } from '@babel/types';
+import type { ExpressionStatement, File } from '@babel/types';
 import MagicString from 'magic-string';
 import type { CandidateAttribute } from './scan-jsx.js';
 import type { ResolvedSite } from './resolve-schema.js';
@@ -99,7 +99,19 @@ export function generateSource(input: GenerateSourceInput): GenerateSourceOutput
     );
   }
   const insertAt = findImportInsertionPoint(source, onWarn);
-  ms.appendLeft(insertAt, importLines.join('\n') + '\n');
+  // When the scanner can't find a trailing newline after the preamble
+  // (e.g. a preamble-only file, or a shebang file with no final `\n`),
+  // prepend one to the inserted text so `#!/usr/bin/env node` + generated
+  // import can't collapse to `#!/usr/bin/env nodeimport { … }` on the
+  // same line. No-op in the common case where `insertAt` already points
+  // at the start of a line.
+  const needsLeadingNewline =
+    insertAt > 0 &&
+    insertAt < source.length &&
+    source[insertAt - 1] !== '\n' &&
+    source[insertAt - 1] !== '\r';
+  const prefix = needsLeadingNewline ? '\n' : '';
+  ms.appendLeft(insertAt, prefix + importLines.join('\n') + '\n');
 
   return {
     code: ms.toString(),
@@ -124,12 +136,30 @@ export function generateSource(input: GenerateSourceInput): GenerateSourceOutput
  * textual walker.
  *
  * On parse failure (e.g. the user is mid-save with broken syntax) we
- * warn via `onWarn` and return 0. In practice this branch is unreachable
- * because scanJsx parses the same source first and returns zero
- * candidates on failure, so `generateSource` never reaches this path —
- * the guard exists as defense-in-depth against Babel plugin-flag drift.
+ * warn via `onWarn` and return 0. This is defense-in-depth: `scanJsx`'s
+ * upstream parse normally filters broken sources before this code runs,
+ * but a future Babel plugin-flag drift between the two parsers could
+ * make them disagree, and silent corruption is worse than a warn line.
+ *
+ * `onWarn` MUST NOT throw — exceptions in the callback would kill the
+ * transform and turn a recoverable warning into a hard build failure.
+ * Any throw is caught and ignored below.
  */
-function findImportInsertionPoint(source: string, onWarn?: (message: string) => void): number {
+// Exported for direct unit testing. Not part of the plugin's public API —
+// callers outside this file should go through `generateSource`.
+export function findImportInsertionPoint(
+  source: string,
+  onWarn?: (message: string) => void
+): number {
+  const safeWarn = (message: string): void => {
+    if (onWarn === undefined) return;
+    try {
+      onWarn(message);
+    } catch {
+      // A throwing logger must not mask the fallback return path.
+    }
+  };
+
   let ast: ParseResult<File>;
   try {
     ast = parseBabel(source, {
@@ -139,44 +169,41 @@ function findImportInsertionPoint(source: string, onWarn?: (message: string) => 
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    onWarn?.(
+    safeWarn(
       `generate-mode: re-parse failed inside findImportInsertionPoint (${msg}); ` +
         'inserting at byte 0 as a safety fallback'
     );
     return 0;
   }
 
-  // Seed from the interpreter directive (shebang). Babel models a `#!`
-  // line as `program.interpreter`, not as a statement in `body`, so we
-  // must pick its end offset up separately to avoid landing the emitted
-  // imports ABOVE the shebang (which would break Node's interpreter
-  // detection).
-  let lastPreambleEnd = 0;
-  if (ast.program.interpreter?.end != null) {
-    lastPreambleEnd = ast.program.interpreter.end;
-  }
+  // Seed from the furthest end across every preamble-flavored node:
+  // - `program.interpreter` holds the shebang (`#!...`). Babel models it
+  //   outside `body`, so a shebang would otherwise slip past the walk.
+  // - `program.directives` holds every leading string-literal directive.
+  //   Babel lifts them out of `body` under `sourceType: 'module'`.
+  let lastPreambleEnd = Math.max(
+    0,
+    ast.program.interpreter?.end ?? 0,
+    ...ast.program.directives.map((d) => d.end ?? 0)
+  );
 
-  // Babel lifts every leading string-literal directive out of `body`
-  // and into `program.directives` (always, for `sourceType: 'module'`).
-  // Take the max end across all of them so the seed covers every
-  // directive regardless of order.
-  for (const directive of ast.program.directives) {
-    if (directive.end != null && directive.end > lastPreambleEnd) {
-      lastPreambleEnd = directive.end;
-    }
-  }
-
-  // Walk top-level imports. They always come after directives per ES
-  // ordering rules, so any import's end is necessarily after the last
-  // directive's end.
-  const body: Statement[] = ast.program.body;
-  for (const stmt of body) {
-    if (stmt.type === 'ImportDeclaration') {
-      const node: ImportDeclaration = stmt;
-      if (node.end != null) {
-        lastPreambleEnd = node.end;
-      }
+  // Walk top-level statements. Imports always extend the preamble. For
+  // defense-in-depth against Babel versions (< 7.21) that may leave a
+  // hashbang-following directive as a body `ExpressionStatement` instead
+  // of lifting it to `program.directives`, also treat a leading
+  // `ExpressionStatement` whose expression is a `StringLiteral` as
+  // preamble and keep walking.
+  for (const stmt of ast.program.body) {
+    if (stmt.type === 'ImportDeclaration' && stmt.end != null) {
+      lastPreambleEnd = stmt.end;
       continue;
+    }
+    if (stmt.type === 'ExpressionStatement') {
+      const expr = (stmt as ExpressionStatement).expression;
+      if (expr.type === 'StringLiteral' && stmt.end != null) {
+        lastPreambleEnd = Math.max(lastPreambleEnd, stmt.end);
+        continue;
+      }
     }
     // Anything else stops the preamble.
     break;
@@ -186,8 +213,7 @@ function findImportInsertionPoint(source: string, onWarn?: (message: string) => 
   // horizontal whitespace followed by a single line terminator (any of
   // `\n`, `\r\n`, or bare `\r`) so the inserted imports land on their
   // own line rather than appended to the last preamble statement.
-  const tail = source.slice(lastPreambleEnd);
-  const match = /^[ \t]*(?:\r\n|\n|\r)/.exec(tail);
+  const match = /^[ \t]*(?:\r\n|\n|\r)/.exec(source.slice(lastPreambleEnd));
   if (match !== null) {
     lastPreambleEnd += match[0].length;
   }

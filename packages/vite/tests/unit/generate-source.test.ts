@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { scanJsx } from '../../src/generate-mode/scan-jsx.js';
 import { resolveSchemas } from '../../src/generate-mode/resolve-schema.js';
 import { generateSource } from '../../src/generate-mode/generate-source.js';
@@ -181,8 +181,12 @@ import { s } from './s';
 const App = () => <ZodForm schema={s}/>;
 `;
     const out = await pipeline(source, { './s': '/abs/project/src/s.ts' });
-    // The shebang MUST be the literal first bytes of the output.
-    expect(out.slice(0, 19)).toBe('#!/usr/bin/env node');
+    // The shebang MUST be the literal first line of the output — not
+    // just a prefix that could be followed by `import` on the same line.
+    expect(out).toMatch(/^#!\/usr\/bin\/env node\r?\n/);
+    // And the generated import must come on some line AFTER the shebang.
+    const firstNewline = out.indexOf('\n');
+    expect(out.indexOf('_z2fGeneratedForm_1')).toBeGreaterThan(firstNewline);
   });
 
   it('places generated imports after directives AND imports (both present)', async () => {
@@ -212,10 +216,63 @@ const App = () => <ZodForm schema={s} />;
       `import { s } from './s';\r` +
       `const App = () => <ZodForm schema={s} />;\r`;
     const out = await pipeline(source, { './s': '/abs/project/src/s.ts' });
-    // The generated import is on its own line — not immediately
-    // following a `;` from the user's last import.
-    const generatedLine = out.match(/^import \{ Form as _z2fGeneratedForm_1 \}[^\n\r]*$/m);
-    expect(generatedLine).not.toBeNull();
+    // Positive: the generated import MUST be preceded by a `\r` or the
+    // start of the file (no semicolon-without-terminator before it).
+    expect(out).toMatch(/(^|\r)import \{ Form as _z2fGeneratedForm_1 \}/);
+    // Negative: must NOT appear glued onto the last user import's `;`.
+    expect(out).not.toMatch(/;import \{ Form as _z2fGeneratedForm_1 \}/);
+  });
+
+  describe('findImportInsertionPoint onWarn contract', () => {
+    // Direct tests against the exported helper — the defense-in-depth
+    // path is "unreachable in practice" from the full generateSource
+    // pipeline (scanJsx parses first and filters broken sources), so we
+    // exercise the helper directly to pin the callback contract.
+
+    it('fires onWarn with a "re-parse failed" message when the inner parser throws', async () => {
+      const { findImportInsertionPoint } =
+        await import('../../src/generate-mode/generate-source.js');
+      const warn = vi.fn();
+      // `const x = ;` is syntactically broken — Babel rejects it.
+      const result = findImportInsertionPoint('const x = ;', warn);
+      // Fallback: insertion at byte 0.
+      expect(result).toBe(0);
+      // Callback fired exactly once with a message containing the rationale.
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]?.[0]).toMatch(/re-parse failed/);
+    });
+
+    it('swallows exceptions thrown by onWarn (safeWarn guard)', async () => {
+      const { findImportInsertionPoint } =
+        await import('../../src/generate-mode/generate-source.js');
+      const throwingWarn = (): never => {
+        throw new Error('logger exploded');
+      };
+      // A throwing callback must NOT propagate out — a recoverable
+      // diagnostic shouldn't be able to convert itself into a hard
+      // build failure.
+      expect(() => findImportInsertionPoint('const x = ;', throwingWarn)).not.toThrow();
+    });
+
+    it('returns the correct insertion point for a well-formed source even without onWarn', async () => {
+      const { findImportInsertionPoint } =
+        await import('../../src/generate-mode/generate-source.js');
+      const source = `'use client';
+import { ZodForm } from '@zod-to-form/react';
+
+const App = () => null;
+`;
+      // Insertion lands on the blank line between the imports and
+      // `const App = …` — i.e. after the last import + trailing newline.
+      const at = findImportInsertionPoint(source);
+      const importEnd =
+        source.indexOf("from '@zod-to-form/react';") + "from '@zod-to-form/react';".length;
+      expect(at).toBeGreaterThan(importEnd);
+      // And the character at `at` (if within bounds) is either EOF or
+      // the start of a non-preamble statement.
+      const rest = source.slice(at);
+      expect(rest.startsWith('\n') || rest.startsWith('const')).toBe(true);
+    });
   });
 
   it('handles side-effect-only imports (`import "polyfill";`)', async () => {
