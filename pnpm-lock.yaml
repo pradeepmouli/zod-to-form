@@ -20,9 +20,6 @@ importers:
       '@to-skills/cli':
         specifier: ^0.2.1
         version: 0.2.1(commander@14.0.3)
-      '@to-skills/vitepress':
-        specifier: ^0.2.0
-        version: 0.2.0
       '@types/node':
         specifier: ^25.6.0
         version: 25.6.0
@@ -3230,14 +3227,6 @@ packages:
     resolution: {integrity: sha512-LTHbrMpa8KEdp9XmWrTGJIAUZa3W5+qVgjfZ14lFzRuiwLnwYm0NrbdYSyAFnkvnqYzFl/TjBqj0C9RlCNt5jQ==}
     peerDependencies:
       typedoc: '>=0.28.0'
-
-  '@to-skills/vitepress@0.2.0':
-    resolution: {integrity: sha512-s4JMollbgR0Xtd8DcskBatLbS83Bat1njjMOUpS6JsCnzHc1HUBY/7tGj2/VocJnWr3f5Q0d8Tjq/Emn9IApwQ==}
-    peerDependencies:
-      vitepress: '>=1.0.0'
-    peerDependenciesMeta:
-      vitepress:
-        optional: true
 
   '@ts-morph/common@0.27.0':
     resolution: {integrity: sha512-Wf29UqxWDpc+i61k3oIOzcUfQt79PIT9y/MWfAGlrkjg6lBC1hwDECLXPVJAhWjiGbfBCxZd65F/LIZF3+jeJQ==}
@@ -11825,10 +11814,6 @@ snapshots:
     dependencies:
       '@to-skills/core': 0.10.0
       typedoc: 0.28.19(typescript@6.0.2)
-
-  '@to-skills/vitepress@0.2.0':
-    dependencies:
-      '@to-skills/core': 0.10.0
 
   '@ts-morph/common@0.27.0':
     dependencies:
