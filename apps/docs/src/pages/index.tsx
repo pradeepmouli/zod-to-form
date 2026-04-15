@@ -97,7 +97,6 @@ export default function Form(props) {
 
 type PathKey = 'runtime' | 'codegen' | 'plugin';
 
-/** One cell in a tab's content grid — a titled code snippet. */
 interface SnippetCell {
   title: string;
   language: string;
@@ -105,20 +104,20 @@ interface SnippetCell {
 }
 
 /**
- * `left` and `right` carry 1 or 2 cells. Encoding the row count as an
- * array length (rather than a pair of nullable fields) makes the JSX
- * trivially map-able and keeps asymmetric column heights from creeping
- * in as a bug surface. Each tab either has one row (runtime/codegen)
- * or two (plugin), and the column-level invariant "both columns have
- * the same row count" falls out naturally from the shared array length.
+ * A column holds either 1 cell (runtime/codegen — single row) or 2
+ * cells (plugin — two rows joined by a connector). The tuple union
+ * makes the "1 or 2, nothing else" invariant structurally enforced:
+ * `[]` and `[a, b, c]` literals won't type-check.
  */
+type PathColumnCells = readonly [SnippetCell] | readonly [SnippetCell, SnippetCell];
+
 interface IntegrationPath {
   key: PathKey;
   label: string;
   tagline: string;
   bullets: string[];
-  left: SnippetCell[];
-  right: SnippetCell[];
+  left: PathColumnCells;
+  right: PathColumnCells;
 }
 
 const PATHS: IntegrationPath[] = [
@@ -271,8 +270,8 @@ function ArchitectureSection(): ReactNode {
         </div>
 
         <div className={styles.pathContent} role="tabpanel" aria-label={active.label}>
-          <PathColumn header="Config" cells={active.left} connectorKind="plus" />
-          <PathColumn header="Code" cells={active.right} connectorKind="arrow" />
+          <PathColumn role="config" cells={active.left} />
+          <PathColumn role="code" cells={active.right} />
         </div>
       </div>
     </section>
@@ -280,27 +279,28 @@ function ArchitectureSection(): ReactNode {
 }
 
 /**
- * Renders one column of the architecture content panel. `cells` is
- * 1 or 2 entries; when 2, a connector (either `+` for the config column
- * or `↓` for the code column) is drawn between them.
+ * Renders one column of the architecture content panel. The `role`
+ * drives both the header label and the connector symbol: "config"
+ * columns join their cells with `+` (configs combine), "code" columns
+ * join them with `↓` (transform direction).
  */
 function PathColumn({
-  header,
-  cells,
-  connectorKind
+  role,
+  cells
 }: {
-  header: string;
-  cells: SnippetCell[];
-  connectorKind: 'plus' | 'arrow';
+  role: 'config' | 'code';
+  cells: PathColumnCells;
 }): ReactNode {
+  const header = role === 'config' ? 'Config' : 'Code';
+  const connector = role === 'config' ? '+' : '↓';
   return (
     <div className={styles.pathColumn}>
       <div className={styles.pathColumnHeader}>{header}</div>
       {cells.map((cell, i) => (
         <Fragment key={cell.title}>
           {i > 0 && (
-            <div className={styles.pathConnector} data-kind={connectorKind} aria-hidden>
-              {connectorKind === 'plus' ? '+' : '↓'}
+            <div className={styles.pathConnector} data-kind={role} aria-hidden>
+              {connector}
             </div>
           )}
           <PathSnippet snippet={cell} />
@@ -322,10 +322,15 @@ function PathSnippet({ snippet }: { snippet: SnippetCell }): ReactNode {
 /**
  * Render a string with single-backtick segments as <code> spans so the
  * tab bullets can have inline monospace highlights without needing MDX.
- * Non-code parts are returned as plain strings (no wrapping <span>).
+ * Non-code parts are wrapped in keyed Fragments so React's array
+ * reconciliation stays stable under any future reordering.
  */
 function renderInlineCode(text: string): ReactNode[] {
-  return text.split('`').map((part, i) => (i % 2 === 1 ? <code key={i}>{part}</code> : part));
+  return text
+    .split('`')
+    .map((part, i) =>
+      i % 2 === 1 ? <code key={i}>{part}</code> : <Fragment key={i}>{part}</Fragment>
+    );
 }
 
 function CodePreviewSection(): ReactNode {

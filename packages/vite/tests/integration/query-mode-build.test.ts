@@ -166,10 +166,9 @@ describe('query-mode build integration', () => {
     // spread attribute objects). Those are downstream bundler
     // optimizations, not drift in the plugin's input to codegen.
     //
-    // Assert STRUCTURAL parity instead: both bodies must contain the
-    // same field identifiers, the same schema reference, and the same
-    // handleSubmit shape. This pins "the build-mode SSR loader feeds
-    // the right namespace" without locking in Rollup's formatting.
+    // Assert STRUCTURAL parity instead — and pin the specific schema
+    // so a regression that fed a decoy namespace (e.g. a same-shaped
+    // fallback from a stale cache) would still be caught.
     const structuralMarkers = [
       'useForm',
       '_resolver',
@@ -182,6 +181,19 @@ describe('query-mode build integration', () => {
       expect(devBody, `dev body missing marker '${marker}'`).toContain(marker);
       expect(buildBody, `build body missing marker '${marker}'`).toContain(marker);
     }
+    // Schema-specific assertions: the signupSchema we defined above has
+    // exactly two fields (name + email), so both bodies must produce
+    // exactly two `register(...)` call sites AND no more. A regression
+    // that swapped in a different namespace with a different field
+    // count would fail here.
+    const devRegisterCount = (devBody?.match(/register\(/g) ?? []).length;
+    const buildRegisterCount = (buildBody?.match(/register\(/g) ?? []).length;
+    expect(devRegisterCount).toBe(2);
+    expect(buildRegisterCount).toBe(2);
+    // And the HTML preset's email-type input pins the `type: "email"`
+    // attribute, which only the `email` field would emit.
+    expect(devBody).toMatch(/type:\s*["']email["']/);
+    expect(buildBody).toMatch(/type:\s*["']email["']/);
   });
 
   it('emits a bundle that contains the generated form component', async () => {

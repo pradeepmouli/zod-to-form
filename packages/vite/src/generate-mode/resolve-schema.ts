@@ -46,7 +46,7 @@ export interface ResolvedSite {
   schemaFile: string;
   /** Imported name of the schema from the source module. */
   schemaExportName: string;
-  /** The local identifier the rewrite will introduce (`_z2fGeneratedForm_<n>`). */
+  /** The local identifier that will replace `ZodForm` at this site ( (`_z2fGeneratedForm_<n>`). */
   generatedIdentifier: string;
 }
 

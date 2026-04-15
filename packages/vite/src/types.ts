@@ -175,7 +175,7 @@ export interface CompilationEntry {
  * Lives only during a single `transform` call — not persisted.
  */
 export interface GenerateSite {
-  /** Absolute path to the source file containing the rewrite. */
+  /** Absolute path to the source file containing the matched `<ZodForm>` site. */
   sourceFile: string;
 
   /** Byte range of the original `<ZodForm>` element in the source file. */

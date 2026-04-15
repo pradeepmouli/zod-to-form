@@ -166,7 +166,56 @@ import { s } from './s';
 const App = () => <ZodForm schema={s} />;
 `;
     const out = await pipeline(source, { './s': '/abs/project/src/s.ts' });
+    // Shebang stays first; the generated import comes after it.
     expect(out.startsWith('#!/usr/bin/env node')).toBe(true);
+    expect(out.indexOf('#!/usr/bin/env node')).toBeLessThan(out.indexOf('_z2fGeneratedForm_1'));
+  });
+
+  it('preserves a shebang even when there are no user imports', async () => {
+    // Regression: the old textual scanner handled shebangs explicitly.
+    // The AST scanner must seed from program.interpreter so the shebang
+    // doesn't get demoted below the generated import.
+    const source = `#!/usr/bin/env node
+import { ZodForm } from '@zod-to-form/react';
+import { s } from './s';
+const App = () => <ZodForm schema={s}/>;
+`;
+    const out = await pipeline(source, { './s': '/abs/project/src/s.ts' });
+    // The shebang MUST be the literal first bytes of the output.
+    expect(out.slice(0, 19)).toBe('#!/usr/bin/env node');
+  });
+
+  it('places generated imports after directives AND imports (both present)', async () => {
+    const source = `'use client';
+import { ZodForm } from '@zod-to-form/react';
+import { s } from './s';
+const App = () => <ZodForm schema={s} />;
+`;
+    const out = await pipeline(source, { './s': '/abs/project/src/s.ts' });
+    const directiveIdx = out.indexOf("'use client';");
+    const importIdx = out.indexOf("from './s'");
+    const generatedIdx = out.indexOf('_z2fGeneratedForm_1');
+    // Order must be directive → user import → generated import.
+    expect(directiveIdx).toBeGreaterThanOrEqual(0);
+    expect(importIdx).toBeGreaterThan(directiveIdx);
+    expect(generatedIdx).toBeGreaterThan(importIdx);
+  });
+
+  it('handles CR-only line endings without concatenating statements', async () => {
+    // Legacy fixtures may use Mac-classic CR-only line endings. The
+    // insertion-point scanner's post-preamble whitespace advance must
+    // treat bare `\r` as a line terminator — otherwise the generated
+    // import would land directly after the preceding `;` on the same
+    // line, producing `import X;import Y;` back-to-back.
+    const source =
+      `import { ZodForm } from '@zod-to-form/react';\r` +
+      `import { s } from './s';\r` +
+      `const App = () => <ZodForm schema={s} />;\r`;
+    const out = await pipeline(source, { './s': '/abs/project/src/s.ts' });
+    // The generated import is on its own line — not immediately
+    // following a `;` from the user's last import.
+    const generatedLine = out.match(/^import \{ Form as _z2fGeneratedForm_1 \}[^\n\r]*$/m);
+    expect(generatedLine).not.toBeNull();
   });
 
   it('handles side-effect-only imports (`import "polyfill";`)', async () => {

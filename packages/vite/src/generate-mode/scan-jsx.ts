@@ -69,7 +69,7 @@ export interface CandidateSite {
 }
 
 export interface ScanResult {
-  /** Candidate sites that may be rewriteable. resolveSchema validates them. */
+  /** Candidate sites that may be transformable. resolveSchema validates them. */
   candidates: CandidateSite[];
   /** Sites that matched `<ZodForm>` but failed an early structural check. */
   skipped: SkippedSite[];
@@ -109,7 +109,7 @@ export function scanJsx(source: string): ScanResult | null {
   } catch (err) {
     // Surface the parse failure as a buffered skip so the user sees one
     // line in the buildEnd generate-mode summary instead of silently
-    // missing the rewrite. The parse error itself still propagates
+    // missing the transform. The parse error itself still propagates
     // through Vite's normal pipeline and the user fixes it there.
     const message = err instanceof Error ? err.message : String(err);
     return {

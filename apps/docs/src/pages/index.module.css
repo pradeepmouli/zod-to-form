@@ -380,11 +380,11 @@
   color: var(--z2f-text-muted);
 }
 
-.pathConnector[data-kind='plus'] {
+.pathConnector[data-kind='config'] {
   color: var(--z2f-teal);
 }
 
-.pathConnector[data-kind='arrow'] {
+.pathConnector[data-kind='code'] {
   color: var(--z2f-brand);
 }
 
