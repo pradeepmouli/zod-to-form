@@ -226,6 +226,8 @@ const config: Config = {
           '@typeParam',
           '@virtual'
         ],
+        llmsTxt: true,
+        llmsTxtOutDir: './static',
         sidebar: {
           autoConfiguration: true,
           pretty: true
