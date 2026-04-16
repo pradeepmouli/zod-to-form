@@ -152,6 +152,31 @@ function normalizeFieldKey(key: string): string {
   return result;
 }
 
+/**
+ * Resolve the component name and override config for a single `FormField` key.
+ *
+ * Walks the `componentConfig.fields` map (by exact key, then normalized key) to
+ * find a per-field override, then falls back to the `componentConfig.components.overrides`
+ * map keyed by component name. Returns `{ source: 'none' }` when no config is present.
+ *
+ * @param fieldKey - Dot-path key from `FormField.key` (e.g. `'address.street'`).
+ * @param componentName - Inferred component name from the schema walker.
+ * @param componentConfig - Optional `ZodFormsConfig` with `fields` and `components` overrides.
+ * @returns Resolved component name, override config, and the resolution source.
+ *
+ * @useWhen
+ * - Building a custom codegen backend that needs the same override resolution logic as the CLI
+ * - Writing tests that verify field-to-component mapping for a given config
+ *
+ * @avoidWhen
+ * - You are using the CLI or Vite plugin — this is called internally and you don't need it
+ *
+ * @pitfalls
+ * - NEVER assume `source: 'none'` means the field has no component — the schema walker may
+ *   have inferred one; `resolveFieldMapping` only resolves user-provided config overrides
+ *
+ * @category Codegen
+ */
 export function resolveFieldMapping<TComponents extends Record<string, unknown>>(
   fieldKey: string,
   componentName: string | undefined,
@@ -570,6 +595,48 @@ function generateHoistedValidators(fields: FormField[], exportName: string): str
   });
 }
 
+/**
+ * Generate a React form component as a TypeScript string from `FormField[]`.
+ *
+ * Produces a `.tsx` file string containing imports, the form component, and
+ * (when `config.mode === 'auto-save'`) the `FormProvider` wrapper. The output
+ * is deterministic for a given `(fields, config)` pair — same inputs always
+ * produce the same output string.
+ *
+ * @param fields - Intermediate `FormField[]` from `walkSchema`.
+ * @param config - Resolved codegen config (output path, component names, UI preset, etc.).
+ * @returns The generated `.tsx` source as a string. Not yet written to disk.
+ *
+ * @example
+ * ```ts
+ * const fields = walkSchema(schema, { formRegistry });
+ * const code = generateFormComponent(fields, {
+ *   schemaPath: './signup.schema.ts',
+ *   exportName: 'signupSchema',
+ *   outputPath: './SignupForm.tsx',
+ *   componentName: 'SignupForm',
+ *   mode: 'submit',
+ *   ui: 'shadcn',
+ * });
+ * await writeFile('./SignupForm.tsx', code, 'utf8');
+ * ```
+ *
+ * @useWhen
+ * - Building a custom codegen pipeline that assembles `FormField[]` and needs the TSX string
+ * - Writing codegen tests that verify output structure without spawning a CLI process
+ *
+ * @avoidWhen
+ * - You want file-writing behavior — use `runGenerate()` from `@zod-to-form/cli` instead
+ * - You are using the Vite plugin — `compileTarget` wraps this and handles esbuild transformation
+ *
+ * @pitfalls
+ * - NEVER call `generateFormComponent` with a stale `fields` array from a previous schema
+ *   version — there is no cache invalidation; callers must re-run `walkSchema` on schema change
+ * - NEVER use the returned string as a module cache key — it is not content-addressed;
+ *   use `configHash` from `@zod-to-form/core` on the config object instead
+ *
+ * @category Codegen
+ */
 export function generateFormComponent(fields: FormField[], config: CodegenConfig): string {
   const schemaImportPath = config.schemaImportPath ?? './schema';
   const arrayFields = collectArrayFields(fields);

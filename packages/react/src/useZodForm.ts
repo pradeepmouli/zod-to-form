@@ -39,6 +39,47 @@ function rhfCast<T>(value: T): never {
 // a separate entrypoint (@zod-to-form/react/optimized) would be needed — tracked
 // as a future improvement.
 
+/**
+ * React Hook Form integration hook for Zod v4 schemas.
+ *
+ * Walks the schema to produce `FormField[]` and wires `useForm` with a
+ * `zodResolver`. When `options.optimization` is set the `zodResolver` is
+ * replaced by per-field validation (via `schemaLite`) and the resolver
+ * import is tree-shaken in production builds.
+ *
+ * @param schema - The `z.object({...})` schema to generate the form from.
+ * @param options - Optional hook configuration.
+ * @returns `{ form, fields }` — the RHF `UseFormReturn` and the `FormField[]` array.
+ *
+ * @example
+ * ```tsx
+ * const { form, fields } = useZodForm(loginSchema);
+ * return (
+ *   <form onSubmit={form.handleSubmit(onSubmit)}>
+ *     {fields.map((f) => <input key={f.key} {...form.register(f.key)} />)}
+ *   </form>
+ * );
+ * ```
+ *
+ * @useWhen
+ * - You need direct access to the RHF `form` instance (e.g. to call `form.setValue`)
+ * - You are building a custom renderer on top of `FormField[]`
+ * - You want to colocate form state management with your own layout logic
+ *
+ * @avoidWhen
+ * - You just need a working form UI — use `<ZodForm>` instead, which handles rendering
+ * - You are on Zod v3 — the hook requires Zod v4 schema internals
+ *
+ * @pitfalls
+ * - NEVER pass a new schema object on every render — `walkSchema` is memoized by schema
+ *   identity; an unstable reference causes re-walking on every render cycle
+ * - NEVER forget `normalizeFormValues()` before manually calling `schema.safeParse()` —
+ *   the hook's internal resolver applies normalization, but manual calls do not
+ * - NEVER mix `formRegistry` and `fields` options on the same call — when `formRegistry`
+ *   is provided, `fields` is ignored entirely (no merge, no warning)
+ *
+ * @category Hooks
+ */
 export function useZodForm<TSchema extends ZodObject>(
   schema: TSchema,
   options?: UseZodFormOptions<TSchema>

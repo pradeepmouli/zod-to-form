@@ -33,6 +33,27 @@ export interface Z2FViteErrorLocation {
   column?: number;
 }
 
+/**
+ * Structured error thrown by the `@zod-to-form/vite` plugin.
+ *
+ * Every error carries a stable `code` (see `Z2FViteErrorCode`) and an optional
+ * file location. During `vite dev` the plugin catches these and reports them via
+ * the dev-server error overlay. During `vite build` they propagate and abort the
+ * build with the code as a breadcrumb.
+ *
+ * @useWhen
+ * - Catching plugin errors in integration tests: `expect(fn).toThrow(/Z2F_VITE_/))`
+ * - Wrapping plugin calls in error handlers that need to branch on specific error codes
+ *
+ * @avoidWhen
+ * - General application error handling — this class is specific to plugin-level failures
+ *
+ * @pitfalls
+ * - NEVER compare `error.message` to detect error type — the message format may change.
+ *   Use `error.code` (e.g. `error.code === 'Z2F_VITE_SCHEMA_NOT_FOUND'`) for stable matching
+ *
+ * @category Errors
+ */
 export class Z2FViteError extends Error {
   public readonly code: Z2FViteErrorCode;
   public readonly location?: Z2FViteErrorLocation;

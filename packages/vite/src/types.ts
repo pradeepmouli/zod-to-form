@@ -16,6 +16,16 @@ import type { CodegenConfig } from '@zod-to-form/core';
 /**
  * Variant overrides keyed by the `?z2f=<name>` query value.
  * Per-variant settings merge on top of the global `CodegenConfig`.
+ *
+ * @useWhen
+ * - You need different generated form styles for the same schema (e.g. `?z2f=mobile` vs `?z2f=desktop`)
+ * - You want variant-specific UI presets or component overrides without separate schema files
+ *
+ * @avoidWhen
+ * - You only have a single form variant — omit this field entirely and use the global config
+ *
+ * @config
+ * @category Plugin Types
  */
 export type VariantConfigs = Record<string, Partial<CodegenConfig>>;
 
@@ -28,6 +38,27 @@ export type VariantConfigs = Record<string, Partial<CodegenConfig>>;
  * throws `Z2F_VITE_AMBIGUOUS_EXPORT` on ambiguity. The codegen package
  * still requires it, and the plugin promotes the resolved name before
  * invoking codegen.
+ *
+ * @remarks
+ * Place this in `z2f.config.ts` as a default export. The plugin auto-discovers
+ * that file from the Vite root (searches `z2f.config.{ts,mts,js,mjs}` in order).
+ * Use `defineConfig` from `@zod-to-form/core` for type-safe config authoring.
+ *
+ * @useWhen
+ * - Centralizing form generation options for all `?z2f` imports in a project
+ * - Applying a consistent UI preset (shadcn/html) and field overrides across forms
+ *
+ * @avoidWhen
+ * - You only need a single one-off form — pass `configOverride` to `z2fVite()` instead
+ *
+ * @pitfalls
+ * - NEVER place `z2f.config.ts` outside the Vite root — the auto-discovery only searches
+ *   `resolvedConfig.root` and will silently fall back to defaults if the file is not found
+ * - NEVER export an async function as the config default — only plain objects are supported;
+ *   async evaluation is not handled by `ssrLoadModule`
+ *
+ * @config
+ * @category Plugin Types
  */
 export type Z2FViteConfig = Omit<CodegenConfig, 'exportName'> & {
   exportName?: string;
@@ -55,6 +86,29 @@ export interface WriteOptions {
 /**
  * Plugin options passed to `z2fVite(options)`. Every field is optional;
  * the bare `z2fVite()` invocation produces a working plugin.
+ *
+ * @remarks
+ * Pass this to `z2fVite()` in your `vite.config.ts`. Only known keys are
+ * accepted — unknown keys throw `Z2F_VITE_INVALID_OPTIONS` at startup.
+ *
+ * @useWhen
+ * - Pointing the plugin to a non-standard config file path (`configPath`)
+ * - Enabling generate mode to rewrite `<ZodForm>` call sites at build time (`generate`)
+ * - Overriding config programmatically without a `z2f.config.ts` (`configOverride`)
+ * - Adjusting diagnostic verbosity (`logLevel`)
+ *
+ * @avoidWhen
+ * - You want zero-config usage — the bare `z2fVite()` call with no options works out of the box
+ *
+ * @pitfalls
+ * - NEVER set `generate: {}` in production without auditing what files it matches — by default
+ *   it targets all `**\/*.{ts,tsx,js,jsx}` and rewrites every `<ZodForm>` call site it can
+ *   statically resolve, which changes compiled output the developer didn't explicitly annotate
+ * - NEVER pass unknown option keys — the plugin validates the options object at startup and
+ *   throws `Z2F_VITE_INVALID_OPTIONS` for any unrecognized key
+ *
+ * @config
+ * @category Plugin Types
  */
 export interface PluginOptions {
   /**
