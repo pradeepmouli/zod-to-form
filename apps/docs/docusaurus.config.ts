@@ -177,7 +177,8 @@ const config: Config = {
           '../../packages/core/src/index.ts',
           '../../packages/react/src/index.ts',
           '../../packages/cli/src/index.ts',
-          '../../packages/codegen/src/index.ts'
+          '../../packages/codegen/src/index.ts',
+          '../../packages/vite/src/index.ts'
         ],
         entryPointStrategy: 'resolve',
         tsconfig: '../../tsconfig.typedoc.json',
@@ -191,6 +192,8 @@ const config: Config = {
           '@useWhen',
           '@avoidWhen',
           '@pitfalls',
+          '@config',
+          '@template',
           '@alpha',
           '@beta',
           '@category',
