@@ -226,6 +226,7 @@ const config: Config = {
           '@typeParam',
           '@virtual'
         ],
+        plugin: ['typedoc-plugin-markdown', 'typedoc-plugin-to-skills'],
         llmsTxt: true,
         llmsTxtOutDir: './static',
         sidebar: {
