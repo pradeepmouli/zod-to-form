@@ -248,6 +248,14 @@ pnpm run build      # Build all packages
 - [Feature Spec](specs/001-zodform/spec.md)
 - [Quickstart](specs/001-zodform/quickstart.md)
 
+## Related Projects
+
+| Library | Relationship | npm |
+|---|---|---|
+| [langium-zod](https://github.com/pradeepmouli/langium-zod) | Generate Zod schemas from Langium DSL grammars — feeds into zod-to-form | [![npm](https://img.shields.io/npm/v/langium-zod?style=flat-square)](https://www.npmjs.com/package/langium-zod) |
+| [x-to-zod](https://github.com/pradeepmouli/x-to-zod) | Convert JSON Schema to Zod — alternative schema input path | [![npm](https://img.shields.io/npm/v/x-to-zod?style=flat-square)](https://www.npmjs.com/package/x-to-zod) |
+| [rune-langium](https://github.com/pradeepmouli/rune-langium) | Full DSL toolchain combining langium-zod + zod-to-form into an IDE | [![npm](https://img.shields.io/npm/v/@rune-langium/core?style=flat-square)](https://www.npmjs.com/package/@rune-langium/core) |
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
