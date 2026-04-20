@@ -6,7 +6,7 @@
 
 # Interface: HMRInvalidationMap
 
-Defined in: [packages/vite/src/types.ts:265](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/types.ts#L265)
+Defined in: [packages/vite/src/types.ts:265](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/vite/src/types.ts#L265)
 
 The graph edges that `handleHotUpdate` walks when a watched file changes.
 
@@ -19,7 +19,7 @@ calls. Reset on dev server restart.
 
 > **configWatchers**: `Set`\<`string`\>
 
-Defined in: [packages/vite/src/types.ts:276](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/types.ts#L276)
+Defined in: [packages/vite/src/types.ts:276](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/vite/src/types.ts#L276)
 
 All modules that depend on the config (for config-change fan-out).
 
@@ -29,7 +29,7 @@ All modules that depend on the config (for config-change fan-out).
 
 > **schemaToImporters**: `Map`\<`string`, `Set`\<`string`\>\>
 
-Defined in: [packages/vite/src/types.ts:270](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/types.ts#L270)
+Defined in: [packages/vite/src/types.ts:270](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/vite/src/types.ts#L270)
 
 For each schema file, the set of Vite module ids that import it.
 
@@ -39,7 +39,7 @@ For each schema file, the set of Vite module ids that import it.
 
 > **schemaToTargets**: `Map`\<`string`, `Set`\<`string`\>\>
 
-Defined in: [packages/vite/src/types.ts:267](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/types.ts#L267)
+Defined in: [packages/vite/src/types.ts:267](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/vite/src/types.ts#L267)
 
 For each schema file, the set of cache keys depending on it.
 
@@ -49,6 +49,6 @@ For each schema file, the set of cache keys depending on it.
 
 > **targetToImporters**: `Map`\<`string`, `Set`\<`string`\>\>
 
-Defined in: [packages/vite/src/types.ts:273](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/types.ts#L273)
+Defined in: [packages/vite/src/types.ts:273](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/vite/src/types.ts#L273)
 
 For each cache entry, the set of modules that import its virtual id.

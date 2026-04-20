@@ -8,7 +8,7 @@
 
 > **collectFieldSections**(`fields`, `getOverride`): `Map`\<`string`, `string`[]\>
 
-Defined in: [utils.ts:276](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/utils.ts#L276)
+Defined in: [utils.ts:276](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/core/src/utils.ts#L276)
 
 Collect section groupings from fields and a config override lookup.
 Returns a Map of section name → array of field keys that belong to it.

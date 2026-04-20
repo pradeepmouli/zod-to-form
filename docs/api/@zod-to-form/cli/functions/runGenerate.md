@@ -8,7 +8,7 @@
 
 > **runGenerate**(`options`): `Promise`\<\{ `actionCode?`: `string`; `actionPath?`: `string`; `code`: `string`; `outputPath`: `string`; `wroteFile`: `boolean`; \}\>
 
-Defined in: [cli/src/index.ts:168](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/cli/src/index.ts#L168)
+Defined in: [cli/src/index.ts:169](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/cli/src/index.ts#L169)
 
 Executes the code generation pipeline for a single Zod schema export.
 
@@ -48,6 +48,7 @@ Resolved output paths and the generated code string.
 - NEVER call with a schema that already has a generated output file when
   `defaults.overwrite` is false — the function silently skips writing and returns
   `wroteFile: false` with no error; this is intentional but easy to miss in scripts
+  — check result.wroteFile and set defaults.overwrite: true or delete the file first
 - NEVER rely on generated file content after re-running `runGenerate` without
   checking `wroteFile` — if the file already exists and overwrite is disabled,
   the on-disk file is NOT updated even though `code` is returned

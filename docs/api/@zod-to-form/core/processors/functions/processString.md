@@ -8,7 +8,7 @@
 
 > **processString**(`schema`, `ctx`, `field`, `_params`): `void`
 
-Defined in: [processors/string.ts:35](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/processors/string.ts#L35)
+Defined in: [processors/string.ts:35](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/core/src/processors/string.ts#L35)
 
 Process `z.string()` — renders as an `Input` (or `DatePicker` for date/time formats).
 Extracts format, minLength, maxLength, and pattern constraints from the constraint bag.

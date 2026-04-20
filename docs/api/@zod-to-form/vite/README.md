@@ -90,6 +90,9 @@ migrating existing `<ZodForm>` call sites.
 - NEVER assume Zod schema objects survive Vite's module graph isolation
   intact — always re-export schemas from a dedicated file so `ssrLoadModule`
   can evaluate them without pulling in unrelated runtime dependencies
+- NEVER place schema files outside the Vite root when using `ssrLoadModule` —
+  schemas outside the Vite root may fail to resolve their own imports
+  — produces Z2F_VITE_SCHEMA_OUTSIDE_ROOT error
 - NEVER put your `z2f.config.ts` outside the Vite root — auto-discovery
   only searches `resolvedConfig.root`; files outside that boundary are
   silently skipped and the plugin falls back to defaults

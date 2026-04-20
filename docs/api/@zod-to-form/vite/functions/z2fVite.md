@@ -8,7 +8,7 @@
 
 > **z2fVite**(`options?`): `Plugin`
 
-Defined in: [packages/vite/src/plugin.ts:147](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/plugin.ts#L147)
+Defined in: [packages/vite/src/plugin.ts:148](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/vite/src/plugin.ts#L148)
 
 Vite plugin factory for `@zod-to-form/vite`.
 
@@ -77,3 +77,4 @@ export default defineConfig({
 - NEVER configure `configPath` to point outside the Vite `root` — the plugin
   uses `ssrLoadModule` with a dev server scoped to `root`, so files outside
   that boundary may fail to resolve their own imports
+  — produces Z2F_VITE_SCHEMA_OUTSIDE_ROOT error

@@ -8,7 +8,7 @@
 
 > **registerPathExpr**(`path`): `string`
 
-Defined in: [codegen/src/templates.ts:162](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/codegen/src/templates.ts#L162)
+Defined in: [codegen/src/templates.ts:162](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/codegen/src/templates.ts#L162)
 
 Produce the correct `register(...)` call expression for a field path.
 Uses template-literal syntax when the path contains `${` (e.g. array item paths),

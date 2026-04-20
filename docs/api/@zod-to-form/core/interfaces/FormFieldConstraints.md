@@ -6,7 +6,7 @@
 
 # Interface: FormFieldConstraints
 
-Defined in: [types.ts:74](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/types.ts#L74)
+Defined in: [types.ts:74](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/core/src/types.ts#L74)
 
 Structural constraints extracted from Zod's `_zod.bag` for a field.
 Used to populate HTML validation attributes (min, max, minLength, pattern, etc.)
@@ -18,7 +18,7 @@ and to drive the L2 native-rules optimizer output.
 
 > `optional` **format?**: `string`
 
-Defined in: [types.ts:86](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/types.ts#L86)
+Defined in: [types.ts:86](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/core/src/types.ts#L86)
 
 String format name (from `z.string().email()` → `'email'`, etc.).
 
@@ -28,7 +28,7 @@ String format name (from `z.string().email()` → `'email'`, etc.).
 
 > `optional` **max?**: `number`
 
-Defined in: [types.ts:78](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/types.ts#L78)
+Defined in: [types.ts:78](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/core/src/types.ts#L78)
 
 Maximum numeric value (from `z.number().max()`).
 
@@ -38,7 +38,7 @@ Maximum numeric value (from `z.number().max()`).
 
 > `optional` **maxLength?**: `number`
 
-Defined in: [types.ts:82](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/types.ts#L82)
+Defined in: [types.ts:82](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/core/src/types.ts#L82)
 
 Maximum string length (from `z.string().max()`).
 
@@ -48,7 +48,7 @@ Maximum string length (from `z.string().max()`).
 
 > `optional` **min?**: `number`
 
-Defined in: [types.ts:76](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/types.ts#L76)
+Defined in: [types.ts:76](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/core/src/types.ts#L76)
 
 Minimum numeric value (from `z.number().min()`).
 
@@ -58,7 +58,7 @@ Minimum numeric value (from `z.number().min()`).
 
 > `optional` **minLength?**: `number`
 
-Defined in: [types.ts:80](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/types.ts#L80)
+Defined in: [types.ts:80](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/core/src/types.ts#L80)
 
 Minimum string length (from `z.string().min()`).
 
@@ -68,7 +68,7 @@ Minimum string length (from `z.string().min()`).
 
 > `optional` **pattern?**: `string`
 
-Defined in: [types.ts:84](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/types.ts#L84)
+Defined in: [types.ts:84](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/core/src/types.ts#L84)
 
 Regex pattern as a string (from `z.string().regex()`).
 
@@ -78,6 +78,6 @@ Regex pattern as a string (from `z.string().regex()`).
 
 > `optional` **step?**: `number`
 
-Defined in: [types.ts:88](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/types.ts#L88)
+Defined in: [types.ts:88](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/core/src/types.ts#L88)
 
 Step constraint for numeric inputs (1 for integer-constrained fields).

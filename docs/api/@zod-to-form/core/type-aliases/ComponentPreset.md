@@ -8,7 +8,7 @@
 
 > **ComponentPreset** = `"shadcn"` \| `"html"`
 
-Defined in: [config.ts:28](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/config.ts#L28)
+Defined in: [config.ts:28](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/core/src/config.ts#L28)
 
 Preset name for built-in component library mappings.
 `'shadcn'` uses Radix-based controlled components with field-expression props;

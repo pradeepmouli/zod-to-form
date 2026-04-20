@@ -6,7 +6,7 @@
 
 # Class: Z2FViteError
 
-Defined in: [packages/vite/src/errors.ts:67](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/errors.ts#L67)
+Defined in: [packages/vite/src/errors.ts:67](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/vite/src/errors.ts#L67)
 
 Structured error thrown by the `@zod-to-form/vite` plugin.
 
@@ -39,7 +39,7 @@ build with the code as a breadcrumb.
 
 > **new Z2FViteError**(`code`, `message`, `location?`): `Z2FViteError`
 
-Defined in: [packages/vite/src/errors.ts:71](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/errors.ts#L71)
+Defined in: [packages/vite/src/errors.ts:71](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/vite/src/errors.ts#L71)
 
 #### Parameters
 
@@ -81,7 +81,7 @@ Defined in: node\_modules/.pnpm/typescript@6.0.2/node\_modules/typescript/lib/li
 
 > `readonly` **code**: [`Z2FViteErrorCode`](../type-aliases/Z2FViteErrorCode.md)
 
-Defined in: [packages/vite/src/errors.ts:68](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/errors.ts#L68)
+Defined in: [packages/vite/src/errors.ts:68](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/vite/src/errors.ts#L68)
 
 ***
 
@@ -89,7 +89,7 @@ Defined in: [packages/vite/src/errors.ts:68](https://github.com/pradeepmouli/zod
 
 > `readonly` `optional` **location?**: [`Z2FViteErrorLocation`](../interfaces/Z2FViteErrorLocation.md)
 
-Defined in: [packages/vite/src/errors.ts:69](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/errors.ts#L69)
+Defined in: [packages/vite/src/errors.ts:69](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/vite/src/errors.ts#L69)
 
 ***
 
@@ -155,7 +155,7 @@ not capture any frames.
 
 > `static` **captureStackTrace**(`targetObject`, `constructorOpt?`): `void`
 
-Defined in: [packages/vite/src/errors.ts:104](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/errors.ts#L104)
+Defined in: [packages/vite/src/errors.ts:104](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/vite/src/errors.ts#L104)
 
 Captures the current V8 call stack and attaches it to `targetObject.stack`.
 Inherited from the built-in Node.js `Error` class. Documented here so
@@ -189,7 +189,7 @@ Optional constructor; frames above it are omitted from the trace.
 
 > `static` **isError**(`error`): `error is Error`
 
-Defined in: [packages/vite/src/errors.ts:92](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/errors.ts#L92)
+Defined in: [packages/vite/src/errors.ts:92](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/vite/src/errors.ts#L92)
 
 Returns `true` when `error` is an instance of `Error`.
 Inherited from the built-in `Error` class (ES2025). Documented here so
@@ -220,7 +220,7 @@ The value to test.
 
 > `static` **prepareStackTrace**(`err`, `stackTraces`): `unknown`
 
-Defined in: [packages/vite/src/errors.ts:117](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/errors.ts#L117)
+Defined in: [packages/vite/src/errors.ts:117](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/vite/src/errors.ts#L117)
 
 Optional hook called by V8 to format the stack trace string.
 Inherited from the built-in Node.js `Error` class. When set, it replaces V8's

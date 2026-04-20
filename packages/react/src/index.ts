@@ -1,5 +1,5 @@
 /**
- * Runtime React renderer for Zod v4 form schemas.
+ * Runtime React renderer for Zod v4 form schemas — wraps react-hook-form with a schema walker that maps Zod types to form components.
  *
  * Provides the `<ZodForm>` component and `useZodForm()` hook for dynamically rendering
  * forms from a `z.object()` schema at runtime — no codegen required. Use this package

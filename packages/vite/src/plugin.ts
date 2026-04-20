@@ -141,6 +141,7 @@ interface PluginState {
  * - NEVER configure `configPath` to point outside the Vite `root` — the plugin
  *   uses `ssrLoadModule` with a dev server scoped to `root`, so files outside
  *   that boundary may fail to resolve their own imports
+ *   — produces Z2F_VITE_SCHEMA_OUTSIDE_ROOT error
  *
  * @category Plugin
  */
