@@ -44,7 +44,8 @@ jobs:
         run: |
           which pnpm
           pnpm --version
-          head -3 pnpm-lock.yaml
+          git diff pnpm-lock.yaml | head -20
+          xxd pnpm-lock.yaml | head -3
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
