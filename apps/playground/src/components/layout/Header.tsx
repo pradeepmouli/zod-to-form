@@ -64,23 +64,30 @@ export function Header({
       role="banner"
     >
       <div className="flex items-center gap-3">
-        <img
-          src={`${import.meta.env.BASE_URL}logo.svg`}
-          alt="zod-to-form logo"
-          style={{ width: 28, height: 24 }}
-        />
-        <h1
-          className="text-lg tracking-tight"
-          style={{
-            fontFamily: "'Outfit', sans-serif",
-            fontWeight: 700,
-            letterSpacing: '-0.5px'
-          }}
+        <a
+          href="/"
+          className="flex items-center gap-3 no-underline transition-opacity hover:opacity-80"
+          aria-label="Back to zod-to-form homepage"
+          title="Back to homepage"
         >
-          <span style={{ color: '#14B8A6' }}>zod</span>
-          <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>-to-</span>
-          <span style={{ color: '#EC4899' }}>form</span>
-        </h1>
+          <img
+            src={`${import.meta.env.BASE_URL}logo.svg`}
+            alt="zod-to-form logo"
+            style={{ width: 28, height: 24 }}
+          />
+          <h1
+            className="text-lg tracking-tight"
+            style={{
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 700,
+              letterSpacing: '-0.5px'
+            }}
+          >
+            <span style={{ color: '#14B8A6' }}>zod</span>
+            <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>-to-</span>
+            <span style={{ color: '#EC4899' }}>form</span>
+          </h1>
+        </a>
         <span
           className="text-xs hidden sm:inline"
           style={{
