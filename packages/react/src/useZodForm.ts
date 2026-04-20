@@ -70,7 +70,7 @@ function rhfCast<T>(value: T): never {
  * - You just need a working form UI — use `<ZodForm>` instead, which handles rendering
  * - You are on Zod v3 — the hook requires Zod v4 schema internals
  *
- * @pitfalls
+ * @never
  * - NEVER pass a new schema object on every render — `walkSchema` is memoized by schema
  *   identity; an unstable reference causes re-walking on every render cycle
  * - NEVER forget `normalizeFormValues()` before manually calling `schema.safeParse()` —

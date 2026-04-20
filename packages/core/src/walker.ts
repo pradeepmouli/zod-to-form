@@ -277,7 +277,7 @@ function extractChecksFromSchema(
  * - You just want generated components — use the CLI instead
  * - Your schema is not z.object() at the root level
  *
- * @pitfalls
+ * @never
  * - NEVER pass a non-object schema at the root — throws immediately
  * - NEVER bypass the processor registry for custom types — extend via options.processors
  * - NEVER skip normalizeFormValues() before schema.safeParse() — empty strings from HTML inputs fail optional field validation

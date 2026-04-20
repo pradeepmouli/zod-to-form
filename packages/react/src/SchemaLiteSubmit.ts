@@ -34,7 +34,7 @@ type SafeParseable = {
  * - Your schema has cross-field refinements in the lite schema — the lite schema
  *   intentionally strips root-level refinements, so cross-field rules are NOT checked
  *
- * @pitfalls
+ * @never
  * - NEVER pass the full schema as `schemaLite` — it defeats the optimization and adds
  *   double-validation overhead; only pass the schema produced by `walkSchema`'s
  *   `result.schemaLite` field

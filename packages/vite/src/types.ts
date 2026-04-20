@@ -51,7 +51,7 @@ export type VariantConfigs = Record<string, Partial<CodegenConfig>>;
  * @avoidWhen
  * - You only need a single one-off form — pass `configOverride` to `z2fVite()` instead
  *
- * @pitfalls
+ * @never
  * - NEVER place `z2f.config.ts` outside the Vite root — the auto-discovery only searches
  *   `resolvedConfig.root` and will silently fall back to defaults if the file is not found
  * - NEVER export an async function as the config default — only plain objects are supported;
@@ -100,7 +100,7 @@ export interface WriteOptions {
  * @avoidWhen
  * - You want zero-config usage — the bare `z2fVite()` call with no options works out of the box
  *
- * @pitfalls
+ * @never
  * - NEVER set `generate: {}` in production without auditing what files it matches — by default
  *   it targets all `**\/*.{ts,tsx,js,jsx}` and rewrites every `<ZodForm>` call site it can
  *   statically resolve, which changes compiled output the developer didn't explicitly annotate

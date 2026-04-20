@@ -965,7 +965,7 @@ const builtinProcessors: Record<string, FormProcessor>
 
 ## @zod-to-form/react
 
-Runtime React renderer for Zod v4 form schemas.
+Runtime React renderer for Zod v4 form schemas — wraps react-hook-form with a schema walker that maps Zod types to form components.
 
 Provides the `<ZodForm>` component and `useZodForm()` hook for dynamically rendering
 forms from a `z.object()` schema at runtime — no codegen required. Use this package
@@ -1463,7 +1463,7 @@ const PRESET_TEMPLATE_IMPORTS: Record<string, string[]>
 
 ## @zod-to-form/vite
 
-Vite plugin for schema-driven form generation.
+Vite plugin for zod-to-form — transforms `?z2f` imports into generated form components and replaces `<ZodForm>` JSX call sites with static output at build time.
 
 Two modes:
 - **Query mode** (`?z2f` imports): import a schema file with a `?z2f` query

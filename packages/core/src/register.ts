@@ -72,7 +72,7 @@ function stripTraversalKeys(config: Record<string, unknown>): Record<string, unk
  * - For simple flat configs — registerFlat() is simpler and more direct
  * - Don't use if your config comes from dot-path format (CLI global fields)
  *
- * @pitfalls
+ * @never
  * - NEVER mix with registerFlat() on the same schema — registry entries conflict silently
  * - NEVER forget the structural keys (fields, arrayItems) for nested config — without them, child config is silently ignored
  *
@@ -217,7 +217,7 @@ function resolveSchemaPath(schema: $ZodType, path: string): $ZodType | undefined
  * @avoidWhen
  * - Your config is already nested mirroring schema shape — use registerDeep() instead
  *
- * @pitfalls
+ * @never
  * - NEVER mix with registerDeep() on the same schema — registry entries conflict silently
  * - NEVER assume numeric path segments matter — "items.0.name" and "items.2.name" resolve to the same target
  *

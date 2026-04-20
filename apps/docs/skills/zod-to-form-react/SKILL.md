@@ -1,6 +1,6 @@
 ---
 name: zod-to-form-react
-description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Use when: You want a zero-config form from a Zod v4 schema at runtime, no build step; You need form rendering in storybook, playgrounds, or low-traffic admin UIs; You are prototyping before committing to CLI codegen."
+description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Runtime React renderer for Zod v4 form schemas — wraps react-hook-form with a schema walker that maps Zod types to form components. Use when: You want a zero-config form from a Zod v4 schema at runtime, no build step; You need form rendering in storybook, playgrounds, or low-traffic admin UIs; You are prototyping before committing to CLI codegen."
 ---
 
 # @zod-to-form/react
@@ -41,7 +41,6 @@ flexibility.
 ## Pitfalls
 
 - NEVER pass `componentConfig` without a matching `components` map that covers the component names referenced — missing components are silently dropped at render time with no console error
-- NEVER change the `schema` object identity on every render — `walkSchema` runs inside `useMemo` keyed on schema identity, so unstable schema references cause full re-walks on each render
 - NEVER expect controlled component prop expressions (e.g. `field.value`) to work without a `propMap` in `componentConfig` — uncontrolled mode is the default; controlled mode requires explicit opt-in via field config
 - NEVER pass a new schema object on every render — `walkSchema` is memoized by schema identity; an unstable reference causes re-walking on every render cycle
 - NEVER forget `normalizeFormValues()` before manually calling `schema.safeParse()` — the hook's internal resolver applies normalization, but manual calls do not

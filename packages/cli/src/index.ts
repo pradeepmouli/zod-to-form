@@ -22,7 +22,7 @@
  * - Browser environments — this package uses Node.js `fs` and `path` APIs not available in browsers
  * - Projects that do not use Vite — the `@zod-to-form/vite` plugin covers that use case better with HMR integration
  *
- * @pitfalls
+ * @never
  * - NEVER omit `--config` when calling the CLI — there is no fallback auto-discovery
  *   when `--export` is provided without a config; the command will error
  * - NEVER rely on generated file content without checking `wroteFile` — when `overwrite`
@@ -137,7 +137,7 @@ function resolveOutputPath(cwd: string, out: string | undefined, componentName: 
  * - Interactive use — run `npx zod-to-form generate` (via `createProgram()`) instead
  * - Browser environments — this function uses Node.js `fs` and `path` APIs
  *
- * @pitfalls
+ * @never
  * - NEVER call with a schema that already has a generated output file when
  *   `defaults.overwrite` is false — the function silently skips writing and returns
  *   `wroteFile: false` with no error; this is intentional but easy to miss in scripts
@@ -310,7 +310,7 @@ export async function runGenerate(options: GenerateOptions): Promise<{
  * - You just want to generate a form from a script — use `runGenerate()` directly
  * - End-user invocation — use `npx zod-to-form` (the binary entry point) instead
  *
- * @pitfalls
+ * @never
  * - NEVER call `program.parse()` (synchronous) in ESM environments — use
  *   `.parseAsync(process.argv)` instead or the program will silently not execute
  *

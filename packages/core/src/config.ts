@@ -429,7 +429,7 @@ const PRESET_MAP: Record<ComponentPreset, Record<string, ComponentOverride>> = {
  * @avoidWhen
  * - Runtime-only usage where you pass config inline to walkSchema
  *
- * @pitfalls
+ * @never
  * - NEVER assume preset props merge with your props — the entire props dict is replaced. If you set component props, you must include ALL props including the ones from the preset
  *
  * @example
@@ -479,7 +479,7 @@ export function defineConfig<
  * @avoidWhen
  * - Using TypeScript with defineConfig() — type errors catch most issues at dev time
  *
- * @pitfalls
+ * @never
  * - NEVER use as a type guard — it throws on invalid input, doesn't narrow
  * - NEVER assume extra keys cause failures — the schema uses z.object().loose(), extra keys are silently ignored
  *

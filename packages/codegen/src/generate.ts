@@ -185,7 +185,7 @@ function normalizeFieldKey(key: string): string {
  * }
  * ```
  *
- * @pitfalls
+ * @never
  * - NEVER assume `source: 'none'` means the field has no component — the schema walker may
  *   have inferred one; `resolveFieldMapping` only resolves user-provided config overrides
  *
@@ -646,7 +646,7 @@ function generateHoistedValidators(fields: FormField[], exportName: string): str
  * @throws Never — this function is purely a string transformer; I/O errors from writing
  *   the result to disk are the caller's responsibility.
  *
- * @pitfalls
+ * @never
  * - NEVER call `generateFormComponent` with a stale `fields` array from a previous schema
  *   version — there is no cache invalidation; callers must re-run `walkSchema` on schema change
  * - NEVER use the returned string as a module cache key — it is not content-addressed;

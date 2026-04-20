@@ -31,7 +31,7 @@
  * - You need SSR-safe form HTML without a client-side React bundle — static codegen produces lighter server-renderable output
  * - You are on Zod v3 — the plugin only supports Zod v4 schemas
  *
- * @pitfalls
+ * @never
  * - NEVER use `?z2f` on schemas with cyclic type references — the schema
  *   walker recurses on Zod's type graph and hits infinite recursion on cycles
  * - NEVER enable `rewrite` (generate mode) with HMR simultaneously without

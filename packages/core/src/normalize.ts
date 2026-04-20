@@ -27,7 +27,7 @@
  * - CLI codegen mode — generated components handle normalization internally
  * - Your form library already normalizes (but calling it anyway is safe — it's idempotent)
  *
- * @pitfalls
+ * @never
  * - NEVER skip `normalizeFormValues()` in runtime mode — optional fields will fail validation with "expected string, received string" errors that are extremely confusing to debug
  * - NEVER rely on `normalizeFormValues()` for custom types (Date, etc.) — only handles strings and FileList
  *

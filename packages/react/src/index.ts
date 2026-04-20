@@ -27,7 +27,7 @@
  * - Performance is critical and you can run codegen at build time — prefer `@zod-to-form/cli` for static `.tsx` output with zero runtime overhead
  * - You need SSR with no client bundle — generated static components are lighter and have no React runtime dependency on `walkSchema`
  *
- * @pitfalls
+ * @never
  * - NEVER call `schema.safeParse(formValues)` without first calling `normalizeFormValues(formValues)` — HTML inputs produce empty strings for optional fields, which Zod rejects
  * - NEVER use a Zod v3 schema — this package requires Zod v4's `_zod.bag` and `z.registry()` APIs
  *

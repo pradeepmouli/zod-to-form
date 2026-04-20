@@ -12,5 +12,5 @@
   "excludePrivate": true,
   "excludeInternal": true,
   "hideGenerator": true,
-  "blockTags": ["@useWhen", "@avoidWhen", "@pitfalls"]
+  "blockTags": ["@useWhen", "@avoidWhen", "@never"]
 }

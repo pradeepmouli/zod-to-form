@@ -29,7 +29,7 @@
  * - You need forms for non-Zod schemas (use a form builder instead)
  * - Your forms have no relationship to your validation schema
  *
- * @pitfalls
+ * @never
  * - NEVER use with Zod v3 — accessing `_zod.bag` on v3 schemas throws at runtime with cryptic errors
  * - NEVER forget to call `normalizeFormValues()` before `schema.safeParse()` — HTML inputs produce empty strings for unset optional fields, which Zod rejects as invalid
  * - NEVER pass a non-object schema as the root to `walkSchema()` — it must be `z.object({...})` at the top level

@@ -1,6 +1,6 @@
 ---
 name: zod-to-form-codegen
-description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Use when: Building a custom codegen pipeline that assembles `FormField[]` and needs the TSX string; Writing codegen tests that verify output structure without spawning a CLI process; Building a custom codegen backend that needs the same override resolution logic as the CLI."
+description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Browser-safe code generation utilities for Zod v4 form components. Use when: Building a custom codegen pipeline that assembles `FormField[]` and needs the TSX string; Writing codegen tests that verify output structure without spawning a CLI process; Building a custom codegen backend that needs the same override resolution logic as the CLI."
 ---
 
 # @zod-to-form/codegen

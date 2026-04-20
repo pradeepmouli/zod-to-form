@@ -58,7 +58,7 @@ export interface Z2FViteErrorLocation {
  * @avoidWhen
  * - General application error handling — this class is specific to plugin-level failures
  *
- * @pitfalls
+ * @never
  * - NEVER compare `error.message` to detect error type — the message format may change.
  *   Use `error.code` (e.g. `error.code === 'Z2F_VITE_SCHEMA_NOT_FOUND'`) for stable matching
  *

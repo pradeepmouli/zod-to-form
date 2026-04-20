@@ -66,7 +66,7 @@ export const builtinOptimizers: Record<string, FormOptimizer[]> = buildBuiltinOp
  * @avoidWhen
  * - You only need whole-schema validation — omit the optimization option entirely
  *
- * @pitfalls
+ * @never
  * - NEVER mutate builtinOptimizers — it's a module singleton. Always use createOptimizers(custom)
  * - NEVER assume custom optimizers append — they REPLACE the entire chain for that type
  *

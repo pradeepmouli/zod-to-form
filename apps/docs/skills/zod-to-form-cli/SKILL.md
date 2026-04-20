@@ -1,6 +1,6 @@
 ---
 name: zod-to-form-cli
-description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Use when: You need programmatic codegen from a Node.js script or build tool (not just the CLI); You are writing tests for the code generation pipeline end-to-end; You need `dryRun` output for preview/diffing without touching the filesystem."
+description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) @zod-to-form/cli — Build-time CLI for generating React form components from Zod v4 schemas. Use when: You need programmatic codegen from a Node.js script or build tool (not just the CLI); You are writing tests for the code generation pipeline end-to-end; You need `dryRun` output for preview/diffing without touching the filesystem."
 ---
 
 # @zod-to-form/cli
@@ -39,7 +39,7 @@ Before using the CLI, decide: are you scripting (use `runGenerate`) or interacti
 
 ## Pitfalls
 
-- NEVER call with a schema that already has a generated output file when `defaults.overwrite` is false — the function silently skips writing and returns `wroteFile: false` with no error; this is intentional but easy to miss in scripts
+- NEVER call with a schema that already has a generated output file when `defaults.overwrite` is false — the function silently skips writing and returns `wroteFile: false` with no error; this is intentional but easy to miss in scripts — check result.wroteFile and set defaults.overwrite: true or delete the file first
 - NEVER rely on generated file content after re-running `runGenerate` without checking `wroteFile` — if the file already exists and overwrite is disabled, the on-disk file is NOT updated even though `code` is returned
 - NEVER use `--watch` mode on schema files that have indirect imports — the watcher only tracks the top-level schema file, not its transitive dependencies
 - NEVER call `program.parse()` (synchronous) in ESM environments — use `.parseAsync(process.argv)` instead or the program will silently not execute

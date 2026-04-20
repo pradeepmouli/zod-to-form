@@ -191,7 +191,7 @@ const config: Config = {
         blockTags: [
           '@useWhen',
           '@avoidWhen',
-          '@pitfalls',
+          '@never',
           '@config',
           '@template',
           '@alpha',

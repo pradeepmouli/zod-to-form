@@ -129,7 +129,7 @@ interface PluginState {
  * - Your schemas have cyclic references — the walker will recurse infinitely on them; break cycles before using the plugin
  * - You need server-side form rendering without a React runtime — static codegen produces lighter SSR-compatible output
  *
- * @pitfalls
+ * @never
  * - NEVER use `?z2f` on schemas with cyclic type references — the schema walker
  *   recurses on Zod's internal type graph and hangs on cycles
  * - NEVER enable `generate` mode and then rely on HMR without testing — the
