@@ -14,7 +14,6 @@ import {
   isValidRegistryName,
   jsonResponse,
   loadRegistries,
-  type CommunityRegistry,
   type RegistryIndexItem,
   type SearchResultItem
 } from './_shared';
@@ -41,7 +40,6 @@ export const onRequestGet: PagesFunction = async (context) => {
     }
 
     let indexUrl: string | null;
-    let registryEntry: CommunityRegistry | null = null;
 
     if (registry === SHADCN_REGISTRY_NAME) {
       indexUrl = buildIndexUrl(SHADCN_REGISTRY_NAME);
@@ -51,7 +49,6 @@ export const onRequestGet: PagesFunction = async (context) => {
       if (!entry) {
         return errorResponse(`Unknown registry: ${registry}`, 404);
       }
-      registryEntry = entry;
       indexUrl = buildIndexUrl(entry);
     }
 
