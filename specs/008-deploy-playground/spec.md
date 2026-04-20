@@ -85,5 +85,5 @@ The documentation site's navigation bar links directly to the deployed playgroun
 
 - The playground is a fully static single-page application (no server-side rendering or API required)
 - The deployment target is the same hosting platform as the docs site (already configured for zod.toform.dev)
-- The playground will be hosted at zod.toform.dev/playground (subpath of the docs site, same deployment project)
+- The playground will be hosted at zod.toform.dev/play (subpath of the docs site, same deployment project)
 - Session persistence (localStorage) works without additional infrastructure since it is client-only

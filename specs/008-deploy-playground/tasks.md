@@ -19,8 +19,8 @@
 
 **Purpose**: Prepare build configuration for combined docs + playground deployment
 
-- [ ] T001 Add conditional `base: '/playground/'` to apps/playground/vite.config.ts (only when CF_PAGES env is set)
-- [ ] T002 Create combined build script at scripts/build-site.sh that builds docs, builds playground, copies playground dist into docs output at apps/docs/build/playground/
+- [X] T001 Add conditional `base: '/play/'` to apps/playground/vite.config.ts (only when CF_PAGES env is set)
+- [X] T002 Create combined build script at apps/docs/scripts/build-combined.mts that builds docs, builds playground, copies playground dist into docs output at apps/docs/build/play/
 
 ---
 
@@ -28,7 +28,7 @@
 
 **Purpose**: Ensure the playground works correctly as a subpath SPA on Cloudflare Pages
 
-- [ ] T003 Add SPA redirect rule for /playground/* in apps/docs/static/_redirects (append `/playground/* /playground/index.html 200`)
+- [X] T003 Add SPA redirect rule for /play/* (written by build-combined.mts into _redirects at build time)
 
 **Checkpoint**: Build infrastructure ready — user story implementation can begin
 
@@ -40,7 +40,7 @@
 
 **Independent Test**: Run the combined build locally, serve with `npx serve apps/docs/build`, navigate to localhost:3000/playground and confirm the editor loads
 
-- [ ] T004 [US1] Update Cloudflare Pages build command to use scripts/build-site.sh in CF dashboard
+- [ ] T004 [US1] Update Cloudflare Pages build command in dashboard to: `pnpm --filter @zod-to-form/docs run build:combined`
 - [ ] T005 [US1] Push to master and verify zod.toform.dev/playground loads the playground application
 - [ ] T006 [US1] Verify HTTPS and that all playground assets load correctly from /playground/ subpath
 
@@ -67,8 +67,8 @@
 
 **Independent Test**: Visit zod.toform.dev, click Playground in the nav bar, confirm navigation to /playground/
 
-- [ ] T009 [P] [US3] Update navbar Playground link in apps/docs/docusaurus.config.ts to point to /playground/
-- [ ] T010 [P] [US3] Remove "coming soon" badge from Playground button and make it a live link to /playground/ in apps/docs/src/pages/index.tsx
+- [X] T009 [P] [US3] Update navbar Playground link in apps/docs/docusaurus.config.ts to point to /play/ (already done)
+- [X] T010 [P] [US3] Remove "coming soon" badge from Playground button and make it a live link to /play/ in apps/docs/src/pages/index.tsx
 - [ ] T011 [US3] Push and verify both nav link and landing page button navigate to the live playground
 
 **Checkpoint**: All user stories complete — playground is deployed, auto-updating, and discoverable

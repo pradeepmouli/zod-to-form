@@ -227,10 +227,9 @@ function HomepageHeader(): ReactNode {
           >
             View on GitHub
           </Link>
-          <span className={`button button--outline button--lg ${styles.comingSoon}`}>
+          <Link className="button button--outline button--lg" href="https://zod.toform.dev/play/">
             Playground
-            <span className={styles.comingSoonBadge}>coming soon</span>
-          </span>
+          </Link>
         </div>
         <div className={styles.npmLinks}>
           <a href="https://www.npmjs.com/package/@zod-to-form/react" className={styles.npmBadge}>
