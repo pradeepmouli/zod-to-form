@@ -20,7 +20,7 @@ import {
   foldGutter,
   foldKeymap
 } from '@codemirror/language';
-import type { Extension } from '@codemirror/state';
+import { EditorState, type Extension } from '@codemirror/state';
 
 const sharedTheme = EditorView.theme({
   '&': { height: '100%', fontSize: '14px' },
@@ -76,4 +76,25 @@ export function createConfigEditorExtensions(
   completionSource: (ctx: CompletionContext) => CompletionResult | null
 ): Extension[] {
   return [...baseExtensions(onChange), autocompletion({ override: [completionSource] })];
+}
+
+/**
+ * Extensions for a read-only code viewer (generated code preview).
+ * Reuses the same theme and language highlighting as the editable editors,
+ * but omits history/keymap/autocomplete and disables edits.
+ */
+export function createReadOnlyViewerExtensions(): Extension[] {
+  return [
+    lineNumbers(),
+    foldGutter(),
+    drawSelection(),
+    bracketMatching(),
+    syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+    javascript({ typescript: true, jsx: true }),
+    oneDark,
+    EditorView.editable.of(false),
+    EditorState.readOnly.of(true),
+    keymap.of([...defaultKeymap, ...searchKeymap, ...foldKeymap]),
+    sharedTheme
+  ];
 }
