@@ -1,6 +1,6 @@
 # zod-to-form Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-14
+Auto-generated from all feature plans. Last updated: 2026-04-20
 
 ## Active Technologies
 - TypeScript 5.x (strict mode) + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), commander, jiti, prettier, chokidar (CLI direct) (refactor/001-1-componentconfig-config)
@@ -11,6 +11,8 @@ Auto-generated from all feature plans. Last updated: 2026-04-14
 - N/A (library) (005-api-surface-cleanup)
 - TypeScript 5.x with strict mode + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), @hookform/resolvers (peer — conditional after optimization) (006-validation-optimization)
 - N/A — plugin is stateless between sessions; in-memory compilation cache only (007-vite-codegen-plugin)
+- TypeScript 5.x (existing playground is a Vite + React app) + Vite (build), React 18+, CodeMirror 6 (existing playground deps — no new deps added) (008-deploy-playground)
+- N/A (static SPA; session state in localStorage — no server) (008-deploy-playground)
 
 - TypeScript 5.x (strict mode)
 - Zod v4 (v4.0.0+) — `_zod` substrate API
@@ -62,10 +64,9 @@ pnpm run dev           # Dev mode (parallel)
 - Metadata precedence: form registry → global registry → inferred defaults
 
 ## Recent Changes
+- 008-deploy-playground: Added TypeScript 5.x (existing playground is a Vite + React app) + Vite (build), React 18+, CodeMirror 6 (existing playground deps — no new deps added)
 - 007-vite-codegen-plugin: New `@zod-to-form/vite` package shipping the Vite plugin (query mode `?z2f`, generate mode, config auto-discovery + watch, resolver tree-shake). `@zod-to-form/core/loader` subpath added (jiti as optional peer); `@zod-to-form/cli/loader` is now a thin re-export. CodegenConfig + canonicalizeConfig moved to core.
 - 006-validation-optimization: Added TypeScript 5.x with strict mode + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), @hookform/resolvers (peer — conditional after optimization)
-- 005-api-surface-cleanup: Added TypeScript 5.x (strict mode) + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), @hookform/resolvers
-- 004-studio-layout-redesign: Added TypeScript 5.x (strict mode) + React 18+, CodeMirror 6, Zod v4, React Hook Form 7+, @zod-to-form/core, @zod-to-form/react, fflate (new — zip for export)
 
 
 <!-- MANUAL ADDITIONS START -->
