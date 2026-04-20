@@ -1,6 +1,6 @@
 ---
 name: zod-to-form-react
-description: "Runtime <ZodForm> renderer for Zod v4 schemas Use when: You want a zero-config form from a Zod v4 schema at runtime, no build step; You need form rendering in storybook, playgrounds, or low-traffic admin UIs; You are prototyping before committing to CLI codegen."
+description: "Runtime <ZodForm> renderer for Zod v4 schemas Runtime React renderer for Zod v4 form schemas — wraps react-hook-form with a schema walker that maps Zod types to form components. Use when: You want a zero-config form from a Zod v4 schema at runtime, no build step; You need form rendering in storybook, playgrounds, or low-traffic admin UIs; You are prototyping before committing to CLI codegen."
 license: MIT
 ---
 

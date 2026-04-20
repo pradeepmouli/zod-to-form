@@ -1,5 +1,5 @@
 /**
- * Vite plugin for schema-driven form generation.
+ * Vite plugin for zod-to-form — transforms `?z2f` imports into generated form components and replaces `<ZodForm>` JSX call sites with static output at build time.
  *
  * Two modes:
  * - **Query mode** (`?z2f` imports): import a schema file with a `?z2f` query

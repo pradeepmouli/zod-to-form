@@ -1,6 +1,6 @@
 ---
 name: zod-to-form-core
-description: "Schema walker and processor registry for Zod v4 form generation Use when: You want per-field validation instead of whole-form validation; You need native HTML validation attributes (required, minLength, pattern); Writing z2f.config.ts for CLI codegen (primary use case)."
+description: "Schema walker and processor registry for Zod v4 form generation Schema-driven form generation for Zod v4. Use when: You want per-field validation instead of whole-form validation; You need native HTML validation attributes (required, minLength, pattern); Writing z2f.config.ts for CLI codegen (primary use case)."
 license: MIT
 ---
 

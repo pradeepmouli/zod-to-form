@@ -8,7 +8,7 @@
 
 > **runGenerate**(`options`): `Promise`\<\{ `actionCode?`: `string`; `actionPath?`: `string`; `code`: `string`; `outputPath`: `string`; `wroteFile`: `boolean`; \}\>
 
-Defined in: [cli/src/index.ts:169](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/cli/src/index.ts#L169)
+Defined in: [cli/src/index.ts:169](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/cli/src/index.ts#L169)
 
 Executes the code generation pipeline for a single Zod schema export.
 

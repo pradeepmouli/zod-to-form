@@ -1,6 +1,6 @@
 ---
 name: zod-to-form-cli
-description: "Build-time code generator for Zod v4 form components Use when: You need programmatic codegen from a Node.js script or build tool (not just the CLI); You are writing tests for the code generation pipeline end-to-end; You need `dryRun` output for preview/diffing without touching the filesystem."
+description: "Build-time code generator for Zod v4 form components @zod-to-form/cli — Build-time CLI for generating React form components from Zod v4 schemas. Use when: You need programmatic codegen from a Node.js script or build tool (not just the CLI); You are writing tests for the code generation pipeline end-to-end; You need `dryRun` output for preview/diffing without touching the filesystem."
 license: MIT
 ---
 

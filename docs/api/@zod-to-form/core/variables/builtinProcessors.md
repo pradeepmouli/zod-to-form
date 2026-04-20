@@ -8,7 +8,7 @@
 
 > `const` **builtinProcessors**: `Record`\<`string`, [`FormProcessor`](../type-aliases/FormProcessor.md)\>
 
-Defined in: [registry.ts:82](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/core/src/registry.ts#L82)
+Defined in: [registry.ts:82](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/registry.ts#L82)
 
 The default processor registry — maps every Zod v4 `def.type` string to its processor.
 The typed `typedProcessors` constant provides compile-time safety; this export widens

@@ -8,7 +8,7 @@
 
 > **loadDefaultConfig**(`cwd`): `Promise`\<[`ZodFormsConfig`](../../type-aliases/ZodFormsConfig.md)\<`Record`\<`string`, `unknown`\>\> \| `undefined`\>
 
-Defined in: [loader/index.ts:264](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/core/src/loader/index.ts#L264)
+Defined in: [loader/index.ts:264](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/loader/index.ts#L264)
 
 Load and validate the default config file from `cwd` by auto-discovering
 standard naming candidates (`z2f.config.ts`, `component-config.ts`, etc.).

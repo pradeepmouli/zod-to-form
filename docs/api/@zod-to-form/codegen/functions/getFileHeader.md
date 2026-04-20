@@ -8,7 +8,7 @@
 
 > **getFileHeader**(`schemaImportPath`, `exportName`, `hasArrays?`, `mode?`, `componentImportLine?`, `options?`, `optimized?`): `string`
 
-Defined in: [codegen/src/templates.ts:100](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/codegen/src/templates.ts#L100)
+Defined in: [codegen/src/templates.ts:100](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/codegen/src/templates.ts#L100)
 
 Generate the import block for a form component file.
 Emits react-hook-form, zodResolver, zod, and component import lines

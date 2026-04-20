@@ -8,7 +8,7 @@
 
 > **FormOptimizer**\<`T`\> = (`schema`, `ctx`, `field`, `params`) => `void`
 
-Defined in: [optimizers/types.ts:70](https://github.com/pradeepmouli/zod-to-form/blob/d11b2e688e77ff9814f6ffb76867a08ff1c7d2cb/packages/core/src/optimizers/types.ts#L70)
+Defined in: [optimizers/types.ts:70](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/optimizers/types.ts#L70)
 
 An optimizer function that mutates a `FormField` after the processor has run.
 Receives the same schema, context, field, and params as a processor.
