@@ -31,21 +31,11 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
-        with:
-          standalone: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 20
-          cache: 'pnpm'
-
-      - name: Debug pnpm
-        run: |
-          which pnpm
-          pnpm --version
-          git diff pnpm-lock.yaml | head -20
-          xxd pnpm-lock.yaml | head -3
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -132,14 +122,11 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
-        with:
-          standalone: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 20
-          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
