@@ -68,6 +68,17 @@ The existing `<button>` elements remain as the default; component map additions 
 - [ ] Documentation updated (if needed)
 - [ ] Code reviewed (if appropriate)
 
+## Follow-on: Record Fields
+
+Records (`z.record()`) should get similar add/remove UX:
+- `RecordField` component that renders key-value pairs with add/remove
+- Add button creates a new entry with a user-provided key + empty value
+- Remove button deletes an entry by key
+- `recordConfig?: { addLabel?, removeLabel?, keyPlaceholder? }` in FieldConfigBase
+- The record processor currently renders as a plain `Input` — needs a new component type
+
+This is larger scope (needs key input UX, different RHF pattern with `useWatch` or manual state) and should be a separate enhancement or feature spec.
+
 ## Notes
 - `FormFieldConstraints.maxLength` is already populated by the array processor from `z.array().max(N)._zod.bag.maximum`
 - `FieldConfig` is already typed per-schema-type: `$ZodArray` branch gets `arrayItems` — `arrayConfig` fits naturally alongside it
