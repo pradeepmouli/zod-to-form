@@ -1,5 +1,25 @@
 # Configuration
 
+## ArrayConfig
+
+Configuration for collection-style field add/remove buttons.
+Applied via FormMeta registry on schemas rendered as `ArrayField`:
+`z.array()`, `z.set()`, and `z.map()`.
+
+### Properties
+
+#### addLabel
+
+Label for the "add item" button (default: "+ Add")
+
+**Type:** `string`
+
+#### removeLabel
+
+Label for the "remove item" button (default: "− Remove")
+
+**Type:** `string`
+
 ## FieldConfig
 
 Per-field configuration that customises how a Zod schema field is rendered.

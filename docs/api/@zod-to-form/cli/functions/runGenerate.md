@@ -8,7 +8,7 @@
 
 > **runGenerate**(`options`): `Promise`\<\{ `actionCode?`: `string`; `actionPath?`: `string`; `code`: `string`; `outputPath`: `string`; `wroteFile`: `boolean`; \}\>
 
-Defined in: [cli/src/index.ts:169](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/cli/src/index.ts#L169)
+Defined in: [cli/src/index.ts:168](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/cli/src/index.ts#L168)
 
 Executes the code generation pipeline for a single Zod schema export.
 
@@ -43,17 +43,16 @@ Resolved output paths and the generated code string.
 - Interactive use — run `npx zod-to-form generate` (via `createProgram()`) instead
 - Browser environments — this function uses Node.js `fs` and `path` APIs
 
-## Pitfalls
+## Never
 
-- NEVER call with a schema that already has a generated output file when
-  `defaults.overwrite` is false — the function silently skips writing and returns
-  `wroteFile: false` with no error; this is intentional but easy to miss in scripts
-  — check result.wroteFile and set defaults.overwrite: true or delete the file first
-- NEVER rely on generated file content after re-running `runGenerate` without
-  checking `wroteFile` — if the file already exists and overwrite is disabled,
-  the on-disk file is NOT updated even though `code` is returned
-- NEVER use `--watch` mode on schema files that have indirect imports — the watcher
-  only tracks the top-level schema file, not its transitive dependencies
+- NEVER treat `result.code` as the on-disk file content when `overwrite` is false — if
+  the output file already exists, `runGenerate` returns `wroteFile: false` and the
+  existing file is unchanged without throwing; FIX: check `result.wroteFile` before
+  assuming the file was updated, or set `defaults.overwrite: true` explicitly
+- NEVER use `--watch` mode on schemas that re-export types from other modules — the
+  watcher tracks only the top-level file, so a change in an imported schema file
+  does not trigger regeneration; FIX: run `runGenerate` manually from a parent file
+  watcher (e.g. chokidar) that covers the full import tree
 
 ## Throws
 

@@ -8,7 +8,7 @@
 
 > **createOptimizers**(`custom?`): `Record`\<`string`, [`FormOptimizer`](../type-aliases/FormOptimizer.md)[]\>
 
-Defined in: [optimizers/index.ts:78](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/optimizers/index.ts#L78)
+Defined in: [optimizers/index.ts:78](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/optimizers/index.ts#L78)
 
 Create an optimizer registry by merging custom optimizers with builtins.
 Custom optimizers for a type replace the entire chain for that type.
@@ -43,7 +43,7 @@ Custom optimizers for a type REPLACE the entire chain — they don't append.
 
 - You only need whole-schema validation — omit the optimization option entirely
 
-## Pitfalls
+## Never
 
 - NEVER mutate builtinOptimizers — it's a module singleton. Always use createOptimizers(custom)
 - NEVER assume custom optimizers append — they REPLACE the entire chain for that type

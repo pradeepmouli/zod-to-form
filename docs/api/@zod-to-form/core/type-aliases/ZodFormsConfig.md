@@ -8,7 +8,7 @@
 
 > **ZodFormsConfig**\<`TComponents`, `TSchemas`\> = `object`
 
-Defined in: [config.ts:125](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/config.ts#L125)
+Defined in: [config.ts:125](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L125)
 
 Root configuration type for `zod-to-form` code generation.
 
@@ -37,7 +37,7 @@ Map of schema export names to their Zod schema types (used to type `schemas.[key
 
 > **components**: [`ComponentsConfig`](ComponentsConfig.md)\<`TComponents`\>
 
-Defined in: [config.ts:129](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/config.ts#L129)
+Defined in: [config.ts:129](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L129)
 
 ***
 
@@ -45,7 +45,7 @@ Defined in: [config.ts:129](https://github.com/pradeepmouli/zod-to-form/blob/808
 
 > `optional` **defaults?**: [`ConfigDefaults`](ConfigDefaults.md)
 
-Defined in: [config.ts:130](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/config.ts#L130)
+Defined in: [config.ts:130](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L130)
 
 ***
 
@@ -53,7 +53,7 @@ Defined in: [config.ts:130](https://github.com/pradeepmouli/zod-to-form/blob/808
 
 > `optional` **exclude?**: `string`[]
 
-Defined in: [config.ts:133](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/config.ts#L133)
+Defined in: [config.ts:133](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L133)
 
 ***
 
@@ -61,7 +61,7 @@ Defined in: [config.ts:133](https://github.com/pradeepmouli/zod-to-form/blob/808
 
 > `optional` **fields?**: `Record`\<`string`, [`TypedFieldConfig`](TypedFieldConfig.md)\<`TComponents`\>\>
 
-Defined in: [config.ts:134](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/config.ts#L134)
+Defined in: [config.ts:134](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L134)
 
 ***
 
@@ -69,7 +69,7 @@ Defined in: [config.ts:134](https://github.com/pradeepmouli/zod-to-form/blob/808
 
 > `optional` **include?**: `string`[]
 
-Defined in: [config.ts:132](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/config.ts#L132)
+Defined in: [config.ts:132](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L132)
 
 ***
 
@@ -77,7 +77,7 @@ Defined in: [config.ts:132](https://github.com/pradeepmouli/zod-to-form/blob/808
 
 > `optional` **schemas?**: `{ [K in keyof TSchemas & string]?: ZodTypeConfig<TSchemas[K] extends $ZodType ? SchemaFieldPath<TSchemas[K]> : string, TComponents> }`
 
-Defined in: [config.ts:135](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/config.ts#L135)
+Defined in: [config.ts:135](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L135)
 
 ***
 
@@ -85,4 +85,4 @@ Defined in: [config.ts:135](https://github.com/pradeepmouli/zod-to-form/blob/808
 
 > `optional` **types?**: `string`[]
 
-Defined in: [config.ts:131](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/config.ts#L131)
+Defined in: [config.ts:131](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L131)

@@ -8,7 +8,7 @@
 
 > **registerFlat**\<`Meta`\>(`registry`, `schema`, `fields`): `void`
 
-Defined in: [register.ts:230](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/register.ts#L230)
+Defined in: [register.ts:230](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/register.ts#L230)
 
 Register flat dot-path field configs against a schema's registry.
 
@@ -82,7 +82,7 @@ into the registry. Warns on unresolved paths — check logs for typo detection.
 
 - Your config is already nested mirroring schema shape — use registerDeep() instead
 
-## Pitfalls
+## Never
 
 - NEVER mix with registerDeep() on the same schema — registry entries conflict silently
 - NEVER assume numeric path segments matter — "items.0.name" and "items.2.name" resolve to the same target

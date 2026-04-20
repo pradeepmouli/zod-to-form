@@ -8,7 +8,7 @@
 
 > **generateFormComponent**(`fields`, `config`): `string`
 
-Defined in: [codegen/src/generate.ts:657](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/codegen/src/generate.ts#L657)
+Defined in: [codegen/src/generate.ts:673](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/codegen/src/generate.ts#L673)
 
 Generate a React form component as a TypeScript string from `FormField[]`.
 
@@ -67,7 +67,7 @@ await writeFile('./SignupForm.tsx', code, 'utf8');
 Never — this function is purely a string transformer; I/O errors from writing
   the result to disk are the caller's responsibility.
 
-## Pitfalls
+## Never
 
 - NEVER call `generateFormComponent` with a stale `fields` array from a previous schema
   version — there is no cache invalidation; callers must re-run `walkSchema` on schema change

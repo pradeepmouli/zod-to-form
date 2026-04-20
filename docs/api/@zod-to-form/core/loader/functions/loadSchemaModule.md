@@ -8,7 +8,7 @@
 
 > **loadSchemaModule**(`schemaPath`): `Promise`\<`Record`\<`string`, `unknown`\>\>
 
-Defined in: [loader/index.ts:156](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/loader/index.ts#L156)
+Defined in: [loader/index.ts:156](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/loader/index.ts#L156)
 
 Load a schema file and return the entire module namespace, leaving the
 choice of which export to use to the caller. The Vite plugin uses this

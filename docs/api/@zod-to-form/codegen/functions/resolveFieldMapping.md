@@ -8,7 +8,7 @@
 
 > **resolveFieldMapping**\<`TComponents`\>(`fieldKey`, `componentName`, `componentConfig`): `object`
 
-Defined in: [codegen/src/generate.ts:194](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/codegen/src/generate.ts#L194)
+Defined in: [codegen/src/generate.ts:194](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/codegen/src/generate.ts#L194)
 
 Resolve the component name and override config for a single `FormField` key.
 
@@ -89,7 +89,7 @@ if (mapping.source !== 'none') {
 }
 ```
 
-## Pitfalls
+## Never
 
 - NEVER assume `source: 'none'` means the field has no component — the schema walker may
   have inferred one; `resolveFieldMapping` only resolves user-provided config overrides

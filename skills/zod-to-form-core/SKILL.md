@@ -1,6 +1,6 @@
 ---
 name: zod-to-form-core
-description: "Schema walker and processor registry for Zod v4 form generation Schema-driven form generation for Zod v4. Use when: You want per-field validation instead of whole-form validation; You need native HTML validation attributes (required, minLength, pattern); Writing z2f.config.ts for CLI codegen (primary use case)."
+description: "Schema walker and processor registry for Zod v4 form generation Use when: You want per-field validation instead of whole-form validation. Also: zod, zod-v4, forms, form-generation, schema, schema-walker, processor-registry, react-hook-form, schema-driven, form-schema, zod-registry."
 license: MIT
 ---
 
@@ -36,49 +36,40 @@ console.log(fields.map((f) => ({ key: f.key, component: f.component })));
 
 ## When to Use
 
+**Use this skill when:**
+- You want per-field validation instead of whole-form validation → use `createOptimizers`
+- You need native HTML validation attributes (required, minLength, pattern) → use `createOptimizers`
+- You want TypeScript inference and IDE autocompletion for config → use `defineConfig` — `defineConfig` is the typed entry point; bare object literals lose generic inference on `components.overrides`
+- Loading config from JSON files or dynamic import() where the type is `unknown` → use `validateConfig` — validates and narrows to `ZodFormsConfig`
+- ALWAYS call on form values before schema.safeParse() in runtime mode → use `normalizeFormValues` — HTML inputs produce `""` for unset optional fields, which Zod rejects; this is the single mandatory normalization step
+- You need direct schema-to-fields conversion in runtime contexts → use `walkSchema`
+- You're building a custom codegen pipeline on top of FormField[] → use `walkSchema`
+- You have a deeply-nested FieldConfig mirroring your schema shape → use `registerDeep`
+- Recommended for complex schemas with nested objects and arrays → use `registerDeep`
+- Merging global field configs from z2f.config.ts into a registry → use `registerFlat`
+- Your config uses dot-path notation rather than nested structure → use `registerFlat`
 
-| Task | Use |
-|------|-----|
-| You want per-field validation instead of whole-form validation | `createOptimizers` |
-| You need native HTML validation attributes (required, minLength, pattern) | `createOptimizers` |
-| Writing z2f.config.ts for CLI codegen (primary use case) | `defineConfig` |
-| You want TypeScript inference and IDE autocompletion for config | `defineConfig` |
-| Loading config from JSON files or dynamic import() | `validateConfig` |
-| You need runtime validation of user-provided config | `validateConfig` |
-| ALWAYS call on form values before schema.safeParse() in runtime mode | `normalizeFormValues` |
-| Critical for optional fields where HTML produces "" but Zod expects undefined | `normalizeFormValues` |
-| You need direct schema-to-fields conversion in runtime contexts | `walkSchema` |
-| You're building a custom codegen pipeline on top of FormField[] | `walkSchema` |
-| You have a deeply-nested FieldConfig mirroring your schema shape | `registerDeep` |
-| Recommended for complex schemas with nested objects and arrays | `registerDeep` |
-| Merging global field configs from z2f.config.ts into a registry | `registerFlat` |
-| Your config uses dot-path notation rather than nested structure | `registerFlat` |
+**Do NOT use when:**
+- You only need whole-schema validation — omit the optimization option entirely (`createOptimizers`)
+- Runtime-only usage where you pass config inline to walkSchema — `defineConfig` is a no-op at runtime without a preset; skip it when config comes from JSON or dynamic import (`defineConfig`)
+- Using TypeScript with defineConfig() — type errors catch most issues at dev time; validateConfig is only needed when the config source is not type-checkable (`validateConfig`)
+- CLI codegen mode — generated components call normalization internally; calling it again is safe (idempotent) but redundant (`normalizeFormValues`)
+- You just want generated components — use the CLI instead (`walkSchema`)
+- Your schema is not z.object() at the root level (`walkSchema`)
+- For simple flat configs — registerFlat() is simpler and more direct (`registerDeep`)
+- Don't use if your config comes from dot-path format (CLI global fields) (`registerDeep`)
+- Your config is already nested mirroring schema shape — use registerDeep() instead (`registerFlat`)
 
-**Avoid when:**
+API surface: 49 functions, 20 types, 4 constants
 
-| Don't Use | When | Use Instead |
-|-----------|------|-------------|
-| `createOptimizers` | You only need whole-schema validation | omit the optimization option entirely |
-| `defineConfig` | Runtime-only usage where you pass config inline to walkSchema | — |
-| `validateConfig` | Using TypeScript with defineConfig() | type errors catch most issues at dev time |
-| `normalizeFormValues` | CLI codegen mode | generated components handle normalization internally |
-| `normalizeFormValues` | Your form library already normalizes (but calling it anyway is safe | it's idempotent) |
-| `walkSchema` | You just want generated components | use the CLI instead |
-| `walkSchema` | Your schema is not z.object() at the root level | — |
-| `registerDeep` | For simple flat configs | registerFlat() is simpler and more direct |
-| `registerDeep` | Don't use if your config comes from dot-path format (CLI global fields) | — |
-| `registerFlat` | Your config is already nested mirroring schema shape | use registerDeep() instead |
-- API surface: 49 functions, 20 types, 4 constants
-
-## Pitfalls
+## NEVER
 
 - NEVER mutate builtinOptimizers — it's a module singleton. Always use createOptimizers(custom)
 - NEVER assume custom optimizers append — they REPLACE the entire chain for that type
 - NEVER assume preset props merge with your props — the entire props dict is replaced. If you set component props, you must include ALL props including the ones from the preset
-- NEVER use as a type guard — it throws on invalid input, doesn't narrow
-- NEVER assume extra keys cause failures — the schema uses z.object().loose(), extra keys are silently ignored
-- NEVER skip `normalizeFormValues()` in runtime mode — optional fields will fail validation with "expected string, received string" errors that are extremely confusing to debug
-- NEVER rely on `normalizeFormValues()` for custom types (Date, etc.) — only handles strings and FileList
+- NEVER use as a type guard — it throws on invalid input, doesn't narrow; FIX: wrap in try/catch and branch on success, or check keys manually before calling
+- NEVER assume extra keys cause failures — the schema uses z.object().loose(), so unrecognized keys are silently dropped not rejected; FIX: if you need strict key validation, inspect the returned config for unexpected fields manually
+- NEVER rely on this for custom types (Date, File subclasses, etc.) — it only handles empty strings and FileList; FIX: normalize custom types before calling this function or in a custom resolver wrapper
 - NEVER pass a non-object schema at the root — throws immediately
 - NEVER bypass the processor registry for custom types — extend via options.processors
 - NEVER skip normalizeFormValues() before schema.safeParse() — empty strings from HTML inputs fail optional field validation
@@ -89,7 +80,7 @@ console.log(fields.map((f) => ({ key: f.key, component: f.component })));
 
 ## Configuration
 
-8 configuration interfaces — see references/config.md for details.
+9 configuration interfaces — see references/config.md for details.
 
 ## Quick Reference
 

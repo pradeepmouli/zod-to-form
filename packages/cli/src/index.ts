@@ -18,18 +18,18 @@
  * - You want programmatic codegen from a Node.js script without spawning a child process — import `runGenerate` directly instead of using the CLI binary
  *
  * @avoidWhen
- * - Runtime form rendering — use `@zod-to-form/react` for that; the CLI only emits static `.tsx` files
+ * - Runtime form rendering — use `@zod-to-form/react`; the CLI only emits static `.tsx` files, it does not render at runtime
  * - Browser environments — this package uses Node.js `fs` and `path` APIs not available in browsers
- * - Projects that do not use Vite — the `@zod-to-form/vite` plugin covers that use case better with HMR integration
+ * - Vite-based projects that want HMR — use `@zod-to-form/vite` instead; the Vite plugin has per-import invalidation that the CLI watcher lacks
  *
  * @never
- * - NEVER omit `--config` when calling the CLI — there is no fallback auto-discovery
- *   when `--export` is provided without a config; the command will error
  * - NEVER rely on generated file content without checking `wroteFile` — when `overwrite`
  *   is false and the output file already exists, `runGenerate` returns `wroteFile: false`
- *   and leaves the existing file unchanged without throwing
+ *   and leaves the existing file unchanged without throwing; FIX: check `result.wroteFile`
+ *   before treating `result.code` as fresh output
  * - NEVER mix CLI-generated components with components managed by the Vite plugin
- *   in the same module — the import paths and registry expectations differ
+ *   in the same module — the import paths and registry expectations differ; FIX: choose
+ *   one code-generation strategy per module boundary
  *
  * @packageDocumentation
  */
@@ -138,15 +138,14 @@ function resolveOutputPath(cwd: string, out: string | undefined, componentName: 
  * - Browser environments — this function uses Node.js `fs` and `path` APIs
  *
  * @never
- * - NEVER call with a schema that already has a generated output file when
- *   `defaults.overwrite` is false — the function silently skips writing and returns
- *   `wroteFile: false` with no error; this is intentional but easy to miss in scripts
- *   — check result.wroteFile and set defaults.overwrite: true or delete the file first
- * - NEVER rely on generated file content after re-running `runGenerate` without
- *   checking `wroteFile` — if the file already exists and overwrite is disabled,
- *   the on-disk file is NOT updated even though `code` is returned
- * - NEVER use `--watch` mode on schema files that have indirect imports — the watcher
- *   only tracks the top-level schema file, not its transitive dependencies
+ * - NEVER treat `result.code` as the on-disk file content when `overwrite` is false — if
+ *   the output file already exists, `runGenerate` returns `wroteFile: false` and the
+ *   existing file is unchanged without throwing; FIX: check `result.wroteFile` before
+ *   assuming the file was updated, or set `defaults.overwrite: true` explicitly
+ * - NEVER use `--watch` mode on schemas that re-export types from other modules — the
+ *   watcher tracks only the top-level file, so a change in an imported schema file
+ *   does not trigger regeneration; FIX: run `runGenerate` manually from a parent file
+ *   watcher (e.g. chokidar) that covers the full import tree
  *
  * @throws When the schema file cannot be loaded, the export is missing, or the export is not a Zod schema.
  * @throws When the output file exists and cannot be read (permissions or unexpected I/O error).
@@ -311,8 +310,9 @@ export async function runGenerate(options: GenerateOptions): Promise<{
  * - End-user invocation — use `npx zod-to-form` (the binary entry point) instead
  *
  * @never
- * - NEVER call `program.parse()` (synchronous) in ESM environments — use
- *   `.parseAsync(process.argv)` instead or the program will silently not execute
+ * - NEVER call `program.parse()` (synchronous) in ESM environments — Commander's
+ *   synchronous parse returns before async action handlers complete in ESM because
+ *   it cannot await top-level async actions; FIX: always use `.parseAsync(process.argv)`
  *
  * @example
  * ```ts

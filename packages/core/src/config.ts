@@ -423,11 +423,10 @@ const PRESET_MAP: Record<ComponentPreset, Record<string, ComponentOverride>> = {
  * @returns The same configuration with preset overrides applied.
  *
  * @useWhen
- * - Writing z2f.config.ts for CLI codegen (primary use case)
- * - You want TypeScript inference and IDE autocompletion for config
+ * - You want TypeScript inference and IDE autocompletion for config — `defineConfig` is the typed entry point; bare object literals lose generic inference on `components.overrides`
  *
  * @avoidWhen
- * - Runtime-only usage where you pass config inline to walkSchema
+ * - Runtime-only usage where you pass config inline to walkSchema — `defineConfig` is a no-op at runtime without a preset; skip it when config comes from JSON or dynamic import
  *
  * @never
  * - NEVER assume preset props merge with your props — the entire props dict is replaced. If you set component props, you must include ALL props including the ones from the preset
@@ -473,15 +472,14 @@ export function defineConfig<
  * @throws If `value` does not conform to the config schema.
  *
  * @useWhen
- * - Loading config from JSON files or dynamic import()
- * - You need runtime validation of user-provided config
+ * - Loading config from JSON files or dynamic import() where the type is `unknown` — validates and narrows to `ZodFormsConfig`
  *
  * @avoidWhen
- * - Using TypeScript with defineConfig() — type errors catch most issues at dev time
+ * - Using TypeScript with defineConfig() — type errors catch most issues at dev time; validateConfig is only needed when the config source is not type-checkable
  *
  * @never
- * - NEVER use as a type guard — it throws on invalid input, doesn't narrow
- * - NEVER assume extra keys cause failures — the schema uses z.object().loose(), extra keys are silently ignored
+ * - NEVER use as a type guard — it throws on invalid input, doesn't narrow; FIX: wrap in try/catch and branch on success, or check keys manually before calling
+ * - NEVER assume extra keys cause failures — the schema uses z.object().loose(), so unrecognized keys are silently dropped not rejected; FIX: if you need strict key validation, inspect the returned config for unexpected fields manually
  *
  * @category Configuration
  */

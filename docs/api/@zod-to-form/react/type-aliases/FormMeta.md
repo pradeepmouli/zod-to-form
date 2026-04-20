@@ -8,7 +8,7 @@
 
 > **FormMeta**\<`T`\> = [`FieldConfig`](FieldConfig.md)\<`T`\> & `object`
 
-Defined in: packages/core/dist/types.d.ts:216
+Defined in: packages/core/dist/types.d.ts:235
 
 Per-schema annotation stored in a `z.registry<FormMeta>()`.
 Extends `FieldConfig` with a runtime-only `render` function for custom field rendering.

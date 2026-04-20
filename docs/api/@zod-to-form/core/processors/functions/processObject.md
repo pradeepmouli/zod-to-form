@@ -8,7 +8,7 @@
 
 > **processObject**(`schema`, `ctx`, `field`, `params`): `void`
 
-Defined in: [processors/object.ts:35](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/processors/object.ts#L35)
+Defined in: [processors/object.ts:35](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/processors/object.ts#L35)
 
 Process `z.object()` — renders as a `Fieldset` with each shape key as a child field.
 Recursively processes all shape entries via `ctx.processChild`.

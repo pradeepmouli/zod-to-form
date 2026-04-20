@@ -28,8 +28,8 @@
  * - You need SSR with no client bundle — generated static components are lighter and have no React runtime dependency on `walkSchema`
  *
  * @never
- * - NEVER call `schema.safeParse(formValues)` without first calling `normalizeFormValues(formValues)` — HTML inputs produce empty strings for optional fields, which Zod rejects
- * - NEVER use a Zod v3 schema — this package requires Zod v4's `_zod.bag` and `z.registry()` APIs
+ * - NEVER call `schema.safeParse(formValues)` without first calling `normalizeFormValues(formValues)` — HTML inputs produce `""` for unset optional fields, which Zod's `.optional()` rejects with a confusing "expected string, received string" error; FIX: always use `schema.safeParse(normalizeFormValues(values))`
+ * - NEVER use a Zod v3 schema — this package requires Zod v4's `_zod.bag` and `z.registry()` APIs; FIX: upgrade to `zod@^4.0.0` or use the Zod v3 JSON Schema path without this package
  *
  * @packageDocumentation
  */

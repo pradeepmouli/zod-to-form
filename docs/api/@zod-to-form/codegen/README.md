@@ -29,7 +29,7 @@ Key exports:
 
 - You just want to generate forms — use the CLI (`npx zod-to-form generate`) instead
 
-## Pitfalls
+## Never
 
 - NEVER import this in a browser bundle that tree-shakes — the template strings are large.
   Use dynamic `import()` if you only need codegen in certain code paths.

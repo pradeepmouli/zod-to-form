@@ -8,7 +8,7 @@
 
 > **Z2FViteConfig** = `Omit`\<[`CodegenConfig`](../../codegen/type-aliases/CodegenConfig.md), `"exportName"`\> & `object`
 
-Defined in: [packages/vite/src/types.ts:63](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/vite/src/types.ts#L63)
+Defined in: [packages/vite/src/types.ts:63](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/vite/src/types.ts#L63)
 
 The full config the Vite plugin operates on: a base `CodegenConfig`
 plus optional per-variant overrides.
@@ -46,7 +46,7 @@ Use `defineConfig` from `@zod-to-form/core` for type-safe config authoring.
 
 - You only need a single one-off form — pass `configOverride` to `z2fVite()` instead
 
-## Pitfalls
+## Never
 
 - NEVER place `z2f.config.ts` outside the Vite root — the auto-discovery only searches
   `resolvedConfig.root` and will silently fall back to defaults if the file is not found

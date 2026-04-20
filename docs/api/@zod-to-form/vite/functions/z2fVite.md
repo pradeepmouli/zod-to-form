@@ -8,7 +8,7 @@
 
 > **z2fVite**(`options?`): `Plugin`
 
-Defined in: [packages/vite/src/plugin.ts:148](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/vite/src/plugin.ts#L148)
+Defined in: [packages/vite/src/plugin.ts:147](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/vite/src/plugin.ts#L147)
 
 Vite plugin factory for `@zod-to-form/vite`.
 
@@ -64,17 +64,16 @@ export default defineConfig({
 - Your schemas have cyclic references — the walker will recurse infinitely on them; break cycles before using the plugin
 - You need server-side form rendering without a React runtime — static codegen produces lighter SSR-compatible output
 
-## Pitfalls
+## Never
 
 - NEVER use `?z2f` on schemas with cyclic type references — the schema walker
-  recurses on Zod's internal type graph and hangs on cycles
+  recurses on Zod's internal type graph and hangs with no error or timeout;
+  FIX: break cycles with `z.lazy()` before using the `?z2f` import
 - NEVER enable `generate` mode and then rely on HMR without testing — the
   generate-mode transform cache does not integrate with Vite's standard HMR
-  module invalidation for rewritten JSX files
-- NEVER assume Zod types survive Vite's module graph isolation — always export
-  schemas from a dedicated `.schema.ts` file; importing from a module that
-  re-exports through complex chains can fail under `ssrLoadModule`
+  module invalidation for rewritten JSX files; FIX: disable generate mode during
+  development and only enable it in production builds
 - NEVER configure `configPath` to point outside the Vite `root` — the plugin
   uses `ssrLoadModule` with a dev server scoped to `root`, so files outside
-  that boundary may fail to resolve their own imports
-  — produces Z2F_VITE_SCHEMA_OUTSIDE_ROOT error
+  that boundary may fail to resolve their own imports; FIX: move the config into
+  the Vite root or set `root` to include it — produces Z2F_VITE_SCHEMA_OUTSIDE_ROOT error

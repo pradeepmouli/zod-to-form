@@ -1,6 +1,6 @@
 ---
 name: zod-to-form-cli
-description: "Build-time code generator for Zod v4 form components @zod-to-form/cli — Build-time CLI for generating React form components from Zod v4 schemas. Use when: You need programmatic codegen from a Node.js script or build tool (not just the CLI); You are writing tests for the code generation pipeline end-to-end; You need `dryRun` output for preview/diffing without touching the filesystem."
+description: "Build-time code generator for Zod v4 form components Use when: You need programmatic codegen from a Node.js script or build tool (not just.... Also: zod, zod-v4, codegen, forms, form-generation, react-hook-form, schema-driven, cli, generator, component-codegen, schema-to-tsx."
 license: MIT
 ---
 
@@ -17,105 +17,35 @@ Before using the CLI, decide: are you scripting (use `runGenerate`) or interacti
 zod-to-form generate --config ./z2f.config.ts --schema ./src/schema.ts --export userSchema
 ```
 
-```bash
-zod-to-form init
-```
-
-Alias: `z2f`.
-
-### Command
-
-`zod-to-form generate`
-
-Required options:
-
-- `--config <path>`: path to config file (`.json` or `.ts`) that drives generation
-- `--schema <path>`: path to schema module
-
-Optional options:
-
-- `--export <name>`: named export containing the schema (optional when `config.types` or `config.include` are set)
-- `--mode <mode>`: `submit | auto-save` (default `submit`)
-- `--out <path>`: output directory or `.tsx` file path
-- `--name <componentName>`: generated component name override
-- `--ui <preset>`: `shadcn | html` (default `shadcn`)
-- `--dry-run`: print generated code to stdout without writing files
-- `--server-action`: generate Next.js server action next to form output
-- `--watch`: watch schema file and regenerate on changes
-
-Generation selection/overwrite is now config-driven:
-
-- `overwrite`: overwrite existing output files
-- `types`: explicit list of schema exports to generate (used when `--export` is omitted)
-- `include`: wildcard include patterns for schema export names
-- `exclude`: wildcard exclude patterns for schema export names
-
-When generating with `--config`, component mapping and generation controls come from the same file.
-Default config discovery order (used by runtime helpers / existing workflows) is still:
-
-1. `z2f.config.ts`
-2. `component-config.ts`
-3. `z2f.config.js`
-4. `component-config.js`
-5. `z2f.config.json`
-6. `component-config.json`
-
-### Command
-
-`zod-to-form init`
-
-Creates `z2f.config.ts` using sensible defaults and introspection of shadcn `components.json` when available.
-
-Optional options:
-
-- `--out <path>`: output file or directory (default `z2f.config.ts`)
-- `--components <modulePath>`: module path assigned to `components` in generated config (overrides inference)
-- `--schemas <path>`: path to schema file or directory for autodiscovery
-- `--force`: overwrite existing config file
-- `--dry-run`: print generated config and skip file writes
-- `--verbose`: print detailed diagnostics for each step
-
-Output behavior:
-
-- default: concise progress + final summary
-- `--verbose`: adds detailed diagnostics (detected config source/aliases)
-
 ## When to Use
 
+**Use this skill when:**
+- You need programmatic codegen from a Node.js script or build tool (not just the CLI) → use `runGenerate`
+- You are writing tests for the code generation pipeline end-to-end → use `runGenerate`
+- You need `dryRun` output for preview/diffing without touching the filesystem → use `runGenerate`
+- Testing CLI commands programmatically without spawning a child process → use `createProgram`
+- Extending the CLI with custom sub-commands in a wrapper tool → use `createProgram`
+- You want TypeScript inference and IDE autocompletion for config → use `defineConfig` — `defineConfig` is the typed entry point; bare object literals lose generic inference on `components.overrides`
+- Loading config from JSON files or dynamic import() where the type is `unknown` → use `validateConfig` — validates and narrows to `ZodFormsConfig`
 
-| Task | Use |
-|------|-----|
-| You need programmatic codegen from a Node.js script or build tool (not just the CLI) | `runGenerate` |
-| You are writing tests for the code generation pipeline end-to-end | `runGenerate` |
-| You need `dryRun` output for preview/diffing without touching the filesystem | `runGenerate` |
-| Testing CLI commands programmatically without spawning a child process | `createProgram` |
-| Extending the CLI with custom sub-commands in a wrapper tool | `createProgram` |
-| Writing z2f.config.ts for CLI codegen (primary use case) | `defineConfig` |
-| You want TypeScript inference and IDE autocompletion for config | `defineConfig` |
-| Loading config from JSON files or dynamic import() | `validateConfig` |
-| You need runtime validation of user-provided config | `validateConfig` |
+**Do NOT use when:**
+- Interactive use — run `npx zod-to-form generate` (via `createProgram()`) instead (`runGenerate`)
+- Browser environments — this function uses Node.js `fs` and `path` APIs (`runGenerate`)
+- You just want to generate a form from a script — use `runGenerate()` directly (`createProgram`)
+- End-user invocation — use `npx zod-to-form` (the binary entry point) instead (`createProgram`)
+- Runtime-only usage where you pass config inline to walkSchema — `defineConfig` is a no-op at runtime without a preset; skip it when config comes from JSON or dynamic import (`defineConfig`)
+- Using TypeScript with defineConfig() — type errors catch most issues at dev time; validateConfig is only needed when the config source is not type-checkable (`validateConfig`)
 
-**Avoid when:**
+API surface: 4 functions, 1 types
 
-| Don't Use | When | Use Instead |
-|-----------|------|-------------|
-| `runGenerate` | Interactive use | run `npx zod-to-form generate` (via `createProgram()`) instead |
-| `runGenerate` | Browser environments | this function uses Node.js `fs` and `path` APIs |
-| `createProgram` | You just want to generate a form from a script | use `runGenerate()` directly |
-| `createProgram` | End-user invocation | use `npx zod-to-form` (the binary entry point) instead |
-| `defineConfig` | Runtime-only usage where you pass config inline to walkSchema | — |
-| `validateConfig` | Using TypeScript with defineConfig() | type errors catch most issues at dev time |
-- API surface: 4 functions, 1 types
+## NEVER
 
-## Pitfalls
-
-- NEVER call with a schema that already has a generated output file when `defaults.overwrite` is false — the function silently skips writing and returns `wroteFile: false` with no error; this is intentional but easy to miss in scripts — check result.wroteFile and set defaults.overwrite: true or delete the file first
-- NEVER rely on generated file content after re-running `runGenerate` without checking `wroteFile` — if the file already exists and overwrite is disabled, the on-disk file is NOT updated even though `code` is returned
-- NEVER use `--watch` mode on schema files that have indirect imports — the watcher only tracks the top-level schema file, not its transitive dependencies
-- NEVER call `program.parse()` (synchronous) in ESM environments — use `.parseAsync(process.argv)` instead or the program will silently not execute
+- NEVER treat `result.code` as the on-disk file content when `overwrite` is false — if the output file already exists, `runGenerate` returns `wroteFile: false` and the existing file is unchanged without throwing; FIX: check `result.wroteFile` before assuming the file was updated, or set `defaults.overwrite: true` explicitly
+- NEVER use `--watch` mode on schemas that re-export types from other modules — the watcher tracks only the top-level file, so a change in an imported schema file does not trigger regeneration; FIX: run `runGenerate` manually from a parent file watcher (e.g. chokidar) that covers the full import tree
+- NEVER call `program.parse()` (synchronous) in ESM environments — Commander's synchronous parse returns before async action handlers complete in ESM because it cannot await top-level async actions; FIX: always use `.parseAsync(process.argv)`
 - NEVER assume preset props merge with your props — the entire props dict is replaced. If you set component props, you must include ALL props including the ones from the preset
-- NEVER use as a type guard — it throws on invalid input, doesn't narrow
-- NEVER assume extra keys cause failures — the schema uses z.object().loose(), extra keys are silently ignored
+- NEVER use as a type guard — it throws on invalid input, doesn't narrow; FIX: wrap in try/catch and branch on success, or check keys manually before calling
+- NEVER assume extra keys cause failures — the schema uses z.object().loose(), so unrecognized keys are silently dropped not rejected; FIX: if you need strict key validation, inspect the returned config for unexpected fields manually
 
 ## Configuration
 

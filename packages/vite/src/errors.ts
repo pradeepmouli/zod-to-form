@@ -56,11 +56,12 @@ export interface Z2FViteErrorLocation {
  * - Wrapping plugin calls in error handlers that need to branch on specific error codes
  *
  * @avoidWhen
- * - General application error handling — this class is specific to plugin-level failures
+ * - General application error handling — this class is specific to plugin-level failures; use standard `Error` or your own error hierarchy for application errors
  *
  * @never
- * - NEVER compare `error.message` to detect error type — the message format may change.
- *   Use `error.code` (e.g. `error.code === 'Z2F_VITE_SCHEMA_NOT_FOUND'`) for stable matching
+ * - NEVER compare `error.message` to detect error type — the `[Z2F_VITE_...]` prefix in
+ *   the message is an implementation detail and may change; FIX: always check `error.code`
+ *   (e.g. `error.code === 'Z2F_VITE_SCHEMA_NOT_FOUND'`) for stable, semver-stable matching
  *
  * @category Errors
  */

@@ -8,7 +8,7 @@
 
 > **useZodForm**\<`TSchema`\>(`schema`, `options?`): `object`
 
-Defined in: [packages/react/src/useZodForm.ts:83](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/react/src/useZodForm.ts#L83)
+Defined in: [packages/react/src/useZodForm.ts:85](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/react/src/useZodForm.ts#L85)
 
 React Hook Form integration hook for Zod v4 schemas.
 
@@ -80,14 +80,16 @@ return (
 
 ## Avoid When
 
-- You just need a working form UI — use `<ZodForm>` instead, which handles rendering
-- You are on Zod v3 — the hook requires Zod v4 schema internals
+- You just need a working form UI — use `<ZodForm>` instead; `useZodForm` returns `fields[]` and `form`, but rendering those fields requires wiring up each field component yourself
 
-## Pitfalls
+## Never
 
 - NEVER pass a new schema object on every render — `walkSchema` is memoized by schema
-  identity; an unstable reference causes re-walking on every render cycle
+  identity; an unstable reference causes re-walking on every render cycle; FIX: declare
+  the schema outside the component or wrap in `useMemo`
 - NEVER forget `normalizeFormValues()` before manually calling `schema.safeParse()` —
-  the hook's internal resolver applies normalization, but manual calls do not
+  the hook's internal resolver applies normalization, but manual calls do not; FIX:
+  always call `schema.safeParse(normalizeFormValues(values))`
 - NEVER mix `formRegistry` and `fields` options on the same call — when `formRegistry`
-  is provided, `fields` is ignored entirely (no merge, no warning)
+  is provided, `fields` is ignored entirely with no merge and no warning; FIX: pick one
+  or merge field config into the registry manually before passing it

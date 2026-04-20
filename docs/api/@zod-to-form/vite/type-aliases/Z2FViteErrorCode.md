@@ -8,7 +8,7 @@
 
 > **Z2FViteErrorCode** = `"Z2F_VITE_CONFIG_NOT_FOUND"` \| `"Z2F_VITE_CONFIG_INVALID"` \| `"Z2F_VITE_SCHEMA_NOT_FOUND"` \| `"Z2F_VITE_SCHEMA_OUTSIDE_ROOT"` \| `"Z2F_VITE_SCHEMA_NOT_ZOD"` \| `"Z2F_VITE_AMBIGUOUS_EXPORT"` \| `"Z2F_VITE_UNKNOWN_VARIANT"` \| `"Z2F_VITE_QUERY_COMPOSITION_UNSUPPORTED"` \| `"Z2F_VITE_INVALID_VARIANT_NAME"` \| `"Z2F_VITE_CODEGEN_FAILURE"` \| `"Z2F_VITE_GENERATE_PARSE_ERROR"` \| `"Z2F_VITE_WOULD_CLOBBER_FILE"` \| `"Z2F_VITE_INVALID_OPTIONS"` \| `"Z2F_VITE_NOT_IMPLEMENTED"` \| `"Z2F_VITE_RESOLVER_STRIP_FAILED"`
 
-Defined in: [packages/vite/src/errors.ts:13](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/vite/src/errors.ts#L13)
+Defined in: [packages/vite/src/errors.ts:13](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/vite/src/errors.ts#L13)
 
 Plugin error classes.
 

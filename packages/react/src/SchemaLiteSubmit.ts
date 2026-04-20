@@ -25,21 +25,18 @@ type SafeParseable = {
  * @returns A wrapped submit handler with the same signature as `onSubmit`.
  *
  * @useWhen
- * - You are using a codegen output with `validationLevel: 1` or higher (schema-lite mode)
- * - You need to map server validation errors back to form fields via RHF's `setError`
+ * - You are using codegen output with `validationLevel: 1` or higher and need the lite schema to run before your submit handler — this is the only function that wires `schemaLite` into RHF's `handleSubmit` flow
  *
  * @avoidWhen
- * - You are using the default `zodResolver` path (no `validationLevel`) — validation
- *   is handled by RHF's resolver and this wrapper is redundant
- * - Your schema has cross-field refinements in the lite schema — the lite schema
- *   intentionally strips root-level refinements, so cross-field rules are NOT checked
+ * - You are using the default `zodResolver` path (no `validationLevel`) — validation is handled by RHF's resolver and adding this wrapper causes double-validation with no benefit
  *
  * @never
  * - NEVER pass the full schema as `schemaLite` — it defeats the optimization and adds
- *   double-validation overhead; only pass the schema produced by `walkSchema`'s
- *   `result.schemaLite` field
+ *   double-validation overhead; FIX: only pass the schema produced by `walkSchema`'s
+ *   `result.schemaLite` field (never the original `z.object({...})`)
  * - NEVER use this with schemas that have root-level `.superRefine()` — root refinements
- *   are stripped from `schemaLite` by design and will not run through this wrapper
+ *   are stripped from `schemaLite` by design and will not run through this wrapper;
+ *   FIX: use full `zodResolver` path and skip `wrapWithSchemaLite` entirely
  *
  * @remarks
  * The wrapper calls `normalizeFormValues()` on the data before passing it to `schemaLite.safeParse()`.

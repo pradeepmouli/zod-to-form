@@ -6,7 +6,7 @@
 
 # Interface: FormOptimizerContext
 
-Defined in: [optimizers/types.ts:51](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/optimizers/types.ts#L51)
+Defined in: [optimizers/types.ts:51](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/optimizers/types.ts#L51)
 
 Context shared across all optimizers during a `walkSchema` run.
 Carries the optimizer registry, the SchemaLite collector, the optimization level,
@@ -18,7 +18,7 @@ and the current collector's base path for building nested lite schemas.
 
 > **collectorBasePath**: `string`
 
-Defined in: [optimizers/types.ts:59](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/optimizers/types.ts#L59)
+Defined in: [optimizers/types.ts:59](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/optimizers/types.ts#L59)
 
 Dot-path prefix of the current collector's scope (empty string at root)
 
@@ -28,7 +28,7 @@ Dot-path prefix of the current collector's scope (empty string at root)
 
 > **level**: `1` \| `2` \| `3`
 
-Defined in: [optimizers/types.ts:57](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/optimizers/types.ts#L57)
+Defined in: [optimizers/types.ts:57](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/optimizers/types.ts#L57)
 
 Optimization level: 1 = decompose per-field, 2 = native rules, 3 = cross-field
 
@@ -38,7 +38,7 @@ Optimization level: 1 = decompose per-field, 2 = native rules, 3 = cross-field
 
 > **optimizers**: `Record`\<`string`, [`FormOptimizer`](../type-aliases/FormOptimizer.md)[]\>
 
-Defined in: [optimizers/types.ts:53](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/optimizers/types.ts#L53)
+Defined in: [optimizers/types.ts:53](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/optimizers/types.ts#L53)
 
 The registered optimizer chains, keyed by Zod def.type
 
@@ -48,6 +48,6 @@ The registered optimizer chains, keyed by Zod def.type
 
 > **schemaLite**: [`SchemaLiteCollector`](SchemaLiteCollector.md)
 
-Defined in: [optimizers/types.ts:55](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/optimizers/types.ts#L55)
+Defined in: [optimizers/types.ts:55](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/optimizers/types.ts#L55)
 
 Mutable collector that accumulates checks and fallthrough fields for the lite schema

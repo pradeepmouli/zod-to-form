@@ -32,23 +32,17 @@
  * - You are on Zod v3 — the plugin only supports Zod v4 schemas
  *
  * @never
- * - NEVER use `?z2f` on schemas with cyclic type references — the schema
- *   walker recurses on Zod's type graph and hits infinite recursion on cycles
- * - NEVER enable `rewrite` (generate mode) with HMR simultaneously without
- *   testing — the in-memory compilation cache has invalidation gaps when
- *   source files are changed mid-session and the module graph is stale
- * - NEVER assume Zod schema objects survive Vite's module graph isolation
- *   intact — always re-export schemas from a dedicated file so `ssrLoadModule`
- *   can evaluate them without pulling in unrelated runtime dependencies
- * - NEVER place schema files outside the Vite root when using `ssrLoadModule` —
- *   schemas outside the Vite root may fail to resolve their own imports
- *   — produces Z2F_VITE_SCHEMA_OUTSIDE_ROOT error
- * - NEVER put your `z2f.config.ts` outside the Vite root — auto-discovery
- *   only searches `resolvedConfig.root`; files outside that boundary are
- *   silently skipped and the plugin falls back to defaults
- * - NEVER mix `configOverride` with a `z2f.config.ts` that overlaps the
- *   same keys — `configOverride` wins unconditionally (shallow merge), so
- *   config-file fields with the same name are silently dropped
+ * - NEVER use `?z2f` on schemas with cyclic type references — the schema walker
+ *   recurses on Zod's internal type graph and hangs with no timeout or error;
+ *   FIX: break cycles by extracting shared types into a `z.lazy()` boundary before
+ *   using the `?z2f` import
+ * - NEVER assume Zod schema objects survive Vite's module graph isolation intact —
+ *   `ssrLoadModule` evaluates modules in a fresh context, so schemas imported from
+ *   barrel files that also import React/RHF may fail due to missing peer globals;
+ *   FIX: re-export schemas from a dedicated `.schema.ts` file with no non-schema imports
+ * - NEVER mix `configOverride` with a `z2f.config.ts` that overlaps the same keys —
+ *   `configOverride` wins unconditionally (shallow merge), silently dropping config-file
+ *   fields; FIX: use either `configPath` + a full config file, or `configOverride` only
  *
  * @packageDocumentation
  */

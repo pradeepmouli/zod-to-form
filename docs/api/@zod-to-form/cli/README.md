@@ -254,19 +254,19 @@ Before using the CLI, decide: are you scripting (use `runGenerate`) or interacti
 
 ## Avoid When
 
-- Runtime form rendering — use `@zod-to-form/react` for that; the CLI only emits static `.tsx` files
+- Runtime form rendering — use `@zod-to-form/react`; the CLI only emits static `.tsx` files, it does not render at runtime
 - Browser environments — this package uses Node.js `fs` and `path` APIs not available in browsers
-- Projects that do not use Vite — the `@zod-to-form/vite` plugin covers that use case better with HMR integration
+- Vite-based projects that want HMR — use `@zod-to-form/vite` instead; the Vite plugin has per-import invalidation that the CLI watcher lacks
 
-## Pitfalls
+## Never
 
-- NEVER omit `--config` when calling the CLI — there is no fallback auto-discovery
-  when `--export` is provided without a config; the command will error
 - NEVER rely on generated file content without checking `wroteFile` — when `overwrite`
   is false and the output file already exists, `runGenerate` returns `wroteFile: false`
-  and leaves the existing file unchanged without throwing
+  and leaves the existing file unchanged without throwing; FIX: check `result.wroteFile`
+  before treating `result.code` as fresh output
 - NEVER mix CLI-generated components with components managed by the Vite plugin
-  in the same module — the import paths and registry expectations differ
+  in the same module — the import paths and registry expectations differ; FIX: choose
+  one code-generation strategy per module boundary
 
 ## CLI
 

@@ -10,7 +10,7 @@
 
 > **walkSchema**(`schema`, `options`): [`WalkResult`](../interfaces/WalkResult.md)
 
-Defined in: [walker.ts:291](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/walker.ts#L291)
+Defined in: [walker.ts:294](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/walker.ts#L294)
 
 Walk a Zod schema and produce a FormField[] tree.
 When optimization option is set, returns WalkResult with fields + schemaLite.
@@ -54,7 +54,7 @@ The walker is STATELESS — call it repeatedly with different formRegistry value
 - You just want generated components — use the CLI instead
 - Your schema is not z.object() at the root level
 
-### Pitfalls
+### Never
 
 - NEVER pass a non-object schema at the root — throws immediately
 - NEVER bypass the processor registry for custom types — extend via options.processors
@@ -64,7 +64,7 @@ The walker is STATELESS — call it repeatedly with different formRegistry value
 
 > **walkSchema**(`schema`, `options?`): [`FormField`](../interfaces/FormField.md)[]
 
-Defined in: [walker.ts:295](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/walker.ts#L295)
+Defined in: [walker.ts:298](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/walker.ts#L298)
 
 Walk a Zod schema and produce a FormField[] tree.
 When optimization option is set, returns WalkResult with fields + schemaLite.
@@ -108,7 +108,7 @@ The walker is STATELESS — call it repeatedly with different formRegistry value
 - You just want generated components — use the CLI instead
 - Your schema is not z.object() at the root level
 
-### Pitfalls
+### Never
 
 - NEVER pass a non-object schema at the root — throws immediately
 - NEVER bypass the processor registry for custom types — extend via options.processors

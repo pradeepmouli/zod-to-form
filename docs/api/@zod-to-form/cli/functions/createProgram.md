@@ -8,7 +8,7 @@
 
 > **createProgram**(): `Command`
 
-Defined in: [cli/src/index.ts:329](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/cli/src/index.ts#L329)
+Defined in: [cli/src/index.ts:329](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/cli/src/index.ts#L329)
 
 Creates the Commander.js CLI program for `zod-to-form`.
 
@@ -32,10 +32,11 @@ A fully configured `Command` instance ready to be parsed.
 - You just want to generate a form from a script — use `runGenerate()` directly
 - End-user invocation — use `npx zod-to-form` (the binary entry point) instead
 
-## Pitfalls
+## Never
 
-- NEVER call `program.parse()` (synchronous) in ESM environments — use
-  `.parseAsync(process.argv)` instead or the program will silently not execute
+- NEVER call `program.parse()` (synchronous) in ESM environments — Commander's
+  synchronous parse returns before async action handlers complete in ESM because
+  it cannot await top-level async actions; FIX: always use `.parseAsync(process.argv)`
 
 ## Example
 

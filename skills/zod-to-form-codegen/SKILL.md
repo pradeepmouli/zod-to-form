@@ -1,6 +1,6 @@
 ---
 name: zod-to-form-codegen
-description: "Browser-safe code generation for Zod v4 form components Use when: Building a custom codegen pipeline that assembles `FormField[]` and needs the TSX string; Writing codegen tests that verify output structure without spawning a CLI process; Building a custom codegen backend that needs the same override resolution logic as the CLI."
+description: "Browser-safe code generation for Zod v4 form components Use when: Building a custom codegen pipeline that assembles `FormField[]` and needs the.... Also: zod, zod-v4, codegen, forms, form-generation, react-hook-form, schema-driven, template-generation, browser-safe, component-codegen, schema-to-tsx."
 license: MIT
 ---
 
@@ -129,65 +129,26 @@ RJSF and JSON Forms require restructuring your schema or maintaining a separate 
 
 ## Quick Start
 
-### Runtime — iterate on forms instantly
-
 ```bash
 pnpm add @zod-to-form/core @zod-to-form/react zod react react-hook-form @hookform/resolvers
 ```
 
-```tsx
-import { z } from 'zod';
-import { ZodForm } from '@zod-to-form/react';
-
-const schema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  role: z.enum(['admin', 'editor', 'viewer']),
-});
-
-<ZodForm schema={schema} onSubmit={(data) => save(data)} />
-```
-
-Labels inferred from field names. Select rendered for enums. Validation wired automatically. Full type inference on `onSubmit`.
-
-### Codegen — own the output
-
-```bash
-pnpm add -D @zod-to-form/cli zod
-npx z2f generate --schema src/schemas/signup.ts --export signupSchema --out src/components/
-```
-
-Produces `src/components/SignupForm.tsx` — a hand-readable `.tsx` file that imports only `react-hook-form`, `zod`, and your UI components. Inspect it, modify it, commit it. Use `--watch` to regenerate when the schema changes.
-
-| | Runtime `<ZodForm>` | CLI `z2f generate` |
-|---|---|---|
-| **Use when** | Iterating, dynamic schemas, prototyping | Production forms, full control |
-| **Output** | Rendered from schema at runtime | Static `.tsx` file you own |
-| **z2f dependency** | `@zod-to-form/react` at runtime | None — generated code is standalone |
-| **Validation** | `zodResolver` or AOT optimization | AOT optimization (L1→L2→L3) |
-
----
-
 ## When to Use
 
+**Use this skill when:**
+- Building a custom codegen pipeline that assembles `FormField[]` and needs the TSX string → use `generateFormComponent`
+- Writing codegen tests that verify output structure without spawning a CLI process → use `generateFormComponent`
+- Building a custom codegen backend that needs the same override resolution logic as the CLI → use `resolveFieldMapping`
+- Writing tests that verify field-to-component mapping for a given config → use `resolveFieldMapping`
 
-| Task | Use |
-|------|-----|
-| Building a custom codegen pipeline that assembles `FormField[]` and needs the TSX string | `generateFormComponent` |
-| Writing codegen tests that verify output structure without spawning a CLI process | `generateFormComponent` |
-| Building a custom codegen backend that needs the same override resolution logic as the CLI | `resolveFieldMapping` |
-| Writing tests that verify field-to-component mapping for a given config | `resolveFieldMapping` |
+**Do NOT use when:**
+- You want file-writing behavior — use `runGenerate()` from `@zod-to-form/cli` instead (`generateFormComponent`)
+- You are using the Vite plugin — `compileTarget` wraps this and handles esbuild transformation (`generateFormComponent`)
+- You are using the CLI or Vite plugin — this is called internally and you don't need it (`resolveFieldMapping`)
 
-**Avoid when:**
+API surface: 8 functions, 1 constants
 
-| Don't Use | When | Use Instead |
-|-----------|------|-------------|
-| `generateFormComponent` | You want file-writing behavior | use `runGenerate()` from `@zod-to-form/cli` instead |
-| `generateFormComponent` | You are using the Vite plugin | `compileTarget` wraps this and handles esbuild transformation |
-| `resolveFieldMapping` | You are using the CLI or Vite plugin | this is called internally and you don't need it |
-- API surface: 8 functions, 1 constants
-
-## Pitfalls
+## NEVER
 
 - NEVER call `generateFormComponent` with a stale `fields` array from a previous schema version — there is no cache invalidation; callers must re-run `walkSchema` on schema change
 - NEVER use the returned string as a module cache key — it is not content-addressed; use `configHash` from `@zod-to-form/core` on the config object instead

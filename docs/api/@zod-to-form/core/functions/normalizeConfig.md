@@ -8,7 +8,7 @@
 
 > **normalizeConfig**(`config`): [`ZodFormsConfig`](../type-aliases/ZodFormsConfig.md)\<`Record`\<`string`, `unknown`\>\>
 
-Defined in: [config.ts:553](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/config.ts#L553)
+Defined in: [config.ts:551](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L551)
 
 Normalize a validated config by migrating deprecated top-level fields to their canonical locations.
 Currently handles the legacy top-level `overwrite` key — moves it into `defaults.overwrite`

@@ -8,7 +8,7 @@
 
 > **processRecord**(`schema`, `_ctx`, `field`, `_params`): `void`
 
-Defined in: [processors/record.ts:16](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/processors/record.ts#L16)
+Defined in: [processors/record.ts:16](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/processors/record.ts#L16)
 
 Process `z.record()` — renders as a plain `Input` with an item template derived from the value type.
 The item template is stored in `field.arrayItem` for codegen to use in dynamic key-value entry forms.

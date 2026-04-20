@@ -8,7 +8,7 @@
 
 > **registerDeep**\<`S`, `Meta`\>(`registry`, `schema`, `config`): `void`
 
-Defined in: [register.ts:81](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/register.ts#L81)
+Defined in: [register.ts:81](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/register.ts#L81)
 
 Register a schema and all its nested fields in a registry using a
 path-structured [FieldConfig](../type-aliases/FieldConfig.md) tree.
@@ -93,7 +93,7 @@ schema shape (helpful for typo detection).
 - For simple flat configs — registerFlat() is simpler and more direct
 - Don't use if your config comes from dot-path format (CLI global fields)
 
-## Pitfalls
+## Never
 
 - NEVER mix with registerFlat() on the same schema — registry entries conflict silently
 - NEVER forget the structural keys (fields, arrayItems) for nested config — without them, child config is silently ignored

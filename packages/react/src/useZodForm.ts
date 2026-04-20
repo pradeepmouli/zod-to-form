@@ -67,16 +67,18 @@ function rhfCast<T>(value: T): never {
  * - You want to colocate form state management with your own layout logic
  *
  * @avoidWhen
- * - You just need a working form UI — use `<ZodForm>` instead, which handles rendering
- * - You are on Zod v3 — the hook requires Zod v4 schema internals
+ * - You just need a working form UI — use `<ZodForm>` instead; `useZodForm` returns `fields[]` and `form`, but rendering those fields requires wiring up each field component yourself
  *
  * @never
  * - NEVER pass a new schema object on every render — `walkSchema` is memoized by schema
- *   identity; an unstable reference causes re-walking on every render cycle
+ *   identity; an unstable reference causes re-walking on every render cycle; FIX: declare
+ *   the schema outside the component or wrap in `useMemo`
  * - NEVER forget `normalizeFormValues()` before manually calling `schema.safeParse()` —
- *   the hook's internal resolver applies normalization, but manual calls do not
+ *   the hook's internal resolver applies normalization, but manual calls do not; FIX:
+ *   always call `schema.safeParse(normalizeFormValues(values))`
  * - NEVER mix `formRegistry` and `fields` options on the same call — when `formRegistry`
- *   is provided, `fields` is ignored entirely (no merge, no warning)
+ *   is provided, `fields` is ignored entirely with no merge and no warning; FIX: pick one
+ *   or merge field config into the registry manually before passing it
  *
  * @category Hooks
  */

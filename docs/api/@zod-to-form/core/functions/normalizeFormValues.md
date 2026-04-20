@@ -8,7 +8,7 @@
 
 > **normalizeFormValues**(`value`): `unknown`
 
-Defined in: [normalize.ts:39](https://github.com/pradeepmouli/zod-to-form/blob/80855062565e7587830d7555ce1551eb20fdbb74/packages/core/src/normalize.ts#L39)
+Defined in: [normalize.ts:36](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/normalize.ts#L36)
 
 Normalize raw HTML form values for Zod parsing.
 
@@ -47,15 +47,12 @@ Recursively applies to arrays and nested objects.
 
 ## Use When
 
-- ALWAYS call on form values before schema.safeParse() in runtime mode
-- Critical for optional fields where HTML produces "" but Zod expects undefined
+- ALWAYS call on form values before schema.safeParse() in runtime mode — HTML inputs produce `""` for unset optional fields, which Zod rejects; this is the single mandatory normalization step
 
 ## Avoid When
 
-- CLI codegen mode — generated components handle normalization internally
-- Your form library already normalizes (but calling it anyway is safe — it's idempotent)
+- CLI codegen mode — generated components call normalization internally; calling it again is safe (idempotent) but redundant
 
-## Pitfalls
+## Never
 
-- NEVER skip `normalizeFormValues()` in runtime mode — optional fields will fail validation with "expected string, received string" errors that are extremely confusing to debug
-- NEVER rely on `normalizeFormValues()` for custom types (Date, etc.) — only handles strings and FileList
+- NEVER rely on this for custom types (Date, File subclasses, etc.) — it only handles empty strings and FileList; FIX: normalize custom types before calling this function or in a custom resolver wrapper

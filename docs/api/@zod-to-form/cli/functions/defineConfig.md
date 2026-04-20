@@ -8,7 +8,7 @@
 
 > **defineConfig**\<`TComponents`, `TSchemas`\>(`config`): [`ZodFormsConfig`](../type-aliases/ZodFormsConfig.md)\<`TComponents`, `TSchemas`\>
 
-Defined in: core/dist/config.d.ts:162
+Defined in: core/dist/config.d.ts:161
 
 Identity helper that returns its argument typed as `ZodFormsConfig`.
 
@@ -49,14 +49,13 @@ dict is replaced entirely, not merged.
 
 ## Use When
 
-- Writing z2f.config.ts for CLI codegen (primary use case)
-- You want TypeScript inference and IDE autocompletion for config
+- You want TypeScript inference and IDE autocompletion for config — `defineConfig` is the typed entry point; bare object literals lose generic inference on `components.overrides`
 
 ## Avoid When
 
-- Runtime-only usage where you pass config inline to walkSchema
+- Runtime-only usage where you pass config inline to walkSchema — `defineConfig` is a no-op at runtime without a preset; skip it when config comes from JSON or dynamic import
 
-## Pitfalls
+## Never
 
 - NEVER assume preset props merge with your props — the entire props dict is replaced. If you set component props, you must include ALL props including the ones from the preset
 
