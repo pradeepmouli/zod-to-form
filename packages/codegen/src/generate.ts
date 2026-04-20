@@ -164,12 +164,26 @@ function normalizeFieldKey(key: string): string {
  * @param componentConfig - Optional `ZodFormsConfig` with `fields` and `components` overrides.
  * @returns Resolved component name, override config, and the resolution source.
  *
+ * @remarks
+ * Resolution order: (1) `componentConfig.fields[fieldKey]` exact match,
+ * (2) `componentConfig.fields[normalizedKey]` for array-indexed paths (e.g. `items[].name`),
+ * (3) `componentConfig.components.overrides[componentName]` for component-level metadata.
+ * A field-level override wins over a component-level override on conflict.
+ *
  * @useWhen
  * - Building a custom codegen backend that needs the same override resolution logic as the CLI
  * - Writing tests that verify field-to-component mapping for a given config
  *
  * @avoidWhen
  * - You are using the CLI or Vite plugin — this is called internally and you don't need it
+ *
+ * @example
+ * ```ts
+ * const mapping = resolveFieldMapping('address.street', 'Input', componentConfig);
+ * if (mapping.source !== 'none') {
+ *   console.log('Override component:', mapping.componentName);
+ * }
+ * ```
  *
  * @pitfalls
  * - NEVER assume `source: 'none'` means the field has no component — the schema walker may
@@ -628,6 +642,9 @@ function generateHoistedValidators(fields: FormField[], exportName: string): str
  * @avoidWhen
  * - You want file-writing behavior — use `runGenerate()` from `@zod-to-form/cli` instead
  * - You are using the Vite plugin — `compileTarget` wraps this and handles esbuild transformation
+ *
+ * @throws Never — this function is purely a string transformer; I/O errors from writing
+ *   the result to disk are the caller's responsibility.
  *
  * @pitfalls
  * - NEVER call `generateFormComponent` with a stale `fields` array from a previous schema

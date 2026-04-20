@@ -18,6 +18,13 @@ export type ComponentOverride = {
 
 // ─── Components Config ────────────────────────────────────────────────
 
+/**
+ * Preset name for built-in component library mappings.
+ * `'shadcn'` uses Radix-based controlled components with field-expression props;
+ * `'html'` uses plain uncontrolled HTML inputs.
+ *
+ * @category Configuration
+ */
 export type ComponentPreset = 'shadcn' | 'html';
 
 /** @category Configuration */
@@ -74,6 +81,12 @@ export type OptimizationConfig = {
   level?: 1 | 2 | 3;
 };
 
+/**
+ * Default generation settings applied to all schemas unless overridden per-schema.
+ * These map directly to CLI flag defaults and to the `defaults` block in `z2f.config.ts`.
+ *
+ * @category Configuration
+ */
 export type ConfigDefaults = {
   mode?: 'submit' | 'auto-save';
   ui?: 'shadcn' | 'html';
@@ -484,6 +497,17 @@ export function validateConfig(
   return parsed.data as ZodFormsConfig<Record<string, unknown>>;
 }
 
+/**
+ * Merge global field config with per-schema field config overrides.
+ * Per-schema entries shallow-merge on top of global entries for the same key.
+ * Returns an empty record when both inputs are undefined.
+ *
+ * @param globalFields - Global field overrides from `ZodFormsConfig.fields`.
+ * @param schemaFields - Per-schema field overrides from `ZodFormsConfig.schemas[key].fields`.
+ * @returns Merged field config map where schema-level overrides win on conflict.
+ *
+ * @category Configuration
+ */
 export function resolveFieldConfig(
   globalFields: Record<string, FieldConfig> | undefined,
   schemaFields: Partial<Record<string, FieldConfig>> | undefined
@@ -516,6 +540,16 @@ export function resolveFieldConfig(
   return merged;
 }
 
+/**
+ * Normalize a validated config by migrating deprecated top-level fields to their canonical locations.
+ * Currently handles the legacy top-level `overwrite` key — moves it into `defaults.overwrite`
+ * so the rest of the pipeline can assume the normalized shape.
+ *
+ * @param config - A fully validated `ZodFormsConfig` (output of `validateConfig`).
+ * @returns The same config with any deprecated top-level fields migrated into `defaults`.
+ *
+ * @category Configuration
+ */
 export function normalizeConfig(
   config: ZodFormsConfig<Record<string, unknown>>
 ): ZodFormsConfig<Record<string, unknown>> {

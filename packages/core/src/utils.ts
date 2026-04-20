@@ -2,6 +2,10 @@ import type { FormField } from './types.js';
 
 /**
  * Convert a camelCase or snake_case key to a human-readable Title Case label.
+ * Strips dot-path prefixes (e.g. `"address.street"` → `"Street"`) before conversion.
+ *
+ * @param key - A field key in camelCase, snake_case, or dot-notation path.
+ * @returns A space-separated Title Case string suitable for use as a form label.
  *
  * @example inferLabel('firstName') → 'First Name'
  * @example inferLabel('email_address') → 'Email Address'
@@ -22,6 +26,19 @@ export function inferLabel(key: string): string {
   );
 }
 
+/**
+ * Join a parent path and a child key with a dot separator.
+ * Returns `key` directly when `parent` is undefined or empty.
+ *
+ * @param parent - The parent path (e.g. `"address"`) or undefined for top-level fields.
+ * @param key - The child field key to append (e.g. `"street"`).
+ * @returns The joined path (e.g. `"address.street"`) or `key` when parent is absent.
+ *
+ * @example joinPath('address', 'street') → 'address.street'
+ * @example joinPath(undefined, 'name') → 'name'
+ *
+ * @category Utils
+ */
 export function joinPath(parent: string | undefined, key: string): string {
   if (!parent) return key;
   return `${parent}.${key}`;
@@ -148,6 +165,11 @@ function charClassToMaskChar(cls: string): string | null {
  * - array (ArrayField) → []
  * - enum → first option value or ''
  * - union/discriminatedUnion → first variant's empty default
+ *
+ * @param field - The FormField to generate an empty default for.
+ * @returns An empty default value matching the field's type structure.
+ *
+ * @category Utils
  */
 export function getEmptyDefault(field: FormField): unknown {
   // Explicit default takes priority
@@ -223,9 +245,14 @@ export function getEmptyDefault(field: FormField): unknown {
  * Normalise a concrete field key to the bracket notation used in config.
  * Replaces `.0.`, `.${index}.`, and any `.<digits>.` segments with `[].`.
  *
+ * @param key - A concrete field key potentially containing numeric array indices.
+ * @returns The normalized key with array index segments replaced by `[]`.
+ *
  * @example normalizeFieldKey('items.0.name') → 'items[].name'
  * @example normalizeFieldKey('items.${index}.name') → 'items[].name'
  * @example normalizeFieldKey('tags.2') → 'tags[]'
+ *
+ * @category Utils
  */
 export function normalizeFieldKey(key: string): string {
   // Replace `.<digits>.` or `.${index}.` segments with `[].`
@@ -238,6 +265,13 @@ export function normalizeFieldKey(key: string): string {
 /**
  * Collect section groupings from fields and a config override lookup.
  * Returns a Map of section name → array of field keys that belong to it.
+ * Recursively visits nested children and array item templates.
+ *
+ * @param fields - The flat or nested FormField array to scan for section assignments.
+ * @param getOverride - A function that returns the config override (if any) for a given field key.
+ * @returns A Map from section name to the ordered list of field keys assigned to that section.
+ *
+ * @category Utils
  */
 export function collectFieldSections(
   fields: FormField[],
@@ -276,7 +310,13 @@ export function collectFieldSections(
 
 /**
  * Create a base FormField with sensible defaults.
- * Processors fill in the specific component and props.
+ * Processors fill in the specific component and props after calling this.
+ *
+ * @param key - The field path (e.g. `"name"`, `"address.street"`).
+ * @param zodType - The Zod `def.type` string (e.g. `"string"`, `"object"`).
+ * @returns A FormField with all required properties set to their defaults.
+ *
+ * @category Utils
  */
 export function createBaseField(key: string, zodType: string): FormField {
   return {

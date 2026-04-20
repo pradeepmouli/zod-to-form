@@ -1,7 +1,34 @@
 #!/usr/bin/env node
 
 /**
- * @zod-to-form/cli — Build-time code generator for Zod v4 forms
+ * @zod-to-form/cli — Build-time CLI for generating React form components from Zod v4 schemas.
+ *
+ * Drives the full code generation pipeline: loads a schema file, walks the Zod internal
+ * type tree via `@zod-to-form/core`, applies per-field overrides from `z2f.config.ts`,
+ * and emits static `.tsx` form components — optionally alongside a Next.js server action
+ * and a schema-lite file for optimized client-side validation.
+ *
+ * @useWhen
+ * - You want a one-shot CLI command to generate a typed React form from a Zod schema
+ * - You need watch-mode codegen that regenerates on schema file changes
+ * - You want programmatic codegen from a Node.js script without spawning a child process
+ *   (import `runGenerate` directly instead of using the CLI binary)
+ *
+ * @avoidWhen
+ * - Runtime form rendering — use `@zod-to-form/react` for that
+ * - Browser environments — this package uses Node.js `fs` and `path` APIs
+ * - Projects that do not use Vite — the `@zod-to-form/vite` plugin covers that use case better
+ *
+ * @pitfalls
+ * - NEVER omit `--config` when calling the CLI — there is no fallback auto-discovery
+ *   when `--export` is provided without a config; the command will error
+ * - NEVER rely on generated file content without checking `wroteFile` — when `overwrite`
+ *   is false and the output file already exists, `runGenerate` returns `wroteFile: false`
+ *   and leaves the existing file unchanged without throwing
+ * - NEVER mix CLI-generated components with components managed by the Vite plugin
+ *   in the same module — the import paths and registry expectations differ
+ *
+ * @packageDocumentation
  */
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -116,6 +143,22 @@ function resolveOutputPath(cwd: string, out: string | undefined, componentName: 
  *   the on-disk file is NOT updated even though `code` is returned
  * - NEVER use `--watch` mode on schema files that have indirect imports — the watcher
  *   only tracks the top-level schema file, not its transitive dependencies
+ *
+ * @throws When the schema file cannot be loaded, the export is missing, or the export is not a Zod schema.
+ * @throws When the output file exists and cannot be read (permissions or unexpected I/O error).
+ *
+ * @example
+ * ```ts
+ * const result = await runGenerate({
+ *   config: './z2f.config.ts',
+ *   schema: './src/schemas/user.ts',
+ *   export: 'UserSchema',
+ *   out: './src/forms',
+ * });
+ * if (result.wroteFile) {
+ *   console.log('Generated:', result.outputPath);
+ * }
+ * ```
  *
  * @category CLI
  */
@@ -266,6 +309,16 @@ export async function runGenerate(options: GenerateOptions): Promise<{
  * @pitfalls
  * - NEVER call `program.parse()` (synchronous) in ESM environments — use
  *   `.parseAsync(process.argv)` instead or the program will silently not execute
+ *
+ * @example
+ * ```ts
+ * const program = createProgram();
+ * await program.parseAsync(['node', 'z2f', 'generate',
+ *   '--config', 'z2f.config.ts',
+ *   '--schema', 'src/schemas/user.ts',
+ *   '--export', 'UserSchema',
+ * ]);
+ * ```
  *
  * @category CLI
  */

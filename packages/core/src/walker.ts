@@ -282,6 +282,10 @@ function extractChecksFromSchema(
  * - NEVER bypass the processor registry for custom types — extend via options.processors
  * - NEVER skip normalizeFormValues() before schema.safeParse() — empty strings from HTML inputs fail optional field validation
  *
+ * @param schema - The Zod schema to walk. Must be a `z.object()` (or pipe-wrapped object) at the root.
+ * @param options - Optional walk options including formRegistry, custom processors, maxDepth, and optimization config.
+ * @returns A sorted `FormField[]` array, or a `WalkResult` with `fields` + `schemaLite` when optimization is requested.
+ *
  * @category Schema Walking
  */
 export function walkSchema(

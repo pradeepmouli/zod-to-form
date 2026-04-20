@@ -41,6 +41,21 @@ type SafeParseable = {
  * - NEVER use this with schemas that have root-level `.superRefine()` — root refinements
  *   are stripped from `schemaLite` by design and will not run through this wrapper
  *
+ * @remarks
+ * The wrapper calls `normalizeFormValues()` on the data before passing it to `schemaLite.safeParse()`.
+ * This ensures empty strings from HTML inputs are converted to `undefined`, matching Zod's `.optional()` expectation.
+ * Each validation issue's `path` array is joined with `.` to produce the RHF field path for `setError`.
+ *
+ * @throws Never — validation errors are mapped to RHF's `setError` rather than thrown.
+ *
+ * @example
+ * ```ts
+ * const handleSubmit = wrapWithSchemaLite(schemaLite, setError, async (data) => {
+ *   await fetch('/api/submit', { method: 'POST', body: JSON.stringify(data) });
+ * });
+ * // Pass handleSubmit to RHF's form.handleSubmit(handleSubmit)
+ * ```
+ *
  * @category Optimization
  */
 export function wrapWithSchemaLite<TData extends Record<string, unknown>>(

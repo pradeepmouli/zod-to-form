@@ -108,6 +108,14 @@ async function makeJitiNoAlias(): Promise<JitiInstance> {
  * Load a single named Zod schema export from a TypeScript or JavaScript
  * file. Throws with a clear message when the file can't be read, the
  * export doesn't exist, or the export isn't a Zod schema.
+ *
+ * @param schemaPath - Absolute or relative path to the schema file to load.
+ * @param exportName - The named export to extract from the loaded module (e.g. `'UserSchema'`).
+ * @returns The Zod schema instance for the named export.
+ *
+ * @throws When the file cannot be read, the export is missing, or the export is not a Zod schema.
+ *
+ * @category Loader
  */
 export async function loadSchema(schemaPath: string, exportName: string): Promise<unknown> {
   const absolutePath = path.resolve(schemaPath);
@@ -137,6 +145,13 @@ export async function loadSchema(schemaPath: string, exportName: string): Promis
  * Load a schema file and return the entire module namespace, leaving the
  * choice of which export to use to the caller. The Vite plugin uses this
  * variant so it can run its own export-disambiguation pass.
+ *
+ * @param schemaPath - Absolute or relative path to the schema file to load.
+ * @returns All named exports from the module as a `Record<string, unknown>`.
+ *
+ * @throws When the file cannot be read or evaluated.
+ *
+ * @category Loader
  */
 export async function loadSchemaModule(schemaPath: string): Promise<Record<string, unknown>> {
   const absolutePath = path.resolve(schemaPath);
@@ -154,6 +169,11 @@ export async function loadSchemaModule(schemaPath: string): Promise<Record<strin
  * Return the sorted list of named Zod schema exports in a schema file.
  * Used by the CLI's `--list-exports` flag and the Vite plugin's
  * ambiguous-export error message.
+ *
+ * @param schemaPath - Absolute or relative path to the schema file to inspect.
+ * @returns Alphabetically sorted array of export names that are Zod schemas.
+ *
+ * @category Loader
  */
 export async function resolveSchemaExportNames(schemaPath: string): Promise<string[]> {
   const moduleExports = await loadSchemaModule(schemaPath);
@@ -166,6 +186,13 @@ export async function resolveSchemaExportNames(schemaPath: string): Promise<stri
 /**
  * Load and validate a component config file (`z2f.config.ts` or similar).
  * Returns the normalized form ready to feed into codegen.
+ *
+ * @param configPath - Absolute or relative path to the config file to load.
+ * @returns The validated and normalized `ZodFormsConfig` from the config file's default export.
+ *
+ * @throws When the file cannot be read, or the exported config fails `validateConfig`.
+ *
+ * @category Loader
  */
 export async function loadConfig(
   configPath: string
@@ -199,6 +226,11 @@ async function fileExists(filePath: string): Promise<boolean> {
  * Walk the standard config-file naming candidates in `cwd` and return the
  * first that exists. Used by the CLI's auto-discovery and (eventually) by
  * the Vite plugin's config watcher.
+ *
+ * @param cwd - The directory to search for a config file.
+ * @returns The absolute path of the first config file found, or `undefined` if none exists.
+ *
+ * @category Loader
  */
 export async function resolveDefaultConfigPath(cwd: string): Promise<string | undefined> {
   const candidates = [
@@ -219,6 +251,16 @@ export async function resolveDefaultConfigPath(cwd: string): Promise<string | un
   return undefined;
 }
 
+/**
+ * Load and validate the default config file from `cwd` by auto-discovering
+ * standard naming candidates (`z2f.config.ts`, `component-config.ts`, etc.).
+ * Returns `undefined` when no config file is found.
+ *
+ * @param cwd - The directory to search for a config file.
+ * @returns The validated and normalized config, or `undefined` if none was found.
+ *
+ * @category Loader
+ */
 export async function loadDefaultConfig(
   cwd: string
 ): Promise<ZodFormsConfig<Record<string, unknown>> | undefined> {

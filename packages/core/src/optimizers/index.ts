@@ -40,6 +40,13 @@ function buildBuiltinOptimizers(): Record<string, FormOptimizer[]> {
   return combined;
 }
 
+/**
+ * The default optimizer registry — L1 (decompose) + L2 (native rules) chains merged per type.
+ * Keyed by `def.type`; each entry is an ordered chain of optimizers applied left-to-right.
+ * NEVER mutate this directly — use `createOptimizers(custom)` to extend.
+ *
+ * @category Optimization
+ */
 export const builtinOptimizers: Record<string, FormOptimizer[]> = buildBuiltinOptimizers();
 
 /**
@@ -62,6 +69,9 @@ export const builtinOptimizers: Record<string, FormOptimizer[]> = buildBuiltinOp
  * @pitfalls
  * - NEVER mutate builtinOptimizers — it's a module singleton. Always use createOptimizers(custom)
  * - NEVER assume custom optimizers append — they REPLACE the entire chain for that type
+ *
+ * @param custom - Custom optimizer chains keyed by Zod `def.type`. Each entry replaces the entire built-in chain for that type.
+ * @returns A merged optimizer registry combining built-in and custom chains, ready to pass via `walkSchema` options.
  *
  * @category Optimization
  */

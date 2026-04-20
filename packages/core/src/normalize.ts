@@ -31,6 +31,9 @@
  * - NEVER skip this in runtime mode — optional fields will fail validation with "expected string, received string" errors that are extremely confusing to debug
  * - NEVER rely on it for custom types (Date, etc.) — only handles strings and FileList
  *
+ * @param value - The raw form value to normalize (may be nested object, array, string, or FileList).
+ * @returns The normalized value with empty strings replaced by `undefined` and FileList unwrapped.
+ *
  * @category Normalization
  */
 export function normalizeFormValues(value: unknown): unknown {

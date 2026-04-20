@@ -1,43 +1,66 @@
 ---
 name: zod-to-form-core
-description: "Schema-Driven Form Generation for Zod v4 - walks Zod internal type tree using processor registry pattern to emit React form components instead of JSON Schema Use when working with zod, forms, form-generation, schema, codegen, react, validation, ui, components."
+description: "Schema walker and processor registry for Zod v4 form generation Use when working with zod, zod-v4, forms, form-generation, schema, schema-walker, processor-registry, react-hook-form, schema-driven, form-schema, zod-registry."
 license: MIT
 ---
 
 # @zod-to-form/core
 
-Schema-Driven Form Generation for Zod v4 - walks Zod internal type tree using processor registry pattern to emit React form components instead of JSON Schema
+Schema walker and processor registry for Zod v4 form generation
+
+## Quick Start
+
+```ts
+import { z } from 'zod';
+import { walkSchema } from '@zod-to-form/core';
+
+const schema = z.object({
+  name: z.string().min(1).describe('Your full name'),
+  age: z.number().int().min(0),
+  newsletter: z.boolean().default(false)
+});
+
+const fields = walkSchema(schema);
+
+console.log(fields.map((f) => ({ key: f.key, component: f.component })));
+```
 
 ## When to Use
 
-- Working with zod, forms, form-generation, schema, codegen, react, validation, ui, components
-- You want per-field validation instead of whole-form validation
-- You need native HTML validation attributes (required, minLength, pattern)
-- Writing z2f.config.ts for CLI codegen (primary use case)
-- You want TypeScript inference and IDE autocompletion for config
-- Loading config from JSON files or dynamic import()
-- You need runtime validation of user-provided config
-- ALWAYS call on form values before schema.safeParse() in runtime mode
-- Critical for optional fields where HTML produces "" but Zod expects undefined
-- You need direct schema-to-fields conversion in runtime contexts
-- You're building a custom codegen pipeline on top of FormField[]
-- You have a deeply-nested FieldConfig mirroring your schema shape
-- Recommended for complex schemas with nested objects and arrays
-- Merging global field configs from z2f.config.ts into a registry
-- Your config uses dot-path notation rather than nested structure
+- Working with zod, zod-v4, forms, form-generation, schema, schema-walker, processor-registry, react-hook-form, schema-driven, form-schema, zod-registry
+
+| Task | Use | Why |
+|------|-----|-----|
+| You want per-field validation instead of whole-form validation | `createOptimizers` | — |
+| You need native HTML validation attributes (required, minLength, pattern) | `createOptimizers` | — |
+| Writing z2f.config.ts for CLI codegen (primary use case) | `defineConfig` | — |
+| You want TypeScript inference and IDE autocompletion for config | `defineConfig` | — |
+| Loading config from JSON files or dynamic import() | `validateConfig` | — |
+| You need runtime validation of user-provided config | `validateConfig` | — |
+| ALWAYS call on form values before schema.safeParse() in runtime mode | `normalizeFormValues` | — |
+| Critical for optional fields where HTML produces "" but Zod expects undefined | `normalizeFormValues` | — |
+| You need direct schema-to-fields conversion in runtime contexts | `walkSchema` | — |
+| You're building a custom codegen pipeline on top of FormField[] | `walkSchema` | — |
+| You have a deeply-nested FieldConfig mirroring your schema shape | `registerDeep` | — |
+| Recommended for complex schemas with nested objects and arrays | `registerDeep` | — |
+| Merging global field configs from z2f.config.ts into a registry | `registerFlat` | — |
+| Your config uses dot-path notation rather than nested structure | `registerFlat` | — |
 
 **Avoid when:**
-- You only need whole-schema validation — omit the optimization option entirely
-- Runtime-only usage where you pass config inline to walkSchema
-- Using TypeScript with defineConfig() — type errors catch most issues at dev time
-- CLI codegen mode — generated components handle normalization internally
-- Your form library already normalizes (but calling it anyway is safe — it's idempotent)
-- You just want generated components — use the CLI instead
-- Your schema is not z.object() at the root level
-- For simple flat configs — registerFlat() is simpler and more direct
-- Don't use if your config comes from dot-path format (CLI global fields)
-- Your config is already nested mirroring schema shape — use registerDeep() instead
-- API surface: 42 functions, 26 types, 4 constants
+
+| Don't Use | When | Use Instead |
+|-----------|------|-------------|
+| `createOptimizers` | You only need whole-schema validation | omit the optimization option entirely |
+| `defineConfig` | Runtime-only usage where you pass config inline to walkSchema | — |
+| `validateConfig` | Using TypeScript with defineConfig() | type errors catch most issues at dev time |
+| `normalizeFormValues` | CLI codegen mode | generated components handle normalization internally |
+| `normalizeFormValues` | Your form library already normalizes (but calling it anyway is safe | it's idempotent) |
+| `walkSchema` | You just want generated components | use the CLI instead |
+| `walkSchema` | Your schema is not z.object() at the root level | — |
+| `registerDeep` | For simple flat configs | registerFlat() is simpler and more direct |
+| `registerDeep` | Don't use if your config comes from dot-path format (CLI global fields) | — |
+| `registerFlat` | Your config is already nested mirroring schema shape | use registerDeep() instead |
+- API surface: 49 functions, 20 types, 4 constants
 
 ## Pitfalls
 
@@ -58,50 +81,33 @@ Schema-Driven Form Generation for Zod v4 - walks Zod internal type tree using pr
 
 ## Configuration
 
-### WalkOptions
-
-| Key | Type | Required | Default | Description |
-| --- | --- | --- | --- | --- |
-| `formRegistry` | `ZodFormRegistry` | no | — | Custom form registry for metadata annotations |
-| `processors` | `Record<string, FormProcessor<$ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>>>` | no | — | Custom processors to add or override built-in ones |
-| `maxDepth` | `number` | no | — | Maximum recursion depth for lazy/recursive schemas (default: 5) |
-| `optimization` | `{ level: 1 | 2 | 3; optimizers?: Record<string, FormOptimizer[]> }` | no | — | Validation optimization settings.
-
-This is the walker's API surface — callers (useZodForm, CLI codegen) pass
-the optimization config here. The CLI reads `config.defaults.optimization`
-and forwards it; useZodForm accepts it via its own options. Both converge
-here as the single source of truth for the walker. |
+8 configuration interfaces — see references/config.md for details.
 
 ## Quick Reference
 
-**Optimization:** `createOptimizers`
-**schema-lite:** `createSchemaLiteCollector`
-**Configuration:** `defineConfig`, `validateConfig`, `ComponentsConfig`, `ZodFormsConfig`
-**config:** `resolveFieldConfig`, `normalizeConfig`, `ComponentOverride`, `ComponentPreset`, `TypedFieldConfig`, `ZodTypeConfig`, `ConfigDefaults`, `OptimizationConfig`, `StripIndexSignature`, `SHADCN_OVERRIDES`, `DEFAULT_OVERRIDES`
-**utils:** `inferLabel`, `joinPath`, `createBaseField`, `getEmptyDefault`, `normalizeFieldKey`, `collectFieldSections`
-**Normalization:** `normalizeFormValues`
-**Schema Walking:** `walkSchema`
-**registry:** `createProcessors`, `builtinProcessors`
-**Registration:** `registerDeep`, `registerFlat`
-**array:** `processArray`, `processTuple`
-**boolean:** `processBoolean`
-**collections:** `processMap`, `processSet`
-**cross-ref:** `processCrossRef`
-**date:** `processDate`
-**enum:** `processEnum`, `processLiteral`
-**fallback:** `processFallback`
-**file:** `processFile`
-**number:** `processNumber`
-**object:** `processObject`, `processIntersection`
-**record:** `processRecord`
-**string:** `processString`, `processTemplateLiteral`
-**union:** `processUnion`, `processDiscriminatedUnion`
-**wrappers:** `processDefault`, `processLazy`, `processNullable`, `processOptional`, `processPipe`, `processReadonly`
-**Types:** `FormField`, `FormProcessor`, `FormMeta`, `FieldConfig`
-**types:** `FormFieldOption`, `FormFieldConstraints`, `FormProcessorContext`, `FieldExpression`, `ProcessParams`, `ZodFormRegistry`, `NativeRules`, `ValidationStrategy`, `FormOptimizer`, `FormOptimizerContext`, `WalkResult`, `SchemaLiteCollector`, `SchemaLiteInfo`
-`builtinOptimizers`
+**Configuration:** `canonicalizeConfig` (Serialize a CodegenConfig to a canonical string suitable for
+hashing into a cache key), `defineConfig` (Identity helper that returns its argument typed as `ZodFormsConfig`), `validateConfig` (Validates an unknown value as a `ZodFormsConfig` at runtime), `resolveFieldConfig` (Merge global field config with per-schema field config overrides), `normalizeConfig` (Normalize a validated config by migrating deprecated top-level fields to their canonical locations), `ComponentPreset` (Preset name for built-in component library mappings), `ConfigDefaults` (Default generation settings applied to all schemas unless overridden per-schema)
+**Optimization:** `createOptimizers` (Create an optimizer registry by merging custom optimizers with builtins), `createSchemaLiteCollector` (Create a new SchemaLiteCollector instance), `FormOptimizer` (An optimizer function that mutates a `FormField` after the processor has run), `FormOptimizerContext` (Context shared across all optimizers during a `walkSchema` run), `SchemaLiteCollector` (Mutable accumulator that builds a lite Zod schema for submit-time validation), `builtinOptimizers` (The default optimizer registry — L1 (decompose) + L2 (native rules) chains merged per type)
+**utils:** `inferLabel` (Convert a camelCase or snake_case key to a human-readable Title Case label)
+**Utils:** `joinPath` (Join a parent path and a child key with a dot separator), `createBaseField` (Create a base FormField with sensible defaults), `getEmptyDefault` (Returns a type-safe empty default value for a FormField based on its zodType
+and structure), `normalizeFieldKey` (Normalise a concrete field key to the bracket notation used in config), `collectFieldSections` (Collect section groupings from fields and a config override lookup)
+**Normalization:** `normalizeFormValues` (Normalize raw HTML form values for Zod parsing)
+**Schema Walking:** `walkSchema` (Walk a Zod schema and produce a FormField[] tree), `WalkResult` (The result returned by `walkSchema()` when an optimization level is specified)
+**Registry:** `createProcessors` (Create a custom processor registry by merging with built-in processors), `builtinProcessors` (The default processor registry — maps every Zod v4 `def)
+**Registration:** `registerDeep` (Register a schema and all its nested fields in a registry using a
+path-structured FieldConfig tree), `registerFlat` (Register flat dot-path field configs against a schema's registry)
+**Processors:** `processArray` (Process `z), `processTuple` (Process `z), `processBoolean` (Process `z), `processMap` (Process `z), `processSet` (Process `z), `processCrossRef` (Process a cross-reference field — a schema annotated in the form registry with `refType`), `processDate` (Process `z), `processEnum` (Process `z), `processLiteral` (Process `z), `processFallback` (Fallback processor for Zod types without a dedicated handler), `processFile` (Process `z), `processNumber` (Process `z), `processObject` (Process `z), `processIntersection` (Process `z), `processRecord` (Process `z), `processString` (Process `z), `processTemplateLiteral` (Process `z), `processUnion` (Process `z), `processDiscriminatedUnion` (Process `z), `processDefault` (Process `z), `processLazy` (Process `z), `processNullable` (Process `z), `processOptional` (Process `z), `processPipe` (Process `z), `processReadonly` (Process `z)
+**Loader:** `loadSchema` (Load a single named Zod schema export from a TypeScript or JavaScript
+file), `loadSchemaModule` (Load a schema file and return the entire module namespace, leaving the
+choice of which export to use to the caller), `resolveSchemaExportNames` (Return the sorted list of named Zod schema exports in a schema file), `loadConfig` (Load and validate a component config file (`z2f), `resolveDefaultConfigPath` (Walk the standard config-file naming candidates in `cwd` and return the
+first that exists), `loadDefaultConfig` (Load and validate the default config file from `cwd` by auto-discovering
+standard naming candidates (`z2f)
+**Types:** `FormField` (Intermediate representation of a single form field produced by `walkSchema`), `FormFieldOption` (An individual option in a Select, RadioGroup, or similar enum-driven component), `FormFieldConstraints` (Structural constraints extracted from Zod's `_zod), `FormProcessor` (A processor function that mutates a `FormField` in-place based on the Zod schema it handles), `FormProcessorContext` (Runtime context passed to every processor during a walkSchema traversal), `FormMeta` (Per-schema annotation stored in a `z), `ProcessParams` (Optional parameters passed to each processor alongside the schema, context, and field), `NativeRules` (Native HTML and RHF validation rules extracted from Zod constraints), `ValidationStrategy` (Specifies how a field's validation is handled at submit and change time)
+**types:** `FieldExpression` (Known RHF field expression strings that can be used as values in `props`), `ZodFormRegistry` (Zod v4 registry parameterized with FormMeta)
+**config:** `ComponentOverride` (Per-component metadata override), `StripIndexSignature` (Strips index signatures from a type, keeping only explicitly declared keys), `SHADCN_OVERRIDES` (shadcn preset — Radix-based components need controlled mo...), `DEFAULT_OVERRIDES` (Default HTML preset — no controlled components by default)
+**optimizers:** `SchemaLiteInfo` (Metadata for codegen to reconstruct the lite schema in a...)
 
 ## Links
 
 - [Repository](https://github.com/pradeepmouli/zod-to-form)
-- Author: Pradeep Mouli <noreply@anthropic.com>
+- Author: Pradeep Mouli <pmouli@mac.com> (https://github.com/pradeepmouli)

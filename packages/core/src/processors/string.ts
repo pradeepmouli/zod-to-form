@@ -15,6 +15,23 @@ const FORMAT_TO_INPUT_TYPE: Record<string, string> = {
 /** Formats that should render as DatePicker instead of a plain Input */
 const DATE_PICKER_FORMATS = new Set(['date', 'time', 'datetime']);
 
+/**
+ * Process `z.string()` — renders as an `Input` (or `DatePicker` for date/time formats).
+ * Extracts format, minLength, maxLength, and pattern constraints from the constraint bag.
+ * Converts regex patterns to input masks via `regexToMask` when possible.
+ *
+ * @param schema - The `$ZodString` schema to process.
+ * @param ctx - The walker context providing the form registry for component overrides.
+ * @param field - The base FormField to mutate in-place.
+ * @param _params - Unused; included for processor signature conformance.
+ *
+ * @remarks
+ * Format-to-input-type mapping: `email` → `type="email"`, `url` → `type="url"`,
+ * `date`/`time`/`datetime` → `DatePicker` component. Other formats fall through to `type="text"`.
+ * Pattern is extracted from `bag.patterns` (a `Set<RegExp>`); only the first pattern is used.
+ *
+ * @category Processors
+ */
 export function processString(
   schema: $ZodString,
   ctx: FormProcessorContext,
@@ -71,6 +88,17 @@ export function processString(
   }
 }
 
+/**
+ * Process `z.templateLiteral()` — renders as a plain text `Input`.
+ * Template literals have a fixed structure; no constraints are extracted.
+ *
+ * @param schema - The `$ZodTemplateLiteral` schema to process.
+ * @param _ctx - The walker context (unused for template literal processing).
+ * @param field - The base FormField to mutate in-place.
+ * @param _params - Unused; included for processor signature conformance.
+ *
+ * @category Processors
+ */
 export function processTemplateLiteral(
   schema: $ZodTemplateLiteral,
   _ctx: FormProcessorContext,

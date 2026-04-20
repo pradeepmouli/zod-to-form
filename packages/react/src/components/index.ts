@@ -29,6 +29,17 @@ function FieldMessage(props: HTMLAttributes<HTMLParagraphElement>) {
 /** Internal wrapper component names — not user-configurable */
 const WRAPPER_NAMES = new Set(['Field', 'FieldLabel', 'FieldDescription', 'FieldMessage']);
 
+/**
+ * The default HTML-based component map used by `<ZodForm>` and `<FieldRenderer>`.
+ * Maps component names (e.g. `'Input'`, `'Select'`, `'Checkbox'`) to their React implementations.
+ * Pass a subset of this map as `components` to override individual components at the form level.
+ *
+ * @useWhen
+ * - You want to swap a single component while keeping the rest of the defaults
+ * - You are building a custom form renderer that extends the default set
+ *
+ * @category Components
+ */
 export const defaultComponentMap = {
   Input,
   Textarea,

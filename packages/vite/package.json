@@ -13,10 +13,14 @@
     "vite",
     "vite-plugin",
     "zod",
+    "zod-v4",
     "codegen",
     "forms",
     "form-generation",
-    "typescript"
+    "schema-driven",
+    "react-hook-form",
+    "build-plugin",
+    "jsx-transform"
   ],
   "type": "module",
   "exports": {

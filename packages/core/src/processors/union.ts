@@ -31,6 +31,22 @@ function isAllLiterals(options: ZodType[]): boolean {
   });
 }
 
+/**
+ * Process `z.union()` — renders as a `Select` when all options are literals,
+ * or delegates to `processDiscriminatedUnion` when a discriminator property is detected.
+ * Falls back to a plain `Input` for mixed unions.
+ *
+ * @param schema - The `$ZodUnion` schema to process.
+ * @param ctx - The walker context (used by discriminated union delegation).
+ * @param field - The base FormField to mutate in-place.
+ * @param params - Parent path metadata for discriminated union child keys.
+ *
+ * @remarks
+ * Discriminated unions have `def.type === "union"` in Zod v4 — they are detected
+ * by the presence of a `discriminator` property in the def. This processor handles both.
+ *
+ * @category Processors
+ */
 export function processUnion(
   schema: $ZodUnion,
   ctx: FormProcessorContext,
@@ -65,6 +81,23 @@ export function processUnion(
   field.component = 'Input';
 }
 
+/**
+ * Process `z.discriminatedUnion()` — renders as a `Select` for the discriminator field,
+ * with variant child fields stored in `field.props._variants` for runtime conditional rendering.
+ * The runtime `DiscriminatedUnionBlock` and codegen both read `_discriminator` and `_variants`.
+ *
+ * @param schema - The `$ZodDiscriminatedUnion` schema to process.
+ * @param ctx - The walker context providing child processing for variant shape entries.
+ * @param field - The base FormField to mutate in-place.
+ * @param params - Parent path metadata for constructing variant child field keys.
+ *
+ * @remarks
+ * The discriminator select options are derived from the literal values in each variant's
+ * discriminator field. Variant child fields (excluding the discriminator key) are pre-processed
+ * and stored keyed by their discriminator value string.
+ *
+ * @category Processors
+ */
 export function processDiscriminatedUnion(
   schema: $ZodDiscriminatedUnion,
   ctx: FormProcessorContext,

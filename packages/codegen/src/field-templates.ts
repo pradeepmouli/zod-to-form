@@ -103,6 +103,22 @@ export const PRESET_TEMPLATE_IMPORTS: Record<string, string[]> = {
   html: []
 };
 
+/**
+ * Return the source code for the preset's `FieldTemplate` React component.
+ * Used by the CLI `generate` and `init` commands to emit a standalone `FieldTemplate.tsx`
+ * alongside generated forms.
+ *
+ * @param preset - The preset name: `'shadcn'` for Radix/shadcn-ui, `'html'` for plain HTML.
+ * @returns The complete `FieldTemplate.tsx` source string for the chosen preset.
+ *
+ * @example
+ * ```ts
+ * const source = getFieldTemplateSource('shadcn');
+ * await fs.writeFile('src/components/FieldTemplate.tsx', source);
+ * ```
+ *
+ * @category Templates
+ */
 export function getFieldTemplateSource(preset: 'shadcn' | 'html'): string {
   return preset === 'shadcn' ? SHADCN_FIELD_TEMPLATE : HTML_FIELD_TEMPLATE;
 }

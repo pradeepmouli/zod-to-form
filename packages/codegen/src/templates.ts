@@ -69,6 +69,34 @@ function normalizeFormValues(value: unknown): unknown {
   return value;
 }`;
 
+/**
+ * Generate the import block for a form component file.
+ * Emits react-hook-form, zodResolver, zod, and component import lines
+ * based on the generation options. Also inlines the `StripIndexSignature` utility type
+ * and the `normalizeFormValues` helper for html-preset forms.
+ *
+ * @param schemaImportPath - Module specifier for the schema file (e.g. `'./schema'`).
+ * @param exportName - The named schema export to import (e.g. `'UserSchema'`).
+ * @param hasArrays - Whether to include `useFieldArray` in the RHF import.
+ * @param mode - Form submission mode: `'submit'` (default) or `'auto-save'`.
+ * @param componentImportLine - Optional custom import line for the component module.
+ * @param options - Additional flags: `hasControlled`, `formProvider`, `preset`.
+ * @param optimized - Whether to conditionally include `zodResolver` and `zod` imports.
+ * @returns The complete import block as a multi-line string.
+ *
+ * @remarks
+ * The `optimized` parameter controls whether the zodResolver and zod imports are included.
+ * When optimization eliminates the need for zodResolver (all fields use native or per-field validation),
+ * both can be omitted to reduce bundle size. The `hasControlled` flag adds `Controller` to RHF imports.
+ *
+ * @example
+ * ```ts
+ * const header = getFileHeader('./schema', 'UserSchema', false, 'submit', undefined, { preset: 'shadcn' });
+ * // → "import { useForm } from 'react-hook-form';\nimport { zodResolver } ..."
+ * ```
+ *
+ * @category Templates
+ */
 export function getFileHeader(
   schemaImportPath: string,
   exportName: string,
@@ -118,6 +146,19 @@ export function getFileHeader(
   ].join('\n');
 }
 
+/**
+ * Produce the correct `register(...)` call expression for a field path.
+ * Uses template-literal syntax when the path contains `${` (e.g. array item paths),
+ * and single-quoted string syntax otherwise.
+ *
+ * @param path - The field path string (e.g. `"name"`, `"items.${index}.value"`).
+ * @returns A `register('...')` or `register(\`...\`)` expression string for inclusion in JSX.
+ *
+ * @example registerPathExpr('name') → "register('name')"
+ * @example registerPathExpr('items.${index}.name') → "register(`items.${index}.name`)"
+ *
+ * @category Templates
+ */
 export function registerPathExpr(path: string): string {
   return path.includes('${') ? `register(\`${path}\`)` : `register('${path}')`;
 }
@@ -222,6 +263,19 @@ export function renderOptimizedRegister(field: FormField, fieldKey: string): str
   return registerPathExpr(fieldKey);
 }
 
+/**
+ * Render a single `FormField` to its plain-HTML JSX string.
+ * Dispatches on `field.component` to produce the correct input element.
+ * Used by the html-preset code generator for uncontrolled forms.
+ *
+ * @param field - The FormField to render.
+ * @param regExpr - Optional pre-built `register(...)` expression string. If omitted, generated from `field.key`.
+ * @returns A JSX string for the field's input element (e.g. `<input type="text" {...register('name')} />`).
+ *
+ * @example renderField({ component: 'Input', key: 'name', props: { type: 'text' }, ... }) → "<input ... />"
+ *
+ * @category Templates
+ */
 export function renderField(field: FormField, regExpr?: string): string {
   switch (field.component) {
     case 'Checkbox':

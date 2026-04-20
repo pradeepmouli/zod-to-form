@@ -1,6 +1,18 @@
 import type { $ZodNumber, $ZodBigInt } from 'zod/v4/core';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
 
+/**
+ * Process `z.number()` / `z.bigint()` — renders as a numeric `Input` with `type="number"`.
+ * Extracts `min`/`max` from the constraint bag and detects integer constraints from `def.checks`.
+ * Sets `step=1` when an integer constraint is detected.
+ *
+ * @param schema - The `$ZodNumber` or `$ZodBigInt` schema to process.
+ * @param _ctx - The walker context (unused for number processing).
+ * @param field - The base FormField to mutate in-place.
+ * @param _params - Unused; included for processor signature conformance.
+ *
+ * @category Processors
+ */
 export function processNumber(
   schema: $ZodNumber | $ZodBigInt,
   _ctx: FormProcessorContext,

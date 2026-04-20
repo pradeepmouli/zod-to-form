@@ -70,6 +70,17 @@ function canonicalize(value: unknown): unknown {
 /**
  * Serialize a {@link CodegenConfig} to a canonical string suitable for
  * hashing into a cache key.
+ *
+ * @param config - The codegen configuration to serialize.
+ * @returns A deterministic JSON string representation of the config with keys sorted lexicographically.
+ *
+ * @example
+ * ```ts
+ * const key = canonicalizeConfig({ schemaImportPath: './schema', exportName: 'UserSchema' });
+ * const hash = crypto.createHash('sha256').update(key).digest('hex');
+ * ```
+ *
+ * @category Configuration
  */
 export function canonicalizeConfig(config: CodegenConfig): string {
   return JSON.stringify(canonicalize(config));

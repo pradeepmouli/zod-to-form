@@ -3,17 +3,43 @@ import type { FormOptimizer } from './optimizers/types.js';
 
 // ─── Validation Strategy (used by FormField and optimizers) ──────────
 
+/**
+ * Native HTML and RHF validation rules extracted from Zod constraints.
+ * Used by L2 optimizers to produce per-field validation rules that map directly
+ * to react-hook-form's `register()` options, bypassing the zodResolver overhead.
+ *
+ * @category Types
+ */
 export interface NativeRules {
+  /** Required validation message shown when field is empty. */
   required?: string;
+  /** Minimum numeric value constraint with violation message. */
   min?: { value: number; message: string };
+  /** Maximum numeric value constraint with violation message. */
   max?: { value: number; message: string };
+  /** Minimum string length constraint with violation message. */
   minLength?: { value: number; message: string };
+  /** Maximum string length constraint with violation message. */
   maxLength?: { value: number; message: string };
+  /** Regex pattern constraint with violation message. */
   pattern?: { value: RegExp; message: string };
 }
 
+/**
+ * Specifies how a field's validation is handled at submit and change time.
+ * Set by the L1/L2 optimizers; undefined means use the whole-schema zodResolver.
+ *
+ * @category Types
+ */
 export interface ValidationStrategy {
+  /**
+   * How validation is performed for this field:
+   * - `'zodSchema'` — per-field Zod schema via `register({ validate })` (L1)
+   * - `'native'` — HTML/RHF native rules from the constraint bag (L2)
+   * - `'component-enforced'` — the component handles validation itself (no RHF rules emitted)
+   */
   mode: 'zodSchema' | 'native' | 'component-enforced';
+  /** Native RHF validation rules, populated by the L2 optimizer when `mode === 'native'`. */
   rules?: NativeRules;
   // TODO(L3): Add watch mode when cross-field optimization is implemented
   // mode: 'zodSchema' | 'native' | 'component-enforced' | 'watch';
@@ -23,23 +49,53 @@ export interface ValidationStrategy {
 
 // ─── FormField: Intermediate Representation ───────────────────────────
 
+/**
+ * An individual option in a Select, RadioGroup, or similar enum-driven component.
+ * Generated from z.enum(), z.literal(), and z.union() of literals by their processors.
+ *
+ * @category Types
+ */
 export interface FormFieldOption {
+  /** The option value submitted with the form (must be string or number for HTML compatibility). */
   value: string | number;
+  /** Human-readable label displayed in the Select, RadioGroup, or Combobox. */
   label: string;
+  /** When true, the option is shown but cannot be selected. */
   disabled?: boolean;
 }
 
+/**
+ * Structural constraints extracted from Zod's `_zod.bag` for a field.
+ * Used to populate HTML validation attributes (min, max, minLength, pattern, etc.)
+ * and to drive the L2 native-rules optimizer output.
+ *
+ * @category Types
+ */
 export interface FormFieldConstraints {
+  /** Minimum numeric value (from `z.number().min()`). */
   min?: number;
+  /** Maximum numeric value (from `z.number().max()`). */
   max?: number;
+  /** Minimum string length (from `z.string().min()`). */
   minLength?: number;
+  /** Maximum string length (from `z.string().max()`). */
   maxLength?: number;
+  /** Regex pattern as a string (from `z.string().regex()`). */
   pattern?: string;
+  /** String format name (from `z.string().email()` → `'email'`, etc.). */
   format?: string;
+  /** Step constraint for numeric inputs (1 for integer-constrained fields). */
   step?: number;
 }
 
-/** @category Types */
+/**
+ * Intermediate representation of a single form field produced by `walkSchema`.
+ * Each processor fills in component, props, constraints, and optional children.
+ * This structure is consumed by codegen (static TSX generation) and by the
+ * runtime `FieldRenderer` to produce a live React component tree.
+ *
+ * @category Types
+ */
 export interface FormField {
   /** Field path, e.g. "name", "address.street", "items.0.name" */
   key: string;
@@ -160,7 +216,14 @@ export type FieldConfig<T extends $ZodType = $ZodType> = FieldConfigBase & Field
 
 // ─── FormMeta: Registry Annotation ────────────────────────────────────
 
-/** @category Types */
+/**
+ * Per-schema annotation stored in a `z.registry<FormMeta>()`.
+ * Extends `FieldConfig` with a runtime-only `render` function for custom field rendering.
+ * Used with `registerDeep()` / `registerFlat()` to attach form metadata to Zod schemas.
+ *
+ * @typeParam T - The Zod schema type this meta is attached to.
+ * @category Types
+ */
 export type FormMeta<T extends $ZodType = $ZodType> = FieldConfig<T> & {
   /** Custom render function (runtime only, ignored in codegen) */
   render?: (field: FormField, props: unknown) => unknown;
@@ -168,6 +231,12 @@ export type FormMeta<T extends $ZodType = $ZodType> = FieldConfig<T> & {
 
 // ─── Processor Types ──────────────────────────────────────────────────
 
+/**
+ * Optional parameters passed to each processor alongside the schema, context, and field.
+ * Provides parent key and array-item metadata needed for path construction.
+ *
+ * @category Types
+ */
 export interface ProcessParams {
   /** Parent field path for nested fields */
   parentKey?: string;
@@ -177,6 +246,13 @@ export interface ProcessParams {
   index?: number;
 }
 
+/**
+ * Runtime context passed to every processor during a walkSchema traversal.
+ * Provides the processor registry, form registry, path tracking, cycle detection,
+ * and a child-processing callback for recursive types (object, array, union).
+ *
+ * @category Types
+ */
 export interface FormProcessorContext {
   /** Registry mapping def.type → processor function */
   processors: Record<string, FormProcessor>;
@@ -198,7 +274,13 @@ export interface FormProcessorContext {
   processChild?: (schema: $ZodType, key: string) => FormField;
 }
 
-/** @category Types */
+/**
+ * A processor function that mutates a `FormField` in-place based on the Zod schema it handles.
+ * Dispatched by the walker based on `schema._zod.def.type`. Register custom processors
+ * via `walkSchema(schema, { processors: { myType: myProcessor } })`.
+ *
+ * @category Types
+ */
 export type FormProcessor<T extends $ZodType = $ZodType> = (
   schema: T,
   ctx: FormProcessorContext,

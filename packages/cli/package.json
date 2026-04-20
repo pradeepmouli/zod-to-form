@@ -11,11 +11,16 @@
   },
   "keywords": [
     "zod",
+    "zod-v4",
     "codegen",
     "forms",
     "form-generation",
+    "react-hook-form",
+    "schema-driven",
     "cli",
-    "typescript"
+    "generator",
+    "component-codegen",
+    "schema-to-tsx"
   ],
   "type": "module",
   "bin": {

@@ -35,6 +35,27 @@ const PRESET_IMPORT_NAME: Record<string, string> = {
   html: 'DEFAULT_OVERRIDES'
 };
 
+/**
+ * Generate a `z2f.config.ts` starter file as a source string.
+ * Produces a `defineConfig(...)` call with components, defaults, include/exclude,
+ * optional fields, and schemas blocks based on the provided options.
+ *
+ * @param opts - Template options controlling the generated config structure.
+ * @returns The complete config file source as a string, ready to write to disk.
+ *
+ * @example
+ * ```ts
+ * const source = buildConfigSource({ componentSource: './components/ui', preset: 'shadcn' });
+ * await fs.writeFile('z2f.config.ts', source);
+ * ```
+ *
+ * @remarks
+ * The generated file uses TypeScript generics for full type inference:
+ * `defineConfig<typeof Components, typeof ZodSchemas>(...)`.
+ * Preset-specific overrides (e.g. `SHADCN_OVERRIDES`) are spread into the overrides block.
+ *
+ * @category Config Templates
+ */
 export function buildConfigSource(opts: ConfigTemplateOptions): string {
   const preset = opts.preset;
   const presetImportName = preset ? PRESET_IMPORT_NAME[preset] : undefined;

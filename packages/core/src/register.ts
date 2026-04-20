@@ -221,6 +221,10 @@ function resolveSchemaPath(schema: $ZodType, path: string): $ZodType | undefined
  * - NEVER mix with registerDeep() on the same schema — registry entries conflict silently
  * - NEVER assume numeric path segments matter — "items.0.name" and "items.2.name" resolve to the same target
  *
+ * @param registry - The Zod registry to register field metadata into.
+ * @param schema - The root Zod schema whose nested nodes are resolved by dot-path.
+ * @param fields - Flat `Record<string, FieldConfig>` keyed by dot-path (e.g. `"address.street"`, `"tags[]"`).
+ *
  * @category Registration
  */
 export function registerFlat<Meta extends object>(

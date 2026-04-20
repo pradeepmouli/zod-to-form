@@ -3,8 +3,15 @@ import { createBaseField } from '../utils.js';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
 
 /**
- * Process z.set() — renders as an array-like repeater of unique items.
- * The value type determines the item template.
+ * Process `z.set()` — renders as an array-like repeater of unique items.
+ * The value type determines the item template stored in `field.arrayItem`.
+ *
+ * @param schema - The `$ZodSet` schema whose `valueType` drives the item template.
+ * @param ctx - The walker context providing child processing.
+ * @param field - The base FormField to mutate in-place.
+ * @param params - Parent path metadata for constructing the item template key.
+ *
+ * @category Processors
  */
 export function processSet(
   schema: $ZodSet,
@@ -23,8 +30,15 @@ export function processSet(
 }
 
 /**
- * Process z.map() — renders as an array-like repeater of key-value pair fieldsets.
+ * Process `z.map()` — renders as an array-like repeater of key-value pair fieldsets.
  * Each entry has a `key` field and a `value` field derived from the Map's type params.
+ *
+ * @param schema - The `$ZodMap` schema whose `keyType` and `valueType` drive the entry fieldset.
+ * @param ctx - The walker context providing child processing for key and value fields.
+ * @param field - The base FormField to mutate in-place.
+ * @param params - Parent path metadata for constructing the entry fieldset key.
+ *
+ * @category Processors
  */
 export function processMap(
   schema: $ZodMap,

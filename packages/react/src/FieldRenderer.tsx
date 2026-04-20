@@ -235,15 +235,31 @@ function getRegisterOptions(field: FormField): Record<string, unknown> {
 //   return (value: unknown) => watchValidate(value, watchedMap);
 // }
 
+/**
+ * Props passed to the field template component that wraps each rendered form field.
+ * The template controls layout: label position, description placement, error display, etc.
+ * Override the default template by providing a `FieldTemplate` export in `componentModule`.
+ *
+ * @category Types
+ */
 export interface FieldTemplateProps {
+  /** The rendered field input (passed as `children`). */
   children: ReactNode;
+  /** Human-readable field label derived from the schema key or `title` metadata. */
   label: string;
+  /** Optional description text from `.describe()` or `.meta({ description })`. */
   description?: string;
+  /** Optional help text from `FormMeta.helpText`, displayed below the input. */
   helpText?: string;
+  /** Validation error message from RHF `formState.errors`, if present. */
   error?: string;
+  /** Field path used as the `htmlFor` target on the label. */
   name: string;
+  /** Whether the field is required (drives asterisk or `aria-required`). */
   required?: boolean;
+  /** Whether the field is disabled (drives `disabled` on the wrapper). */
   disabled?: boolean;
+  /** Whether the field is deprecated (drives strikethrough on the label). */
   deprecated?: boolean;
 }
 

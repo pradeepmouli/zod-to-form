@@ -146,6 +146,21 @@ function ShadcnFieldMessage(props: HTMLAttributes<HTMLParagraphElement>) {
 // defaultComponentMap; overrides Input, Textarea, Select and all Field wrapper
 // components with shadcn/ui-styled stubs.
 
+/**
+ * Component map pre-wired with shadcn/ui-styled implementations.
+ * Extends `defaultComponentMap` by overriding Input, Textarea, Select, and all
+ * Field wrapper components with shadcn/ui Tailwind CSS stubs.
+ *
+ * These stubs work without installing shadcn/ui — they apply the shadcn class names
+ * to plain HTML elements. Replace individual entries with real shadcn components
+ * for production use (see module JSDoc above for import instructions).
+ *
+ * @useWhen
+ * - Your project uses shadcn/ui and you want styled form components out of the box
+ * - You are prototyping with the shadcn preset before wiring up real shadcn components
+ *
+ * @category Components
+ */
 export const shadcnComponentMap = {
   ...defaultComponentMap,
   Input: ShadcnInput,

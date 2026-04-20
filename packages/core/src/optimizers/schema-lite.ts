@@ -184,6 +184,11 @@ function materializeFieldMap(fieldMap: ReadonlyMap<string, $ZodType>): Record<st
  * - Checks (superRefine/refine): z.object({}).loose().check(c1).check(c2)
  * - Transforms: z.object({}).loose().check(...).transform(fn)
  * - Non-decomposable pipes: original schema as-is
+ *
+ * @param options - Optional configuration for the collector base type.
+ * @returns A fresh `SchemaLiteCollector` ready to accumulate checks, transforms, and fallthrough fields.
+ *
+ * @category Optimization
  */
 export function createSchemaLiteCollector(options?: {
   /** Use z.any() instead of z.object({}).loose() when no fields are present.

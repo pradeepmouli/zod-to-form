@@ -11,10 +11,16 @@
   },
   "keywords": [
     "zod",
+    "zod-v4",
     "forms",
     "form-generation",
     "schema",
-    "typescript"
+    "schema-walker",
+    "processor-registry",
+    "react-hook-form",
+    "schema-driven",
+    "form-schema",
+    "zod-registry"
   ],
   "type": "module",
   "exports": {

@@ -21,6 +21,17 @@ function normalizeOptions(values: unknown[]): FormFieldOption[] {
   return options;
 }
 
+/**
+ * Process `z.enum()` — renders as a `Select` component with options derived from enum entries.
+ * Duplicate values are deduplicated, and labels are generated via `inferLabel`.
+ *
+ * @param schema - The `$ZodEnum` schema whose entries define the select options.
+ * @param _ctx - The walker context (unused for enum processing).
+ * @param field - The base FormField to mutate in-place.
+ * @param _params - Unused; included for processor signature conformance.
+ *
+ * @category Processors
+ */
 export function processEnum(
   schema: $ZodEnum,
   _ctx: FormProcessorContext,
@@ -36,6 +47,17 @@ export function processEnum(
   field.options = normalizeOptions(enumValues);
 }
 
+/**
+ * Process `z.literal()` — renders as a read-only `Select` with a single fixed option.
+ * The field is marked `readOnly` because literal fields have exactly one valid value.
+ *
+ * @param schema - The `$ZodLiteral` schema whose values define the select options.
+ * @param _ctx - The walker context (unused for literal processing).
+ * @param field - The base FormField to mutate in-place.
+ * @param _params - Unused; included for processor signature conformance.
+ *
+ * @category Processors
+ */
 export function processLiteral(
   schema: $ZodLiteral,
   _ctx: FormProcessorContext,

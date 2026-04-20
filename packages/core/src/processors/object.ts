@@ -17,6 +17,21 @@ function processShapeEntries(
   });
 }
 
+/**
+ * Process `z.object()` — renders as a `Fieldset` with each shape key as a child field.
+ * Recursively processes all shape entries via `ctx.processChild`.
+ *
+ * @param schema - The `$ZodObject` schema whose shape defines the child fields.
+ * @param ctx - The walker context providing child processing.
+ * @param field - The base FormField to mutate in-place.
+ * @param params - Parent path metadata for constructing nested field keys.
+ *
+ * @remarks
+ * The fieldset label is inferred from `params.parentKey` or `field.key` via `inferLabel`.
+ * Schema-level metadata (title, description) can override the inferred label via `resolveMetadata`.
+ *
+ * @category Processors
+ */
 export function processObject(
   schema: $ZodObject,
   ctx: FormProcessorContext,
@@ -30,6 +45,18 @@ export function processObject(
   field.children = processShapeEntries(shape, params.parentKey, ctx);
 }
 
+/**
+ * Process `z.intersection()` — renders as a `Fieldset` that merges the left and right shape entries.
+ * Both the left and right schemas must be `z.object()` types for their shapes to be merged.
+ * Non-object intersection members are silently skipped.
+ *
+ * @param schema - The `$ZodIntersection` schema whose left/right shapes are merged.
+ * @param ctx - The walker context providing child processing.
+ * @param field - The base FormField to mutate in-place.
+ * @param params - Parent path metadata for constructing nested field keys.
+ *
+ * @category Processors
+ */
 export function processIntersection(
   schema: $ZodIntersection,
   ctx: FormProcessorContext,

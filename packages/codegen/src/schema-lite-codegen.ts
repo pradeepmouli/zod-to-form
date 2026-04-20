@@ -74,10 +74,31 @@ function emitLiteBase(exportName: string, fallthroughFields: string[]): string {
 }
 
 /**
- * Generate the content of a .lite.ts file that constructs a lite schema
+ * Generate the content of a `.lite.ts` file that reconstructs a lite Zod schema
  * from the imported schema's check objects at runtime.
+ * Returns `null` when no schemaLite is needed (no top-level effects were detected).
  *
- * Returns null if no schemaLite is needed (no top-level effects).
+ * @param schemaImportPath - Module specifier for the original schema file (e.g. `'./schema'`).
+ * @param exportName - The named schema export (e.g. `'UserSchema'`).
+ * @param info - Metadata from `WalkResult.schemaLiteInfo` describing what to reconstruct.
+ * @returns The complete `.lite.ts` file source, or `null` if no lite schema is needed.
+ *
+ * @remarks
+ * Three reconstruction strategies based on `info.type`:
+ * - `'original'` — re-exports the original schema unchanged (non-decomposable pipes)
+ * - `'checks'` — slices `_zod.def.checks` at runtime to extract superRefine/refine checks
+ * - `'transform'` — extracts both inner checks and the transform function from a pipe wrapper
+ * Fallthrough fields are included in the base object via shape references into the original schema.
+ *
+ * @example
+ * ```ts
+ * const liteSource = generateSchemaLiteFile('./schema', 'UserSchema', schemaLiteInfo);
+ * if (liteSource) {
+ *   await writeFile('./UserForm.lite.ts', liteSource, 'utf8');
+ * }
+ * ```
+ *
+ * @category Templates
  */
 export function generateSchemaLiteFile(
   schemaImportPath: string,

@@ -27,9 +27,19 @@ export type Z2FViteErrorCode =
   | 'Z2F_VITE_NOT_IMPLEMENTED'
   | 'Z2F_VITE_RESOLVER_STRIP_FAILED';
 
+/**
+ * Source location attached to a `Z2FViteError` for IDE navigation and Vite overlay display.
+ * All properties are optional — only `file` is always available; `line`/`column` require
+ * parse-time or AST-level context.
+ *
+ * @category Errors
+ */
 export interface Z2FViteErrorLocation {
+  /** Absolute or project-relative file path where the error originated. */
   file?: string;
+  /** 1-based line number within `file`, when available. */
   line?: number;
+  /** 0-based column offset within the line, when available. */
   column?: number;
 }
 
@@ -69,12 +79,64 @@ export class Z2FViteError extends Error {
       this.location = location;
     }
   }
+
+  /**
+   * Returns `true` when `error` is an instance of `Error`.
+   * Inherited from the built-in `Error` class (ES2025). Documented here so
+   * TypeDoc surfaces the complete API for `Z2FViteError` without consumers
+   * needing to check the global `Error` reference.
+   *
+   * @param error - The value to test.
+   * @returns `true` if `error` is an `Error` instance; `false` otherwise.
+   */
+  static override isError(error: unknown): error is Error {
+    return error instanceof Error;
+  }
+
+  /**
+   * Captures the current V8 call stack and attaches it to `targetObject.stack`.
+   * Inherited from the built-in Node.js `Error` class. Documented here so
+   * TypeDoc surfaces it as part of the `Z2FViteError` API.
+   *
+   * @param targetObject - The object on which the `stack` property is set.
+   * @param constructorOpt - Optional constructor; frames above it are omitted from the trace.
+   */
+  static override captureStackTrace(targetObject: object, constructorOpt?: Function): void {
+    super.captureStackTrace(targetObject, constructorOpt ?? Z2FViteError);
+  }
+
+  /**
+   * Optional hook called by V8 to format the stack trace string.
+   * Inherited from the built-in Node.js `Error` class. When set, it replaces V8's
+   * default stack-trace formatter.
+   *
+   * @param err - The `Error` instance whose stack is being formatted.
+   * @param stackTraces - The structured stack-trace frames provided by V8.
+   * @returns A formatted stack string (or any value; V8 coerces it via `.toString()`).
+   */
+  static override prepareStackTrace(err: Error, stackTraces: NodeJS.CallSite[]): unknown {
+    return super.prepareStackTrace?.(err, stackTraces);
+  }
 }
 
 /**
- * Format an error for inclusion in a Vite error overlay or terminal output.
- * The error's `message` already includes the code prefix; this function
- * appends the location line when available.
+ * Format a `Z2FViteError` for inclusion in a Vite error overlay or terminal output.
+ * The error's `message` already includes the code prefix (`[Z2F_VITE_...]`); this function
+ * appends the source location line when `error.location.file` is set.
+ *
+ * @param error - The `Z2FViteError` to format.
+ * @returns A human-readable error string with optional file:line:column location appended.
+ *
+ * @example
+ * ```ts
+ * try { ... } catch (e) {
+ *   if (e instanceof Z2FViteError) console.error(formatZ2FViteError(e));
+ * }
+ * ```
+ *
+ * @throws Never — this function is purely a formatter.
+ *
+ * @category Errors
  */
 export function formatZ2FViteError(error: Z2FViteError): string {
   const parts: string[] = [error.message];

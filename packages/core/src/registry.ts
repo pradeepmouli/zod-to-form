@@ -71,10 +71,24 @@ const typedProcessors: { [K in $ZodTypes as K['_zod']['def']['type']]: FormProce
 // Runtime registry widens to FormProcessor since walker dispatches by def.type string.
 // Note: discriminated unions have def.type "union" (not "discriminated_union") —
 // processUnion detects the discriminator property and delegates to processDiscriminatedUnion.
+
+/**
+ * The default processor registry — maps every Zod v4 `def.type` string to its processor.
+ * The typed `typedProcessors` constant provides compile-time safety; this export widens
+ * to `Record<string, FormProcessor>` for runtime dispatch.
+ *
+ * @category Registry
+ */
 export const builtinProcessors = typedProcessors as unknown as Record<string, FormProcessor>;
 
 /**
  * Create a custom processor registry by merging with built-in processors.
+ * Custom entries override built-in processors for the same `def.type` key.
+ *
+ * @param custom - Additional or override processors keyed by Zod `def.type` (e.g. `'string'`, `'myCustomType'`).
+ * @returns A merged registry of built-in and custom processors ready for use with `walkSchema`.
+ *
+ * @category Registry
  */
 export function createProcessors(
   custom: Record<string, FormProcessor>

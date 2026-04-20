@@ -11,11 +11,16 @@
   },
   "keywords": [
     "zod",
+    "zod-v4",
     "react",
     "forms",
     "form-generation",
     "react-hook-form",
-    "typescript"
+    "schema-driven",
+    "dynamic-forms",
+    "form-renderer",
+    "hookform-resolver",
+    "zod-form-renderer"
   ],
   "type": "module",
   "exports": {
