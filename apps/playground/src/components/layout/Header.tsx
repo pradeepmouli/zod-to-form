@@ -64,7 +64,11 @@ export function Header({
       role="banner"
     >
       <div className="flex items-center gap-3">
-        <img src="/logo.svg" alt="zod-to-form logo" style={{ width: 28, height: 24 }} />
+        <img
+          src={`${import.meta.env.BASE_URL}logo.svg`}
+          alt="zod-to-form logo"
+          style={{ width: 28, height: 24 }}
+        />
         <h1
           className="text-lg tracking-tight"
           style={{
