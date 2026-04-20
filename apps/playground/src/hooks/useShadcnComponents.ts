@@ -1,6 +1,47 @@
-import { useEffect, useState, useMemo, type ComponentType } from 'react';
+import {
+  createElement,
+  useEffect,
+  useState,
+  useMemo,
+  type ComponentType,
+  type ReactNode
+} from 'react';
 import { fetchShadcnSources } from '../lib/shadcn-registry.js';
 import { compileComponents } from '../lib/component-compiler.js';
+
+/**
+ * Wrap the fetched shadcn Button as an ArrayAddButton: applies outline variant
+ * and sm size, sets type="button" defensively, default label "+ Add".
+ */
+function wrapAsArrayAddButton(
+  Button: ComponentType<Record<string, unknown>>
+): ComponentType<Record<string, unknown>> {
+  return function ShadcnArrayAddButton(props: Record<string, unknown>) {
+    const { children, ...rest } = props;
+    return createElement(
+      Button as ComponentType<Record<string, unknown>>,
+      { variant: 'outline', size: 'sm', ...rest, type: 'button' },
+      (children ?? '+ Add') as ReactNode
+    );
+  };
+}
+
+/**
+ * Wrap the fetched shadcn Button as an ArrayRemoveButton: ghost variant, sm size,
+ * red-tinted destructive styling for clearer remove affordance.
+ */
+function wrapAsArrayRemoveButton(
+  Button: ComponentType<Record<string, unknown>>
+): ComponentType<Record<string, unknown>> {
+  return function ShadcnArrayRemoveButton(props: Record<string, unknown>) {
+    const { children, ...rest } = props;
+    return createElement(
+      Button as ComponentType<Record<string, unknown>>,
+      { variant: 'ghost', size: 'sm', ...rest, type: 'button' },
+      (children ?? '− Remove') as ReactNode
+    );
+  };
+}
 
 interface ShadcnComponentsState {
   /** Compiled shadcn components ready to pass into the form preview */
@@ -47,7 +88,17 @@ export function useShadcnComponents(enabled: boolean): ShadcnComponentsState {
     if (!sources || Object.keys(sources).length === 0) {
       return { components: {}, errors: {} };
     }
-    return compileComponents(sources);
+    const result = compileComponents(sources);
+
+    // If the Button component was fetched and compiled, wire it into the
+    // array add/remove slots so array/set/map fields get real shadcn Buttons.
+    const Button = result.components['Button'];
+    if (Button) {
+      result.components['ArrayAddButton'] = wrapAsArrayAddButton(Button);
+      result.components['ArrayRemoveButton'] = wrapAsArrayRemoveButton(Button);
+    }
+
+    return result;
   }, [sources]);
 
   const errors = useMemo(() => {
