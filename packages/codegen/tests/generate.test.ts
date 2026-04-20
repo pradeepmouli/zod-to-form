@@ -205,6 +205,48 @@ describe('generateFormComponent', () => {
     expect(result).toContain('removeItems');
   });
 
+  it('emits disabled Add button when maxLength constraint is set', () => {
+    const fields = [
+      makeField({
+        key: 'tags',
+        component: 'ArrayField',
+        label: 'Tags',
+        constraints: { maxLength: 5 },
+        arrayItem: makeField({ key: 'tags.0', label: 'Tag' })
+      })
+    ];
+
+    const result = generateFormComponent(fields, {
+      exportName: 'schema',
+      componentName: 'TagForm',
+      mode: 'submit',
+      ui: 'html'
+    });
+
+    expect(result).toContain('disabled={tagsFields.length >= 5}');
+  });
+
+  it('emits disabled Remove button with minLength constraint', () => {
+    const fields = [
+      makeField({
+        key: 'items',
+        component: 'ArrayField',
+        label: 'Items',
+        constraints: { minLength: 1 },
+        arrayItem: makeField({ key: 'items.0', label: 'Item' })
+      })
+    ];
+
+    const result = generateFormComponent(fields, {
+      exportName: 'schema',
+      componentName: 'ItemForm',
+      mode: 'submit',
+      ui: 'html'
+    });
+
+    expect(result).toContain('disabled={itemsFields.length <= 1}');
+  });
+
   it('uses default schemaImportPath when not provided', () => {
     const fields = [makeField({ key: 'name' })];
 
