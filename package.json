@@ -103,7 +103,8 @@
   "packageManager": "pnpm@10.32.0",
   "pnpm": {
     "overrides": {
-      "webpack": "5.97.1"
+      "webpack": "5.97.1",
+      "serialize-javascript": ">=7.0.5"
     }
   }
 }
