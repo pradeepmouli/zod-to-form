@@ -157,6 +157,7 @@ export function App() {
             onSubmitResult={setSubmitResult}
             editorContent={state.editorContent}
             compiledComponents={compiledComponents}
+            mode={state.config?.defaults?.mode}
           />
         }
         codeOutput={

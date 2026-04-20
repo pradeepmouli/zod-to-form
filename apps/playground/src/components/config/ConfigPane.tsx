@@ -50,6 +50,15 @@ export function ConfigPane({
     [filteredConfig, fields, componentMap]
   );
 
+  // Stable key derived from the field set. When the user picks a different
+  // schema example, this changes — which forces the ConfigForm to remount
+  // with fresh defaultValues (React Hook Form only consumes defaultValues
+  // on mount, not on re-render).
+  const fieldsKey = useMemo(
+    () => (fields ?? []).map((f) => `${f.key}:${f.component}`).join('|'),
+    [fields]
+  );
+
   const [tsSource, setTsSource] = useState(() => serializeConfigToTs(config, componentMap));
   const [parseError, setParseError] = useState<string | null>(null);
   // Guards against re-serialization loops: when the .ts editor triggers a config
@@ -142,6 +151,7 @@ export function ConfigPane({
               </div>
             )}
             <ConfigForm
+              key={fieldsKey}
               schema={configSchema}
               defaultValues={defaultValues}
               fields={fields}

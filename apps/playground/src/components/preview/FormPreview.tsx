@@ -18,6 +18,8 @@ interface FormPreviewProps {
   onSubmitResult: (result: SubmitResult) => void;
   editorContent: string;
   compiledComponents?: Record<string, ComponentType<Record<string, unknown>>>;
+  /** Form submission mode from z2f.config.defaults.mode */
+  mode?: 'submit' | 'auto-save';
 }
 
 export function FormPreview({
@@ -28,8 +30,10 @@ export function FormPreview({
   submitResult,
   onSubmitResult,
   editorContent,
-  compiledComponents
+  compiledComponents,
+  mode = 'submit'
 }: FormPreviewProps) {
+  const isAutoSave = mode === 'auto-save';
   const components = useMemo(() => {
     const base =
       componentMap === 'shadcn'
@@ -72,6 +76,21 @@ export function FormPreview({
       });
     },
     [onSubmitResult]
+  );
+
+  // In auto-save mode, each value change triggers an onSubmit-equivalent
+  // event so the Results panel reflects the latest form state live.
+  const handleValueChange = useCallback(
+    (data: Record<string, unknown>) => {
+      if (!isAutoSave) return;
+      onSubmitResult({
+        success: true,
+        data,
+        errors: null,
+        timestamp: Date.now()
+      });
+    },
+    [isAutoSave, onSubmitResult]
   );
 
   const handleInvalid = useCallback(
@@ -136,12 +155,21 @@ export function FormPreview({
             componentConfig={componentConfig}
             onSubmit={handleSubmit}
             onInvalid={handleInvalid}
+            onValueChange={isAutoSave ? handleValueChange : undefined}
             formRegistry={formRegistry}
+            mode={isAutoSave ? 'onChange' : undefined}
             className="space-y-4"
           >
-            <button type="submit" className="btn-accent px-5 py-2.5 text-sm rounded-lg">
-              Submit
-            </button>
+            {!isAutoSave && (
+              <button type="submit" className="btn-accent px-5 py-2.5 text-sm rounded-lg">
+                Submit
+              </button>
+            )}
+            {isAutoSave && (
+              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                Auto-save mode — values sync live to Results.
+              </div>
+            )}
           </ZodForm>
         </div>
       ) : (
