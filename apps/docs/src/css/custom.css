@@ -77,9 +77,9 @@
   --ifm-color-primary-lighter: #F9A8D4;
   --ifm-color-primary-lightest: #FBCFE8;
 
-  --ifm-font-family-base: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --ifm-font-family-base: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --ifm-font-family-monospace: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
-  --ifm-heading-font-family: 'Outfit', 'DM Sans', system-ui, sans-serif;
+  --ifm-heading-font-family: 'Outfit', 'Inter', system-ui, sans-serif;
   --ifm-heading-font-weight: 700;
 
   --ifm-code-font-size: 92%;
@@ -169,6 +169,10 @@
 html,
 body {
   font-family: var(--ifm-font-family-base);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
