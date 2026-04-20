@@ -2,7 +2,7 @@ import { useMemo, memo } from 'react';
 import type { ComponentType, ReactNode } from 'react';
 import type { FormField, FieldConfig, ComponentOverride } from '@zod-to-form/core';
 import { getEmptyDefault } from '@zod-to-form/core';
-import { useController, useFieldArray, useFormContext } from 'react-hook-form';
+import { useController, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { defaultComponentMap } from './components/index.js';
 
 type ComponentMap = typeof defaultComponentMap;
@@ -389,6 +389,14 @@ const ArrayBlock = memo(function ArrayBlock({
   const { fields: items, append, remove } = useFieldArray({ control, name: field.key });
   const minLength = field.constraints.minLength ?? 0;
   const maxLength = field.constraints.maxLength;
+  const isSet = field.props['_isSet'] === true;
+
+  // Watch all values for set uniqueness validation (O(n) on change, fast for typical form sizes)
+  const watchedValues: unknown[] | undefined = useWatch({
+    control,
+    name: field.key,
+    disabled: !isSet
+  });
 
   const AddButton = componentMap.ArrayAddButton;
   const RemoveButton = componentMap.ArrayRemoveButton;
@@ -400,12 +408,31 @@ const ArrayBlock = memo(function ArrayBlock({
   const addLabel = arrayConfig?.addLabel;
   const removeLabel = arrayConfig?.removeLabel;
 
+  // For sets: build a Set of stringified values for O(1) duplicate lookup
+  const duplicateIndices = useMemo(() => {
+    if (!isSet || !watchedValues) return new Set<number>();
+    const seen = new Map<string, number>();
+    const dupes = new Set<number>();
+    for (let i = 0; i < watchedValues.length; i++) {
+      const key = JSON.stringify(watchedValues[i]);
+      if (key === undefined || key === '""' || key === 'null') continue;
+      if (seen.has(key)) {
+        dupes.add(i);
+        dupes.add(seen.get(key)!);
+      } else {
+        seen.set(key, i);
+      }
+    }
+    return dupes;
+  }, [isSet, watchedValues]);
+
   return (
     <fieldset>
       <legend>{field.label}</legend>
       {items.map((item, index) => {
         if (!field.arrayItem) return null;
         const itemField: FormField = { ...field.arrayItem, key: `${field.key}.${index}` };
+        const isDuplicate = duplicateIndices.has(index);
         return (
           <div key={item.id}>
             <FieldRenderer
@@ -413,6 +440,11 @@ const ArrayBlock = memo(function ArrayBlock({
               components={componentMap}
               componentConfig={componentConfig}
             />
+            {isDuplicate && (
+              <span style={{ color: 'var(--destructive, #ef4444)', fontSize: '0.75rem' }}>
+                Duplicate value
+              </span>
+            )}
             <RemoveButton onClick={() => remove(index)} disabled={items.length <= minLength}>
               {removeLabel}
             </RemoveButton>
