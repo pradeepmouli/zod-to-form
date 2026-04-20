@@ -78,7 +78,9 @@ for (const slot of COMPONENT_MAP_SLOTS) {
 }
 
 function resolveComponentSlotName(registryName: string): string {
-  const normalized = registryName
+  // Strip path prefixes (e.g., "ui/checkbox" → "checkbox")
+  const baseName = registryName.includes('/') ? registryName.split('/').pop()! : registryName;
+  const normalized = baseName
     .replace(/^8bit-/, '')
     .replace(/^retro-/, '')
     .replace(/^brutal-/, '')
@@ -286,13 +288,15 @@ function tryComposeRadixComponent(
   name: string,
   exports: Record<string, unknown>
 ): ComposedResult | null {
-  if (name === 'select') {
+  // Registry keys may have ui/ prefix (e.g., "ui/select" from registry path)
+  const baseName = name.includes('/') ? name.split('/').pop()! : name;
+  if (baseName === 'select') {
     return tryComposeSelect(exports);
   }
-  if (name === 'checkbox') {
+  if (baseName === 'checkbox') {
     return tryComposeCheckbox(exports);
   }
-  if (name === 'switch') {
+  if (baseName === 'switch') {
     return tryComposeSwitch(exports);
   }
   return null;
