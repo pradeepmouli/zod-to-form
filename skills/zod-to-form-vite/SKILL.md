@@ -1,6 +1,6 @@
 ---
 name: zod-to-form-vite
-description: "Vite plugin for zod-to-form — transforms ?z2f imports into generated form components and optionally replaces <ZodForm> JSX call sites with generated components at build time Use when working with vite, vite-plugin, zod, zod-v4, codegen, forms, form-generation, schema-driven, react-hook-form, build-plugin, jsx-transform."
+description: "Vite plugin for zod-to-form — transforms ?z2f imports into generated form components and optionally replaces <ZodForm> JSX call sites with generated components at build time Use when: You want `import SignupForm from './signup.schema?z2f'` to Just Work in a Vite app; You want HMR-aware form recompilation when schemas change in development; You want to run generate mode to pre-compile forms from `<ZodForm>` call sites."
 license: MIT
 ---
 
@@ -10,7 +10,6 @@ Vite plugin for zod-to-form — transforms ?z2f imports into generated form comp
 
 ## When to Use
 
-- Working with vite, vite-plugin, zod, zod-v4, codegen, forms, form-generation, schema-driven, react-hook-form, build-plugin, jsx-transform
 
 | Task | Use | Why |
 |------|-----|-----|
@@ -32,19 +31,11 @@ Vite plugin for zod-to-form — transforms ?z2f imports into generated form comp
 
 ## Pitfalls
 
-- NEVER use `?z2f` on schemas with cyclic type references — the schema walker
-- recurses on Zod's internal type graph and hangs on cycles
-- NEVER enable `generate` mode and then rely on HMR without testing — the
-- generate-mode transform cache does not integrate with Vite's standard HMR
-- module invalidation for rewritten JSX files
-- NEVER assume Zod types survive Vite's module graph isolation — always export
-- schemas from a dedicated `.schema.ts` file; importing from a module that
-- re-exports through complex chains can fail under `ssrLoadModule`
-- NEVER configure `configPath` to point outside the Vite `root` — the plugin
-- uses `ssrLoadModule` with a dev server scoped to `root`, so files outside
-- that boundary may fail to resolve their own imports
-- NEVER compare `error.message` to detect error type — the message format may change.
-- Use `error.code` (e.g. `error.code === 'Z2F_VITE_SCHEMA_NOT_FOUND'`) for stable matching
+- NEVER use `?z2f` on schemas with cyclic type references — the schema walker recurses on Zod's internal type graph and hangs on cycles
+- NEVER enable `generate` mode and then rely on HMR without testing — the generate-mode transform cache does not integrate with Vite's standard HMR module invalidation for rewritten JSX files
+- NEVER assume Zod types survive Vite's module graph isolation — always export schemas from a dedicated `.schema.ts` file; importing from a module that re-exports through complex chains can fail under `ssrLoadModule`
+- NEVER configure `configPath` to point outside the Vite `root` — the plugin uses `ssrLoadModule` with a dev server scoped to `root`, so files outside that boundary may fail to resolve their own imports
+- NEVER compare `error.message` to detect error type — the message format may change. Use `error.code` (e.g. `error.code === 'Z2F_VITE_SCHEMA_NOT_FOUND'`) for stable matching
 
 ## Configuration
 

@@ -58,11 +58,8 @@ Plugin-specific log level. Independent of Vite's log level.
 - Adjusting diagnostic verbosity (`logLevel`)
 
 ### Pitfalls
-- NEVER set `generate: {}` in production without auditing what files it matches — by default
-- it targets all `**/*.{ts,tsx,js,jsx}` and rewrites every `<ZodForm>` call site it can
-- statically resolve, which changes compiled output the developer didn't explicitly annotate
-- NEVER pass unknown option keys — the plugin validates the options object at startup and
-- throws `Z2F_VITE_INVALID_OPTIONS` for any unrecognized key
+- NEVER set `generate: {}` in production without auditing what files it matches — by default it targets all `**/*.{ts,tsx,js,jsx}` and rewrites every `<ZodForm>` call site it can statically resolve, which changes compiled output the developer didn't explicitly annotate
+- NEVER pass unknown option keys — the plugin validates the options object at startup and throws `Z2F_VITE_INVALID_OPTIONS` for any unrecognized key
 
 ## Z2FViteConfig
 
@@ -84,10 +81,8 @@ Use `defineConfig` from `@zod-to-form/core` for type-safe config authoring.
 - Applying a consistent UI preset (shadcn/html) and field overrides across forms
 
 ### Pitfalls
-- NEVER place `z2f.config.ts` outside the Vite root — the auto-discovery only searches
-- `resolvedConfig.root` and will silently fall back to defaults if the file is not found
-- NEVER export an async function as the config default — only plain objects are supported;
-- async evaluation is not handled by `ssrLoadModule`
+- NEVER place `z2f.config.ts` outside the Vite root — the auto-discovery only searches `resolvedConfig.root` and will silently fall back to defaults if the file is not found
+- NEVER export an async function as the config default — only plain objects are supported; async evaluation is not handled by `ssrLoadModule`
 
 ## VariantConfigs
 

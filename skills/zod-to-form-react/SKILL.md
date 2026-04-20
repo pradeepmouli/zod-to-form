@@ -1,6 +1,6 @@
 ---
 name: zod-to-form-react
-description: "Runtime <ZodForm> renderer for Zod v4 schemas Use when working with zod, zod-v4, react, forms, form-generation, react-hook-form, schema-driven, dynamic-forms, form-renderer, hookform-resolver, zod-form-renderer."
+description: "Runtime <ZodForm> renderer for Zod v4 schemas Use when: You want a zero-config form from a Zod v4 schema at runtime, no build step; You need form rendering in storybook, playgrounds, or low-traffic admin UIs; You are prototyping before committing to CLI codegen."
 license: MIT
 ---
 
@@ -37,7 +37,6 @@ export function UserForm() {
 
 ## When to Use
 
-- Working with zod, zod-v4, react, forms, form-generation, react-hook-form, schema-driven, dynamic-forms, form-renderer, hookform-resolver, zod-form-renderer
 
 | Task | Use | Why |
 |------|-----|-----|
@@ -56,45 +55,29 @@ export function UserForm() {
 
 | Don't Use | When | Use Instead |
 |-----------|------|-------------|
-| `ZodForm` | Bundle size is critical | use CLI codegen (`@zod-to-form/cli`) instead for |
-| `ZodForm` | production; runtime schema walking adds tree-size overhead | — |
-| `ZodForm` | You need forms for complex schemas with cyclic references | the walker does |
-| `ZodForm` | not handle cycles and will hit the max-depth guard silently | — |
+| `ZodForm` | Bundle size is critical | use CLI codegen (`@zod-to-form/cli`) instead for production; runtime schema walking adds tree-size overhead |
+| `ZodForm` | You need forms for complex schemas with cyclic references | the walker does not handle cycles and will hit the max-depth guard silently |
 | `ZodForm` | You are on Zod v3 | the schema walker requires Zod v4's `_zod` internals |
 | `useZodForm` | You just need a working form UI | use `<ZodForm>` instead, which handles rendering |
 | `useZodForm` | You are on Zod v3 | the hook requires Zod v4 schema internals |
 | `normalizeFormValues` | CLI codegen mode | generated components handle normalization internally |
 | `normalizeFormValues` | Your form library already normalizes (but calling it anyway is safe | it's idempotent) |
-| `wrapWithSchemaLite` | You are using the default `zodResolver` path (no `validationLevel`) | validation |
-| `wrapWithSchemaLite` | is handled by RHF's resolver and this wrapper is redundant | — |
-| `wrapWithSchemaLite` | Your schema has cross-field refinements in the lite schema | the lite schema |
-| `wrapWithSchemaLite` | intentionally strips root-level refinements, so cross-field rules are NOT checked | — |
+| `wrapWithSchemaLite` | You are using the default `zodResolver` path (no `validationLevel`) | validation is handled by RHF's resolver and this wrapper is redundant |
+| `wrapWithSchemaLite` | Your schema has cross-field refinements in the lite schema | the lite schema intentionally strips root-level refinements, so cross-field rules are NOT checked |
 - API surface: 4 functions, 5 types, 3 constants
 
 ## Pitfalls
 
-- NEVER pass `componentConfig` without a matching `components` map that covers
-- the component names referenced — missing components are silently dropped at
-- render time with no console error
-- NEVER change the `schema` object identity on every render — `walkSchema` runs
-- inside `useMemo` keyed on schema identity, so unstable schema references cause
-- full re-walks on each render
-- NEVER expect controlled component prop expressions (e.g. `field.value`) to
-- work without a `propMap` in `componentConfig` — uncontrolled mode is the
-- default; controlled mode requires explicit opt-in via field config
-- NEVER pass a new schema object on every render — `walkSchema` is memoized by schema
-- identity; an unstable reference causes re-walking on every render cycle
-- NEVER forget `normalizeFormValues()` before manually calling `schema.safeParse()` —
-- the hook's internal resolver applies normalization, but manual calls do not
-- NEVER mix `formRegistry` and `fields` options on the same call — when `formRegistry`
-- is provided, `fields` is ignored entirely (no merge, no warning)
+- NEVER pass `componentConfig` without a matching `components` map that covers the component names referenced — missing components are silently dropped at render time with no console error
+- NEVER change the `schema` object identity on every render — `walkSchema` runs inside `useMemo` keyed on schema identity, so unstable schema references cause full re-walks on each render
+- NEVER expect controlled component prop expressions (e.g. `field.value`) to work without a `propMap` in `componentConfig` — uncontrolled mode is the default; controlled mode requires explicit opt-in via field config
+- NEVER pass a new schema object on every render — `walkSchema` is memoized by schema identity; an unstable reference causes re-walking on every render cycle
+- NEVER forget `normalizeFormValues()` before manually calling `schema.safeParse()` — the hook's internal resolver applies normalization, but manual calls do not
+- NEVER mix `formRegistry` and `fields` options on the same call — when `formRegistry` is provided, `fields` is ignored entirely (no merge, no warning)
 - NEVER skip this in runtime mode — optional fields will fail validation with "expected string, received string" errors that are extremely confusing to debug
 - NEVER rely on it for custom types (Date, etc.) — only handles strings and FileList
-- NEVER pass the full schema as `schemaLite` — it defeats the optimization and adds
-- double-validation overhead; only pass the schema produced by `walkSchema`'s
-- `result.schemaLite` field
-- NEVER use this with schemas that have root-level `.superRefine()` — root refinements
-- are stripped from `schemaLite` by design and will not run through this wrapper
+- NEVER pass the full schema as `schemaLite` — it defeats the optimization and adds double-validation overhead; only pass the schema produced by `walkSchema`'s `result.schemaLite` field
+- NEVER use this with schemas that have root-level `.superRefine()` — root refinements are stripped from `schemaLite` by design and will not run through this wrapper
 
 ## Configuration
 

@@ -1,6 +1,6 @@
 ---
 name: zod-to-form-codegen
-description: "Browser-safe code generation for Zod v4 form components Use when working with zod, zod-v4, codegen, forms, form-generation, react-hook-form, schema-driven, template-generation, browser-safe, component-codegen, schema-to-tsx."
+description: "Browser-safe code generation for Zod v4 form components Use when: Building a custom codegen pipeline that assembles `FormField[]` and needs the TSX string; Writing codegen tests that verify output structure without spawning a CLI process; Building a custom codegen backend that needs the same override resolution logic as the CLI."
 license: MIT
 ---
 
@@ -170,7 +170,6 @@ Produces `src/components/SignupForm.tsx` — a hand-readable `.tsx` file that im
 
 ## When to Use
 
-- Working with zod, zod-v4, codegen, forms, form-generation, react-hook-form, schema-driven, template-generation, browser-safe, component-codegen, schema-to-tsx
 
 | Task | Use | Why |
 |------|-----|-----|
@@ -190,12 +189,9 @@ Produces `src/components/SignupForm.tsx` — a hand-readable `.tsx` file that im
 
 ## Pitfalls
 
-- NEVER call `generateFormComponent` with a stale `fields` array from a previous schema
-- version — there is no cache invalidation; callers must re-run `walkSchema` on schema change
-- NEVER use the returned string as a module cache key — it is not content-addressed;
-- use `configHash` from `@zod-to-form/core` on the config object instead
-- NEVER assume `source: 'none'` means the field has no component — the schema walker may
-- have inferred one; `resolveFieldMapping` only resolves user-provided config overrides
+- NEVER call `generateFormComponent` with a stale `fields` array from a previous schema version — there is no cache invalidation; callers must re-run `walkSchema` on schema change
+- NEVER use the returned string as a module cache key — it is not content-addressed; use `configHash` from `@zod-to-form/core` on the config object instead
+- NEVER assume `source: 'none'` means the field has no component — the schema walker may have inferred one; `resolveFieldMapping` only resolves user-provided config overrides
 
 ## Configuration
 

@@ -1,6 +1,6 @@
 ---
 name: zod-to-form-core
-description: "Schema walker and processor registry for Zod v4 form generation Use when working with zod, zod-v4, forms, form-generation, schema, schema-walker, processor-registry, react-hook-form, schema-driven, form-schema, zod-registry."
+description: "Schema walker and processor registry for Zod v4 form generation Use when: You want per-field validation instead of whole-form validation; You need native HTML validation attributes (required, minLength, pattern); Writing z2f.config.ts for CLI codegen (primary use case)."
 license: MIT
 ---
 
@@ -27,7 +27,6 @@ console.log(fields.map((f) => ({ key: f.key, component: f.component })));
 
 ## When to Use
 
-- Working with zod, zod-v4, forms, form-generation, schema, schema-walker, processor-registry, react-hook-form, schema-driven, form-schema, zod-registry
 
 | Task | Use | Why |
 |------|-----|-----|
