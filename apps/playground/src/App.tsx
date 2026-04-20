@@ -11,6 +11,7 @@ import { ConfigPane } from './components/config/ConfigPane.tsx';
 import { STARTER_SCHEMA } from './components/examples/starter.ts';
 import { compileComponents } from './lib/component-compiler.ts';
 import { exportBundle } from './lib/export.ts';
+import { useShadcnComponents } from './hooks/useShadcnComponents.ts';
 
 const SchemaEditor = lazy(() =>
   import('./components/editor/SchemaEditor.tsx').then((m) => ({
@@ -63,6 +64,9 @@ export function App() {
   const [compilationErrors, setCompilationErrors] = useState<Record<string, string>>({});
   const initialContent = useRef(state.editorContent);
 
+  // Fetch + compile real shadcn/ui components from the public registry
+  const shadcn = useShadcnComponents(state.componentMap === 'shadcn');
+
   const compilationResult = useMemo(() => {
     if (!state.customComponents || Object.keys(state.customComponents).length === 0) {
       return {
@@ -73,7 +77,11 @@ export function App() {
     return compileComponents(state.customComponents);
   }, [state.customComponents]);
 
-  const compiledComponents = compilationResult.components;
+  // Merge: shadcn registry components as base, custom imports override
+  const compiledComponents = useMemo(() => {
+    return { ...shadcn.components, ...compilationResult.components };
+  }, [shadcn.components, compilationResult.components]);
+
   const customComponentNames = useMemo(() => Object.keys(compiledComponents), [compiledComponents]);
 
   useEffect(() => {
