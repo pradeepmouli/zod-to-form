@@ -20,6 +20,19 @@ export function processSet(
   params: ProcessParams
 ): void {
   field.component = 'ArrayField';
+  // Mark as set so runtime can enforce uniqueness
+  field.props['_isSet'] = true;
+
+  const bag = schema._zod.bag;
+  const minimum = typeof bag['minimum'] === 'number' ? bag['minimum'] : undefined;
+  const maximum = typeof bag['maximum'] === 'number' ? bag['maximum'] : undefined;
+
+  if (minimum !== undefined) {
+    field.constraints.minLength = minimum;
+  }
+  if (maximum !== undefined) {
+    field.constraints.maxLength = maximum;
+  }
 
   const valueType = schema._zod.def.valueType;
 

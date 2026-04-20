@@ -3,6 +3,7 @@ import type { FormField } from '@zod-to-form/core';
 import { generateFormComponent } from '@zod-to-form/codegen';
 import type { ComponentMapType, CodeOutputMode } from '../../types/playground.ts';
 import { generateFormCode, generateZodFormCode } from '../../lib/codegen.ts';
+import { CodeViewer } from './CodeViewer.tsx';
 
 function copyButtonLabel(failed: boolean, copied: boolean): string {
   if (failed) return 'Copy failed';
@@ -121,13 +122,8 @@ export function CodeOutput({
           {copyButtonLabel(copyFailed, copied)}
         </button>
       </div>
-      <div className="flex-1 overflow-auto p-4">
-        <pre
-          className="text-sm whitespace-pre-wrap leading-relaxed"
-          style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}
-        >
-          <code>{generatedCode}</code>
-        </pre>
+      <div className="flex-1 overflow-hidden">
+        <CodeViewer value={generatedCode} ariaLabel={modeLabel} />
       </div>
     </div>
   );

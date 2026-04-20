@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import type { HTMLAttributes, LabelHTMLAttributes } from 'react';
+import type { ButtonHTMLAttributes, HTMLAttributes, LabelHTMLAttributes } from 'react';
 import { Checkbox } from './Checkbox.js';
 import { ComboboxFallback } from './Combobox.js';
 import { DatePicker } from './DatePicker.js';
@@ -26,8 +26,23 @@ function FieldMessage(props: HTMLAttributes<HTMLParagraphElement>) {
   return createElement('p', props);
 }
 
+function ArrayAddButton(props: ButtonHTMLAttributes<HTMLButtonElement>) {
+  return createElement('button', { ...props, type: 'button' }, props.children ?? '+ Add');
+}
+
+function ArrayRemoveButton(props: ButtonHTMLAttributes<HTMLButtonElement>) {
+  return createElement('button', { ...props, type: 'button' }, props.children ?? '− Remove');
+}
+
 /** Internal wrapper component names — not user-configurable */
-const WRAPPER_NAMES = new Set(['Field', 'FieldLabel', 'FieldDescription', 'FieldMessage']);
+const WRAPPER_NAMES = new Set([
+  'Field',
+  'FieldLabel',
+  'FieldDescription',
+  'FieldMessage',
+  'ArrayAddButton',
+  'ArrayRemoveButton'
+]);
 
 /**
  * The default HTML-based component map used by `<ZodForm>` and `<FieldRenderer>`.
@@ -53,7 +68,9 @@ export const defaultComponentMap = {
   Field,
   FieldLabel,
   FieldDescription,
-  FieldMessage
+  FieldMessage,
+  ArrayAddButton,
+  ArrayRemoveButton
 };
 
 /** User-facing field component names derived from defaultComponentMap, excluding internal wrappers */

@@ -142,6 +142,7 @@ export function App() {
             componentMap={state.componentMap}
             configTab={state.configTab}
             customComponentNames={customComponentNames}
+            compiledComponents={compiledComponents}
             onConfigTabChange={setConfigTab}
             onConfigChange={setConfig}
           />

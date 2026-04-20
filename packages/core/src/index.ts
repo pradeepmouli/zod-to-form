@@ -43,6 +43,7 @@
 // All exports are named exports only (no default, no `export *`) for full tree-shakeability.
 
 export type {
+  ArrayConfig,
   FormField,
   FormFieldOption,
   FormFieldConstraints,

@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useRef, useEffect, memo } from 'react';
+import { useMemo, useState, useCallback, useRef, useEffect, memo, type ComponentType } from 'react';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import type { FormField } from '@zod-to-form/core';
@@ -21,6 +21,7 @@ interface ConfigPaneProps {
   componentMap: ComponentMapType;
   configTab: ConfigTab;
   customComponentNames: string[];
+  compiledComponents?: Record<string, ComponentType<Record<string, unknown>>>;
   onConfigTabChange: (tab: ConfigTab) => void;
   onConfigChange: (config: PlaygroundConfig | null) => void;
 }
@@ -36,6 +37,7 @@ export function ConfigPane({
   componentMap,
   configTab,
   customComponentNames,
+  compiledComponents,
   onConfigTabChange,
   onConfigChange
 }: ConfigPaneProps) {
@@ -144,6 +146,8 @@ export function ConfigPane({
               defaultValues={defaultValues}
               fields={fields}
               onChange={handleFormChange}
+              componentMap={componentMap}
+              compiledComponents={compiledComponents}
             />
           </div>
         ) : (

@@ -391,18 +391,34 @@ function renderArrayBlock(
     );
   }
 
+  // Read optional label overrides from FormMeta.arrayConfig (stored at walk time)
+  const arrayConfig = field.props['_arrayConfig'] as
+    | { addLabel?: string; removeLabel?: string }
+    | undefined;
+  const addLabel = escapeJsx(arrayConfig?.addLabel ?? '+ Add');
+  const removeLabel = escapeJsx(arrayConfig?.removeLabel ?? '− Remove');
+
   return [
     `${indent}<div>`,
     `${indent}  <label>${field.label}</label>`,
     `${indent}  {${varName}Fields.map((item, index) => (`,
     `${indent}    <div key={item.id}>`,
     itemJsx,
-    `${indent}      <button type="button" onClick={() => remove${capitalize(varName)}(index)}>Remove</button>`,
+    `${indent}      <button type="button" onClick={() => remove${capitalize(varName)}(index)} disabled={${varName}Fields.length <= ${field.constraints.minLength ?? 0}}>${removeLabel}</button>`,
     `${indent}    </div>`,
     `${indent}  ))}`,
-    `${indent}  <button type="button" onClick={() => append${capitalize(varName)}(${getDefaultArrayItemExpression(itemField)})}>Add</button>`,
+    `${indent}  <button type="button" onClick={() => append${capitalize(varName)}(${getDefaultArrayItemExpression(itemField)})}${field.constraints.maxLength != null ? ` disabled={${varName}Fields.length >= ${field.constraints.maxLength}}` : ''}>${addLabel}</button>`,
     `${indent}</div>`
   ].join('\n');
+}
+
+function escapeJsx(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/{/g, '&#123;')
+    .replace(/}/g, '&#125;');
 }
 
 function capitalize(s: string): string {

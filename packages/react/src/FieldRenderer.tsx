@@ -2,7 +2,7 @@ import { useMemo, memo } from 'react';
 import type { ComponentType, ReactNode } from 'react';
 import type { FormField, FieldConfig, ComponentOverride } from '@zod-to-form/core';
 import { getEmptyDefault } from '@zod-to-form/core';
-import { useController, useFieldArray, useFormContext } from 'react-hook-form';
+import { useController, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { defaultComponentMap } from './components/index.js';
 
 type ComponentMap = typeof defaultComponentMap;
@@ -374,6 +374,29 @@ const FieldsetBlock = memo(function FieldsetBlock({
 
 // ─── Array block with useFieldArray ───────────────────────────────────
 
+/**
+ * Serialize a value into a dedup key for set uniqueness checks.
+ * Returns null for empty/nullish values (skip from comparison).
+ * Falls back to a unique symbol-string on serialization failure so
+ * unserializable values never match other values.
+ *
+ * @internal Exported for testing
+ */
+export function safeSerializeForDedup(value: unknown): string | null {
+  if (value === null || value === undefined || value === '') return null;
+  const t = typeof value;
+  if (t === 'string') return `s:${value as string}`;
+  if (t === 'number' || t === 'boolean') return `p:${String(value)}`;
+  if (t === 'bigint') return `b:${(value as bigint).toString()}`;
+  if (t === 'symbol' || t === 'function') return `u:${Symbol().toString()}${Math.random()}`;
+  try {
+    return `j:${JSON.stringify(value, (_k, v) => (typeof v === 'bigint' ? `__bigint:${v.toString()}` : v))}`;
+  } catch {
+    // Circular or otherwise unserializable — treat as unique to avoid false matches
+    return `u:${Symbol().toString()}${Math.random()}`;
+  }
+}
+
 function getDefaultAppendValue(arrayItem: FormField | undefined): unknown {
   if (!arrayItem) return '';
   return getEmptyDefault(arrayItem);
@@ -388,6 +411,48 @@ const ArrayBlock = memo(function ArrayBlock({
   const { control } = useFormContext();
   const { fields: items, append, remove } = useFieldArray({ control, name: field.key });
   const minLength = field.constraints.minLength ?? 0;
+  const maxLength = field.constraints.maxLength;
+  const isSet = field.props['_isSet'] === true;
+
+  // Watch all values for set uniqueness validation (O(n) on change, fast for typical form sizes)
+  const watchedValues: unknown[] | undefined = useWatch({
+    control,
+    name: field.key,
+    disabled: !isSet
+  });
+
+  const AddButton = componentMap.ArrayAddButton;
+  const RemoveButton = componentMap.ArrayRemoveButton;
+
+  // Resolve custom labels from field metadata (arrayConfig)
+  const arrayConfig = field.props['_arrayConfig'] as
+    | { addLabel?: string; removeLabel?: string }
+    | undefined;
+  const addLabel = arrayConfig?.addLabel;
+  const removeLabel = arrayConfig?.removeLabel;
+
+  // For sets: build a Set of stringified values for O(1) duplicate lookup.
+  // Uses a safe serializer that handles BigInt/Symbol and falls back to a
+  // non-matching key on serialization errors (so one bad value doesn't
+  // break the whole check).
+  const duplicateIndices = useMemo(() => {
+    if (!isSet || !watchedValues) return new Set<number>();
+    const seen = new Map<string, number>();
+    const dupes = new Set<number>();
+    for (let i = 0; i < watchedValues.length; i++) {
+      const value = watchedValues[i];
+      const key = safeSerializeForDedup(value);
+      // Skip empty/nullish — users haven't filled these in yet
+      if (key === null) continue;
+      if (seen.has(key)) {
+        dupes.add(i);
+        dupes.add(seen.get(key)!);
+      } else {
+        seen.set(key, i);
+      }
+    }
+    return dupes;
+  }, [isSet, watchedValues]);
 
   return (
     <fieldset>
@@ -395,6 +460,7 @@ const ArrayBlock = memo(function ArrayBlock({
       {items.map((item, index) => {
         if (!field.arrayItem) return null;
         const itemField: FormField = { ...field.arrayItem, key: `${field.key}.${index}` };
+        const isDuplicate = duplicateIndices.has(index);
         return (
           <div key={item.id}>
             <FieldRenderer
@@ -402,19 +468,23 @@ const ArrayBlock = memo(function ArrayBlock({
               components={componentMap}
               componentConfig={componentConfig}
             />
-            <button
-              type="button"
-              onClick={() => remove(index)}
-              disabled={items.length <= minLength}
-            >
-              Remove
-            </button>
+            {isDuplicate && (
+              <span style={{ color: 'var(--destructive, #ef4444)', fontSize: '0.75rem' }}>
+                Duplicate value
+              </span>
+            )}
+            <RemoveButton onClick={() => remove(index)} disabled={items.length <= minLength}>
+              {removeLabel}
+            </RemoveButton>
           </div>
         );
       })}
-      <button type="button" onClick={() => append(getDefaultAppendValue(field.arrayItem))}>
-        Add
-      </button>
+      <AddButton
+        onClick={() => append(getDefaultAppendValue(field.arrayItem))}
+        disabled={maxLength != null && items.length >= maxLength}
+      >
+        {addLabel}
+      </AddButton>
     </fieldset>
   );
 });
