@@ -6,7 +6,7 @@
 
 # Interface: PluginOptions
 
-Defined in: [packages/vite/src/types.ts:113](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/vite/src/types.ts#L113)
+Defined in: [packages/vite/src/types.ts:113](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/types.ts#L113)
 
 Plugin options passed to `z2fVite(options)`. Every field is optional;
 the bare `z2fVite()` invocation produces a working plugin.
@@ -43,7 +43,7 @@ accepted — unknown keys throw `Z2F_VITE_INVALID_OPTIONS` at startup.
 
 > `optional` **configOverride?**: `Partial`\<[`Z2FViteConfig`](../type-aliases/Z2FViteConfig.md)\>
 
-Defined in: [packages/vite/src/types.ts:121](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/vite/src/types.ts#L121)
+Defined in: [packages/vite/src/types.ts:121](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/types.ts#L121)
 
 Shallow override merged on top of the loaded config.
 
@@ -53,7 +53,7 @@ Shallow override merged on top of the loaded config.
 
 > `optional` **configPath?**: `string`
 
-Defined in: [packages/vite/src/types.ts:118](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/vite/src/types.ts#L118)
+Defined in: [packages/vite/src/types.ts:118](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/types.ts#L118)
 
 Path to `z2f.config.{ts,js,mjs}`. Auto-discovered from the Vite root
 if undefined.
@@ -64,7 +64,7 @@ if undefined.
 
 > `optional` **generate?**: `object`
 
-Defined in: [packages/vite/src/types.ts:136](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/vite/src/types.ts#L136)
+Defined in: [packages/vite/src/types.ts:136](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/types.ts#L136)
 
 Generate mode: scan JSX source for `<ZodForm>` elements and replace
 statically resolvable call sites with generated form components at
@@ -96,7 +96,7 @@ Glob patterns for files generate mode should consider.
 
 > `optional` **logLevel?**: `"silent"` \| `"warn"` \| `"info"` \| `"debug"`
 
-Defined in: [packages/vite/src/types.ts:147](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/vite/src/types.ts#L147)
+Defined in: [packages/vite/src/types.ts:147](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/types.ts#L147)
 
 Plugin-specific log level. Independent of Vite's log level.
 
@@ -106,6 +106,6 @@ Plugin-specific log level. Independent of Vite's log level.
 
 > `optional` **write?**: [`WriteOptions`](WriteOptions.md)
 
-Defined in: [packages/vite/src/types.ts:144](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/vite/src/types.ts#L144)
+Defined in: [packages/vite/src/types.ts:144](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/vite/src/types.ts#L144)
 
 Optional opt-in to emit generated files to disk.

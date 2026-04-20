@@ -77,8 +77,8 @@ console.log(fields.map((f) => ({ key: f.key, component: f.component })));
 - NEVER assume preset props merge with your props — the entire props dict is replaced. If you set component props, you must include ALL props including the ones from the preset
 - NEVER use as a type guard — it throws on invalid input, doesn't narrow
 - NEVER assume extra keys cause failures — the schema uses z.object().loose(), extra keys are silently ignored
-- NEVER skip this in runtime mode — optional fields will fail validation with "expected string, received string" errors that are extremely confusing to debug
-- NEVER rely on it for custom types (Date, etc.) — only handles strings and FileList
+- NEVER skip `normalizeFormValues()` in runtime mode — optional fields will fail validation with "expected string, received string" errors that are extremely confusing to debug
+- NEVER rely on `normalizeFormValues()` for custom types (Date, etc.) — only handles strings and FileList
 - NEVER pass a non-object schema at the root — throws immediately
 - NEVER bypass the processor registry for custom types — extend via options.processors
 - NEVER skip normalizeFormValues() before schema.safeParse() — empty strings from HTML inputs fail optional field validation

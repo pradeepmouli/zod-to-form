@@ -8,7 +8,7 @@
 
 > **canonicalizeConfig**(`config`): `string`
 
-Defined in: [canonicalize-config.ts:85](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/canonicalize-config.ts#L85)
+Defined in: [canonicalize-config.ts:85](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/canonicalize-config.ts#L85)
 
 Serialize a [CodegenConfig](../type-aliases/CodegenConfig.md) to a canonical string suitable for
 hashing into a cache key.

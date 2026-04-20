@@ -8,7 +8,7 @@
 
 > **createProcessors**(`custom`): `Record`\<`string`, [`FormProcessor`](../type-aliases/FormProcessor.md)\>
 
-Defined in: [registry.ts:93](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/registry.ts#L93)
+Defined in: [registry.ts:93](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/registry.ts#L93)
 
 Create a custom processor registry by merging with built-in processors.
 Custom entries override built-in processors for the same `def.type` key.

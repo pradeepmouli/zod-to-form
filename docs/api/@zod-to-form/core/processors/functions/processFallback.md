@@ -8,7 +8,7 @@
 
 > **processFallback**(`schema`, `_ctx`, `field`, `_params`): `void`
 
-Defined in: [processors/fallback.ts:17](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/processors/fallback.ts#L17)
+Defined in: [processors/fallback.ts:17](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/processors/fallback.ts#L17)
 
 Fallback processor for Zod types without a dedicated handler.
 Renders as a plain text `Input`, preserving the schema's `def.type` on the field.

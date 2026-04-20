@@ -8,7 +8,7 @@
 
 > `const` **builtinOptimizers**: `Record`\<`string`, [`FormOptimizer`](../type-aliases/FormOptimizer.md)[]\>
 
-Defined in: [optimizers/index.ts:50](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/optimizers/index.ts#L50)
+Defined in: [optimizers/index.ts:50](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/optimizers/index.ts#L50)
 
 The default optimizer registry — L1 (decompose) + L2 (native rules) chains merged per type.
 Keyed by `def.type`; each entry is an ordered chain of optimizers applied left-to-right.

@@ -8,7 +8,7 @@
 
 > `const` **shadcnComponentMap**: `object`
 
-Defined in: [packages/react/src/shadcn/index.ts:164](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/react/src/shadcn/index.ts#L164)
+Defined in: [packages/react/src/shadcn/index.ts:164](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/react/src/shadcn/index.ts#L164)
 
 Component map pre-wired with shadcn/ui-styled implementations.
 Extends `defaultComponentMap` by overriding Input, Textarea, Select, and all

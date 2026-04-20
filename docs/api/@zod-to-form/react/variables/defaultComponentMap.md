@@ -8,7 +8,7 @@
 
 > `const` **defaultComponentMap**: `object`
 
-Defined in: [packages/react/src/components/index.ts:43](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/react/src/components/index.ts#L43)
+Defined in: [packages/react/src/components/index.ts:43](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/react/src/components/index.ts#L43)
 
 The default HTML-based component map used by `<ZodForm>` and `<FieldRenderer>`.
 Maps component names (e.g. `'Input'`, `'Select'`, `'Checkbox'`) to their React implementations.

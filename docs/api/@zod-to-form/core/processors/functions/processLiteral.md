@@ -8,7 +8,7 @@
 
 > **processLiteral**(`schema`, `_ctx`, `field`, `_params`): `void`
 
-Defined in: [processors/enum.ts:61](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/processors/enum.ts#L61)
+Defined in: [processors/enum.ts:61](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/processors/enum.ts#L61)
 
 Process `z.literal()` — renders as a read-only `Select` with a single fixed option.
 The field is marked `readOnly` because literal fields have exactly one valid value.

@@ -8,6 +8,10 @@ license: MIT
 
 Vite plugin for zod-to-form — transforms ?z2f imports into generated form components and optionally replaces <ZodForm> JSX call sites with generated components at build time
 
+Two modes: `?z2f` query imports (transform per-import, HMR works) vs `generate` mode
+(static JSX rewriting, no HMR integration). Use `?z2f` for new forms, `generate` for
+migrating existing `<ZodForm>` call sites.
+
 ## When to Use
 
 

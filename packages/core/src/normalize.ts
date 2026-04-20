@@ -28,8 +28,8 @@
  * - Your form library already normalizes (but calling it anyway is safe — it's idempotent)
  *
  * @pitfalls
- * - NEVER skip this in runtime mode — optional fields will fail validation with "expected string, received string" errors that are extremely confusing to debug
- * - NEVER rely on it for custom types (Date, etc.) — only handles strings and FileList
+ * - NEVER skip `normalizeFormValues()` in runtime mode — optional fields will fail validation with "expected string, received string" errors that are extremely confusing to debug
+ * - NEVER rely on `normalizeFormValues()` for custom types (Date, etc.) — only handles strings and FileList
  *
  * @param value - The raw form value to normalize (may be nested object, array, string, or FileList).
  * @returns The normalized value with empty strings replaced by `undefined` and FileList unwrapped.

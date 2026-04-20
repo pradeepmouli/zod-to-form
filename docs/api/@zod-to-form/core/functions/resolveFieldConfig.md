@@ -8,7 +8,7 @@
 
 > **resolveFieldConfig**(`globalFields`, `schemaFields`): `Record`\<`string`, [`FieldConfig`](../type-aliases/FieldConfig.md)\>
 
-Defined in: [config.ts:511](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/config.ts#L511)
+Defined in: [config.ts:511](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/config.ts#L511)
 
 Merge global field config with per-schema field config overrides.
 Per-schema entries shallow-merge on top of global entries for the same key.

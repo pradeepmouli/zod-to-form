@@ -8,7 +8,7 @@
 
 > **generateFormComponent**(`fields`, `config`): `string`
 
-Defined in: [codegen/src/generate.ts:657](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/codegen/src/generate.ts#L657)
+Defined in: [codegen/src/generate.ts:657](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/codegen/src/generate.ts#L657)
 
 Generate a React form component as a TypeScript string from `FormField[]`.
 

@@ -8,6 +8,9 @@ license: MIT
 
 Build-time code generator for Zod v4 form components
 
+Before using the CLI, decide: are you scripting (use `runGenerate`) or interacting
+(use `npx zod-to-form`)? For config authoring, always use `defineConfig` for type inference.
+
 ## Quick Start
 
 ```bash

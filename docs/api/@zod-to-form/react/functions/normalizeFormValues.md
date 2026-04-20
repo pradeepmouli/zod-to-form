@@ -57,5 +57,5 @@ Recursively applies to arrays and nested objects.
 
 ## Pitfalls
 
-- NEVER skip this in runtime mode — optional fields will fail validation with "expected string, received string" errors that are extremely confusing to debug
-- NEVER rely on it for custom types (Date, etc.) — only handles strings and FileList
+- NEVER skip `normalizeFormValues()` in runtime mode — optional fields will fail validation with "expected string, received string" errors that are extremely confusing to debug
+- NEVER rely on `normalizeFormValues()` for custom types (Date, etc.) — only handles strings and FileList

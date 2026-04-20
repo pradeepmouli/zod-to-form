@@ -77,8 +77,8 @@ export function UserForm() {
 - NEVER pass a new schema object on every render — `walkSchema` is memoized by schema identity; an unstable reference causes re-walking on every render cycle
 - NEVER forget `normalizeFormValues()` before manually calling `schema.safeParse()` — the hook's internal resolver applies normalization, but manual calls do not
 - NEVER mix `formRegistry` and `fields` options on the same call — when `formRegistry` is provided, `fields` is ignored entirely (no merge, no warning)
-- NEVER skip this in runtime mode — optional fields will fail validation with "expected string, received string" errors that are extremely confusing to debug
-- NEVER rely on it for custom types (Date, etc.) — only handles strings and FileList
+- NEVER skip `normalizeFormValues()` in runtime mode — optional fields will fail validation with "expected string, received string" errors that are extremely confusing to debug
+- NEVER rely on `normalizeFormValues()` for custom types (Date, etc.) — only handles strings and FileList
 - NEVER pass the full schema as `schemaLite` — it defeats the optimization and adds double-validation overhead; only pass the schema produced by `walkSchema`'s `result.schemaLite` field
 - NEVER use this with schemas that have root-level `.superRefine()` — root refinements are stripped from `schemaLite` by design and will not run through this wrapper
 

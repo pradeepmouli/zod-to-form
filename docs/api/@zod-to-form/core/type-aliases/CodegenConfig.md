@@ -8,7 +8,7 @@
 
 > **CodegenConfig** = `object`
 
-Defined in: [config-types.ts:13](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/config-types.ts#L13)
+Defined in: [config-types.ts:13](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/config-types.ts#L13)
 
 ## Properties
 
@@ -16,7 +16,7 @@ Defined in: [config-types.ts:13](https://github.com/pradeepmouli/zod-to-form/blo
 
 > `optional` **componentConfig?**: [`ZodFormsConfig`](ZodFormsConfig.md)\<`Record`\<`string`, `unknown`\>\>
 
-Defined in: [config-types.ts:23](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/config-types.ts#L23)
+Defined in: [config-types.ts:23](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/config-types.ts#L23)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [config-types.ts:23](https://github.com/pradeepmouli/zod-to-form/blo
 
 > **componentName**: `string`
 
-Defined in: [config-types.ts:21](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/config-types.ts#L21)
+Defined in: [config-types.ts:21](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/config-types.ts#L21)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [config-types.ts:21](https://github.com/pradeepmouli/zod-to-form/blo
 
 > **exportName**: `string`
 
-Defined in: [config-types.ts:20](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/config-types.ts#L20)
+Defined in: [config-types.ts:20](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/config-types.ts#L20)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [config-types.ts:20](https://github.com/pradeepmouli/zod-to-form/blo
 
 > `optional` **formProvider?**: `boolean`
 
-Defined in: [config-types.ts:28](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/config-types.ts#L28)
+Defined in: [config-types.ts:28](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/config-types.ts#L28)
 
 Force FormProvider wrapper in submit mode. Auto-save mode always uses FormProvider regardless.
 
@@ -50,7 +50,7 @@ Force FormProvider wrapper in submit mode. Auto-save mode always uses FormProvid
 
 > **mode**: `"submit"` \| `"auto-save"`
 
-Defined in: [config-types.ts:22](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/config-types.ts#L22)
+Defined in: [config-types.ts:22](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/config-types.ts#L22)
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: [config-types.ts:22](https://github.com/pradeepmouli/zod-to-form/blo
 
 > `optional` **outputPath?**: `string`
 
-Defined in: [config-types.ts:36](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/config-types.ts#L36)
+Defined in: [config-types.ts:36](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/config-types.ts#L36)
 
 Output path of the form component — used to compute the .lite.ts import path
 
@@ -68,7 +68,7 @@ Output path of the form component — used to compute the .lite.ts import path
 
 > `optional` **schemaImportPath?**: `string`
 
-Defined in: [config-types.ts:19](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/config-types.ts#L19)
+Defined in: [config-types.ts:19](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/config-types.ts#L19)
 
 Optional pre-computed import path for the schema (e.g., `./schema.js`).
 Defaults to `./schema`. The CLI typically computes this from file paths;
@@ -80,7 +80,7 @@ the browser playground and Vite plugin can pass it explicitly.
 
 > `optional` **schemaLite?**: `$ZodType` \| `null`
 
-Defined in: [config-types.ts:32](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/config-types.ts#L32)
+Defined in: [config-types.ts:32](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/config-types.ts#L32)
 
 SchemaLite for submit-time validation of top-level effects (null when no effects exist)
 
@@ -90,7 +90,7 @@ SchemaLite for submit-time validation of top-level effects (null when no effects
 
 > `optional` **schemaLiteInfo?**: [`SchemaLiteInfo`](SchemaLiteInfo.md)
 
-Defined in: [config-types.ts:34](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/config-types.ts#L34)
+Defined in: [config-types.ts:34](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/config-types.ts#L34)
 
 Codegen metadata for generating the .lite.ts file
 
@@ -100,7 +100,7 @@ Codegen metadata for generating the .lite.ts file
 
 > `optional` **serverAction?**: `boolean`
 
-Defined in: [config-types.ts:26](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/config-types.ts#L26)
+Defined in: [config-types.ts:26](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/config-types.ts#L26)
 
 #### Deprecated
 
@@ -112,7 +112,7 @@ Currently unused. Reserved for future server action codegen support.
 
 > **ui**: `"shadcn"` \| `"html"`
 
-Defined in: [config-types.ts:24](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/config-types.ts#L24)
+Defined in: [config-types.ts:24](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/config-types.ts#L24)
 
 ***
 
@@ -120,6 +120,6 @@ Defined in: [config-types.ts:24](https://github.com/pradeepmouli/zod-to-form/blo
 
 > `optional` **validationLevel?**: `1` \| `2` \| `3`
 
-Defined in: [config-types.ts:30](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/config-types.ts#L30)
+Defined in: [config-types.ts:30](https://github.com/pradeepmouli/zod-to-form/blob/5f49fae050176ccfdb49bf394bb00a3229c02f4a/packages/core/src/config-types.ts#L30)
 
 Validation optimization level. When set, generated code uses per-field validation instead of zodResolver.
