@@ -1,0 +1,174 @@
+# @zod-to-form/docs
+
+> Documentation site for zod-to-form (Docusaurus 3 + TypeDoc)
+
+## @zod-to-form/core
+
+> Schema-driven form generation for Zod v4.
+
+### API
+
+- `canonicalizeConfig`: Serialize a CodegenConfig to a canonical string suitable for
+hashing into a cache key.
+- `createOptimizers`: Create an optimizer registry by merging custom optimizers with builtins.
+Custom optimizers for a type replace the entire chain for that type.
+- `createSchemaLiteCollector`: Create a new SchemaLiteCollector instance.
+- `defineConfig`: Identity helper that returns its argument typed as `ZodFormsConfig`.
+- `validateConfig`: Validates an unknown value as a `ZodFormsConfig` at runtime.
+- `resolveFieldConfig`: Merge global field config with per-schema field config overrides.
+- `normalizeConfig`: Normalize a validated config by migrating deprecated top-level fields to their canonical locations.
+- `inferLabel`: Convert a camelCase or snake_case key to a human-readable Title Case label.
+- `joinPath`: Join a parent path and a child key with a dot separator.
+Returns `key` directly when `parent` is undefined or empty.
+- `createBaseField`: Create a base FormField with sensible defaults.
+Processors fill in the specific component and props after calling this.
+- `getEmptyDefault`: Returns a type-safe empty default value for a FormField based on its zodType
+and structure.
+- `normalizeFieldKey`: Normalise a concrete field key to the bracket notation used in config.
+Replaces `.0.`, `.${index}.`, and any `.<digits>.` segments with `[].`.
+- `collectFieldSections`: Collect section groupings from fields and a config override lookup.
+- `normalizeFormValues`: Normalize raw HTML form values for Zod parsing.
+- `walkSchema`: Walk a Zod schema and produce a FormField[] tree.
+When optimization option is set, returns WalkResult with fields + schemaLite.
+- `createProcessors`: Create a custom processor registry by merging with built-in processors.
+Custom entries override built-in processors for the same `def.type` key.
+- `registerDeep`: Register a schema and all its nested fields in a registry using a
+path-structured FieldConfig tree.
+- `registerFlat`: Register flat dot-path field configs against a schema's registry.
+- `processArray`: Process `z.
+- `processTuple`: Process `z.
+- `processBoolean`: Process `z.
+- `processMap`: Process `z.
+- `processSet`: Process `z.set()` — renders as an array-like repeater of unique items.
+The value type determines the item template stored in `field.arrayItem`.
+- `processCrossRef`: Process a cross-reference field — a schema annotated in the form registry with `refType`.
+- `processDate`: Process `z.
+- `processEnum`: Process `z.
+- `processLiteral`: Process `z.
+- `processFallback`: Fallback processor for Zod types without a dedicated handler.
+- `processFile`: Process `z.
+- `processNumber`: Process `z.
+- `processObject`: Process `z.object()` — renders as a `Fieldset` with each shape key as a child field.
+Recursively processes all shape entries via `ctx.processChild`.
+- `processIntersection`: Process `z.
+- `processRecord`: Process `z.
+- `processString`: Process `z.
+- `processTemplateLiteral`: Process `z.templateLiteral()` — renders as a plain text `Input`.
+Template literals have a fixed structure; no constraints are extracted.
+- `processUnion`: Process `z.
+- `processDiscriminatedUnion`: Process `z.
+- `processDefault`: Process `z.
+- `processLazy`: Process `z.
+- `processNullable`: Process `z.
+- `processOptional`: Process `z.
+- `processPipe`: Process `z.
+- `processReadonly`: Process `z.
+- `builtinOptimizers`: The default optimizer registry — L1 (decompose) + L2 (native rules) chains merged per type.
+- `SHADCN_OVERRIDES`: shadcn preset — Radix-based components need controlled mode + field expression props
+- `DEFAULT_OVERRIDES`: Default HTML preset — no controlled components by default
+- `builtinProcessors`: The default processor registry — maps every Zod v4 `def.
+
+## Optional
+
+### Types
+
+- `FormField`: Intermediate representation of a single form field produced by `walkSchema`.
+- `FormFieldOption`: An individual option in a Select, RadioGroup, or similar enum-driven component.
+- `FormFieldConstraints`: Structural constraints extracted from Zod's `_zod.
+- `FormProcessor`: A processor function that mutates a `FormField` in-place based on the Zod schema it handles.
+- `FormProcessorContext`: Runtime context passed to every processor during a walkSchema traversal.
+- `FormMeta`: Per-schema annotation stored in a `z.
+- `FieldExpression`: Known RHF field expression strings that can be used as values in `props`.
+- `ProcessParams`: Optional parameters passed to each processor alongside the schema, context, and field.
+- `ZodFormRegistry`: Zod v4 registry parameterized with FormMeta. Create via `z.registry<FormMeta>()`.
+- `NativeRules`: Native HTML and RHF validation rules extracted from Zod constraints.
+- `ValidationStrategy`: Specifies how a field's validation is handled at submit and change time.
+- `ComponentOverride`: Per-component metadata override. Only components that differ from defaults need an entry.
+- `ComponentPreset`: Preset name for built-in component library mappings.
+- `ConfigDefaults`: Default generation settings applied to all schemas unless overridden per-schema.
+- `StripIndexSignature`: Strips index signatures from a type, keeping only explicitly declared keys.
+- `FormOptimizer`: An optimizer function that mutates a `FormField` after the processor has run.
+- `FormOptimizerContext`: Context shared across all optimizers during a `walkSchema` run.
+- `WalkResult`: The result returned by `walkSchema()` when an optimization level is specified.
+- `SchemaLiteCollector`: Mutable accumulator that builds a lite Zod schema for submit-time validation.
+- `SchemaLiteInfo`: Metadata for codegen to reconstruct the lite schema in a generated file
+
+## @zod-to-form/react
+
+> Runtime React renderer for Zod v4 form schemas.
+
+### API
+
+- `ZodForm`: Runtime React component that renders a type-safe form from a Zod v4 schema.
+- `useZodForm`: React Hook Form integration hook for Zod v4 schemas.
+- `wrapWithSchemaLite`: Wraps a form `onSubmit` handler with `schemaLite` client-side validation.
+- `defaultComponentMap`: The default HTML-based component map used by `<ZodForm>` and `<FieldRenderer>`.
+- `shadcnComponentMap`: Component map pre-wired with shadcn/ui-styled implementations.
+- `FIELD_COMPONENT_NAMES`: User-facing field component names derived from defaultComponentMap, excluding internal wrappers
+
+## Optional
+
+### Types
+
+- `FormField`: Intermediate representation of a single form field produced by `walkSchema`.
+- `FormFieldOption`: An individual option in a Select, RadioGroup, or similar enum-driven component.
+- `FormFieldConstraints`: Structural constraints extracted from Zod's `_zod.
+- `FormMeta`: Per-schema annotation stored in a `z.
+- `FieldTemplateProps`: Props passed to the field template component that wraps each rendered form field.
+
+## @zod-to-form/cli
+
+> @zod-to-form/cli — Build-time CLI for generating React form components from Zod v4 schemas.
+
+### API
+
+- `runGenerate`: Executes the code generation pipeline for a single Zod schema export.
+- `createProgram`: Creates the Commander.
+- `defineConfig`: Identity helper that returns its argument typed as `ZodFormsConfig`.
+- `validateConfig`: Validates an unknown value as a `ZodFormsConfig` at runtime.
+
+## Optional
+
+### Types
+
+- `ComponentOverride`: Per-component metadata override. Only components that differ from defaults need an entry.
+
+## @zod-to-form/codegen
+
+> Browser-safe code generation utilities for Zod v4 form components.
+
+### API
+
+- `generateFormComponent`: Generate a React form component as a TypeScript string from `FormField[]`.
+- `resolveFieldMapping`: Resolve the component name and override config for a single `FormField` key.
+- `getFileHeader`: Generate the import block for a form component file.
+- `renderField`: Render a single `FormField` to its plain-HTML JSX string.
+- `registerPathExpr`: Produce the correct `register(.
+- `generateSchemaLiteFile`: Generate the content of a `.
+- `buildConfigSource`: Generate a `z2f.
+- `getFieldTemplateSource`: Return the source code for the preset's `FieldTemplate` React component.
+- `PRESET_TEMPLATE_IMPORTS`: Components that each preset's field template imports from the component source
+
+## @zod-to-form/vite
+
+> Vite plugin for schema-driven form generation.
+
+### API
+
+- `z2fVite`: Vite plugin factory for `@zod-to-form/vite`.
+- `formatZ2FViteError`: Format a `Z2FViteError` for inclusion in a Vite error overlay or terminal output.
+- `Z2FViteError`: Structured error thrown by the `@zod-to-form/vite` plugin.
+
+## Optional
+
+### Types
+
+- `GenerationTarget`: A single (schema, variant, config) triple that produces exactly one
+generated form.
+- `CompilationEntry`: One cached compilation result. The cache stores entries keyed by
+`${schemaFile}::${variant}::${configHash}`.
+- `GenerateSite`: A single `<ZodForm>` JSX element matched by generate mode.
+Lives only during a single `transform` call — not persisted.
+- `HMRInvalidationMap`: The graph edges that `handleHotUpdate` walks when a watched file changes.
+- `Z2FViteErrorCode`: Plugin error classes.
+- `Z2FViteErrorLocation`: Source location attached to a `Z2FViteError` for IDE navigation and Vite overlay display.

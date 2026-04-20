@@ -8,7 +8,7 @@
 
 > **resolveDefaultConfigPath**(`cwd`): `Promise`\<`string` \| `undefined`\>
 
-Defined in: [loader/index.ts:235](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/loader/index.ts#L235)
+Defined in: [loader/index.ts:235](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/loader/index.ts#L235)
 
 Walk the standard config-file naming candidates in `cwd` and return the
 first that exists. Used by the CLI's auto-discovery and (eventually) by

@@ -66,9 +66,6 @@ const _warnedKeys = new Set<string>();
  * - NEVER pass `componentConfig` without a matching `components` map that covers
  *   the component names referenced — missing components are silently dropped at
  *   render time with no console error
- * - NEVER change the `schema` object identity on every render — `walkSchema` runs
- *   inside `useMemo` keyed on schema identity, so unstable schema references cause
- *   full re-walks on each render
  * - NEVER expect controlled component prop expressions (e.g. `field.value`) to
  *   work without a `propMap` in `componentConfig` — uncontrolled mode is the
  *   default; controlled mode requires explicit opt-in via field config

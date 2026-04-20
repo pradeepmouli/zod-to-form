@@ -8,7 +8,7 @@
 
 > **GenerationTarget** = `GenerationTargetBase` & `object` \| `GenerationTargetBase` & `object`
 
-Defined in: [packages/vite/src/types.ts:183](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/vite/src/types.ts#L183)
+Defined in: [packages/vite/src/types.ts:183](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/vite/src/types.ts#L183)
 
 A single (schema, variant, config) triple that produces exactly one
 generated form. The cache key space.

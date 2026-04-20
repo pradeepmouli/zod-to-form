@@ -8,7 +8,7 @@
 
 > **z2fVite**(`options?`): `Plugin`
 
-Defined in: [packages/vite/src/plugin.ts:147](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/vite/src/plugin.ts#L147)
+Defined in: [packages/vite/src/plugin.ts:147](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/vite/src/plugin.ts#L147)
 
 Vite plugin factory for `@zod-to-form/vite`.
 
@@ -54,15 +54,15 @@ export default defineConfig({
 
 ## Use When
 
-- You want `import SignupForm from './signup.schema?z2f'` to Just Work in a Vite app
-- You want HMR-aware form recompilation when schemas change in development
-- You want to run generate mode to pre-compile forms from `<ZodForm>` call sites
+- You want `import SignupForm from './signup.schema?z2f'` to Just Work in a Vite app — the plugin intercepts the import and compiles the form on demand
+- You want HMR-aware form recompilation when schemas change in development — only the affected virtual modules are invalidated
+- You want to run generate mode to pre-compile forms from `<ZodForm>` call sites — opt in via `generate: {}` in plugin options
 
 ## Avoid When
 
-- You are building with webpack, esbuild, Rollup, or any non-Vite bundler
-- Your schemas have cyclic references — the walker will recurse infinitely on them
-- You need server-side form rendering without a React runtime
+- You are building with webpack, esbuild, Rollup, or any non-Vite bundler — use `@zod-to-form/cli` instead
+- Your schemas have cyclic references — the walker will recurse infinitely on them; break cycles before using the plugin
+- You need server-side form rendering without a React runtime — static codegen produces lighter SSR-compatible output
 
 ## Pitfalls
 

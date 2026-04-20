@@ -8,16 +8,19 @@
  * and emits static `.tsx` form components — optionally alongside a Next.js server action
  * and a schema-lite file for optimized client-side validation.
  *
+ * @remarks
+ * Before using the CLI, decide: are you scripting (use `runGenerate`) or interacting
+ * (use `npx zod-to-form`)? For config authoring, always use `defineConfig` for type inference.
+ *
  * @useWhen
- * - You want a one-shot CLI command to generate a typed React form from a Zod schema
- * - You need watch-mode codegen that regenerates on schema file changes
- * - You want programmatic codegen from a Node.js script without spawning a child process
- *   (import `runGenerate` directly instead of using the CLI binary)
+ * - You want a one-shot CLI command to generate a typed React form from a Zod schema — no runtime overhead, static output
+ * - You need watch-mode codegen that regenerates on schema file changes — `--watch` keeps the output in sync automatically
+ * - You want programmatic codegen from a Node.js script without spawning a child process — import `runGenerate` directly instead of using the CLI binary
  *
  * @avoidWhen
- * - Runtime form rendering — use `@zod-to-form/react` for that
- * - Browser environments — this package uses Node.js `fs` and `path` APIs
- * - Projects that do not use Vite — the `@zod-to-form/vite` plugin covers that use case better
+ * - Runtime form rendering — use `@zod-to-form/react` for that; the CLI only emits static `.tsx` files
+ * - Browser environments — this package uses Node.js `fs` and `path` APIs not available in browsers
+ * - Projects that do not use Vite — the `@zod-to-form/vite` plugin covers that use case better with HMR integration
  *
  * @pitfalls
  * - NEVER omit `--config` when calling the CLI — there is no fallback auto-discovery

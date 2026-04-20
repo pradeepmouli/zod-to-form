@@ -171,12 +171,12 @@ Produces `src/components/SignupForm.tsx` — a hand-readable `.tsx` file that im
 ## When to Use
 
 
-| Task | Use | Why |
-|------|-----|-----|
-| Building a custom codegen pipeline that assembles `FormField[]` and needs the TSX string | `generateFormComponent` | Generate a React form component as a TypeScript string from `FormField[]`. |
-| Writing codegen tests that verify output structure without spawning a CLI process | `generateFormComponent` | Generate a React form component as a TypeScript string from `FormField[]`. |
-| Building a custom codegen backend that needs the same override resolution logic as the CLI | `resolveFieldMapping` | Resolve the component name and override config for a single `FormField` key. |
-| Writing tests that verify field-to-component mapping for a given config | `resolveFieldMapping` | Resolve the component name and override config for a single `FormField` key. |
+| Task | Use |
+|------|-----|
+| Building a custom codegen pipeline that assembles `FormField[]` and needs the TSX string | `generateFormComponent` |
+| Writing codegen tests that verify output structure without spawning a CLI process | `generateFormComponent` |
+| Building a custom codegen backend that needs the same override resolution logic as the CLI | `resolveFieldMapping` |
+| Writing tests that verify field-to-component mapping for a given config | `resolveFieldMapping` |
 
 **Avoid when:**
 

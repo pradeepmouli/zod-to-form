@@ -8,7 +8,7 @@
 
 > **processReadonly**(`schema`, `ctx`, `field`, `params`): `void`
 
-Defined in: [processors/wrappers.ts:126](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/processors/wrappers.ts#L126)
+Defined in: [processors/wrappers.ts:126](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/processors/wrappers.ts#L126)
 
 Process `z.readonly()` — marks the field as read-only and delegates to the inner type.
 The rendered component receives `readOnly: true` via the base field props.

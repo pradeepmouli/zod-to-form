@@ -8,7 +8,7 @@
 
 > **inferLabel**(`key`): `string`
 
-Defined in: [utils.ts:13](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/utils.ts#L13)
+Defined in: [utils.ts:13](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/utils.ts#L13)
 
 Convert a camelCase or snake_case key to a human-readable Title Case label.
 Strips dot-path prefixes (e.g. `"address.street"` → `"Street"`) before conversion.

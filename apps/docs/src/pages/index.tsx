@@ -227,6 +227,24 @@ function HomepageHeader(): ReactNode {
           >
             View on GitHub
           </Link>
+          <span className={`button button--outline button--lg ${styles.comingSoon}`}>
+            Playground
+            <span className={styles.comingSoonBadge}>coming soon</span>
+          </span>
+        </div>
+        <div className={styles.npmLinks}>
+          <a href="https://www.npmjs.com/package/@zod-to-form/react" className={styles.npmBadge}>
+            <span className={styles.npmIcon}>npm</span>
+            @zod-to-form/react
+          </a>
+          <a href="https://www.npmjs.com/package/@zod-to-form/cli" className={styles.npmBadge}>
+            <span className={styles.npmIcon}>npm</span>
+            @zod-to-form/cli
+          </a>
+          <a href="https://www.npmjs.com/package/@zod-to-form/vite" className={styles.npmBadge}>
+            <span className={styles.npmIcon}>npm</span>
+            @zod-to-form/vite
+          </a>
         </div>
       </div>
     </header>
@@ -356,59 +374,6 @@ function CodePreviewSection(): ReactNode {
             <span className={styles.codeTab}>SignupForm.tsx</span>
           </div>
           <CodeBlock language="tsx">{signupFormCode}</CodeBlock>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function UseCasesSection(): ReactNode {
-  return (
-    <section className={styles.section}>
-      <div className={styles.container}>
-        <div className={styles.sectionLabel}>Use Cases</div>
-        <h2 className={styles.sectionTitle}>From prototype to production</h2>
-        <p className={styles.sectionDesc}>Two paths, one config. Start fast, ship clean.</p>
-        <div className={styles.audienceGrid}>
-          <div className={`${styles.audienceCard} ${styles.tealAccent}`}>
-            <div className={`${styles.audienceTag} ${styles.audienceTagTeal}`}>Rapid Builder</div>
-            <h3>Runtime rendering</h3>
-            <p>
-              Drop in &lt;ZodForm&gt; and get a working form instantly. Perfect for admin panels,
-              internal tools, and CRUD forms where speed matters.
-            </p>
-            <ul className={styles.audienceFeatures}>
-              <li>Schema change → form updates on re-render</li>
-              <li>shadcn/ui preset — zero component config</li>
-              <li>Metadata via Zod v4 registry API</li>
-            </ul>
-          </div>
-          <div className={`${styles.audienceCard} ${styles.pinkAccent}`}>
-            <div className={`${styles.audienceTag} ${styles.audienceTagPink}`}>Production Team</div>
-            <h3>CLI codegen</h3>
-            <p>
-              Generate static .tsx files you own. Review diffs, hand-edit, commit. The output has
-              zero runtime dependency on zod-to-form.
-            </p>
-            <ul className={styles.audienceFeatures}>
-              <li>Readable output — looks hand-written</li>
-              <li>--watch mode for development</li>
-              <li>CI-friendly — add to your build pipeline</li>
-            </ul>
-          </div>
-          <div className={`${styles.audienceCard} ${styles.mixedAccent}`}>
-            <div className={`${styles.audienceTag} ${styles.audienceTagMixed}`}>Schema-First</div>
-            <h3>Both paths, one config</h3>
-            <p>
-              Start with runtime for iteration. Eject to codegen when you need full control. Same
-              z2f.config.ts drives both — component names and overrides carry over.
-            </p>
-            <ul className={styles.audienceFeatures}>
-              <li>Codegen ↔ runtime parity</li>
-              <li>Custom field template via config</li>
-              <li>Tabs, accordions, steppers via component override</li>
-            </ul>
-          </div>
         </div>
       </div>
     </section>
@@ -637,7 +602,7 @@ export default function Home(): ReactNode {
         <main>
           <ArchitectureSection />
           <CodePreviewSection />
-          <UseCasesSection />
+
           <PerformanceSection />
           <ComparisonSection />
           <EcosystemSection />

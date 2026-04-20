@@ -62,27 +62,22 @@ Config resolution order:
 
 ## Remarks
 
-Requires Zod v4 and `@zod-to-form/core`. The plugin uses Vite's
-`ssrLoadModule` to evaluate schema files — the same Vite resolver pipeline
-that handles your app code, so aliases and tsconfig paths all work.
-
-HMR contract: schema file changes invalidate only the affected virtual
-modules. Config file (`z2f.config.ts`) changes invalidate all cached
-compiled forms and trigger re-compilation on the next import.
+Two modes: `?z2f` query imports (transform per-import, HMR works) vs `generate` mode
+(static JSX rewriting, no HMR integration). Use `?z2f` for new forms, `generate` for
+migrating existing `<ZodForm>` call sites.
 
 ## Use When
 
-- You want zero-config form generation directly from `import './schema?z2f'`
-- You have a Vite-based app and want to skip the CLI generate step
-- You need per-variant forms (mobile/desktop) from the same schema
-- You want HMR-aware form recompilation during development
+- You want zero-config form generation directly from `import './schema?z2f'` — the plugin intercepts the import and returns a virtual form module
+- You have a Vite-based app and want to skip the CLI generate step — no separate codegen script needed
+- You need per-variant forms (mobile/desktop) from the same schema — append `?z2f=variantName` to get a separate compiled output
+- You want HMR-aware form recompilation during development — schema file changes invalidate only the affected virtual modules
 
 ## Avoid When
 
-- You are NOT using Vite (use `@zod-to-form/cli` for non-Vite builds)
-- Your schema files have cyclic type references — the `?z2f` rewriter
-  recurses on Zod's type graph and will hang on cycles
-- You need SSR-safe form HTML without a client-side React bundle
+- You are NOT using Vite — use `@zod-to-form/cli` for webpack, esbuild, or Rollup builds
+- Your schema files have cyclic type references — the `?z2f` rewriter recurses on Zod's type graph and will hang on cycles
+- You need SSR-safe form HTML without a client-side React bundle — static codegen produces lighter server-renderable output
 - You are on Zod v3 — the plugin only supports Zod v4 schemas
 
 ## Pitfalls

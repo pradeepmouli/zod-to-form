@@ -113,6 +113,73 @@
   animation: fadeUp 0.6s ease-out 0.3s both;
 }
 
+/* ── COMING SOON ─────────────────────────────────────────────────── */
+.comingSoon {
+  cursor: default;
+  opacity: 0.6;
+  position: relative;
+  gap: 0.5rem;
+}
+
+.comingSoon:hover {
+  transform: none;
+}
+
+.comingSoonBadge {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--z2f-teal);
+  background: var(--z2f-teal-muted);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+/* ── NPM BADGES ──────────────────────────────────────────────────── */
+.npmLinks {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+  animation: fadeUp 0.6s ease-out 0.4s both;
+}
+
+.npmBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.875rem;
+  border: 1px solid var(--z2f-border-subtle);
+  border-radius: var(--z2f-radius-sm);
+  background: var(--z2f-bg-surface);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.8125rem;
+  color: var(--z2f-text-secondary);
+  text-decoration: none;
+  transition: all var(--z2f-transition);
+}
+
+.npmBadge:hover {
+  border-color: var(--z2f-border-default);
+  background: var(--z2f-bg-hover);
+  color: var(--z2f-text-primary);
+  text-decoration: none;
+}
+
+.npmIcon {
+  font-weight: 700;
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #cb3837;
+  background: rgba(203, 56, 55, 0.1);
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
 /* ── SECTIONS ─────────────────────────────────────────────────────── */
 .section {
   position: relative;
@@ -456,110 +523,6 @@
   box-shadow: none !important;
 }
 
-/* ── AUDIENCE CARDS ───────────────────────────────────────────────── */
-.audienceGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-}
-
-.audienceCard {
-  position: relative;
-  padding: 2.25rem 2rem;
-  border: 1px solid var(--z2f-border-subtle);
-  border-radius: var(--z2f-radius-lg);
-  background: var(--z2f-bg-surface);
-  overflow: hidden;
-  transition: all var(--z2f-transition);
-}
-
-.audienceCard:hover {
-  transform: translateY(-2px);
-  background: var(--z2f-bg-hover);
-  border-color: var(--z2f-border-default);
-}
-
-.audienceCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-}
-
-.tealAccent::before {
-  background: var(--z2f-teal);
-}
-
-.pinkAccent::before {
-  background: var(--z2f-brand);
-}
-
-.mixedAccent::before {
-  background: linear-gradient(90deg, var(--z2f-teal), var(--z2f-brand));
-}
-
-.audienceTag {
-  font-family: var(--ifm-font-family-monospace);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin-bottom: 0.75rem;
-}
-
-.audienceTagTeal {
-  color: var(--z2f-teal);
-}
-
-.audienceTagPink {
-  color: var(--z2f-brand);
-}
-
-.audienceTagMixed {
-  background: linear-gradient(90deg, var(--z2f-teal), var(--z2f-brand));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-}
-
-.audienceCard h3 {
-  font-family: var(--ifm-heading-font-family);
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0 0 0.625rem;
-  color: var(--z2f-text-primary);
-}
-
-.audienceCard > p {
-  font-size: 0.875rem;
-  color: var(--z2f-text-secondary);
-  margin: 0 0 1.25rem;
-  line-height: 1.6;
-}
-
-.audienceFeatures {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-  padding: 0;
-  margin: 0;
-}
-
-.audienceFeatures li {
-  font-family: var(--ifm-font-family-monospace);
-  font-size: 0.8125rem;
-  color: var(--z2f-text-secondary);
-}
-
-.audienceFeatures li::before {
-  content: '→ ';
-  color: var(--z2f-text-muted);
-}
-
 /* ── COMPARISON TABLE ─────────────────────────────────────────────── */
 .compareTable {
   width: 100%;
@@ -690,9 +653,7 @@
   .whyGrid {
     grid-template-columns: 1fr;
   }
-  .audienceGrid {
-    grid-template-columns: 1fr;
-  }
+
   .section {
     padding: 4rem 0;
   }

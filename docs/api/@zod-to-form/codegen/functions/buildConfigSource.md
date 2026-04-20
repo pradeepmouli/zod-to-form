@@ -8,7 +8,7 @@
 
 > **buildConfigSource**(`opts`): `string`
 
-Defined in: [codegen/src/config-template.ts:59](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/codegen/src/config-template.ts#L59)
+Defined in: [codegen/src/config-template.ts:59](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/codegen/src/config-template.ts#L59)
 
 Generate a `z2f.config.ts` starter file as a source string.
 Produces a `defineConfig(...)` call with components, defaults, include/exclude,

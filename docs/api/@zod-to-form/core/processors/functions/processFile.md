@@ -8,7 +8,7 @@
 
 > **processFile**(`_schema`, `_ctx`, `field`, `_params`): `void`
 
-Defined in: [processors/file.ts:16](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/processors/file.ts#L16)
+Defined in: [processors/file.ts:16](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/processors/file.ts#L16)
 
 Process `z.file()` — renders as a `FileInput` component.
 No constraints are extracted. The field renderer sets `valueAsFile: true` on registration

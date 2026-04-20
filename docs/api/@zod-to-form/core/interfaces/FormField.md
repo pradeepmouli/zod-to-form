@@ -6,7 +6,7 @@
 
 # Interface: FormField
 
-Defined in: [types.ts:99](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L99)
+Defined in: [types.ts:99](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L99)
 
 Intermediate representation of a single form field produced by `walkSchema`.
 Each processor fills in component, props, constraints, and optional children.
@@ -19,7 +19,7 @@ runtime `FieldRenderer` to produce a live React component tree.
 
 > `optional` **arrayItem?**: `FormField`
 
-Defined in: [types.ts:133](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L133)
+Defined in: [types.ts:133](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L133)
 
 Template for array items
 
@@ -29,7 +29,7 @@ Template for array items
 
 > `optional` **children?**: `FormField`[]
 
-Defined in: [types.ts:131](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L131)
+Defined in: [types.ts:131](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L131)
 
 Children for nested objects
 
@@ -39,7 +39,7 @@ Children for nested objects
 
 > **component**: `string`
 
-Defined in: [types.ts:103](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L103)
+Defined in: [types.ts:103](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L103)
 
 Component name from ComponentMap, e.g. "Input", "Select", "Textarea"
 
@@ -49,7 +49,7 @@ Component name from ComponentMap, e.g. "Input", "Select", "Textarea"
 
 > **constraints**: [`FormFieldConstraints`](FormFieldConstraints.md)
 
-Defined in: [types.ts:135](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L135)
+Defined in: [types.ts:135](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L135)
 
 Validation constraints extracted from Zod v4 constraint bag (_zod.bag)
 
@@ -59,7 +59,7 @@ Validation constraints extracted from Zod v4 constraint bag (_zod.bag)
 
 > `optional` **defaultValue?**: `unknown`
 
-Defined in: [types.ts:115](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L115)
+Defined in: [types.ts:115](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L115)
 
 Default value from z.default() or metadata
 
@@ -69,7 +69,7 @@ Default value from z.default() or metadata
 
 > **deprecated**: `boolean`
 
-Defined in: [types.ts:127](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L127)
+Defined in: [types.ts:127](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L127)
 
 Whether the field is marked as deprecated in the schema registry
 
@@ -79,7 +79,7 @@ Whether the field is marked as deprecated in the schema registry
 
 > `optional` **description?**: `string`
 
-Defined in: [types.ts:109](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L109)
+Defined in: [types.ts:109](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L109)
 
 Help text from .describe() or .meta()
 
@@ -89,7 +89,7 @@ Help text from .describe() or .meta()
 
 > **disabled**: `boolean`
 
-Defined in: [types.ts:123](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L123)
+Defined in: [types.ts:123](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L123)
 
 Non-interactive state (greyed out)
 
@@ -99,7 +99,7 @@ Non-interactive state (greyed out)
 
 > `optional` **hasCustomRender?**: `boolean`
 
-Defined in: [types.ts:139](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L139)
+Defined in: [types.ts:139](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L139)
 
 Whether a custom render function is registered for this field (runtime only)
 
@@ -109,7 +109,7 @@ Whether a custom render function is registered for this field (runtime only)
 
 > `optional` **helpText?**: `string`
 
-Defined in: [types.ts:125](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L125)
+Defined in: [types.ts:125](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L125)
 
 Help text rendered below the input, distinct from description (below label)
 
@@ -119,7 +119,7 @@ Help text rendered below the input, distinct from description (below label)
 
 > **hidden**: `boolean`
 
-Defined in: [types.ts:119](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L119)
+Defined in: [types.ts:119](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L119)
 
 Hidden but present in form state
 
@@ -129,7 +129,7 @@ Hidden but present in form state
 
 > **key**: `string`
 
-Defined in: [types.ts:101](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L101)
+Defined in: [types.ts:101](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L101)
 
 Field path, e.g. "name", "address.street", "items.0.name"
 
@@ -139,7 +139,7 @@ Field path, e.g. "name", "address.street", "items.0.name"
 
 > **label**: `string`
 
-Defined in: [types.ts:107](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L107)
+Defined in: [types.ts:107](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L107)
 
 Display label
 
@@ -149,7 +149,7 @@ Display label
 
 > `optional` **options?**: [`FormFieldOption`](FormFieldOption.md)[]
 
-Defined in: [types.ts:129](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L129)
+Defined in: [types.ts:129](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L129)
 
 Options for enum/union select fields
 
@@ -159,7 +159,7 @@ Options for enum/union select fields
 
 > `optional` **order?**: `number`
 
-Defined in: [types.ts:121](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L121)
+Defined in: [types.ts:121](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L121)
 
 Display order override from form registry
 
@@ -169,7 +169,7 @@ Display order override from form registry
 
 > `optional` **placeholder?**: `string`
 
-Defined in: [types.ts:111](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L111)
+Defined in: [types.ts:111](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L111)
 
 Placeholder from examples[0] or metadata
 
@@ -179,7 +179,7 @@ Placeholder from examples[0] or metadata
 
 > **props**: `Record`\<`string`, `unknown`\>
 
-Defined in: [types.ts:105](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L105)
+Defined in: [types.ts:105](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L105)
 
 Pass-through props for the component
 
@@ -189,7 +189,7 @@ Pass-through props for the component
 
 > **readOnly**: `boolean`
 
-Defined in: [types.ts:117](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L117)
+Defined in: [types.ts:117](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L117)
 
 Read-only from z.readonly() or metadata
 
@@ -199,7 +199,7 @@ Read-only from z.readonly() or metadata
 
 > `optional` **render?**: (`field`, `props`) => `unknown`
 
-Defined in: [types.ts:141](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L141)
+Defined in: [types.ts:141](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L141)
 
 Custom render function from FormMeta (runtime only, not serialisable)
 
@@ -223,7 +223,7 @@ Custom render function from FormMeta (runtime only, not serialisable)
 
 > **required**: `boolean`
 
-Defined in: [types.ts:113](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L113)
+Defined in: [types.ts:113](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L113)
 
 Whether the field is required
 
@@ -233,7 +233,7 @@ Whether the field is required
 
 > `optional` **validation?**: [`ValidationStrategy`](ValidationStrategy.md)
 
-Defined in: [types.ts:145](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L145)
+Defined in: [types.ts:145](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L145)
 
 Validation strategy set by optimizers (undefined = use zodResolver)
 
@@ -243,7 +243,7 @@ Validation strategy set by optimizers (undefined = use zodResolver)
 
 > `optional` **zodSchema?**: `$ZodType`\<`unknown`, `unknown`, `$ZodTypeInternals`\<`unknown`, `unknown`\>\>
 
-Defined in: [types.ts:143](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L143)
+Defined in: [types.ts:143](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L143)
 
 Atomic Zod schema for this field, set by L1 optimizer
 
@@ -253,6 +253,6 @@ Atomic Zod schema for this field, set by L1 optimizer
 
 > **zodType**: `string`
 
-Defined in: [types.ts:137](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L137)
+Defined in: [types.ts:137](https://github.com/pradeepmouli/zod-to-form/blob/7bf19cd9fc0937e42a238b2be647353aea0a2a27/packages/core/src/types.ts#L137)
 
 Original Zod def.type for reference

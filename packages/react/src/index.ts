@@ -13,14 +13,19 @@
  * - `shadcnComponentMap` — the shadcn/ui component set
  * - `wrapWithSchemaLite` — wrap a submit handler with the lite schema for optimized validation
  *
+ * @remarks
+ * Choose your abstraction level: `<ZodForm>` for zero-config, `useZodForm` for custom
+ * rendering, manual `walkSchema` for full control. Each step down trades convenience for
+ * flexibility.
+ *
  * @useWhen
- * - You need runtime schema-driven forms with dynamic schema changes
- * - You are prototyping and don't want a codegen step
- * - Your schema is determined at runtime (e.g. from a backend API)
+ * - You need runtime schema-driven forms with dynamic schema changes — no rebuild needed when the schema updates
+ * - You are prototyping and don't want a codegen step — `<ZodForm>` renders immediately from any `z.object()`
+ * - Your schema is determined at runtime (e.g. from a backend API) — the walker evaluates schemas lazily on render
  *
  * @avoidWhen
- * - Performance is critical and you can run codegen at build time — prefer `@zod-to-form/cli`
- * - You need SSR with no client bundle — generated static components are lighter
+ * - Performance is critical and you can run codegen at build time — prefer `@zod-to-form/cli` for static `.tsx` output with zero runtime overhead
+ * - You need SSR with no client bundle — generated static components are lighter and have no React runtime dependency on `walkSchema`
  *
  * @pitfalls
  * - NEVER call `schema.safeParse(formValues)` without first calling `normalizeFormValues(formValues)` — HTML inputs produce empty strings for optional fields, which Zod rejects

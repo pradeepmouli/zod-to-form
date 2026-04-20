@@ -8,6 +8,15 @@ license: MIT
 
 Schema walker and processor registry for Zod v4 form generation
 
+Requires Zod v4 — uses `_zod.def`, `_zod.bag`, and `z.registry()` APIs.
+Does NOT work with Zod v3 (which uses `_def` internals).
+
+Key concepts:
+- **Processors**: Per-type handlers that extract structure from Zod schemas
+- **Registry**: `z.registry<FormMeta>()` stores per-schema field config
+- **Optimization**: L1 decomposes validation per-field, L2 extracts native HTML rules
+- **Config presets**: `shadcn` preset maps to controlled components with field expressions
+
 ## Quick Start
 
 ```ts
@@ -28,24 +37,22 @@ console.log(fields.map((f) => ({ key: f.key, component: f.component })));
 ## When to Use
 
 
-| Task | Use | Why |
-|------|-----|-----|
-| You want per-field validation instead of whole-form validation | `createOptimizers` | Create an optimizer registry by merging custom optimizers with builtins. |
-| You need native HTML validation attributes (required, minLength, pattern) | `createOptimizers` | Create an optimizer registry by merging custom optimizers with builtins. |
-| Writing z2f.config.ts for CLI codegen (primary use case) | `defineConfig` | Identity helper that returns its argument typed as `ZodFormsConfig`. |
-| You want TypeScript inference and IDE autocompletion for config | `defineConfig` | Identity helper that returns its argument typed as `ZodFormsConfig`. |
-| Loading config from JSON files or dynamic import() | `validateConfig` | Validates an unknown value as a `ZodFormsConfig` at runtime. |
-| You need runtime validation of user-provided config | `validateConfig` | Validates an unknown value as a `ZodFormsConfig` at runtime. |
-| ALWAYS call on form values before schema.safeParse() in runtime mode | `normalizeFormValues` | Normalize raw HTML form values for Zod parsing. |
-| Critical for optional fields where HTML produces "" but Zod expects undefined | `normalizeFormValues` | Normalize raw HTML form values for Zod parsing. |
-| You need direct schema-to-fields conversion in runtime contexts | `walkSchema` | Walk a Zod schema and produce a FormField[] tree. |
-| You're building a custom codegen pipeline on top of FormField[] | `walkSchema` | Walk a Zod schema and produce a FormField[] tree. |
-| You have a deeply-nested FieldConfig mirroring your schema shape | `registerDeep` | Register a schema and all its nested fields in a registry using a
-path-structured FieldConfig tree. |
-| Recommended for complex schemas with nested objects and arrays | `registerDeep` | Register a schema and all its nested fields in a registry using a
-path-structured FieldConfig tree. |
-| Merging global field configs from z2f.config.ts into a registry | `registerFlat` | Register flat dot-path field configs against a schema's registry. |
-| Your config uses dot-path notation rather than nested structure | `registerFlat` | Register flat dot-path field configs against a schema's registry. |
+| Task | Use |
+|------|-----|
+| You want per-field validation instead of whole-form validation | `createOptimizers` |
+| You need native HTML validation attributes (required, minLength, pattern) | `createOptimizers` |
+| Writing z2f.config.ts for CLI codegen (primary use case) | `defineConfig` |
+| You want TypeScript inference and IDE autocompletion for config | `defineConfig` |
+| Loading config from JSON files or dynamic import() | `validateConfig` |
+| You need runtime validation of user-provided config | `validateConfig` |
+| ALWAYS call on form values before schema.safeParse() in runtime mode | `normalizeFormValues` |
+| Critical for optional fields where HTML produces "" but Zod expects undefined | `normalizeFormValues` |
+| You need direct schema-to-fields conversion in runtime contexts | `walkSchema` |
+| You're building a custom codegen pipeline on top of FormField[] | `walkSchema` |
+| You have a deeply-nested FieldConfig mirroring your schema shape | `registerDeep` |
+| Recommended for complex schemas with nested objects and arrays | `registerDeep` |
+| Merging global field configs from z2f.config.ts into a registry | `registerFlat` |
+| Your config uses dot-path notation rather than nested structure | `registerFlat` |
 
 **Avoid when:**
 

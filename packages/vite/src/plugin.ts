@@ -120,14 +120,14 @@ interface PluginState {
  * ```
  *
  * @useWhen
- * - You want `import SignupForm from './signup.schema?z2f'` to Just Work in a Vite app
- * - You want HMR-aware form recompilation when schemas change in development
- * - You want to run generate mode to pre-compile forms from `<ZodForm>` call sites
+ * - You want `import SignupForm from './signup.schema?z2f'` to Just Work in a Vite app — the plugin intercepts the import and compiles the form on demand
+ * - You want HMR-aware form recompilation when schemas change in development — only the affected virtual modules are invalidated
+ * - You want to run generate mode to pre-compile forms from `<ZodForm>` call sites — opt in via `generate: {}` in plugin options
  *
  * @avoidWhen
- * - You are building with webpack, esbuild, Rollup, or any non-Vite bundler
- * - Your schemas have cyclic references — the walker will recurse infinitely on them
- * - You need server-side form rendering without a React runtime
+ * - You are building with webpack, esbuild, Rollup, or any non-Vite bundler — use `@zod-to-form/cli` instead
+ * - Your schemas have cyclic references — the walker will recurse infinitely on them; break cycles before using the plugin
+ * - You need server-side form rendering without a React runtime — static codegen produces lighter SSR-compatible output
  *
  * @pitfalls
  * - NEVER use `?z2f` on schemas with cyclic type references — the schema walker
