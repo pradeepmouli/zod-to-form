@@ -52,26 +52,9 @@ Key concepts:
 | `registerFlat` | Your config is already nested mirroring schema shape | use registerDeep() instead |
 - API surface: 43 functions, 20 types, 4 constants
 
-## Pitfalls
-
-- NEVER mutate builtinOptimizers — it's a module singleton. Always use createOptimizers(custom)
-- NEVER assume custom optimizers append — they REPLACE the entire chain for that type
-- NEVER assume preset props merge with your props — the entire props dict is replaced. If you set component props, you must include ALL props including the ones from the preset
-- NEVER use as a type guard — it throws on invalid input, doesn't narrow
-- NEVER assume extra keys cause failures — the schema uses z.object().loose(), extra keys are silently ignored
-- NEVER skip `normalizeFormValues()` in runtime mode — optional fields will fail validation with "expected string, received string" errors that are extremely confusing to debug
-- NEVER rely on `normalizeFormValues()` for custom types (Date, etc.) — only handles strings and FileList
-- NEVER pass a non-object schema at the root — throws immediately
-- NEVER bypass the processor registry for custom types — extend via options.processors
-- NEVER skip normalizeFormValues() before schema.safeParse() — empty strings from HTML inputs fail optional field validation
-- NEVER mix with registerFlat() on the same schema — registry entries conflict silently
-- NEVER forget the structural keys (fields, arrayItems) for nested config — without them, child config is silently ignored
-- NEVER mix with registerDeep() on the same schema — registry entries conflict silently
-- NEVER assume numeric path segments matter — "items.0.name" and "items.2.name" resolve to the same target
-
 ## Configuration
 
-8 configuration interfaces — see references/config.md for details.
+9 configuration interfaces — see references/config.md for details.
 
 ## Quick Reference
 

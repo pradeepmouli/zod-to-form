@@ -37,16 +37,6 @@ Before using the CLI, decide: are you scripting (use `runGenerate`) or interacti
 | `validateConfig` | Using TypeScript with defineConfig() | type errors catch most issues at dev time |
 - API surface: 4 functions, 1 types
 
-## Pitfalls
-
-- NEVER call with a schema that already has a generated output file when `defaults.overwrite` is false — the function silently skips writing and returns `wroteFile: false` with no error; this is intentional but easy to miss in scripts — check result.wroteFile and set defaults.overwrite: true or delete the file first
-- NEVER rely on generated file content after re-running `runGenerate` without checking `wroteFile` — if the file already exists and overwrite is disabled, the on-disk file is NOT updated even though `code` is returned
-- NEVER use `--watch` mode on schema files that have indirect imports — the watcher only tracks the top-level schema file, not its transitive dependencies
-- NEVER call `program.parse()` (synchronous) in ESM environments — use `.parseAsync(process.argv)` instead or the program will silently not execute
-- NEVER assume preset props merge with your props — the entire props dict is replaced. If you set component props, you must include ALL props including the ones from the preset
-- NEVER use as a type guard — it throws on invalid input, doesn't narrow
-- NEVER assume extra keys cause failures — the schema uses z.object().loose(), extra keys are silently ignored
-
 ## Configuration
 
 **ZodFormsConfig** — Root configuration type for `zod-to-form` code generation.

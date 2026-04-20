@@ -26,12 +26,6 @@ Documentation site for zod-to-form (Docusaurus 3 + TypeDoc)
 | `resolveFieldMapping` | You are using the CLI or Vite plugin | this is called internally and you don't need it |
 - API surface: 8 functions, 1 constants
 
-## Pitfalls
-
-- NEVER call `generateFormComponent` with a stale `fields` array from a previous schema version — there is no cache invalidation; callers must re-run `walkSchema` on schema change
-- NEVER use the returned string as a module cache key — it is not content-addressed; use `configHash` from `@zod-to-form/core` on the config object instead
-- NEVER assume `source: 'none'` means the field has no component — the schema walker may have inferred one; `resolveFieldMapping` only resolves user-provided config overrides
-
 ## Configuration
 
 2 configuration interfaces — see references/config.md for details.
