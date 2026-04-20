@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import type { HTMLAttributes, LabelHTMLAttributes } from 'react';
+import type { ButtonHTMLAttributes, HTMLAttributes, LabelHTMLAttributes } from 'react';
 import { Checkbox } from './Checkbox.js';
 import { ComboboxFallback } from './Combobox.js';
 import { DatePicker } from './DatePicker.js';
@@ -26,12 +26,12 @@ function FieldMessage(props: HTMLAttributes<HTMLParagraphElement>) {
   return createElement('p', props);
 }
 
-function ArrayAddButton(props: HTMLAttributes<HTMLButtonElement> & { disabled?: boolean }) {
-  return createElement('button', { type: 'button', ...props }, props.children ?? '+ Add');
+function ArrayAddButton(props: ButtonHTMLAttributes<HTMLButtonElement>) {
+  return createElement('button', { ...props, type: 'button' }, props.children ?? '+ Add');
 }
 
-function ArrayRemoveButton(props: HTMLAttributes<HTMLButtonElement> & { disabled?: boolean }) {
-  return createElement('button', { type: 'button', ...props }, props.children ?? '− Remove');
+function ArrayRemoveButton(props: ButtonHTMLAttributes<HTMLButtonElement>) {
+  return createElement('button', { ...props, type: 'button' }, props.children ?? '− Remove');
 }
 
 /** Internal wrapper component names — not user-configurable */

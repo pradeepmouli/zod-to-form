@@ -160,8 +160,9 @@ export type FieldExpression =
   | 'field.name';
 
 /**
- * Configuration for array field add/remove buttons.
- * Applied via FormMeta registry on `z.array()` schemas.
+ * Configuration for collection-style field add/remove buttons.
+ * Applied via FormMeta registry on schemas rendered as `ArrayField`:
+ * `z.array()`, `z.set()`, and `z.map()`.
  *
  * @category Types
  */
@@ -190,8 +191,9 @@ type FieldConfigBase = {
   /** Help text rendered below the input, distinct from description (below label) */
   helpText?: string;
   /**
-   * Configuration for array field add/remove buttons.
-   * Only meaningful on `z.array()` schemas — ignored on other types.
+   * Configuration for collection-style field add/remove controls.
+   * Meaningful for schemas rendered via array-style UI handling, including
+   * `z.array()`, `z.set()`, and `z.map()`. Ignored on leaf/object types.
    */
   arrayConfig?: ArrayConfig;
   /**

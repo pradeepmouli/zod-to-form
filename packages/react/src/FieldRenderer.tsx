@@ -374,6 +374,29 @@ const FieldsetBlock = memo(function FieldsetBlock({
 
 // ─── Array block with useFieldArray ───────────────────────────────────
 
+/**
+ * Serialize a value into a dedup key for set uniqueness checks.
+ * Returns null for empty/nullish values (skip from comparison).
+ * Falls back to a unique symbol-string on serialization failure so
+ * unserializable values never match other values.
+ *
+ * @internal Exported for testing
+ */
+export function safeSerializeForDedup(value: unknown): string | null {
+  if (value === null || value === undefined || value === '') return null;
+  const t = typeof value;
+  if (t === 'string') return `s:${value as string}`;
+  if (t === 'number' || t === 'boolean') return `p:${String(value)}`;
+  if (t === 'bigint') return `b:${(value as bigint).toString()}`;
+  if (t === 'symbol' || t === 'function') return `u:${Symbol().toString()}${Math.random()}`;
+  try {
+    return `j:${JSON.stringify(value, (_k, v) => (typeof v === 'bigint' ? `__bigint:${v.toString()}` : v))}`;
+  } catch {
+    // Circular or otherwise unserializable — treat as unique to avoid false matches
+    return `u:${Symbol().toString()}${Math.random()}`;
+  }
+}
+
 function getDefaultAppendValue(arrayItem: FormField | undefined): unknown {
   if (!arrayItem) return '';
   return getEmptyDefault(arrayItem);
@@ -408,14 +431,19 @@ const ArrayBlock = memo(function ArrayBlock({
   const addLabel = arrayConfig?.addLabel;
   const removeLabel = arrayConfig?.removeLabel;
 
-  // For sets: build a Set of stringified values for O(1) duplicate lookup
+  // For sets: build a Set of stringified values for O(1) duplicate lookup.
+  // Uses a safe serializer that handles BigInt/Symbol and falls back to a
+  // non-matching key on serialization errors (so one bad value doesn't
+  // break the whole check).
   const duplicateIndices = useMemo(() => {
     if (!isSet || !watchedValues) return new Set<number>();
     const seen = new Map<string, number>();
     const dupes = new Set<number>();
     for (let i = 0; i < watchedValues.length; i++) {
-      const key = JSON.stringify(watchedValues[i]);
-      if (key === undefined || key === '""' || key === 'null') continue;
+      const value = watchedValues[i];
+      const key = safeSerializeForDedup(value);
+      // Skip empty/nullish — users haven't filled these in yet
+      if (key === null) continue;
       if (seen.has(key)) {
         dupes.add(i);
         dupes.add(seen.get(key)!);

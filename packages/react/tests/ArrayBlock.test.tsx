@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { FieldRenderer } from '../src/FieldRenderer.js';
+import { FieldRenderer, safeSerializeForDedup } from '../src/FieldRenderer.js';
 import { defaultComponentMap } from '../src/components/index.js';
 import type { FormField } from '@zod-to-form/core';
 
@@ -139,5 +139,43 @@ describe('ArrayBlock', () => {
 
     // After removing, should have 1 remove button
     expect(screen.getAllByRole('button', { name: /remove/i })).toHaveLength(1);
+  });
+});
+
+describe('safeSerializeForDedup', () => {
+  it('returns null for empty/nullish values', () => {
+    expect(safeSerializeForDedup(null)).toBeNull();
+    expect(safeSerializeForDedup(undefined)).toBeNull();
+    expect(safeSerializeForDedup('')).toBeNull();
+  });
+
+  it('produces stable keys for primitives', () => {
+    expect(safeSerializeForDedup('hello')).toBe(safeSerializeForDedup('hello'));
+    expect(safeSerializeForDedup(42)).toBe(safeSerializeForDedup(42));
+    expect(safeSerializeForDedup(true)).toBe(safeSerializeForDedup(true));
+  });
+
+  it('handles BigInt values without throwing', () => {
+    expect(() => safeSerializeForDedup(BigInt(1))).not.toThrow();
+    expect(safeSerializeForDedup(BigInt(1))).toBe(safeSerializeForDedup(BigInt(1)));
+    expect(safeSerializeForDedup(BigInt(1))).not.toBe(safeSerializeForDedup(BigInt(2)));
+  });
+
+  it('distinguishes different types with the same string representation', () => {
+    // "1" string vs 1 number should NOT collide
+    expect(safeSerializeForDedup('1')).not.toBe(safeSerializeForDedup(1));
+  });
+
+  it('handles objects with BigInt properties without throwing', () => {
+    expect(() => safeSerializeForDedup({ id: BigInt(1), name: 'test' })).not.toThrow();
+  });
+
+  it('returns unique key for circular objects (no false match)', () => {
+    const a: Record<string, unknown> = {};
+    a['self'] = a;
+    const b: Record<string, unknown> = {};
+    b['self'] = b;
+    // Both are circular — safe serializer returns unique keys so they don't falsely match
+    expect(safeSerializeForDedup(a)).not.toBe(safeSerializeForDedup(b));
   });
 });

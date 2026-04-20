@@ -26,7 +26,12 @@
  */
 
 import { createElement, type HTMLAttributes, type LabelHTMLAttributes } from 'react';
-import type { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
+import type {
+  ButtonHTMLAttributes,
+  InputHTMLAttributes,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes
+} from 'react';
 import type { FormFieldOption } from '@zod-to-form/core';
 import { defaultComponentMap } from '../components/index.js';
 
@@ -159,12 +164,12 @@ function ShadcnFieldMessage(props: HTMLAttributes<HTMLParagraphElement>) {
 
 // ─── Shadcn-style Array Buttons ──────────────────────────────────────────────
 
-function ShadcnArrayAddButton(props: HTMLAttributes<HTMLButtonElement> & { disabled?: boolean }) {
+function ShadcnArrayAddButton(props: ButtonHTMLAttributes<HTMLButtonElement>) {
   return createElement(
     'button',
     {
-      type: 'button',
       ...props,
+      type: 'button',
       className: [
         'inline-flex items-center justify-center gap-1 rounded-md border border-input',
         'bg-background px-3 py-1.5 text-sm font-medium shadow-sm',
@@ -179,14 +184,12 @@ function ShadcnArrayAddButton(props: HTMLAttributes<HTMLButtonElement> & { disab
   );
 }
 
-function ShadcnArrayRemoveButton(
-  props: HTMLAttributes<HTMLButtonElement> & { disabled?: boolean }
-) {
+function ShadcnArrayRemoveButton(props: ButtonHTMLAttributes<HTMLButtonElement>) {
   return createElement(
     'button',
     {
-      type: 'button',
       ...props,
+      type: 'button',
       className: [
         'inline-flex items-center justify-center rounded-md px-2 py-1 text-xs',
         'text-muted-foreground hover:text-destructive hover:bg-destructive/10',

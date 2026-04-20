@@ -226,6 +226,28 @@ describe('generateFormComponent', () => {
     expect(result).toContain('disabled={tagsFields.length >= 5}');
   });
 
+  it('emits custom labels from arrayConfig in _arrayConfig prop', () => {
+    const fields = [
+      makeField({
+        key: 'items',
+        component: 'ArrayField',
+        label: 'Items',
+        props: { _arrayConfig: { addLabel: 'Add Row', removeLabel: 'Delete' } },
+        arrayItem: makeField({ key: 'items.0', label: 'Item' })
+      })
+    ];
+
+    const result = generateFormComponent(fields, {
+      exportName: 'schema',
+      componentName: 'ItemForm',
+      mode: 'submit',
+      ui: 'html'
+    });
+
+    expect(result).toContain('>Add Row<');
+    expect(result).toContain('>Delete<');
+  });
+
   it('emits disabled Remove button with minLength constraint', () => {
     const fields = [
       makeField({
