@@ -28,7 +28,7 @@
     "@docusaurus/tsconfig": "3.10.0",
     "@docusaurus/types": "3.10.0",
     "@to-skills/cli": "^0.2.1",
-    "@to-skills/core": "^0.10.0",
+    "@to-skills/core": "^1.0.0",
     "@to-skills/docusaurus": "^0.2.0",
     "docusaurus-plugin-typedoc": "^1.4.2",
     "tsx": "^4.21.0",
