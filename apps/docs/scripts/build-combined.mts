@@ -20,6 +20,8 @@ const playgroundRoot = join(repoRoot, 'apps', 'playground');
 const docsBuild = join(docsRoot, 'build');
 const playgroundDist = join(playgroundRoot, 'dist');
 const playgroundTarget = join(docsBuild, 'play');
+const playgroundFunctions = join(playgroundRoot, 'cf-functions');
+const functionsTarget = join(docsBuild, 'functions');
 
 const env: NodeJS.ProcessEnv = { ...process.env, CF_PAGES: '1' };
 
@@ -45,5 +47,18 @@ cpSync(playgroundDist, playgroundTarget, { recursive: true });
 const redirects = `/play/* /play/index.html 200\n`;
 writeFileSync(join(docsBuild, '_redirects'), redirects);
 console.log('[build-combined] Wrote _redirects with SPA fallback for /play/*');
+
+// Copy playground-owned CF Pages Functions into the combined build so the
+// shadcn registry proxy (used by the Component Explorer) works in prod.
+// Source lives at apps/playground/cf-functions/** and maps 1:1 to
+// apps/docs/build/functions/** which Cloudflare auto-discovers.
+if (existsSync(playgroundFunctions)) {
+  console.log(`\n[build-combined] Copying ${playgroundFunctions} → ${functionsTarget}`);
+  mkdirSync(functionsTarget, { recursive: true });
+  cpSync(playgroundFunctions, functionsTarget, { recursive: true });
+  console.log('[build-combined] CF Pages Functions copied (api/shadcn/*)');
+} else {
+  console.log(`[build-combined] No cf-functions/ at ${playgroundFunctions} — skipping`);
+}
 
 console.log('\n[build-combined] Done.');
