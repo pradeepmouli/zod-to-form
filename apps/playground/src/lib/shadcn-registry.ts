@@ -81,8 +81,10 @@ async function fetchComponent(name: string): Promise<Record<string, string>> {
   const sources: Record<string, string> = {};
   for (const file of data.files) {
     if (file.content && file.path.match(/\.(tsx?|jsx?)$/)) {
-      // Use the filename without extension as the key (e.g., "ui/checkbox")
+      // Registry paths like "registry/new-york-v4/ui/checkbox.tsx"
+      // Extract to "ui/checkbox" for module resolution compatibility
       const key = file.path
+        .replace(/^registry\/[^/]+\//, '')
         .replace(/^src\//, '')
         .replace(/\.tsx?$/, '')
         .replace(/\.jsx?$/, '');

@@ -15,8 +15,22 @@ function cn(...inputs: (string | undefined | null | false | Record<string, boole
   return twMerge(clsx(inputs));
 }
 
+// The unified `radix-ui` package re-exports all primitives under their
+// component names. Assemble a matching namespace so components that
+// `import { Checkbox } from "radix-ui"` resolve correctly.
+const RadixUnified = {
+  Checkbox: CheckboxPrimitive,
+  Switch: SwitchPrimitives,
+  Select: SelectPrimitive,
+  Label: LabelPrimitive,
+  RadioGroup: RadioGroupPrimitive,
+  Slot,
+  __esModule: true
+};
+
 const MODULE_MAP: Record<string, unknown> = {
   react: React,
+  'radix-ui': RadixUnified,
   '@radix-ui/react-checkbox': CheckboxPrimitive,
   '@radix-ui/react-switch': SwitchPrimitives,
   '@radix-ui/react-select': SelectPrimitive,
