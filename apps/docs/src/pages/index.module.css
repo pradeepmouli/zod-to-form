@@ -441,71 +441,12 @@
   }
 }
 
-/* ── CODE PREVIEW ─────────────────────────────────────────────────── */
-.codeWindow {
-  border: 1px solid var(--z2f-border-subtle);
-  border-radius: var(--z2f-radius-lg);
-  background: var(--z2f-bg-surface);
-  overflow: hidden;
-  max-width: 720px;
-  margin: 0 auto;
-  box-shadow: var(--z2f-shadow-elevated);
-}
-
-.codeTitlebar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 20px;
-  background: var(--z2f-bg-elevated);
-  border-bottom: 1px solid var(--z2f-border-subtle);
-}
-
-.codeDots {
-  display: flex;
-  gap: 6px;
-}
-
-.codeDots span {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-
-.codeDots span:nth-child(1) {
-  background: rgba(255, 96, 88, 0.7);
-}
-
-.codeDots span:nth-child(2) {
-  background: rgba(255, 189, 46, 0.7);
-}
-
-.codeDots span:nth-child(3) {
-  background: rgba(39, 202, 64, 0.7);
-}
-
-.codeTab {
-  font-family: var(--ifm-font-family-monospace);
-  font-size: 12px;
-  color: var(--z2f-text-secondary);
-  background: var(--z2f-bg-surface);
-  padding: 4px 12px;
-  border-radius: 4px;
-}
-
-.codeWindow pre {
-  margin: 0 !important;
-  border: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-}
 
 /* ── COMPARISON TABLE ─────────────────────────────────────────────── */
 .compareTable {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 3rem;
-  display: block;
+  margin: 3rem auto 0;
   overflow-x: auto;
 }
 
