@@ -71,7 +71,7 @@
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.6.0",
-    "@changesets/cli": "^2.30.0",
+    "@changesets/cli": "^2.31.0",
     "@to-skills/cli": "^0.2.1",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
@@ -84,7 +84,7 @@
     "@vitest/ui": "^4.1.4",
     "lint-staged": "^16.4.0",
     "oxfmt": "^0.45.0",
-    "oxlint": "^1.60.0",
+    "oxlint": "^1.61.0",
     "playwright": "^1.59.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
@@ -93,7 +93,7 @@
     "typedoc": "^0.28.19",
     "typedoc-plugin-markdown": "^4.11.0",
     "typedoc-plugin-to-skills": "1.0.0",
-    "typescript": "^6.0.2",
+    "typescript": "^6.0.3",
     "vitest": "^4.1.4"
   },
   "engines": {
