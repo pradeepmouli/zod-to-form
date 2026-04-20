@@ -397,10 +397,10 @@ function renderArrayBlock(
     `${indent}  {${varName}Fields.map((item, index) => (`,
     `${indent}    <div key={item.id}>`,
     itemJsx,
-    `${indent}      <button type="button" onClick={() => remove${capitalize(varName)}(index)}>Remove</button>`,
+    `${indent}      <button type="button" onClick={() => remove${capitalize(varName)}(index)} disabled={${varName}Fields.length <= ${field.constraints.minLength ?? 0}}>− Remove</button>`,
     `${indent}    </div>`,
     `${indent}  ))}`,
-    `${indent}  <button type="button" onClick={() => append${capitalize(varName)}(${getDefaultArrayItemExpression(itemField)})}>Add</button>`,
+    `${indent}  <button type="button" onClick={() => append${capitalize(varName)}(${getDefaultArrayItemExpression(itemField)})}${field.constraints.maxLength != null ? ` disabled={${varName}Fields.length >= ${field.constraints.maxLength}}` : ''}>+ Add</button>`,
     `${indent}</div>`
   ].join('\n');
 }

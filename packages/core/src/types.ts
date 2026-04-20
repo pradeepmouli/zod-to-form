@@ -159,6 +159,19 @@ export type FieldExpression =
   | 'field.ref'
   | 'field.name';
 
+/**
+ * Configuration for array field add/remove buttons.
+ * Applied via FormMeta registry on `z.array()` schemas.
+ *
+ * @category Types
+ */
+export interface ArrayConfig {
+  /** Label for the "add item" button (default: "+ Add") */
+  addLabel?: string;
+  /** Label for the "remove item" button (default: "− Remove") */
+  removeLabel?: string;
+}
+
 type FieldConfigBase = {
   /** Component name override, e.g. "Textarea", "Switch", "Combobox" */
   component?: string;
@@ -176,6 +189,11 @@ type FieldConfigBase = {
   section?: string;
   /** Help text rendered below the input, distinct from description (below label) */
   helpText?: string;
+  /**
+   * Configuration for array field add/remove buttons.
+   * Only meaningful on `z.array()` schemas — ignored on other types.
+   */
+  arrayConfig?: ArrayConfig;
   /**
    * Props passed to the rendered component.
    *

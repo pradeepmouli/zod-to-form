@@ -26,8 +26,23 @@ function FieldMessage(props: HTMLAttributes<HTMLParagraphElement>) {
   return createElement('p', props);
 }
 
+function ArrayAddButton(props: HTMLAttributes<HTMLButtonElement> & { disabled?: boolean }) {
+  return createElement('button', { type: 'button', ...props }, props.children ?? '+ Add');
+}
+
+function ArrayRemoveButton(props: HTMLAttributes<HTMLButtonElement> & { disabled?: boolean }) {
+  return createElement('button', { type: 'button', ...props }, props.children ?? '− Remove');
+}
+
 /** Internal wrapper component names — not user-configurable */
-const WRAPPER_NAMES = new Set(['Field', 'FieldLabel', 'FieldDescription', 'FieldMessage']);
+const WRAPPER_NAMES = new Set([
+  'Field',
+  'FieldLabel',
+  'FieldDescription',
+  'FieldMessage',
+  'ArrayAddButton',
+  'ArrayRemoveButton'
+]);
 
 /**
  * The default HTML-based component map used by `<ZodForm>` and `<FieldRenderer>`.
@@ -53,7 +68,9 @@ export const defaultComponentMap = {
   Field,
   FieldLabel,
   FieldDescription,
-  FieldMessage
+  FieldMessage,
+  ArrayAddButton,
+  ArrayRemoveButton
 };
 
 /** User-facing field component names derived from defaultComponentMap, excluding internal wrappers */

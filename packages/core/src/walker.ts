@@ -153,6 +153,9 @@ function processField(
   if (metadata.helpText !== undefined) {
     field.helpText = metadata.helpText;
   }
+  if (metadata.arrayConfig !== undefined) {
+    field.props['_arrayConfig'] = metadata.arrayConfig;
+  }
   if (typeof metadata.render === 'function') {
     field.render = metadata.render as (field: FormField, props: Record<string, unknown>) => unknown;
     field.hasCustomRender = true;

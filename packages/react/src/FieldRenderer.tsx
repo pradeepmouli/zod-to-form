@@ -388,6 +388,17 @@ const ArrayBlock = memo(function ArrayBlock({
   const { control } = useFormContext();
   const { fields: items, append, remove } = useFieldArray({ control, name: field.key });
   const minLength = field.constraints.minLength ?? 0;
+  const maxLength = field.constraints.maxLength;
+
+  const AddButton = componentMap.ArrayAddButton;
+  const RemoveButton = componentMap.ArrayRemoveButton;
+
+  // Resolve custom labels from field metadata (arrayConfig)
+  const arrayConfig = field.props['_arrayConfig'] as
+    | { addLabel?: string; removeLabel?: string }
+    | undefined;
+  const addLabel = arrayConfig?.addLabel;
+  const removeLabel = arrayConfig?.removeLabel;
 
   return (
     <fieldset>
@@ -402,19 +413,18 @@ const ArrayBlock = memo(function ArrayBlock({
               components={componentMap}
               componentConfig={componentConfig}
             />
-            <button
-              type="button"
-              onClick={() => remove(index)}
-              disabled={items.length <= minLength}
-            >
-              Remove
-            </button>
+            <RemoveButton onClick={() => remove(index)} disabled={items.length <= minLength}>
+              {removeLabel}
+            </RemoveButton>
           </div>
         );
       })}
-      <button type="button" onClick={() => append(getDefaultAppendValue(field.arrayItem))}>
-        Add
-      </button>
+      <AddButton
+        onClick={() => append(getDefaultAppendValue(field.arrayItem))}
+        disabled={maxLength != null && items.length >= maxLength}
+      >
+        {addLabel}
+      </AddButton>
     </fieldset>
   );
 });
