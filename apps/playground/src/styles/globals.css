@@ -1,11 +1,17 @@
 @import 'tailwindcss';
 
+/* Use class-based dark mode so `dark:` variant activates via .dark on <html> */
+@custom-variant dark (&:is(.dark *));
+
+/* Safelist: shadcn/ui classes used by runtime-compiled components */
+@source inline("bg-transparent bg-popover bg-primary bg-accent bg-border bg-input/30 text-popover-foreground text-muted-foreground text-primary-foreground text-accent-foreground text-destructive-foreground border border-input border-primary border-ring border-destructive ring-ring/50 ring-destructive/20 ring-destructive/40 shadow-xs shadow-md focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] focus:bg-accent focus:text-accent-foreground data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=unchecked]:bg-input/30 data-[placeholder]:text-muted-foreground dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:ring-destructive/40 dark:data-[state=checked]:bg-primary aria-invalid:border-destructive aria-invalid:ring-destructive/20 disabled:cursor-not-allowed disabled:opacity-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 rounded-md rounded-sm rounded-[4px] peer size-4 shrink-0");
+
 @theme {
   --color-background: #0b0f17;
   --color-foreground: #e2e5ea;
   --color-card: rgba(18, 24, 36, 0.72);
   --color-card-foreground: #e2e5ea;
-  --color-popover: rgba(18, 24, 36, 0.85);
+  --color-popover: rgba(18, 24, 36, 0.97);
   --color-popover-foreground: #e2e5ea;
   --color-primary: #f97316;
   --color-primary-foreground: #ffffff;
@@ -18,7 +24,7 @@
   --color-destructive: #ef4444;
   --color-destructive-foreground: #ffffff;
   --color-border: rgba(255, 255, 255, 0.1);
-  --color-input: rgba(255, 255, 255, 0.12);
+  --color-input: rgba(255, 255, 255, 0.18);
   --color-ring: #f97316;
   --radius: 0.5rem;
 }
