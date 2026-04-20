@@ -6,7 +6,7 @@
 
 # Interface: ValidationStrategy
 
-Defined in: [types.ts:34](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/types.ts#L34)
+Defined in: [types.ts:34](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L34)
 
 Specifies how a field's validation is handled at submit and change time.
 Set by the L1/L2 optimizers; undefined means use the whole-schema zodResolver.
@@ -17,7 +17,7 @@ Set by the L1/L2 optimizers; undefined means use the whole-schema zodResolver.
 
 > **mode**: `"zodSchema"` \| `"native"` \| `"component-enforced"`
 
-Defined in: [types.ts:41](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/types.ts#L41)
+Defined in: [types.ts:41](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L41)
 
 How validation is performed for this field:
 - `'zodSchema'` — per-field Zod schema via `register({ validate })` (L1)
@@ -30,6 +30,6 @@ How validation is performed for this field:
 
 > `optional` **rules?**: [`NativeRules`](NativeRules.md)
 
-Defined in: [types.ts:43](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/types.ts#L43)
+Defined in: [types.ts:43](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L43)
 
 Native RHF validation rules, populated by the L2 optimizer when `mode === 'native'`.

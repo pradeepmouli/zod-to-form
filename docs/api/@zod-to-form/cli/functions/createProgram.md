@@ -8,7 +8,7 @@
 
 > **createProgram**(): `Command`
 
-Defined in: [cli/src/index.ts:325](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/cli/src/index.ts#L325)
+Defined in: [cli/src/index.ts:325](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/cli/src/index.ts#L325)
 
 Creates the Commander.js CLI program for `zod-to-form`.
 

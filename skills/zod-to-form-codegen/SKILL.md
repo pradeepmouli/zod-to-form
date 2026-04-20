@@ -173,10 +173,10 @@ Produces `src/components/SignupForm.tsx` — a hand-readable `.tsx` file that im
 
 | Task | Use | Why |
 |------|-----|-----|
-| Building a custom codegen pipeline that assembles `FormField[]` and needs the TSX string | `generateFormComponent` | — |
-| Writing codegen tests that verify output structure without spawning a CLI process | `generateFormComponent` | — |
-| Building a custom codegen backend that needs the same override resolution logic as the CLI | `resolveFieldMapping` | — |
-| Writing tests that verify field-to-component mapping for a given config | `resolveFieldMapping` | — |
+| Building a custom codegen pipeline that assembles `FormField[]` and needs the TSX string | `generateFormComponent` | Generate a React form component as a TypeScript string from `FormField[]`. |
+| Writing codegen tests that verify output structure without spawning a CLI process | `generateFormComponent` | Generate a React form component as a TypeScript string from `FormField[]`. |
+| Building a custom codegen backend that needs the same override resolution logic as the CLI | `resolveFieldMapping` | Resolve the component name and override config for a single `FormField` key. |
+| Writing tests that verify field-to-component mapping for a given config | `resolveFieldMapping` | Resolve the component name and override config for a single `FormField` key. |
 
 **Avoid when:**
 
@@ -203,6 +203,14 @@ Produces `src/components/SignupForm.tsx` — a hand-readable `.tsx` file that im
 **Templates:** `getFileHeader` (Generate the import block for a form component file), `renderField` (Render a single `FormField` to its plain-HTML JSX string), `registerPathExpr` (Produce the correct `register(), `generateSchemaLiteFile` (Generate the content of a `), `getFieldTemplateSource` (Return the source code for the preset's `FieldTemplate` React component)
 **Config Templates:** `buildConfigSource` (Generate a `z2f)
 **field-templates:** `PRESET_TEMPLATE_IMPORTS` (Components that each preset's field template imports from...)
+
+## References
+
+Load these on demand — do NOT read all at once:
+
+- When calling any function → read `references/functions.md` for full signatures, parameters, and return types
+- When using exported constants → read `references/variables.md`
+- When configuring options → read `references/config.md` for all settings and defaults
 
 ## Links
 

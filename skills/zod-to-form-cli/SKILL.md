@@ -13,15 +13,15 @@ Build-time code generator for Zod v4 form components
 
 | Task | Use | Why |
 |------|-----|-----|
-| You need programmatic codegen from a Node.js script or build tool (not just the CLI) | `runGenerate` | — |
-| You are writing tests for the code generation pipeline end-to-end | `runGenerate` | — |
-| You need `dryRun` output for preview/diffing without touching the filesystem | `runGenerate` | — |
-| Testing CLI commands programmatically without spawning a child process | `createProgram` | — |
-| Extending the CLI with custom sub-commands in a wrapper tool | `createProgram` | — |
-| Writing z2f.config.ts for CLI codegen (primary use case) | `defineConfig` | — |
-| You want TypeScript inference and IDE autocompletion for config | `defineConfig` | — |
-| Loading config from JSON files or dynamic import() | `validateConfig` | — |
-| You need runtime validation of user-provided config | `validateConfig` | — |
+| You need programmatic codegen from a Node.js script or build tool (not just the CLI) | `runGenerate` | Executes the code generation pipeline for a single Zod schema export. |
+| You are writing tests for the code generation pipeline end-to-end | `runGenerate` | Executes the code generation pipeline for a single Zod schema export. |
+| You need `dryRun` output for preview/diffing without touching the filesystem | `runGenerate` | Executes the code generation pipeline for a single Zod schema export. |
+| Testing CLI commands programmatically without spawning a child process | `createProgram` | Creates the Commander. |
+| Extending the CLI with custom sub-commands in a wrapper tool | `createProgram` | Creates the Commander. |
+| Writing z2f.config.ts for CLI codegen (primary use case) | `defineConfig` | Identity helper that returns its argument typed as `ZodFormsConfig`. |
+| You want TypeScript inference and IDE autocompletion for config | `defineConfig` | Identity helper that returns its argument typed as `ZodFormsConfig`. |
+| Loading config from JSON files or dynamic import() | `validateConfig` | Validates an unknown value as a `ZodFormsConfig` at runtime. |
+| You need runtime validation of user-provided config | `validateConfig` | Validates an unknown value as a `ZodFormsConfig` at runtime. |
 
 **Avoid when:**
 
@@ -54,6 +54,14 @@ Build-time code generator for Zod v4 form components
 **CLI:** `runGenerate` (Executes the code generation pipeline for a single Zod schema export), `createProgram` (Creates the Commander)
 **Configuration:** `defineConfig` (Identity helper that returns its argument typed as `ZodFormsConfig`), `validateConfig` (Validates an unknown value as a `ZodFormsConfig` at runtime)
 **config.d:** `ComponentOverride` (Per-component metadata override)
+
+## References
+
+Load these on demand — do NOT read all at once:
+
+- When calling any function → read `references/functions.md` for full signatures, parameters, and return types
+- When defining typed variables or function parameters → read `references/types.md`
+- When configuring options → read `references/config.md` for all settings and defaults
 
 ## Links
 

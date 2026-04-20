@@ -6,7 +6,7 @@
 
 # Interface: Z2FViteErrorLocation
 
-Defined in: [packages/vite/src/errors.ts:37](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/vite/src/errors.ts#L37)
+Defined in: [packages/vite/src/errors.ts:37](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/vite/src/errors.ts#L37)
 
 Source location attached to a `Z2FViteError` for IDE navigation and Vite overlay display.
 All properties are optional — only `file` is always available; `line`/`column` require
@@ -18,7 +18,7 @@ parse-time or AST-level context.
 
 > `optional` **column?**: `number`
 
-Defined in: [packages/vite/src/errors.ts:43](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/vite/src/errors.ts#L43)
+Defined in: [packages/vite/src/errors.ts:43](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/vite/src/errors.ts#L43)
 
 0-based column offset within the line, when available.
 
@@ -28,7 +28,7 @@ Defined in: [packages/vite/src/errors.ts:43](https://github.com/pradeepmouli/zod
 
 > `optional` **file?**: `string`
 
-Defined in: [packages/vite/src/errors.ts:39](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/vite/src/errors.ts#L39)
+Defined in: [packages/vite/src/errors.ts:39](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/vite/src/errors.ts#L39)
 
 Absolute or project-relative file path where the error originated.
 
@@ -38,6 +38,6 @@ Absolute or project-relative file path where the error originated.
 
 > `optional` **line?**: `number`
 
-Defined in: [packages/vite/src/errors.ts:41](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/vite/src/errors.ts#L41)
+Defined in: [packages/vite/src/errors.ts:41](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/vite/src/errors.ts#L41)
 
 1-based line number within `file`, when available.

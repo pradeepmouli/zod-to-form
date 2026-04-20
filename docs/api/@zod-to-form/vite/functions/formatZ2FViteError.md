@@ -8,7 +8,7 @@
 
 > **formatZ2FViteError**(`error`): `string`
 
-Defined in: [packages/vite/src/errors.ts:141](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/vite/src/errors.ts#L141)
+Defined in: [packages/vite/src/errors.ts:141](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/vite/src/errors.ts#L141)
 
 Format a `Z2FViteError` for inclusion in a Vite error overlay or terminal output.
 The error's `message` already includes the code prefix (`[Z2F_VITE_...]`); this function

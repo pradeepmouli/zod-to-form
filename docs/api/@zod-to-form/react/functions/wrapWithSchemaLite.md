@@ -8,7 +8,7 @@
 
 > **wrapWithSchemaLite**\<`TData`\>(`schemaLite`, `setError`, `onSubmit`): (`data`) => `void` \| `Promise`\<`void`\>
 
-Defined in: [packages/react/src/SchemaLiteSubmit.ts:61](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/react/src/SchemaLiteSubmit.ts#L61)
+Defined in: [packages/react/src/SchemaLiteSubmit.ts:61](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/react/src/SchemaLiteSubmit.ts#L61)
 
 Wraps a form `onSubmit` handler with `schemaLite` client-side validation.
 

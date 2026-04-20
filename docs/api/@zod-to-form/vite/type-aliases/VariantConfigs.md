@@ -8,7 +8,7 @@
 
 > **VariantConfigs** = `Record`\<`string`, `Partial`\<[`CodegenConfig`](../../codegen/type-aliases/CodegenConfig.md)\>\>
 
-Defined in: [packages/vite/src/types.ts:30](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/vite/src/types.ts#L30)
+Defined in: [packages/vite/src/types.ts:30](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/vite/src/types.ts#L30)
 
 Variant overrides keyed by the `?z2f=<name>` query value.
 Per-variant settings merge on top of the global `CodegenConfig`.

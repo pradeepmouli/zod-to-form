@@ -6,7 +6,7 @@
 
 # Interface: CompilationEntry
 
-Defined in: [packages/vite/src/types.ts:205](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/vite/src/types.ts#L205)
+Defined in: [packages/vite/src/types.ts:205](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/vite/src/types.ts#L205)
 
 One cached compilation result. The cache stores entries keyed by
 `${schemaFile}::${variant}::${configHash}`.
@@ -17,7 +17,7 @@ One cached compilation result. The cache stores entries keyed by
 
 > **emittedAt**: `number`
 
-Defined in: [packages/vite/src/types.ts:222](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/vite/src/types.ts#L222)
+Defined in: [packages/vite/src/types.ts:222](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/vite/src/types.ts#L222)
 
 `Date.now()` at compile time. Used for debug logging and HMR ordering.
 
@@ -27,7 +27,7 @@ Defined in: [packages/vite/src/types.ts:222](https://github.com/pradeepmouli/zod
 
 > **generatedSource**: `string`
 
-Defined in: [packages/vite/src/types.ts:210](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/vite/src/types.ts#L210)
+Defined in: [packages/vite/src/types.ts:210](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/vite/src/types.ts#L210)
 
 The `.tsx` source emitted by `generateFormComponent`.
 
@@ -37,7 +37,7 @@ The `.tsx` source emitted by `generateFormComponent`.
 
 > **schemaLiteSource**: `string` \| `null`
 
-Defined in: [packages/vite/src/types.ts:216](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/vite/src/types.ts#L216)
+Defined in: [packages/vite/src/types.ts:216](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/vite/src/types.ts#L216)
 
 The companion `.lite.ts` source emitted by `generateSchemaLiteFile`,
 or `null` if the walk produced no top-level effects.
@@ -48,7 +48,7 @@ or `null` if the walk produced no top-level effects.
 
 > **sourceMap**: `unknown`
 
-Defined in: [packages/vite/src/types.ts:219](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/vite/src/types.ts#L219)
+Defined in: [packages/vite/src/types.ts:219](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/vite/src/types.ts#L219)
 
 Reserved for a future sourcemap back to the original schema.
 
@@ -58,6 +58,6 @@ Reserved for a future sourcemap back to the original schema.
 
 > **target**: [`GenerationTarget`](../type-aliases/GenerationTarget.md)
 
-Defined in: [packages/vite/src/types.ts:207](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/vite/src/types.ts#L207)
+Defined in: [packages/vite/src/types.ts:207](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/vite/src/types.ts#L207)
 
 The triple that produced this entry.

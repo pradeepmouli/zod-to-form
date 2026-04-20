@@ -40,16 +40,16 @@ export function UserForm() {
 
 | Task | Use | Why |
 |------|-----|-----|
-| You want a zero-config form from a Zod v4 schema at runtime, no build step | `ZodForm` | — |
-| You need form rendering in storybook, playgrounds, or low-traffic admin UIs | `ZodForm` | — |
-| You are prototyping before committing to CLI codegen | `ZodForm` | — |
-| You need direct access to the RHF `form` instance (e.g. to call `form.setValue`) | `useZodForm` | — |
-| You are building a custom renderer on top of `FormField[]` | `useZodForm` | — |
-| You want to colocate form state management with your own layout logic | `useZodForm` | — |
-| ALWAYS call on form values before schema.safeParse() in runtime mode | `normalizeFormValues` | — |
-| Critical for optional fields where HTML produces "" but Zod expects undefined | `normalizeFormValues` | — |
-| You are using a codegen output with `validationLevel: 1` or higher (schema-lite mode) | `wrapWithSchemaLite` | — |
-| You need to map server validation errors back to form fields via RHF's `setError` | `wrapWithSchemaLite` | — |
+| You want a zero-config form from a Zod v4 schema at runtime, no build step | `ZodForm` | Runtime React component that renders a type-safe form from a Zod v4 schema. |
+| You need form rendering in storybook, playgrounds, or low-traffic admin UIs | `ZodForm` | Runtime React component that renders a type-safe form from a Zod v4 schema. |
+| You are prototyping before committing to CLI codegen | `ZodForm` | Runtime React component that renders a type-safe form from a Zod v4 schema. |
+| You need direct access to the RHF `form` instance (e.g. to call `form.setValue`) | `useZodForm` | React Hook Form integration hook for Zod v4 schemas. |
+| You are building a custom renderer on top of `FormField[]` | `useZodForm` | React Hook Form integration hook for Zod v4 schemas. |
+| You want to colocate form state management with your own layout logic | `useZodForm` | React Hook Form integration hook for Zod v4 schemas. |
+| ALWAYS call on form values before schema.safeParse() in runtime mode | `normalizeFormValues` | Normalize raw HTML form values for Zod parsing. |
+| Critical for optional fields where HTML produces "" but Zod expects undefined | `normalizeFormValues` | Normalize raw HTML form values for Zod parsing. |
+| You are using a codegen output with `validationLevel: 1` or higher (schema-lite mode) | `wrapWithSchemaLite` | Wraps a form `onSubmit` handler with `schemaLite` client-side validation. |
+| You need to map server validation errors back to form fields via RHF's `setError` | `wrapWithSchemaLite` | Wraps a form `onSubmit` handler with `schemaLite` client-side validation. |
 
 **Avoid when:**
 
@@ -91,6 +91,15 @@ export function UserForm() {
 **Optimization:** `wrapWithSchemaLite` (Wraps a form `onSubmit` handler with `schemaLite` client-side validation)
 **Types:** `FormField` (Intermediate representation of a single form field produced by `walkSchema`), `FormFieldOption` (An individual option in a Select, RadioGroup, or similar enum-driven component), `FormFieldConstraints` (Structural constraints extracted from Zod's `_zod), `FormMeta` (Per-schema annotation stored in a `z), `FieldTemplateProps` (Props passed to the field template component that wraps each rendered form field)
 **components:** `FIELD_COMPONENT_NAMES` (User-facing field component names derived from defaultCom...)
+
+## References
+
+Load these on demand — do NOT read all at once:
+
+- When calling any function → read `references/functions.md` for full signatures, parameters, and return types
+- When defining typed variables or function parameters → read `references/types.md`
+- When using exported constants → read `references/variables.md`
+- When configuring options → read `references/config.md` for all settings and defaults
 
 ## Links
 

@@ -6,7 +6,7 @@
 
 # Interface: WalkResult
 
-Defined in: [optimizers/types.ts:33](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/optimizers/types.ts#L33)
+Defined in: [optimizers/types.ts:33](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/optimizers/types.ts#L33)
 
 The result returned by `walkSchema()` when an optimization level is specified.
 Contains the full `FormField[]` tree plus a lite Zod schema for submit-time validation
@@ -18,7 +18,7 @@ and metadata that codegen uses to reconstruct the lite schema in generated files
 
 > **fields**: [`FormField`](FormField.md)[]
 
-Defined in: [optimizers/types.ts:35](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/optimizers/types.ts#L35)
+Defined in: [optimizers/types.ts:35](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/optimizers/types.ts#L35)
 
 Ordered, sorted FormField tree produced by the schema walker
 
@@ -28,7 +28,7 @@ Ordered, sorted FormField tree produced by the schema walker
 
 > **schemaLite**: `$ZodType`\<`unknown`, `unknown`, `$ZodTypeInternals`\<`unknown`, `unknown`\>\> \| `null`
 
-Defined in: [optimizers/types.ts:37](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/optimizers/types.ts#L37)
+Defined in: [optimizers/types.ts:37](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/optimizers/types.ts#L37)
 
 Lite schema for submit-time validation (null when no effects were found)
 
@@ -38,6 +38,6 @@ Lite schema for submit-time validation (null when no effects were found)
 
 > **schemaLiteInfo**: [`SchemaLiteInfo`](../type-aliases/SchemaLiteInfo.md)
 
-Defined in: [optimizers/types.ts:39](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/optimizers/types.ts#L39)
+Defined in: [optimizers/types.ts:39](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/optimizers/types.ts#L39)
 
 Codegen metadata — describes how to reconstruct schemaLite in generated code

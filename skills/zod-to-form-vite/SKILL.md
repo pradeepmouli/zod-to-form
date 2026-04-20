@@ -13,11 +13,11 @@ Vite plugin for zod-to-form — transforms ?z2f imports into generated form comp
 
 | Task | Use | Why |
 |------|-----|-----|
-| You want `import SignupForm from './signup.schema?z2f'` to Just Work in a Vite app | `z2fVite` | — |
-| You want HMR-aware form recompilation when schemas change in development | `z2fVite` | — |
-| You want to run generate mode to pre-compile forms from `<ZodForm>` call sites | `z2fVite` | — |
-| Catching plugin errors in integration tests: `expect(fn).toThrow(/Z2F_VITE_/))` | `Z2FViteError` | — |
-| Wrapping plugin calls in error handlers that need to branch on specific error codes | `Z2FViteError` | — |
+| You want `import SignupForm from './signup.schema?z2f'` to Just Work in a Vite app | `z2fVite` | Vite plugin factory for `@zod-to-form/vite`. |
+| You want HMR-aware form recompilation when schemas change in development | `z2fVite` | Vite plugin factory for `@zod-to-form/vite`. |
+| You want to run generate mode to pre-compile forms from `<ZodForm>` call sites | `z2fVite` | Vite plugin factory for `@zod-to-form/vite`. |
+| Catching plugin errors in integration tests: `expect(fn).toThrow(/Z2F_VITE_/))` | `Z2FViteError` | Structured error thrown by the `@zod-to-form/vite` plugin. |
+| Wrapping plugin calls in error handlers that need to branch on specific error codes | `Z2FViteError` | Structured error thrown by the `@zod-to-form/vite` plugin. |
 
 **Avoid when:**
 
@@ -48,6 +48,15 @@ Vite plugin for zod-to-form — transforms ?z2f imports into generated form comp
 **types:** `GenerationTarget` (A single (schema, variant, config) triple that produces exactly one
 generated form), `CompilationEntry` (One cached compilation result), `GenerateSite` (A single `<ZodForm>` JSX element matched by generate mode), `HMRInvalidationMap` (The graph edges that `handleHotUpdate` walks when a watched file changes)
 **errors:** `Z2FViteErrorCode` (Plugin error classes)
+
+## References
+
+Load these on demand — do NOT read all at once:
+
+- When calling any function → read `references/functions.md` for full signatures, parameters, and return types
+- When using a class → read `references/classes/` for properties, methods, and inheritance
+- When defining typed variables or function parameters → read `references/types.md`
+- When configuring options → read `references/config.md` for all settings and defaults
 
 ## Links
 

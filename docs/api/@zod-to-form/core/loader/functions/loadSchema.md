@@ -8,7 +8,7 @@
 
 > **loadSchema**(`schemaPath`, `exportName`): `Promise`\<`unknown`\>
 
-Defined in: [loader/index.ts:120](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/loader/index.ts#L120)
+Defined in: [loader/index.ts:120](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/loader/index.ts#L120)
 
 Load a single named Zod schema export from a TypeScript or JavaScript
 file. Throws with a clear message when the file can't be read, the

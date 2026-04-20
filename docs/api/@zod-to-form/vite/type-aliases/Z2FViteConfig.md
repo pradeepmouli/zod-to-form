@@ -8,7 +8,7 @@
 
 > **Z2FViteConfig** = `Omit`\<[`CodegenConfig`](../../codegen/type-aliases/CodegenConfig.md), `"exportName"`\> & `object`
 
-Defined in: [packages/vite/src/types.ts:63](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/vite/src/types.ts#L63)
+Defined in: [packages/vite/src/types.ts:63](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/vite/src/types.ts#L63)
 
 The full config the Vite plugin operates on: a base `CodegenConfig`
 plus optional per-variant overrides.

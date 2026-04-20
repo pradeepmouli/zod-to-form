@@ -8,7 +8,7 @@
 
 > **processBoolean**(`schema`, `ctx`, `field`, `_params`): `void`
 
-Defined in: [processors/boolean.ts:19](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/processors/boolean.ts#L19)
+Defined in: [processors/boolean.ts:19](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/processors/boolean.ts#L19)
 
 Process `z.boolean()` — renders as a `Checkbox` component (or a component override from the registry).
 Marks the field as required since boolean fields always have a value (true/false).

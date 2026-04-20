@@ -6,7 +6,7 @@
 
 # Interface: NativeRules
 
-Defined in: [types.ts:13](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/types.ts#L13)
+Defined in: [types.ts:13](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L13)
 
 Native HTML and RHF validation rules extracted from Zod constraints.
 Used by L2 optimizers to produce per-field validation rules that map directly
@@ -18,7 +18,7 @@ to react-hook-form's `register()` options, bypassing the zodResolver overhead.
 
 > `optional` **max?**: `object`
 
-Defined in: [types.ts:19](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/types.ts#L19)
+Defined in: [types.ts:19](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L19)
 
 Maximum numeric value constraint with violation message.
 
@@ -36,7 +36,7 @@ Maximum numeric value constraint with violation message.
 
 > `optional` **maxLength?**: `object`
 
-Defined in: [types.ts:23](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/types.ts#L23)
+Defined in: [types.ts:23](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L23)
 
 Maximum string length constraint with violation message.
 
@@ -54,7 +54,7 @@ Maximum string length constraint with violation message.
 
 > `optional` **min?**: `object`
 
-Defined in: [types.ts:17](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/types.ts#L17)
+Defined in: [types.ts:17](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L17)
 
 Minimum numeric value constraint with violation message.
 
@@ -72,7 +72,7 @@ Minimum numeric value constraint with violation message.
 
 > `optional` **minLength?**: `object`
 
-Defined in: [types.ts:21](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/types.ts#L21)
+Defined in: [types.ts:21](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L21)
 
 Minimum string length constraint with violation message.
 
@@ -90,7 +90,7 @@ Minimum string length constraint with violation message.
 
 > `optional` **pattern?**: `object`
 
-Defined in: [types.ts:25](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/types.ts#L25)
+Defined in: [types.ts:25](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L25)
 
 Regex pattern constraint with violation message.
 
@@ -108,6 +108,6 @@ Regex pattern constraint with violation message.
 
 > `optional` **required?**: `string`
 
-Defined in: [types.ts:15](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/types.ts#L15)
+Defined in: [types.ts:15](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/types.ts#L15)
 
 Required validation message shown when field is empty.

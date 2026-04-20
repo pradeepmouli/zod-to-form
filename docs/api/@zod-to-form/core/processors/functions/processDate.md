@@ -8,7 +8,7 @@
 
 > **processDate**(`_schema`, `_ctx`, `field`, `_params`): `void`
 
-Defined in: [processors/date.ts:15](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/processors/date.ts#L15)
+Defined in: [processors/date.ts:15](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/processors/date.ts#L15)
 
 Process `z.date()` / `z.iso.date()` — renders as a `DatePicker` component.
 No constraints are extracted from the date schema — date validation is handled by the resolver.

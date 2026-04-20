@@ -8,7 +8,7 @@
 
 > **processIntersection**(`schema`, `ctx`, `field`, `params`): `void`
 
-Defined in: [processors/object.ts:60](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/core/src/processors/object.ts#L60)
+Defined in: [processors/object.ts:60](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/core/src/processors/object.ts#L60)
 
 Process `z.intersection()` — renders as a `Fieldset` that merges the left and right shape entries.
 Both the left and right schemas must be `z.object()` types for their shapes to be merged.

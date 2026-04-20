@@ -8,7 +8,7 @@
 
 > **generateSchemaLiteFile**(`schemaImportPath`, `exportName`, `info`): `string` \| `null`
 
-Defined in: [codegen/src/schema-lite-codegen.ts:103](https://github.com/pradeepmouli/zod-to-form/blob/4dbc81702f0a9a2a7fa8f750c3efdc32bb88ac3b/packages/codegen/src/schema-lite-codegen.ts#L103)
+Defined in: [codegen/src/schema-lite-codegen.ts:103](https://github.com/pradeepmouli/zod-to-form/blob/a4dd58978c639c7b27f819dd2141da3ec858bcf3/packages/codegen/src/schema-lite-codegen.ts#L103)
 
 Generate the content of a `.lite.ts` file that reconstructs a lite Zod schema
 from the imported schema's check objects at runtime.
