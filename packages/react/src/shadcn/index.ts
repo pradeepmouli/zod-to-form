@@ -47,6 +47,23 @@ function ShadcnInput(props: InputHTMLAttributes<HTMLInputElement>) {
   });
 }
 
+// ─── Shadcn-style Checkbox stub ──────────────────────────────────────────────
+
+function ShadcnCheckbox(props: InputHTMLAttributes<HTMLInputElement>) {
+  return createElement('input', {
+    type: 'checkbox',
+    ...props,
+    className: [
+      'h-4 w-4 shrink-0 rounded-sm border border-primary shadow',
+      'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+      'disabled:cursor-not-allowed disabled:opacity-50',
+      props.className ?? ''
+    ]
+      .join(' ')
+      .trim()
+  });
+}
+
 // ─── Shadcn-style Textarea stub ───────────────────────────────────────────────
 
 function ShadcnTextarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
@@ -164,6 +181,7 @@ function ShadcnFieldMessage(props: HTMLAttributes<HTMLParagraphElement>) {
 export const shadcnComponentMap = {
   ...defaultComponentMap,
   Input: ShadcnInput,
+  Checkbox: ShadcnCheckbox,
   Textarea: ShadcnTextarea,
   Select: ShadcnSelect,
   Field: ShadcnField,
