@@ -52,14 +52,6 @@
   --accent-pink-muted: rgba(236, 72, 153, 0.12);
   --accent-pink-glow: rgba(236, 72, 153, 0.3);
 
-  /* Legacy aliases — teal is the primary interactive accent; retained so
-     downstream code using --accent-violet (checkboxes, switches, etc.)
-     keeps working during the palette transition. */
-  --accent-violet: var(--accent-teal);
-  --accent-violet-hover: var(--accent-teal-hover);
-  --accent-violet-muted: var(--accent-teal-muted);
-  --accent-violet-glow: var(--accent-teal-glow);
-
   --accent-gradient: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
   --accent-gradient-brand: linear-gradient(135deg, #14b8a6 0%, #ec4899 100%);
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -316,7 +308,7 @@ body {
 
 .form-preview-area input[type='checkbox'],
 .form-preview-area input[type='radio'] {
-  accent-color: var(--accent-violet);
+  accent-color: var(--accent-teal);
 }
 
 .form-preview-area p[class*='text-destructive'],
@@ -377,7 +369,7 @@ body {
 .form-preview-area [data-radix-select-item][data-highlighted],
 .form-preview-area [role='option']:hover,
 .form-preview-area [role='option'][data-highlighted] {
-  background: var(--accent-violet-muted);
+  background: var(--accent-teal-muted);
   color: var(--text-primary);
 }
 
@@ -409,7 +401,7 @@ body {
 }
 
 [data-radix-popper-content-wrapper] [data-radix-select-item][data-highlighted] {
-  background: var(--accent-violet-muted);
+  background: var(--accent-teal-muted);
   color: var(--text-primary);
 }
 
@@ -430,8 +422,8 @@ body {
 
 .form-preview-area [data-radix-checkbox-root][data-state='checked'],
 .form-preview-area button[role='checkbox'][data-state='checked'] {
-  background: var(--accent-violet);
-  border-color: var(--accent-violet);
+  background: var(--accent-teal);
+  border-color: var(--accent-teal);
 }
 
 .form-preview-area [data-radix-switch-root],
@@ -449,8 +441,8 @@ body {
 
 .form-preview-area [data-radix-switch-root][data-state='checked'],
 .form-preview-area button[role='switch'][data-state='checked'] {
-  background: var(--accent-violet);
-  border-color: var(--accent-violet);
+  background: var(--accent-teal);
+  border-color: var(--accent-teal);
 }
 
 .form-preview-area [data-radix-switch-thumb],
@@ -546,7 +538,7 @@ body {
 }
 
 .config-form-area input[type='checkbox'] {
-  accent-color: var(--accent-violet);
+  accent-color: var(--accent-teal);
   width: auto;
 }
 
