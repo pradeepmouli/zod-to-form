@@ -14,6 +14,7 @@ import {
   serializeConfigToTs,
   parseConfigFromTs
 } from '../../lib/config-schema.ts';
+import { PanelHeader } from '../layout/PanelHeader.tsx';
 
 interface ConfigPaneProps {
   fields: FormField[] | null;
@@ -104,32 +105,25 @@ export function ConfigPane({
 
   return (
     <div className="flex flex-col h-full">
-      <div
-        className="flex gap-1 px-3 py-2"
-        style={{ borderBottom: '1px solid var(--border-subtle)' }}
-        role="tablist"
-        aria-label="Config view"
-      >
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            id={`config-tab-${tab.id}`}
-            role="tab"
-            aria-selected={configTab === tab.id}
-            aria-controls="config-tabpanel"
-            onClick={() => onConfigTabChange(tab.id)}
-            className={`px-3 py-1.5 text-xs font-medium transition-all ${
-              configTab === tab.id ? 'tab-active' : ''
-            }`}
-            style={{
-              color: configTab === tab.id ? 'var(--accent-violet)' : 'var(--text-muted)',
-              borderRadius: '6px'
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <PanelHeader label="Config" accent="teal" caption="z2f.config">
+        <div className="flex gap-1" role="tablist" aria-label="Config view">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              id={`config-tab-${tab.id}`}
+              role="tab"
+              aria-selected={configTab === tab.id}
+              aria-controls="config-tabpanel"
+              onClick={() => onConfigTabChange(tab.id)}
+              className={`tab px-2.5 py-1 text-[13px] font-medium ${
+                configTab === tab.id ? 'tab-active' : ''
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </PanelHeader>
       <div
         id="config-tabpanel"
         className="flex-1 min-h-0 overflow-auto"

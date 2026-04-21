@@ -29,7 +29,7 @@ function FieldNode({ field, depth }: { field: FormField; depth: number }) {
 
         <span
           className="text-sm"
-          style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-violet)' }}
+          style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-teal)' }}
         >
           {field.key}
         </span>
@@ -131,7 +131,7 @@ export function IRInspector({ fields }: IRInspectorProps) {
               onClick={() => setViewMode(mode)}
               className="text-xs px-2.5 py-1 rounded-md transition-all"
               style={{
-                background: viewMode === mode ? 'var(--accent-violet)' : 'transparent',
+                background: viewMode === mode ? 'var(--accent-teal)' : 'transparent',
                 color: viewMode === mode ? '#fff' : 'var(--text-muted)'
               }}
             >

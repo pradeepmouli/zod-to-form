@@ -171,8 +171,8 @@ function ShadcnArrayAddButton(props: ButtonHTMLAttributes<HTMLButtonElement>) {
       ...props,
       type: 'button',
       className: [
-        'inline-flex items-center justify-center gap-1 rounded-md border border-input',
-        'bg-background px-3 py-1.5 text-sm font-medium shadow-sm',
+        'inline-flex h-7 items-center justify-center gap-1 rounded-md border border-input',
+        'bg-background px-2 text-xs font-medium shadow-sm',
         'hover:bg-accent hover:text-accent-foreground',
         'disabled:pointer-events-none disabled:opacity-50',
         props.className ?? ''
@@ -191,7 +191,7 @@ function ShadcnArrayRemoveButton(props: ButtonHTMLAttributes<HTMLButtonElement>)
       ...props,
       type: 'button',
       className: [
-        'inline-flex items-center justify-center rounded-md px-2 py-1 text-xs',
+        'inline-flex h-7 items-center justify-center rounded-md px-2 text-xs',
         'text-muted-foreground hover:text-destructive hover:bg-destructive/10',
         'disabled:pointer-events-none disabled:opacity-50',
         props.className ?? ''
