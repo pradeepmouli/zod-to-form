@@ -13,7 +13,7 @@
   --color-card-foreground: #e2e5ea;
   --color-popover: rgba(18, 24, 36, 0.97);
   --color-popover-foreground: #e2e5ea;
-  --color-primary: #f97316;
+  --color-primary: #14b8a6;
   --color-primary-foreground: #ffffff;
   --color-secondary: rgba(26, 33, 48, 0.65);
   --color-secondary-foreground: #e2e5ea;
@@ -25,7 +25,7 @@
   --color-destructive-foreground: #ffffff;
   --color-border: rgba(255, 255, 255, 0.1);
   --color-input: rgba(255, 255, 255, 0.18);
-  --color-ring: #f97316;
+  --color-ring: #14b8a6;
   --radius: 0.5rem;
 }
 
@@ -37,15 +37,31 @@
   --bg-glass: rgba(22, 28, 42, 0.45);
   --border-subtle: rgba(255, 255, 255, 0.06);
   --border-default: rgba(255, 255, 255, 0.1);
-  --border-glow: rgba(249, 115, 22, 0.25);
+  --border-glow: rgba(20, 184, 166, 0.3);
   --text-primary: #e2e5ea;
   --text-secondary: #8b95a8;
   --text-muted: #4e5b6e;
-  --accent-violet: #f97316;
-  --accent-violet-hover: #fb923c;
-  --accent-violet-muted: rgba(249, 115, 22, 0.12);
-  --accent-violet-glow: rgba(249, 115, 22, 0.3);
-  --accent-gradient: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
+
+  /* Brand accents (aligned with landing page zod.toform.dev) */
+  --accent-teal: #14b8a6;
+  --accent-teal-hover: #2dd4bf;
+  --accent-teal-muted: rgba(20, 184, 166, 0.12);
+  --accent-teal-glow: rgba(20, 184, 166, 0.3);
+  --accent-pink: #ec4899;
+  --accent-pink-hover: #f472b6;
+  --accent-pink-muted: rgba(236, 72, 153, 0.12);
+  --accent-pink-glow: rgba(236, 72, 153, 0.3);
+
+  /* Legacy aliases — teal is the primary interactive accent; retained so
+     downstream code using --accent-violet (checkboxes, switches, etc.)
+     keeps working during the palette transition. */
+  --accent-violet: var(--accent-teal);
+  --accent-violet-hover: var(--accent-teal-hover);
+  --accent-violet-muted: var(--accent-teal-muted);
+  --accent-violet-glow: var(--accent-teal-glow);
+
+  --accent-gradient: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  --accent-gradient-brand: linear-gradient(135deg, #14b8a6 0%, #ec4899 100%);
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-sans-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
@@ -53,7 +69,7 @@
   --radius-sm: 8px;
   --blur: 16px;
   --blur-heavy: 24px;
-  --shadow-glow: 0 0 20px rgba(249, 115, 22, 0.08);
+  --shadow-glow: 0 0 20px rgba(20, 184, 166, 0.1);
   --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 1px rgba(255, 255, 255, 0.05);
   --transition: 180ms cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -75,9 +91,9 @@ body,
 
 body {
   background:
-    radial-gradient(ellipse 80% 60% at 10% 10%, rgba(249, 115, 22, 0.05) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 90% 80%, rgba(234, 88, 12, 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(249, 115, 22, 0.02) 0%, transparent 50%),
+    radial-gradient(ellipse 80% 60% at 10% 10%, rgba(20, 184, 166, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 80%, rgba(236, 72, 153, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(20, 184, 166, 0.02) 0%, transparent 50%),
     var(--bg-base);
 }
 
@@ -95,7 +111,7 @@ body {
 }
 
 ::selection {
-  background: rgba(249, 115, 22, 0.3);
+  background: rgba(20, 184, 166, 0.3);
 }
 
 ::-webkit-scrollbar {
@@ -153,22 +169,38 @@ body {
 }
 
 .btn-accent {
-  background: var(--accent-gradient);
+  background: var(--accent-teal);
   color: #fff;
-  border: none;
+  border: 1px solid var(--accent-teal);
   border-radius: var(--radius-sm);
   font-weight: 500;
   transition: all var(--transition);
-  box-shadow: 0 2px 12px rgba(249, 115, 22, 0.25);
+  box-shadow: 0 2px 12px rgba(20, 184, 166, 0.25);
 }
 
 .btn-accent:hover {
-  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4);
+  background: var(--accent-teal-hover);
+  border-color: var(--accent-teal-hover);
+  box-shadow: 0 4px 20px rgba(20, 184, 166, 0.4);
   transform: translateY(-1px);
 }
 
 .btn-accent:active {
   transform: translateY(0);
+}
+
+/* Focus-visible — unified teal ring for all interactive controls.
+   Applied globally here so individual buttons / tabs / selects don't
+   each need to reimplement it. Outline follows element shape, so no
+   explicit border-radius is needed. Resize separators draw their own
+   focus affordance via .resize-handle:focus-visible. */
+:where(button, a, select, input, textarea, [role='tab']):focus-visible {
+  outline: 2px solid var(--accent-teal);
+  outline-offset: 2px;
+}
+
+.resize-handle:focus-visible {
+  outline: none;
 }
 
 .input-glass {
@@ -181,10 +213,10 @@ body {
 }
 
 .input-glass:focus {
-  border-color: rgba(249, 115, 22, 0.4);
+  border-color: var(--accent-teal);
   box-shadow:
-    0 0 0 3px rgba(249, 115, 22, 0.1),
-    inset 0 0 12px rgba(249, 115, 22, 0.05);
+    0 0 0 3px var(--accent-teal-muted),
+    inset 0 0 12px rgba(20, 184, 166, 0.05);
 }
 
 .modal-backdrop {
@@ -260,10 +292,10 @@ body {
 .form-preview-area input:not([type='checkbox']):not([type='radio']):focus,
 .form-preview-area textarea:focus,
 .form-preview-area select:focus {
-  border-color: rgba(249, 115, 22, 0.4);
+  border-color: var(--accent-teal);
   box-shadow:
-    0 0 0 3px rgba(249, 115, 22, 0.1),
-    inset 0 0 12px rgba(249, 115, 22, 0.05);
+    0 0 0 3px var(--accent-teal-muted),
+    inset 0 0 12px rgba(20, 184, 166, 0.05);
 }
 
 .form-preview-area input::placeholder,
@@ -314,10 +346,10 @@ body {
 
 .form-preview-area [data-radix-select-trigger]:focus,
 .form-preview-area button[role='combobox']:focus {
-  border-color: rgba(249, 115, 22, 0.4);
+  border-color: var(--accent-teal);
   box-shadow:
-    0 0 0 3px rgba(249, 115, 22, 0.1),
-    inset 0 0 12px rgba(249, 115, 22, 0.05);
+    0 0 0 3px var(--accent-teal-muted),
+    inset 0 0 12px rgba(20, 184, 166, 0.05);
 }
 
 .form-preview-area [data-radix-select-content],
@@ -499,8 +531,8 @@ body {
 .config-form-area input[type='number']:focus,
 .config-form-area select:focus,
 .config-form-area textarea:focus {
-  border-color: rgba(249, 115, 22, 0.4);
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1);
+  border-color: var(--accent-teal);
+  box-shadow: 0 0 0 2px var(--accent-teal-muted);
 }
 
 .config-form-area input::placeholder,
@@ -522,13 +554,165 @@ body {
   display: none;
 }
 
+/* Tab styling — active tabs use a pink underline (brand "output" color).
+   Playground JS still drives the color state; CSS adds the underline as a
+   separate affordance so active tabs read clearly even when the text-color
+   change is subtle against the muted background. */
+.tab {
+  position: relative;
+  color: var(--text-muted);
+  border-radius: 6px;
+  transition: color var(--transition), background var(--transition);
+}
+
+.tab:hover {
+  color: var(--text-secondary);
+}
+
 .tab-active {
-  color: var(--accent-violet);
-  background: var(--accent-violet-muted);
+  color: var(--text-primary);
+  background: transparent;
   border-radius: 6px;
 }
 
+.tab-active::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -7px;
+  height: 2px;
+  background: var(--accent-pink);
+  border-radius: 2px 2px 0 0;
+  box-shadow: 0 0 8px var(--accent-pink-glow);
+}
+
+/* Panel header — small monospace label at the top of each quadrant.
+   Developer-tool aesthetic (Linear/Vercel): uppercase, low-contrast,
+   sits flush with the border-bottom of the surface. */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.875rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-glass);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+  flex-shrink: 0;
+}
+
+.panel-header__label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.panel-header__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.panel-header__dot--teal {
+  background: var(--accent-teal);
+  box-shadow: 0 0 6px var(--accent-teal-glow);
+}
+
+.panel-header__dot--pink {
+  background: var(--accent-pink);
+  box-shadow: 0 0 6px var(--accent-pink-glow);
+}
+
+/* Resize handle grip — appears on hover/focus to signal draggability.
+   The outer ResizeHandle div provides the hit area; this pseudo-element
+   paints the visible dot stack. */
+.resize-handle {
+  position: relative;
+}
+
+.resize-handle::before {
+  content: '';
+  position: absolute;
+  background: var(--border-default);
+  border-radius: 2px;
+  transition: background var(--transition), box-shadow var(--transition);
+}
+
+.resize-handle[aria-orientation='vertical']::before {
+  left: 2px;
+  top: 0;
+  width: 2px;
+  height: 100%;
+}
+
+.resize-handle[aria-orientation='horizontal']::before {
+  top: 2px;
+  left: 0;
+  height: 2px;
+  width: 100%;
+}
+
+.resize-handle:hover::before,
+.resize-handle:focus-visible::before,
+.resize-handle[data-active='true']::before {
+  background: var(--accent-teal);
+  box-shadow: 0 0 8px var(--accent-teal-glow);
+}
+
+.resize-handle__grip {
+  position: absolute;
+  display: flex;
+  gap: 3px;
+  opacity: 0;
+  transition: opacity var(--transition);
+  pointer-events: none;
+}
+
+.resize-handle[aria-orientation='vertical'] .resize-handle__grip {
+  flex-direction: column;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.resize-handle[aria-orientation='horizontal'] .resize-handle__grip {
+  flex-direction: row;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.resize-handle__grip span {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--accent-teal);
+  box-shadow: 0 0 4px var(--accent-teal-glow);
+}
+
+.resize-handle:hover .resize-handle__grip,
+.resize-handle:focus-visible .resize-handle__grip,
+.resize-handle[data-active='true'] .resize-handle__grip {
+  opacity: 1;
+}
+
 .glow-line {
-  background: linear-gradient(90deg, transparent 0%, rgba(249, 115, 22, 0.4) 50%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--accent-teal) 30%,
+    var(--accent-pink) 70%,
+    transparent 100%
+  );
   height: 1px;
+  opacity: 0.5;
 }
