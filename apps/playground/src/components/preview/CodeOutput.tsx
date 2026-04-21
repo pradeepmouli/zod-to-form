@@ -4,6 +4,7 @@ import { generateFormComponent } from '@zod-to-form/codegen';
 import type { ComponentMapType, CodeOutputMode } from '../../types/playground.ts';
 import { generateFormCode, generateZodFormCode } from '../../lib/codegen.ts';
 import { CodeViewer } from './CodeViewer.tsx';
+import { PanelHeader } from '../layout/PanelHeader.tsx';
 
 function copyButtonLabel(failed: boolean, copied: boolean): string {
   if (failed) return 'Copy failed';
@@ -83,7 +84,9 @@ export function CodeOutput({
   if (!generatedCode) {
     return (
       <div className="h-full flex flex-col">
-        <CodeOutputHeader mode={codeOutputMode} onModeChange={onCodeOutputModeChange} />
+        <PanelHeader label="Output" accent="pink" caption={modeLabel}>
+          <CodeOutputHeader mode={codeOutputMode} onModeChange={onCodeOutputModeChange} />
+        </PanelHeader>
         <div
           className="flex-1 flex items-center justify-center"
           style={{ color: codegenError ? 'var(--accent-red)' : 'var(--text-secondary)' }}
@@ -100,28 +103,18 @@ export function CodeOutput({
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <div
-        className="flex items-center justify-between px-4 py-2.5"
-        style={{ borderBottom: '1px solid var(--border-subtle)' }}
-      >
-        <div className="flex items-center gap-3">
-          <CodeOutputHeader mode={codeOutputMode} onModeChange={onCodeOutputModeChange} />
-          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-            {modeLabel}
-          </span>
-        </div>
+      <PanelHeader label="Output" accent="pink" caption={modeLabel}>
+        <CodeOutputHeader mode={codeOutputMode} onModeChange={onCodeOutputModeChange} />
         <button
           onClick={handleCopy}
           className="btn-glass text-xs px-3 py-1"
           style={
-            copied
-              ? { color: 'var(--accent-violet)', borderColor: 'var(--border-glow)' }
-              : undefined
+            copied ? { color: 'var(--accent-teal)', borderColor: 'var(--border-glow)' } : undefined
           }
         >
           {copyButtonLabel(copyFailed, copied)}
         </button>
-      </div>
+      </PanelHeader>
       <div className="flex-1 overflow-hidden">
         <CodeViewer value={generatedCode} ariaLabel={modeLabel} />
       </div>
@@ -142,13 +135,7 @@ function CodeOutputHeader({
         role="tab"
         aria-selected={mode === 'react'}
         onClick={() => onModeChange('react')}
-        className={`px-2 py-1 text-[11px] font-medium transition-all ${
-          mode === 'react' ? 'tab-active' : ''
-        }`}
-        style={{
-          color: mode === 'react' ? 'var(--accent-violet)' : 'var(--text-muted)',
-          borderRadius: '4px'
-        }}
+        className={`tab px-2 py-1 text-[12px] font-medium ${mode === 'react' ? 'tab-active' : ''}`}
       >
         React
       </button>
@@ -156,13 +143,7 @@ function CodeOutputHeader({
         role="tab"
         aria-selected={mode === 'cli'}
         onClick={() => onModeChange('cli')}
-        className={`px-2 py-1 text-[11px] font-medium transition-all ${
-          mode === 'cli' ? 'tab-active' : ''
-        }`}
-        style={{
-          color: mode === 'cli' ? 'var(--accent-violet)' : 'var(--text-muted)',
-          borderRadius: '4px'
-        }}
+        className={`tab px-2 py-1 text-[12px] font-medium ${mode === 'cli' ? 'tab-active' : ''}`}
       >
         CLI
       </button>
