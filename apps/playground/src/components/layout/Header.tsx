@@ -55,9 +55,11 @@ export function Header({
       });
   };
 
+  const shareLabel = shareButtonLabel(shareFailed, shareWarning, copied);
+
   return (
     <header
-      className="glass-surface flex items-center justify-between px-5 py-3"
+      className="glass-surface flex items-center justify-between px-5 py-2.5"
       style={{
         borderBottom: '1px solid var(--border-subtle)'
       }}
@@ -68,49 +70,43 @@ export function Header({
           href="/"
           className="flex items-center gap-3 no-underline transition-opacity hover:opacity-80"
           aria-label="Back to zod-to-form homepage"
-          title="Back to homepage"
+          title={`zod-to-form Studio — v${__APP_VERSION__}`}
         >
           <img
             src={`${import.meta.env.BASE_URL}logo.svg`}
             alt="zod-to-form logo"
             style={{ width: 28, height: 24 }}
           />
-          <h1
-            className="text-lg tracking-tight"
-            style={{
-              fontFamily: "'Outfit', sans-serif",
-              fontWeight: 700,
-              letterSpacing: '-0.5px'
-            }}
-          >
-            <span style={{ color: '#14B8A6' }}>zod</span>
-            <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>-to-</span>
-            <span style={{ color: '#EC4899' }}>form</span>
-          </h1>
+          <div className="flex flex-col leading-none">
+            <h1
+              className="text-lg tracking-tight"
+              style={{
+                fontFamily: "'Outfit', sans-serif",
+                fontWeight: 700,
+                letterSpacing: '-0.5px',
+                margin: 0
+              }}
+            >
+              <span style={{ color: 'var(--accent-teal)' }}>zod</span>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>-to-</span>
+              <span style={{ color: 'var(--accent-pink)' }}>form</span>
+            </h1>
+            <span
+              className="hidden sm:inline"
+              style={{
+                marginTop: 2,
+                color: 'var(--text-muted)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '10px',
+                fontWeight: 500,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase'
+              }}
+            >
+              Studio
+            </span>
+          </div>
         </a>
-        <span
-          className="text-xs hidden sm:inline"
-          style={{
-            color: 'var(--text-muted)',
-            fontFamily: "'Outfit', sans-serif",
-            fontWeight: 500,
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase',
-            opacity: 0.7
-          }}
-        >
-          Studio
-        </span>
-        <span
-          className="text-[10px] hidden sm:inline"
-          style={{
-            color: 'var(--text-muted)',
-            fontFamily: "'JetBrains Mono', monospace",
-            opacity: 0.7
-          }}
-        >
-          v{__APP_VERSION__}
-        </span>
       </div>
 
       <nav className="flex items-center gap-2" aria-label="Playground controls">
@@ -150,15 +146,10 @@ export function Header({
 
         <button
           onClick={handleShare}
-          className="btn-glass text-xs px-3 py-1.5"
-          style={
-            copied
-              ? { color: 'var(--accent-violet)', borderColor: 'var(--border-glow)' }
-              : undefined
-          }
+          className="btn-accent text-xs px-3 py-1.5"
           aria-label="Copy share URL to clipboard"
         >
-          {shareButtonLabel(shareFailed, shareWarning, copied)}
+          {shareLabel}
         </button>
       </nav>
     </header>

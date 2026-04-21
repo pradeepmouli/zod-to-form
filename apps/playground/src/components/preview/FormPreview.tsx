@@ -129,9 +129,9 @@ export function FormPreview({
         <div
           className="px-4 py-2 text-xs font-medium"
           style={{
-            background: 'var(--accent-violet-muted)',
+            background: 'var(--accent-teal-muted)',
             borderBottom: '1px solid var(--border-subtle)',
-            color: 'var(--accent-violet)'
+            color: 'var(--accent-teal)'
           }}
         >
           Evaluating...
@@ -161,7 +161,7 @@ export function FormPreview({
             className="space-y-4"
           >
             {!isAutoSave && (
-              <button type="submit" className="btn-accent px-5 py-2.5 text-sm rounded-lg">
+              <button type="submit" className="btn-accent h-8 px-4 text-xs rounded-md">
                 Submit
               </button>
             )}
@@ -173,17 +173,73 @@ export function FormPreview({
           </ZodForm>
         </div>
       ) : (
-        !error && (
-          <div
-            className="flex-1 flex items-center justify-center text-sm"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            Write a Zod schema to see a live form preview
-          </div>
-        )
+        !error && <EmptyPreviewState />
       )}
 
       {submitResult && <ResultsPanel result={submitResult} />}
+    </div>
+  );
+}
+
+/**
+ * Empty state shown while the schema editor is empty or invalid.
+ * Composed around the teal→pink brand gradient to reinforce the
+ * "zod (input) → form (output)" mental model.
+ */
+function EmptyPreviewState() {
+  return (
+    <div
+      className="flex-1 flex flex-col items-center justify-center gap-4 px-6 text-center"
+      style={{ color: 'var(--text-muted)' }}
+    >
+      <div
+        aria-hidden="true"
+        className="flex items-center gap-3"
+        style={{ fontFamily: 'var(--font-mono)', fontSize: 13, letterSpacing: '0.04em' }}
+      >
+        <span
+          style={{
+            color: 'var(--accent-teal)',
+            padding: '4px 10px',
+            borderRadius: 6,
+            background: 'var(--accent-teal-muted)',
+            border: '1px solid var(--accent-teal-muted)'
+          }}
+        >
+          z.object({'{…}'})
+        </span>
+        <span
+          aria-hidden="true"
+          style={{
+            width: 28,
+            height: 1,
+            background: 'linear-gradient(90deg, var(--accent-teal) 0%, var(--accent-pink) 100%)'
+          }}
+        />
+        <span
+          style={{
+            color: 'var(--accent-pink)',
+            padding: '4px 10px',
+            borderRadius: 6,
+            background: 'var(--accent-pink-muted)',
+            border: '1px solid var(--accent-pink-muted)'
+          }}
+        >
+          &lt;Form /&gt;
+        </span>
+      </div>
+      <div className="flex flex-col gap-1" style={{ maxWidth: 320 }}>
+        <p
+          className="text-sm"
+          style={{ color: 'var(--text-secondary)', margin: 0, fontWeight: 500 }}
+        >
+          Write a Zod schema to preview your form
+        </p>
+        <p className="text-xs" style={{ margin: 0 }}>
+          Try an example from the <span style={{ color: 'var(--accent-teal)' }}>Examples</span>{' '}
+          menu, or start typing in the schema editor.
+        </p>
+      </div>
     </div>
   );
 }

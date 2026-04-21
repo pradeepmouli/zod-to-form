@@ -13,7 +13,7 @@
   --color-card-foreground: #e2e5ea;
   --color-popover: rgba(18, 24, 36, 0.97);
   --color-popover-foreground: #e2e5ea;
-  --color-primary: #f97316;
+  --color-primary: #14b8a6;
   --color-primary-foreground: #ffffff;
   --color-secondary: rgba(26, 33, 48, 0.65);
   --color-secondary-foreground: #e2e5ea;
@@ -25,7 +25,7 @@
   --color-destructive-foreground: #ffffff;
   --color-border: rgba(255, 255, 255, 0.1);
   --color-input: rgba(255, 255, 255, 0.18);
-  --color-ring: #f97316;
+  --color-ring: #14b8a6;
   --radius: 0.5rem;
 }
 
@@ -37,15 +37,23 @@
   --bg-glass: rgba(22, 28, 42, 0.45);
   --border-subtle: rgba(255, 255, 255, 0.06);
   --border-default: rgba(255, 255, 255, 0.1);
-  --border-glow: rgba(249, 115, 22, 0.25);
+  --border-glow: rgba(20, 184, 166, 0.3);
   --text-primary: #e2e5ea;
   --text-secondary: #8b95a8;
   --text-muted: #4e5b6e;
-  --accent-violet: #f97316;
-  --accent-violet-hover: #fb923c;
-  --accent-violet-muted: rgba(249, 115, 22, 0.12);
-  --accent-violet-glow: rgba(249, 115, 22, 0.3);
-  --accent-gradient: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
+
+  /* Brand accents (aligned with landing page zod.toform.dev) */
+  --accent-teal: #14b8a6;
+  --accent-teal-hover: #2dd4bf;
+  --accent-teal-muted: rgba(20, 184, 166, 0.12);
+  --accent-teal-glow: rgba(20, 184, 166, 0.3);
+  --accent-pink: #ec4899;
+  --accent-pink-hover: #f472b6;
+  --accent-pink-muted: rgba(236, 72, 153, 0.12);
+  --accent-pink-glow: rgba(236, 72, 153, 0.3);
+
+  --accent-gradient: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  --accent-gradient-brand: linear-gradient(135deg, #14b8a6 0%, #ec4899 100%);
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-sans-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
@@ -53,7 +61,7 @@
   --radius-sm: 8px;
   --blur: 16px;
   --blur-heavy: 24px;
-  --shadow-glow: 0 0 20px rgba(249, 115, 22, 0.08);
+  --shadow-glow: 0 0 20px rgba(20, 184, 166, 0.1);
   --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 1px rgba(255, 255, 255, 0.05);
   --transition: 180ms cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -75,9 +83,9 @@ body,
 
 body {
   background:
-    radial-gradient(ellipse 80% 60% at 10% 10%, rgba(249, 115, 22, 0.05) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 90% 80%, rgba(234, 88, 12, 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(249, 115, 22, 0.02) 0%, transparent 50%),
+    radial-gradient(ellipse 80% 60% at 10% 10%, rgba(20, 184, 166, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 80%, rgba(236, 72, 153, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(20, 184, 166, 0.02) 0%, transparent 50%),
     var(--bg-base);
 }
 
@@ -95,7 +103,7 @@ body {
 }
 
 ::selection {
-  background: rgba(249, 115, 22, 0.3);
+  background: rgba(20, 184, 166, 0.3);
 }
 
 ::-webkit-scrollbar {
@@ -153,22 +161,37 @@ body {
 }
 
 .btn-accent {
-  background: var(--accent-gradient);
+  background: var(--accent-teal);
   color: #fff;
-  border: none;
+  border: 1px solid var(--accent-teal);
   border-radius: var(--radius-sm);
   font-weight: 500;
   transition: all var(--transition);
-  box-shadow: 0 2px 12px rgba(249, 115, 22, 0.25);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .btn-accent:hover {
-  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4);
-  transform: translateY(-1px);
+  background: var(--accent-teal-hover);
+  border-color: var(--accent-teal-hover);
+  box-shadow: 0 2px 8px rgba(20, 184, 166, 0.25);
 }
 
 .btn-accent:active {
-  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Focus-visible — unified teal ring for all interactive controls.
+   Applied globally here so individual buttons / tabs / selects don't
+   each need to reimplement it. Outline follows element shape, so no
+   explicit border-radius is needed. Resize separators draw their own
+   focus affordance via .resize-handle:focus-visible. */
+:where(button, a, select, input, textarea, [role='tab']):focus-visible {
+  outline: 2px solid var(--accent-teal);
+  outline-offset: 2px;
+}
+
+.resize-handle:focus-visible {
+  outline: none;
 }
 
 .input-glass {
@@ -181,10 +204,10 @@ body {
 }
 
 .input-glass:focus {
-  border-color: rgba(249, 115, 22, 0.4);
+  border-color: var(--accent-teal);
   box-shadow:
-    0 0 0 3px rgba(249, 115, 22, 0.1),
-    inset 0 0 12px rgba(249, 115, 22, 0.05);
+    0 0 0 3px var(--accent-teal-muted),
+    inset 0 0 12px rgba(20, 184, 166, 0.05);
 }
 
 .modal-backdrop {
@@ -206,19 +229,15 @@ body {
   border-color: var(--border-subtle);
 }
 
-/* Vertical rhythm between fields — applies to both preview and config forms */
-.form-preview-area form > div,
-.form-preview-area fieldset,
-.config-form-area form > div,
-.config-form-area fieldset {
-  margin-bottom: 1rem;
-}
-
+/* Vertical rhythm: ZodForm JSX already sets space-y-4 (16px) between field
+   groups. Only add margin-bottom to fieldsets which aren't affected by
+   space-y. No extra margin on form > div to avoid compounding. */
 .form-preview-area fieldset,
 .config-form-area fieldset {
+  margin-bottom: 0.75rem;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  padding: 0.75rem 1rem 1rem;
+  padding: 0.625rem 0.875rem 0.875rem;
 }
 
 .form-preview-area fieldset legend,
@@ -232,7 +251,35 @@ body {
 .form-preview-area label,
 .config-form-area label {
   display: block;
-  margin-bottom: 0.375rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.8125rem;
+}
+
+/* Description text sits tight under the input, not as a floating line far below */
+.form-preview-area p,
+.config-form-area p {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+/* Header mobile: drop padding + hide Studio subtitle + shrink control gaps.
+   Prevents the 5-button nav from pushing the logo off the top edge. */
+@media (max-width: 640px) {
+  header[role='banner'] {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    gap: 0.5rem;
+  }
+  header[role='banner'] nav {
+    gap: 0.375rem !important;
+  }
+  header[role='banner'] nav button,
+  header[role='banner'] nav select {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
 }
 
 .form-preview-area input:not([type='checkbox']):not([type='radio']),
@@ -260,10 +307,10 @@ body {
 .form-preview-area input:not([type='checkbox']):not([type='radio']):focus,
 .form-preview-area textarea:focus,
 .form-preview-area select:focus {
-  border-color: rgba(249, 115, 22, 0.4);
+  border-color: var(--accent-teal);
   box-shadow:
-    0 0 0 3px rgba(249, 115, 22, 0.1),
-    inset 0 0 12px rgba(249, 115, 22, 0.05);
+    0 0 0 3px var(--accent-teal-muted),
+    inset 0 0 12px rgba(20, 184, 166, 0.05);
 }
 
 .form-preview-area input::placeholder,
@@ -284,7 +331,7 @@ body {
 
 .form-preview-area input[type='checkbox'],
 .form-preview-area input[type='radio'] {
-  accent-color: var(--accent-violet);
+  accent-color: var(--accent-teal);
 }
 
 .form-preview-area p[class*='text-destructive'],
@@ -293,6 +340,7 @@ body {
 }
 
 .form-preview-area [data-radix-select-trigger],
+.form-preview-area [data-slot='select-trigger'],
 .form-preview-area button[role='combobox'] {
   background: rgba(15, 20, 32, 0.6);
   border: 1px solid var(--border-default);
@@ -300,7 +348,11 @@ body {
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 0.875rem;
-  padding: 0.5rem 0.75rem;
+  /* Explicit left/right so shadcn's px-3 utility can't flatten left side */
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+  padding-top: 0;
+  padding-bottom: 0;
   outline: none;
   transition: all var(--transition);
   width: 100%;
@@ -308,21 +360,48 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
   cursor: pointer;
   box-sizing: border-box;
 }
 
-.form-preview-area [data-radix-select-trigger]:focus,
-.form-preview-area button[role='combobox']:focus {
-  border-color: rgba(249, 115, 22, 0.4);
-  box-shadow:
-    0 0 0 3px rgba(249, 115, 22, 0.1),
-    inset 0 0 12px rgba(249, 115, 22, 0.05);
+/* SelectValue wrapper inside SelectTrigger — no extra margin/padding */
+.form-preview-area [data-slot='select-value'],
+.form-preview-area [data-radix-select-value] {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.form-preview-area [data-radix-select-content],
+/* The chevron icon inside the shadcn SelectTrigger — constrain its size
+   so it doesn't expand the trigger height */
+.form-preview-area [data-slot='select-trigger'] svg,
+.form-preview-area [data-radix-select-trigger] svg,
+.form-preview-area button[role='combobox'] svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.form-preview-area [data-radix-select-trigger]:focus,
+.form-preview-area [data-slot='select-trigger']:focus,
+.form-preview-area button[role='combobox']:focus {
+  border-color: var(--accent-teal);
+  box-shadow:
+    0 0 0 3px var(--accent-teal-muted),
+    inset 0 0 12px rgba(20, 184, 166, 0.05);
+}
+
+/* Radix Select dropdown content is portaled to <body>, so .form-preview-area
+   scoping doesn't reach it. Use a global selector scoped by the slot attribute. */
+[data-slot='select-content'],
+[data-radix-select-content],
 .form-preview-area [role='listbox'] {
-  background: rgba(18, 24, 36, 0.95);
+  background: rgba(18, 24, 36, 0.97) !important;
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-sm);
@@ -332,24 +411,29 @@ body {
   z-index: 50;
 }
 
-.form-preview-area [data-radix-select-item],
+[data-slot='select-item'],
+[data-radix-select-item],
 .form-preview-area [role='option'] {
   padding: 0.375rem 0.75rem;
   font-size: 0.875rem;
+  color: var(--text-primary);
   cursor: pointer;
   transition: background var(--transition);
   outline: none;
 }
 
-.form-preview-area [data-radix-select-item]:hover,
-.form-preview-area [data-radix-select-item][data-highlighted],
+[data-slot='select-item']:hover,
+[data-slot='select-item'][data-highlighted],
+[data-radix-select-item]:hover,
+[data-radix-select-item][data-highlighted],
 .form-preview-area [role='option']:hover,
 .form-preview-area [role='option'][data-highlighted] {
-  background: var(--accent-violet-muted);
+  background: var(--accent-teal-muted);
   color: var(--text-primary);
 }
 
-.form-preview-area [data-radix-select-viewport] {
+[data-slot='select-viewport'],
+[data-radix-select-viewport] {
   padding: 0.25rem;
 }
 
@@ -377,17 +461,19 @@ body {
 }
 
 [data-radix-popper-content-wrapper] [data-radix-select-item][data-highlighted] {
-  background: var(--accent-violet-muted);
+  background: var(--accent-teal-muted);
   color: var(--text-primary);
 }
 
 .form-preview-area [data-radix-checkbox-root],
-.form-preview-area button[role='checkbox'] {
+.form-preview-area button[role='checkbox'],
+.form-preview-area [data-slot='checkbox'] {
   width: 1rem;
   height: 1rem;
-  border: 1px solid var(--border-default);
+  /* Stronger border + subtle fill so unchecked state is visible on dark bg */
+  border: 1.5px solid rgba(255, 255, 255, 0.32);
   border-radius: 3px;
-  background: rgba(15, 20, 32, 0.6);
+  background: rgba(255, 255, 255, 0.04);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -396,10 +482,24 @@ body {
   flex-shrink: 0;
 }
 
+.form-preview-area [data-radix-checkbox-root]:hover,
+.form-preview-area button[role='checkbox']:hover,
+.form-preview-area [data-slot='checkbox']:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.06);
+}
+
 .form-preview-area [data-radix-checkbox-root][data-state='checked'],
-.form-preview-area button[role='checkbox'][data-state='checked'] {
-  background: var(--accent-violet);
-  border-color: var(--accent-violet);
+.form-preview-area button[role='checkbox'][data-state='checked'],
+.form-preview-area [data-slot='checkbox'][data-state='checked'] {
+  background: var(--accent-teal);
+  border-color: var(--accent-teal);
+}
+
+.form-preview-area [data-radix-checkbox-root][data-state='checked'] svg,
+.form-preview-area button[role='checkbox'][data-state='checked'] svg,
+.form-preview-area [data-slot='checkbox'][data-state='checked'] svg {
+  color: #fff;
 }
 
 .form-preview-area [data-radix-switch-root],
@@ -417,8 +517,8 @@ body {
 
 .form-preview-area [data-radix-switch-root][data-state='checked'],
 .form-preview-area button[role='switch'][data-state='checked'] {
-  background: var(--accent-violet);
-  border-color: var(--accent-violet);
+  background: var(--accent-teal);
+  border-color: var(--accent-teal);
 }
 
 .form-preview-area [data-radix-switch-thumb],
@@ -499,8 +599,8 @@ body {
 .config-form-area input[type='number']:focus,
 .config-form-area select:focus,
 .config-form-area textarea:focus {
-  border-color: rgba(249, 115, 22, 0.4);
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1);
+  border-color: var(--accent-teal);
+  box-shadow: 0 0 0 2px var(--accent-teal-muted);
 }
 
 .config-form-area input::placeholder,
@@ -514,7 +614,7 @@ body {
 }
 
 .config-form-area input[type='checkbox'] {
-  accent-color: var(--accent-violet);
+  accent-color: var(--accent-teal);
   width: auto;
 }
 
@@ -522,13 +622,165 @@ body {
   display: none;
 }
 
+/* Tab styling — active tabs use a pink underline (brand "output" color).
+   Playground JS still drives the color state; CSS adds the underline as a
+   separate affordance so active tabs read clearly even when the text-color
+   change is subtle against the muted background. */
+.tab {
+  position: relative;
+  color: var(--text-muted);
+  border-radius: 6px;
+  transition: color var(--transition), background var(--transition);
+}
+
+.tab:hover {
+  color: var(--text-secondary);
+}
+
 .tab-active {
-  color: var(--accent-violet);
-  background: var(--accent-violet-muted);
+  color: var(--text-primary);
+  background: transparent;
   border-radius: 6px;
 }
 
+.tab-active::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -7px;
+  height: 2px;
+  background: var(--accent-pink);
+  border-radius: 2px 2px 0 0;
+  box-shadow: 0 0 8px var(--accent-pink-glow);
+}
+
+/* Panel header — small monospace label at the top of each quadrant.
+   Developer-tool aesthetic (Linear/Vercel): uppercase, low-contrast,
+   sits flush with the border-bottom of the surface. */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.875rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-glass);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+  flex-shrink: 0;
+}
+
+.panel-header__label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.panel-header__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.panel-header__dot--teal {
+  background: var(--accent-teal);
+  box-shadow: 0 0 6px var(--accent-teal-glow);
+}
+
+.panel-header__dot--pink {
+  background: var(--accent-pink);
+  box-shadow: 0 0 6px var(--accent-pink-glow);
+}
+
+/* Resize handle grip — appears on hover/focus to signal draggability.
+   The outer ResizeHandle div provides the hit area; this pseudo-element
+   paints the visible dot stack. */
+.resize-handle {
+  position: relative;
+}
+
+.resize-handle::before {
+  content: '';
+  position: absolute;
+  background: var(--border-default);
+  border-radius: 2px;
+  transition: background var(--transition), box-shadow var(--transition);
+}
+
+.resize-handle[aria-orientation='vertical']::before {
+  left: 2px;
+  top: 0;
+  width: 2px;
+  height: 100%;
+}
+
+.resize-handle[aria-orientation='horizontal']::before {
+  top: 2px;
+  left: 0;
+  height: 2px;
+  width: 100%;
+}
+
+.resize-handle:hover::before,
+.resize-handle:focus-visible::before,
+.resize-handle[data-active='true']::before {
+  background: var(--accent-teal);
+  box-shadow: 0 0 8px var(--accent-teal-glow);
+}
+
+.resize-handle__grip {
+  position: absolute;
+  display: flex;
+  gap: 3px;
+  opacity: 0;
+  transition: opacity var(--transition);
+  pointer-events: none;
+}
+
+.resize-handle[aria-orientation='vertical'] .resize-handle__grip {
+  flex-direction: column;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.resize-handle[aria-orientation='horizontal'] .resize-handle__grip {
+  flex-direction: row;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.resize-handle__grip span {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--accent-teal);
+  box-shadow: 0 0 4px var(--accent-teal-glow);
+}
+
+.resize-handle:hover .resize-handle__grip,
+.resize-handle:focus-visible .resize-handle__grip,
+.resize-handle[data-active='true'] .resize-handle__grip {
+  opacity: 1;
+}
+
 .glow-line {
-  background: linear-gradient(90deg, transparent 0%, rgba(249, 115, 22, 0.4) 50%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--accent-teal) 30%,
+    var(--accent-pink) 70%,
+    transparent 100%
+  );
   height: 1px;
+  opacity: 0.5;
 }
