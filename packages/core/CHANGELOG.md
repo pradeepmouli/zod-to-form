@@ -1,5 +1,11 @@
 # @zod-to-form/core
 
+## 0.6.7
+
+### Patch Changes
+
+- [#91](https://github.com/pradeepmouli/zod-to-form/pull/91) [`4291dce`](https://github.com/pradeepmouli/zod-to-form/commit/4291dceb167c2ea2252d2df28435aa7f589b2d4f) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - ci(deps): bump pnpm/action-setup from v5 to v6
+
 ## 0.6.6
 
 ### Patch Changes
