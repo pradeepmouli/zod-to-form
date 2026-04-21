@@ -165,6 +165,7 @@ export function App() {
             fields={displayFields}
             componentMap={state.componentMap}
             customComponentNames={customComponentNames}
+            config={state.config}
             codeOutputMode={state.codeOutputMode}
             onCodeOutputModeChange={setCodeOutputMode}
           />

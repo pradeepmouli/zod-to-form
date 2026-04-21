@@ -1,7 +1,8 @@
 import { useMemo, useState, useCallback } from 'react';
 import type { FormField } from '@zod-to-form/core';
 import { generateFormComponent } from '@zod-to-form/codegen';
-import type { ComponentMapType, CodeOutputMode } from '../../types/playground.ts';
+import type { ZodFormsConfig } from '@zod-to-form/core';
+import type { ComponentMapType, CodeOutputMode, PlaygroundConfig } from '../../types/playground.ts';
 import { generateFormCode, generateZodFormCode } from '../../lib/codegen.ts';
 import { CodeViewer } from './CodeViewer.tsx';
 import { PanelHeader } from '../layout/PanelHeader.tsx';
@@ -16,6 +17,8 @@ interface CodeOutputProps {
   fields: FormField[] | null;
   componentMap: ComponentMapType;
   customComponentNames: string[];
+  /** Current z2f.config from the Config pane — drives componentConfig + defaults.mode */
+  config: PlaygroundConfig | null;
   codeOutputMode: CodeOutputMode;
   onCodeOutputModeChange: (mode: CodeOutputMode) => void;
 }
@@ -24,6 +27,7 @@ export function CodeOutput({
   fields,
   componentMap,
   customComponentNames,
+  config,
   codeOutputMode,
   onCodeOutputModeChange
 }: CodeOutputProps) {
@@ -31,6 +35,31 @@ export function CodeOutput({
   const [copyFailed, setCopyFailed] = useState(false);
 
   const useZodForm = componentMap === 'shadcn' || customComponentNames.length > 0;
+
+  /**
+   * Build a componentConfig that reflects both the user's z2f.config edits
+   * AND any components imported via the Component Explorer. Imported
+   * components register as component-level overrides so codegen emits
+   * `import { Checkbox } from './components/checkbox'` etc.
+   */
+  const componentConfig = useMemo((): ZodFormsConfig<Record<string, unknown>> => {
+    const preset: 'shadcn' | 'html' = componentMap === 'shadcn' ? 'shadcn' : 'html';
+    const baseOverrides =
+      (config?.components?.overrides as Record<string, Record<string, unknown>> | undefined) ?? {};
+    const importOverrides: Record<string, Record<string, unknown>> = {};
+    for (const name of customComponentNames) {
+      // A bare override is enough to trigger the import; details come from
+      // the component source the user already compiled/imported.
+      importOverrides[name] = baseOverrides[name] ?? {};
+    }
+    return {
+      components: {
+        preset,
+        source: config?.components?.source ?? './components',
+        overrides: { ...baseOverrides, ...importOverrides }
+      }
+    } as unknown as ZodFormsConfig<Record<string, unknown>>;
+  }, [componentMap, customComponentNames, config]);
 
   const { code: generatedCode, error: codegenError } = useMemo(() => {
     if (!fields || fields.length === 0) return { code: null, error: null };
@@ -41,9 +70,10 @@ export function CodeOutput({
           schemaImportPath: './schema',
           exportName: 'schema',
           componentName: 'GeneratedForm',
-          mode: 'submit',
+          mode: config?.defaults?.mode ?? 'submit',
           ui: componentMap === 'shadcn' ? 'shadcn' : 'html',
-          formProvider: false
+          formProvider: config?.defaults?.formProvider ?? false,
+          componentConfig
         });
       } else if (useZodForm) {
         code = generateZodFormCode(componentMap, customComponentNames);
@@ -55,7 +85,15 @@ export function CodeOutput({
       console.warn('[zod-to-form] Code generation failed:', err);
       return { code: null, error: err instanceof Error ? err.message : 'Code generation failed' };
     }
-  }, [fields, codeOutputMode, useZodForm, componentMap, customComponentNames]);
+  }, [
+    fields,
+    codeOutputMode,
+    useZodForm,
+    componentMap,
+    customComponentNames,
+    config,
+    componentConfig
+  ]);
 
   const handleCopy = useCallback(() => {
     if (!generatedCode) return;
