@@ -325,7 +325,11 @@ body {
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 0.875rem;
-  padding: 0 0.75rem;
+  /* Explicit left/right so shadcn's px-3 utility can't flatten left side */
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+  padding-top: 0;
+  padding-bottom: 0;
   outline: none;
   transition: all var(--transition);
   width: 100%;
@@ -336,6 +340,17 @@ body {
   gap: 0.5rem;
   cursor: pointer;
   box-sizing: border-box;
+}
+
+/* SelectValue wrapper inside SelectTrigger — no extra margin/padding */
+.form-preview-area [data-slot='select-value'],
+.form-preview-area [data-radix-select-value] {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* The chevron icon inside the shadcn SelectTrigger — constrain its size
