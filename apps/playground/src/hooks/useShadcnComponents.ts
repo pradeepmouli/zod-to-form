@@ -13,31 +13,39 @@ import { compileComponents } from '../lib/component-compiler.js';
  * Wrap the fetched shadcn Button as an ArrayAddButton: applies outline variant
  * and sm size, sets type="button" defensively, default label "+ Add".
  */
+// Tight inline-row button sizing. shadcn's built-in `sm` is 32px tall which
+// feels oversized in array rows — override via className to get ~24px height.
+const COMPACT_BUTTON_CLASS = 'h-7 px-2 text-xs gap-1';
+
 function wrapAsArrayAddButton(
   Button: ComponentType<Record<string, unknown>>
 ): ComponentType<Record<string, unknown>> {
   return function ShadcnArrayAddButton(props: Record<string, unknown>) {
-    const { children, ...rest } = props;
+    const { children, className, ...rest } = props;
+    const mergedClassName = [COMPACT_BUTTON_CLASS, className].filter(Boolean).join(' ');
     return createElement(
       Button as ComponentType<Record<string, unknown>>,
-      { variant: 'outline', size: 'sm', ...rest, type: 'button' },
+      { variant: 'outline', size: 'sm', ...rest, className: mergedClassName, type: 'button' },
       (children ?? '+ Add') as ReactNode
     );
   };
 }
 
 /**
- * Wrap the fetched shadcn Button as an ArrayRemoveButton: ghost variant, sm size,
- * red-tinted destructive styling for clearer remove affordance.
+ * Wrap the fetched shadcn Button as an ArrayRemoveButton: ghost variant, tight
+ * size, red-tinted destructive hover for clearer remove affordance.
  */
 function wrapAsArrayRemoveButton(
   Button: ComponentType<Record<string, unknown>>
 ): ComponentType<Record<string, unknown>> {
   return function ShadcnArrayRemoveButton(props: Record<string, unknown>) {
-    const { children, ...rest } = props;
+    const { children, className, ...rest } = props;
+    const mergedClassName = [COMPACT_BUTTON_CLASS, 'hover:text-destructive', className]
+      .filter(Boolean)
+      .join(' ');
     return createElement(
       Button as ComponentType<Record<string, unknown>>,
-      { variant: 'ghost', size: 'sm', ...rest, type: 'button' },
+      { variant: 'ghost', size: 'sm', ...rest, className: mergedClassName, type: 'button' },
       (children ?? '− Remove') as ReactNode
     );
   };
