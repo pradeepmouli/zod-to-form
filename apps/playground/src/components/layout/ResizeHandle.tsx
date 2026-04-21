@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 interface ResizeHandleProps {
   orientation: 'horizontal' | 'vertical';
@@ -14,10 +14,12 @@ const MAX_PANE_PCT = 85;
 export function ResizeHandle({ orientation, onResize, value }: ResizeHandleProps) {
   const dragging = useRef(false);
   const lastPos = useRef(0);
+  const [active, setActive] = useState(false);
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
       dragging.current = true;
+      setActive(true);
       lastPos.current = orientation === 'vertical' ? e.clientX : e.clientY;
       e.currentTarget.setPointerCapture(e.pointerId);
     },
@@ -37,6 +39,7 @@ export function ResizeHandle({ orientation, onResize, value }: ResizeHandleProps
 
   const handlePointerUp = useCallback(() => {
     dragging.current = false;
+    setActive(false);
   }, []);
 
   const handleKeyDown = useCallback(
@@ -63,6 +66,8 @@ export function ResizeHandle({ orientation, onResize, value }: ResizeHandleProps
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onKeyDown={handleKeyDown}
+      className="resize-handle"
+      data-active={active || undefined}
       style={{
         cursor: isVertical ? 'col-resize' : 'row-resize',
         [isVertical ? 'width' : 'height']: '6px',
@@ -80,17 +85,11 @@ export function ResizeHandle({ orientation, onResize, value }: ResizeHandleProps
       tabIndex={0}
       aria-label={`Resize ${orientation === 'vertical' ? 'columns' : 'rows'}`}
     >
-      <div
-        style={{
-          position: 'absolute',
-          [isVertical ? 'left' : 'top']: '2px',
-          [isVertical ? 'width' : 'height']: '2px',
-          [isVertical ? 'height' : 'width']: '100%',
-          background: 'var(--border-subtle)',
-          borderRadius: '1px',
-          transition: 'background 0.15s'
-        }}
-      />
+      <span className="resize-handle__grip" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </span>
     </div>
   );
 }

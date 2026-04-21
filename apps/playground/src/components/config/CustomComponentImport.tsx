@@ -426,7 +426,7 @@ export function CustomComponentImport({
                             setExpandedSource(expandedSource === comp.name ? null : comp.name)
                           }
                           className="text-xs transition-colors"
-                          style={{ color: 'var(--accent-violet)' }}
+                          style={{ color: 'var(--accent-teal)' }}
                         >
                           {expandedSource === comp.name ? 'Hide' : 'Files'}
                         </button>
@@ -456,7 +456,7 @@ export function CustomComponentImport({
                               className="text-xs py-1 font-medium"
                               style={{
                                 fontFamily: 'var(--font-mono)',
-                                color: 'var(--accent-violet)'
+                                color: 'var(--accent-teal)'
                               }}
                             >
                               {f.path}
@@ -641,7 +641,7 @@ function ComponentBrowser({
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs shrink-0 px-2 py-1.5 rounded transition-colors"
-              style={{ color: 'var(--accent-violet)' }}
+              style={{ color: 'var(--accent-teal)' }}
             >
               Docs
             </a>
@@ -708,7 +708,7 @@ function ComponentBrowser({
                 title={isAlreadyFetched ? 'Already added' : item.name}
               >
                 {isCurrentlyFetching ? (
-                  <span style={{ color: 'var(--accent-violet)' }}>resolving...</span>
+                  <span style={{ color: 'var(--accent-teal)' }}>resolving...</span>
                 ) : (
                   <>
                     {isAlreadyFetched && (

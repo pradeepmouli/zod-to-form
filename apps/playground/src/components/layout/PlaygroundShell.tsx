@@ -3,6 +3,7 @@ import type { ActiveTab, ActivePane, PaneSizes } from '../../types/playground.ts
 import { MIN_PANE_PCT, MAX_PANE_PCT } from '../../types/playground.ts';
 import { useMediaQuery } from '../../hooks/useMediaQuery.ts';
 import { ResizeHandle } from './ResizeHandle.tsx';
+import { PanelHeader } from './PanelHeader.tsx';
 
 interface PlaygroundShellProps {
   editor: ReactNode;
@@ -49,32 +50,25 @@ export function PlaygroundShell({
   const isWide = useMediaQuery('(min-width: 768px)');
 
   const outputTabBar = (
-    <div
-      className="flex gap-1 px-3 py-2"
-      style={{ borderBottom: '1px solid var(--border-subtle)' }}
-      role="tablist"
-      aria-label="Output view"
-    >
-      {OUTPUT_TABS.map((tab) => (
-        <button
-          key={tab.id}
-          id={`output-tab-${tab.id}`}
-          role="tab"
-          aria-selected={activeTab === tab.id}
-          aria-controls={`output-tabpanel-${tab.id}`}
-          onClick={() => onTabChange(tab.id)}
-          className={`px-3 py-1.5 text-xs font-medium transition-all ${
-            activeTab === tab.id ? 'tab-active' : ''
-          }`}
-          style={{
-            color: activeTab === tab.id ? 'var(--accent-violet)' : 'var(--text-muted)',
-            borderRadius: '6px'
-          }}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </div>
+    <PanelHeader label="Preview" accent="pink">
+      <div className="flex gap-1" role="tablist" aria-label="Output view">
+        {OUTPUT_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            id={`output-tab-${tab.id}`}
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            aria-controls={`output-tabpanel-${tab.id}`}
+            onClick={() => onTabChange(tab.id)}
+            className={`tab px-2.5 py-1 text-[13px] font-medium ${
+              activeTab === tab.id ? 'tab-active' : ''
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+    </PanelHeader>
   );
 
   const getOutputContent = () => {
@@ -119,12 +113,13 @@ export function PlaygroundShell({
         <div className="flex flex-col min-h-0 min-w-0" style={{ width: `${verticalSplit}%` }}>
           {/* Top-left: Schema Editor */}
           <div
-            className="min-h-0 overflow-auto"
+            className="flex flex-col min-h-0"
             style={{ height: `${leftHorizontalSplit}%` }}
             role="region"
             aria-label="Schema editor"
           >
-            {editor}
+            <PanelHeader label="Schema" accent="teal" caption="zod" />
+            <div className="flex-1 min-h-0 overflow-auto">{editor}</div>
           </div>
           <ResizeHandle
             orientation="horizontal"
@@ -133,7 +128,7 @@ export function PlaygroundShell({
           />
           {/* Bottom-left: Config Editor */}
           <div
-            className="min-h-0 overflow-auto flex-1"
+            className="min-h-0 overflow-auto flex-1 flex flex-col"
             role="region"
             aria-label="Configuration editor"
           >
@@ -234,13 +229,9 @@ export function PlaygroundShell({
             aria-selected={mobileTab === tab.id}
             aria-controls="mobile-tabpanel"
             onClick={() => handleMobileTabChange(tab.id)}
-            className={`px-3 py-1.5 text-xs font-medium transition-all whitespace-nowrap ${
+            className={`tab px-3 py-1.5 text-[13px] font-medium whitespace-nowrap ${
               mobileTab === tab.id ? 'tab-active' : ''
             }`}
-            style={{
-              color: mobileTab === tab.id ? 'var(--accent-violet)' : 'var(--text-muted)',
-              borderRadius: '6px'
-            }}
           >
             {tab.label}
           </button>
