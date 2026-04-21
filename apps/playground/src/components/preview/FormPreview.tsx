@@ -161,7 +161,7 @@ export function FormPreview({
             className="space-y-4"
           >
             {!isAutoSave && (
-              <button type="submit" className="btn-accent px-5 py-2.5 text-sm rounded-lg">
+              <button type="submit" className="btn-accent h-8 px-4 text-xs rounded-md">
                 Submit
               </button>
             )}
