@@ -167,18 +167,17 @@ body {
   border-radius: var(--radius-sm);
   font-weight: 500;
   transition: all var(--transition);
-  box-shadow: 0 2px 12px rgba(20, 184, 166, 0.25);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .btn-accent:hover {
   background: var(--accent-teal-hover);
   border-color: var(--accent-teal-hover);
-  box-shadow: 0 4px 20px rgba(20, 184, 166, 0.4);
-  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(20, 184, 166, 0.25);
 }
 
 .btn-accent:active {
-  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Focus-visible — unified teal ring for all interactive controls.
@@ -230,19 +229,15 @@ body {
   border-color: var(--border-subtle);
 }
 
-/* Vertical rhythm between fields — applies to both preview and config forms */
-.form-preview-area form > div,
-.form-preview-area fieldset,
-.config-form-area form > div,
-.config-form-area fieldset {
-  margin-bottom: 1rem;
-}
-
+/* Vertical rhythm: ZodForm JSX already sets space-y-4 (16px) between field
+   groups. Only add margin-bottom to fieldsets which aren't affected by
+   space-y. No extra margin on form > div to avoid compounding. */
 .form-preview-area fieldset,
 .config-form-area fieldset {
+  margin-bottom: 0.75rem;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  padding: 0.75rem 1rem 1rem;
+  padding: 0.625rem 0.875rem 0.875rem;
 }
 
 .form-preview-area fieldset legend,
@@ -256,7 +251,35 @@ body {
 .form-preview-area label,
 .config-form-area label {
   display: block;
-  margin-bottom: 0.375rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.8125rem;
+}
+
+/* Description text sits tight under the input, not as a floating line far below */
+.form-preview-area p,
+.config-form-area p {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+/* Header mobile: drop padding + hide Studio subtitle + shrink control gaps.
+   Prevents the 5-button nav from pushing the logo off the top edge. */
+@media (max-width: 640px) {
+  header[role='banner'] {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    gap: 0.5rem;
+  }
+  header[role='banner'] nav {
+    gap: 0.375rem !important;
+  }
+  header[role='banner'] nav button,
+  header[role='banner'] nav select {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
 }
 
 .form-preview-area input:not([type='checkbox']):not([type='radio']),
@@ -373,9 +396,12 @@ body {
     inset 0 0 12px rgba(20, 184, 166, 0.05);
 }
 
-.form-preview-area [data-radix-select-content],
+/* Radix Select dropdown content is portaled to <body>, so .form-preview-area
+   scoping doesn't reach it. Use a global selector scoped by the slot attribute. */
+[data-slot='select-content'],
+[data-radix-select-content],
 .form-preview-area [role='listbox'] {
-  background: rgba(18, 24, 36, 0.95);
+  background: rgba(18, 24, 36, 0.97) !important;
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-sm);
@@ -385,24 +411,29 @@ body {
   z-index: 50;
 }
 
-.form-preview-area [data-radix-select-item],
+[data-slot='select-item'],
+[data-radix-select-item],
 .form-preview-area [role='option'] {
   padding: 0.375rem 0.75rem;
   font-size: 0.875rem;
+  color: var(--text-primary);
   cursor: pointer;
   transition: background var(--transition);
   outline: none;
 }
 
-.form-preview-area [data-radix-select-item]:hover,
-.form-preview-area [data-radix-select-item][data-highlighted],
+[data-slot='select-item']:hover,
+[data-slot='select-item'][data-highlighted],
+[data-radix-select-item]:hover,
+[data-radix-select-item][data-highlighted],
 .form-preview-area [role='option']:hover,
 .form-preview-area [role='option'][data-highlighted] {
   background: var(--accent-teal-muted);
   color: var(--text-primary);
 }
 
-.form-preview-area [data-radix-select-viewport] {
+[data-slot='select-viewport'],
+[data-radix-select-viewport] {
   padding: 0.25rem;
 }
 
