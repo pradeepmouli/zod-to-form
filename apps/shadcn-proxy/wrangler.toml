@@ -1,0 +1,12 @@
+name = "zod-to-form-shadcn-proxy"
+main = "src/index.ts"
+compatibility_date = "2026-04-23"
+workers_dev = false
+
+[[routes]]
+pattern = "zod.toform.dev/api/shadcn/*"
+zone_name = "toform.dev"
+
+# Observability — ship logs to Workers Logs (no Logpush required).
+[observability]
+enabled = true

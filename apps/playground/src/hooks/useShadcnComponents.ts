@@ -63,12 +63,27 @@ interface ShadcnComponentsState {
 /**
  * Fetches and compiles real shadcn/ui components from the public registry.
  * Only activates when `enabled` is true (i.e., shadcn preset is selected).
+ *
+ * `extra` lets callers demand-load extra components (e.g., when a rendered
+ * schema needs a control outside the 7 pre-fetched core components). The
+ * hook deduplicates + sorts the list so new renders with the same set don't
+ * re-trigger the effect.
+ *
  * Results are cached in localStorage for 24h.
  */
-export function useShadcnComponents(enabled: boolean): ShadcnComponentsState {
+export function useShadcnComponents(
+  enabled: boolean,
+  extra: readonly string[] = []
+): ShadcnComponentsState {
   const [sources, setSources] = useState<Record<string, string> | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetchErrors, setFetchErrors] = useState<string[]>([]);
+
+  // Stable key for the effect so identical `extra` arrays don't re-fire.
+  const extraKey = useMemo(() => {
+    const unique = Array.from(new Set(extra.filter(Boolean))).sort();
+    return unique.join(',');
+  }, [extra]);
 
   useEffect(() => {
     if (!enabled) {
@@ -80,7 +95,8 @@ export function useShadcnComponents(enabled: boolean): ShadcnComponentsState {
     let cancelled = false;
     setLoading(true);
 
-    fetchShadcnSources().then((result) => {
+    const extraList = extraKey ? extraKey.split(',') : [];
+    fetchShadcnSources(extraList).then((result) => {
       if (cancelled) return;
       setSources(result.sources);
       setFetchErrors(result.errors);
@@ -90,7 +106,7 @@ export function useShadcnComponents(enabled: boolean): ShadcnComponentsState {
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, [enabled, extraKey]);
 
   const compiled = useMemo(() => {
     if (!sources || Object.keys(sources).length === 0) {

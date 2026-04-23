@@ -1,0 +1,20 @@
+{
+  "name": "@zod-to-form/shadcn-proxy",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Cloudflare Worker that proxies the shadcn/ui registry for the zod-to-form playground. Reuses shadcn.com's registry APIs behind a same-origin /api/shadcn/* route.",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250108.0",
+    "typescript": "^5.5.0",
+    "vitest": "^4.1.4",
+    "wrangler": "^4.0.0"
+  }
+}

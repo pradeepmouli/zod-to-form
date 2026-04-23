@@ -2,6 +2,7 @@ import { useState, useRef, useMemo, useEffect, useCallback, lazy, Suspense } fro
 import type { ComponentType } from 'react';
 import { usePlaygroundState } from './hooks/usePlaygroundState.ts';
 import { useDebouncedEval } from './hooks/useDebouncedEval.ts';
+import { DegradedNotice } from './components/layout/DegradedNotice.tsx';
 import { Header } from './components/layout/Header.tsx';
 import { PlaygroundShell } from './components/layout/PlaygroundShell.tsx';
 import { FormPreview } from './components/preview/FormPreview.tsx';
@@ -12,6 +13,39 @@ import { STARTER_SCHEMA } from './components/examples/starter.ts';
 import { compileComponents } from './lib/component-compiler.ts';
 import { exportBundle } from './lib/export.ts';
 import { useShadcnComponents } from './hooks/useShadcnComponents.ts';
+import type { FormField } from '@zod-to-form/core';
+
+/** Components pre-fetched by useShadcnComponents on first load. */
+const CORE_SHADCN = new Set([
+  'Button',
+  'Checkbox',
+  'Input',
+  'Label',
+  'Select',
+  'Switch',
+  'Textarea'
+]);
+
+/** Kebab-case registry name → PascalCase shadcn component name. */
+function toRegistryName(slot: string): string {
+  // Kebab-case → lower: 'RadioGroup' → 'radio-group'.
+  return slot.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+}
+
+/** Walk an IR tree and collect every `component` slot that isn't in the core set. */
+function collectExtraShadcnNames(fields: readonly FormField[] | null): string[] {
+  if (!fields) return [];
+  const extras = new Set<string>();
+  const visit = (f: FormField) => {
+    if (f.component && !CORE_SHADCN.has(f.component)) {
+      extras.add(toRegistryName(f.component));
+    }
+    if (f.arrayItem) visit(f.arrayItem);
+    if (f.children) for (const c of f.children) visit(c);
+  };
+  for (const f of fields) visit(f);
+  return Array.from(extras);
+}
 
 const SchemaEditor = lazy(() =>
   import('./components/editor/SchemaEditor.tsx').then((m) => ({
@@ -64,8 +98,16 @@ export function App() {
   const [compilationErrors, setCompilationErrors] = useState<Record<string, string>>({});
   const initialContent = useRef(state.editorContent);
 
-  // Fetch + compile real shadcn/ui components from the public registry
-  const shadcn = useShadcnComponents(state.componentMap === 'shadcn');
+  // Derive any non-core components the current schema actually needs.
+  const extraShadcnNames = useMemo(
+    () => collectExtraShadcnNames(fields ?? state.lastValidFields),
+    [fields, state.lastValidFields]
+  );
+
+  // Fetch + compile real shadcn/ui components from the public registry.
+  // Pass on-demand extras so schemas using non-core slots (e.g. RadioGroup)
+  // trigger an in-session fetch instead of falling back to defaults.
+  const shadcn = useShadcnComponents(state.componentMap === 'shadcn', extraShadcnNames);
 
   const compilationResult = useMemo(() => {
     if (!state.customComponents || Object.keys(state.customComponents).length === 0) {
@@ -129,6 +171,7 @@ export function App() {
         onCustomImportClick={() => setCustomImportOpen(true)}
         customComponentCount={Object.keys(state.customComponents ?? {}).length}
       />
+      {state.componentMap === 'shadcn' ? <DegradedNotice errors={shadcn.errors} /> : null}
       <PlaygroundShell
         editor={
           <Suspense fallback={<EditorFallback />}>

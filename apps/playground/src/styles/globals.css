@@ -630,7 +630,9 @@ body {
   position: relative;
   color: var(--text-muted);
   border-radius: 6px;
-  transition: color var(--transition), background var(--transition);
+  transition:
+    color var(--transition),
+    background var(--transition);
 }
 
 .tab:hover {
@@ -712,7 +714,9 @@ body {
   position: absolute;
   background: var(--border-default);
   border-radius: 2px;
-  transition: background var(--transition), box-shadow var(--transition);
+  transition:
+    background var(--transition),
+    box-shadow var(--transition);
 }
 
 .resize-handle[aria-orientation='vertical']::before {

@@ -78,7 +78,9 @@ for (const slot of COMPONENT_MAP_SLOTS) {
 }
 
 function resolveComponentSlotName(registryName: string): string {
-  // Strip path prefixes (e.g., "ui/checkbox" → "checkbox")
+  // Strip path prefixes (e.g., "ui/checkbox" → "checkbox") — applied to both
+  // the slot-lookup AND the PascalCase fallback so we never emit identifiers
+  // like "Ui/button" in generated imports.
   const baseName = registryName.includes('/') ? registryName.split('/').pop()! : registryName;
   const normalized = baseName
     .replace(/^8bit-/, '')
@@ -89,7 +91,7 @@ function resolveComponentSlotName(registryName: string): string {
   if (NAME_TO_SLOT[normalized]) {
     return NAME_TO_SLOT[normalized];
   }
-  return registryName
+  return baseName
     .split('-')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join('');
