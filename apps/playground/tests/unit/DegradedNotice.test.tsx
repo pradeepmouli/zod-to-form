@@ -21,12 +21,11 @@ describe('DegradedNotice', () => {
     expect(region).toHaveTextContent('upstream unavailable');
   });
 
-  it('surfaces only the first error (others are tracked but not displayed)', () => {
+  it('shows the first error + a "+N more" hint when extras exist', () => {
     render(<DegradedNotice errors={['first err', 'second err', 'third err']} />);
 
     const region = screen.getByRole('status');
     expect(region).toHaveTextContent('first err');
-    expect(region).not.toHaveTextContent('second err');
-    expect(region).not.toHaveTextContent('third err');
+    expect(region).toHaveTextContent('+2 more');
   });
 });

@@ -1,10 +1,10 @@
 /**
- * Shared helpers for the /api/shadcn/* Cloudflare Pages Functions.
+ * Shared helpers for the /api/shadcn/* Cloudflare Worker handlers.
  *
  * The playground's Vite dev middleware (apps/playground/vite.config.ts)
- * uses the Node-only `shadcn/registry` package. Cloudflare Pages Functions
- * run on the Workers runtime, so these handlers re-implement the subset
- * of registry behavior we need using plain `fetch()`.
+ * uses the Node-only `shadcn/registry` package. This Worker runs on the
+ * Workers runtime, so these handlers re-implement the subset of registry
+ * behavior we need using plain `fetch()`.
  *
  * No Node built-ins are allowed here — only Web/Workers APIs.
  */
@@ -29,15 +29,18 @@ export const SHADCN_STYLE = 'new-york-v4';
 export const SHADCN_ITEM_URL_TEMPLATE = `https://ui.shadcn.com/r/styles/${SHADCN_STYLE}/{name}.json`;
 export const SHADCN_INDEX_URL = 'https://ui.shadcn.com/r/index.json';
 
-/** Matches community registry names like `@foo`, `@foo-bar`, `@foo.bar`. */
-const REGISTRY_NAME_PATTERN = /^@[a-z0-9][a-z0-9._-]{0,63}$/i;
+/** Matches community registry names like `@foo`, `@foo-bar`, `@foo.bar`.
+ *  Case-sensitive — the `byName` Map lookup is case-sensitive, so accepting
+ *  mixed-case here would let `@SHADCN` pass validation and then miss. */
+const REGISTRY_NAME_PATTERN = /^@[a-z0-9][a-z0-9._-]{0,63}$/;
 
 export function isValidRegistryName(name: string): boolean {
   return REGISTRY_NAME_PATTERN.test(name);
 }
 
-/** Only allow proxying to these hostnames (shadcn.com + community sites
- *  from registries.json). Populated dynamically from the allowlist. */
+/** Returns true iff `url` is https and its hostname is in `allowedHosts`.
+ *  The allowlist is built by `loadRegistries()` from registries.json plus
+ *  the hardcoded `ui.shadcn.com`. */
 export function isAllowedUrl(url: string, allowedHosts: Set<string>): boolean {
   try {
     const u = new URL(url);
@@ -114,6 +117,8 @@ export async function loadRegistries(): Promise<{
   const byName = new Map<string, CommunityRegistry>();
   const allowedHosts = new Set<string>(['ui.shadcn.com']);
   for (const r of data) {
+    // Filter malformed entries so a bad descriptor can't crash the loop.
+    if (!r || typeof r.name !== 'string' || typeof r.url !== 'string') continue;
     byName.set(r.name, r);
     try {
       allowedHosts.add(new URL(r.url.replace('{name}', 'placeholder')).hostname);
@@ -175,7 +180,10 @@ export function buildIndexUrls(
       urls.push(nextU.toString());
     }
     return urls;
-  } catch {
+  } catch (err) {
+    // Malformed URL template in registries.json — surface in logs so a broken
+    // registry descriptor doesn't silently look like "empty registry".
+    console.warn('[shadcn-proxy] invalid registry URL template', registry, err);
     return [];
   }
 }

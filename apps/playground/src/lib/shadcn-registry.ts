@@ -58,7 +58,13 @@ function loadCache(): Record<string, string> | null {
     if (entry.version !== CACHE_VERSION) return null;
     if (Date.now() - entry.timestamp > ONE_DAY_MS) return null;
     return entry.sources;
-  } catch {
+  } catch (err) {
+    // SyntaxError from a partially-written entry + SecurityError on locked-down
+    // localStorage are both benign (cache miss). Surface anything else so
+    // genuine bugs don't hide behind a silent cache miss forever.
+    if (!(err instanceof SyntaxError)) {
+      console.warn('[zod-to-form] unexpected shadcn cache read error:', err);
+    }
     return null;
   }
 }
@@ -71,8 +77,14 @@ function saveCache(sources: Record<string, string>): void {
       sources
     };
     localStorage.setItem(CACHE_KEY, JSON.stringify(entry));
-  } catch {
-    // localStorage full or disabled — silently skip
+  } catch (err) {
+    // Quota exceeded / private mode / disabled storage are all expected.
+    // Other throws (e.g. TypeError from non-stringifiable sources) would
+    // indicate a bug worth surfacing.
+    const isQuota = err instanceof Error && /quota|storage/i.test(err.name);
+    if (!isQuota) {
+      console.warn('[zod-to-form] unexpected shadcn cache write error:', err);
+    }
   }
 }
 
@@ -109,8 +121,13 @@ async function resolveItems(items: readonly string[]): Promise<Record<string, st
 }
 
 export interface FetchResult {
-  sources: Record<string, string>;
-  errors: string[];
+  /** Component-source map, keyed `ui/<name>` for runtime compiler lookup.
+   *  May be partial (even empty) when `errors` is non-empty — callers should
+   *  surface the degraded state rather than treating an empty map as "done". */
+  readonly sources: Readonly<Record<string, string>>;
+  /** Human-readable failures. Empty array on full success; non-empty means
+   *  fetch fell back to cached-or-empty sources — the UI should surface this. */
+  readonly errors: readonly string[];
 }
 
 /**

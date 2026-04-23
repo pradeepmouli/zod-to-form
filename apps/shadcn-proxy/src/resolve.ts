@@ -181,7 +181,10 @@ export const handleResolve = async (request: Request): Promise<Response> => {
             headers: { Accept: 'application/json' },
             cf: { cacheTtl: 300, cacheEverything: true }
           });
-          if (!subRes.ok) continue;
+          if (subRes.status === 404) continue;
+          if (!subRes.ok) {
+            throw new Error(`Upstream error for transitive dep ${dep}: HTTP ${subRes.status}`);
+          }
           const subItem = (await subRes.json()) as RegistryItem;
           for (const f of subItem.files ?? []) {
             if (!f || typeof f.path !== 'string') continue;

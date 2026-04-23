@@ -58,28 +58,48 @@ test.describe('shadcn component download', () => {
       });
     });
 
-    // Start from an empty cache so a fetch is forced on first paint.
-    await page.addInitScript(() => window.localStorage.removeItem('z2f-shadcn-registry-cache'));
+    // Pre-seed persisted state with shadcn preset active + empty cache so the
+    // mount-time fetch is guaranteed to fire — without this the test becomes
+    // a no-op if the default preset changes to something other than shadcn.
+    await page.addInitScript(() => {
+      window.localStorage.removeItem('z2f-shadcn-registry-cache');
+      window.localStorage.setItem(
+        'z2f-playground-state',
+        JSON.stringify({
+          editorContent: 'import { z } from "zod";\nexport default z.object({ name: z.string() });',
+          componentMap: 'shadcn',
+          activeTab: 'preview',
+          config: null,
+          version: 1
+        })
+      );
+    });
 
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
+    // Give the fetch a deterministic window to complete and the cache to write.
+    await expect
+      .poll(
+        async () =>
+          await page.evaluate(() => window.localStorage.getItem('z2f-shadcn-registry-cache'))
+      )
+      .not.toBeNull();
+
     // The degraded banner must NOT appear on the happy path.
     await expect(page.getByTestId('shadcn-degraded-notice')).toHaveCount(0);
+
+    // The mocked resolve endpoint must have been hit at least once.
+    expect(resolveCallCount).toBeGreaterThanOrEqual(1);
 
     // localStorage should reflect the new cache version.
     const cache = await page.evaluate(() =>
       window.localStorage.getItem('z2f-shadcn-registry-cache')
     );
-    // If the playground didn't activate shadcn preset on first load, resolve may not fire —
-    // but the cache is only written when it does. We accept either outcome as long as the
-    // banner stayed hidden (which is the observable FR-004 behavior). The route mock
-    // records calls so we can still report diagnostics on failure.
-    expect(resolveCallCount).toBeGreaterThanOrEqual(0);
-    if (cache) {
-      const parsed = JSON.parse(cache) as { version: number };
-      expect(parsed.version).toBe(2);
-    }
+    expect(cache).not.toBeNull();
+    const parsed = JSON.parse(cache!) as { version: number; sources: Record<string, string> };
+    expect(parsed.version).toBe(2);
+    expect(parsed.sources['ui/button']).toMatch(/^export function Button/);
   });
 
   test('failure path: /api/shadcn/resolve 500s → degraded banner visible, rest of UI usable', async ({

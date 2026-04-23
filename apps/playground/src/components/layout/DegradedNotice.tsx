@@ -25,7 +25,8 @@ export function DegradedNotice({ errors }: DegradedNoticeProps) {
       }}
     >
       <strong>Shadcn components degraded.</strong> Using default preset until upstream recovers —
-      editor, config, and code output continue to work. ({errors[0]})
+      editor, config, and code output continue to work. ({errors[0]}
+      {errors.length > 1 ? ` +${errors.length - 1} more` : ''})
     </div>
   );
 }

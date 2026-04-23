@@ -9,14 +9,14 @@ import {
 import { fetchShadcnSources } from '../lib/shadcn-registry.js';
 import { compileComponents } from '../lib/component-compiler.js';
 
-/**
- * Wrap the fetched shadcn Button as an ArrayAddButton: applies outline variant
- * and sm size, sets type="button" defensively, default label "+ Add".
- */
 // Tight inline-row button sizing. shadcn's built-in `sm` is 32px tall which
 // feels oversized in array rows — override via className to get ~24px height.
 const COMPACT_BUTTON_CLASS = 'h-7 px-2 text-xs gap-1';
 
+/**
+ * Wrap the fetched shadcn Button as an ArrayAddButton: applies outline variant
+ * and sm size, sets type="button" defensively, default label "+ Add".
+ */
 function wrapAsArrayAddButton(
   Button: ComponentType<Record<string, unknown>>
 ): ComponentType<Record<string, unknown>> {
@@ -77,7 +77,7 @@ export function useShadcnComponents(
 ): ShadcnComponentsState {
   const [sources, setSources] = useState<Record<string, string> | null>(null);
   const [loading, setLoading] = useState(false);
-  const [fetchErrors, setFetchErrors] = useState<string[]>([]);
+  const [fetchErrors, setFetchErrors] = useState<readonly string[]>([]);
 
   // Stable key for the effect so identical `extra` arrays don't re-fire.
   const extraKey = useMemo(() => {
@@ -96,12 +96,21 @@ export function useShadcnComponents(
     setLoading(true);
 
     const extraList = extraKey ? extraKey.split(',') : [];
-    fetchShadcnSources(extraList).then((result) => {
-      if (cancelled) return;
-      setSources(result.sources);
-      setFetchErrors(result.errors);
-      setLoading(false);
-    });
+    fetchShadcnSources(extraList)
+      .then((result) => {
+        if (cancelled) return;
+        setSources(result.sources);
+        setFetchErrors(result.errors);
+        setLoading(false);
+      })
+      .catch((err: unknown) => {
+        // fetchShadcnSources is contractually fail-soft, but defensively handle
+        // any regression so the UI never gets stuck in a spinner.
+        if (cancelled) return;
+        const msg = err instanceof Error ? err.message : String(err);
+        setFetchErrors([`Unexpected: ${msg}`]);
+        setLoading(false);
+      });
 
     return () => {
       cancelled = true;

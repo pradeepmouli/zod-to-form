@@ -55,13 +55,22 @@ export const handleSearch = async (request: Request): Promise<Response> => {
     // Probe candidate URLs in order. Accept either a bare array (shadcn's
     // `/r/index.json` shape) or a `{ items: [...] }` wrapper (newer
     // `/r/registry.json` schema used by most community registries).
+    //
+    // Continue only on 404 (URL genuinely doesn't exist at this probe).
+    // Any other non-OK (5xx / 429 / 403) is a real upstream failure that
+    // must not be masked as "empty registry".
     let rawItems: unknown[] | null = null;
+    let lastUpstreamError: { url: string; status: number } | null = null;
     for (const url of indexUrls) {
       const upstream = await fetch(url, {
         headers: { Accept: 'application/json' },
         cf: { cacheTtl: 300, cacheEverything: true }
       });
-      if (!upstream.ok) continue;
+      if (upstream.status === 404) continue;
+      if (!upstream.ok) {
+        lastUpstreamError = { url, status: upstream.status };
+        continue;
+      }
       const parsed = (await upstream.json()) as unknown;
       if (Array.isArray(parsed)) {
         rawItems = parsed;
@@ -78,6 +87,12 @@ export const handleSearch = async (request: Request): Promise<Response> => {
     }
 
     if (!rawItems) {
+      if (lastUpstreamError) {
+        return errorResponse(
+          `Upstream registry error: ${lastUpstreamError.url} returned HTTP ${lastUpstreamError.status}`,
+          502
+        );
+      }
       return jsonResponse({ items: [], pagination: { total: 0 } });
     }
 
