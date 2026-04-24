@@ -161,12 +161,25 @@ export function useZodForm<TSchema extends ZodObject>(
     if (!options?.onValueChange) return;
 
     const subscription = form.watch((values, info) => {
+      // `info.name` is absent on programmatic resets / mount — skip those.
       if (!info?.name) return;
 
-      const parsed = schema.safeParse(normalizeFormValues(values));
-      if (parsed.success) {
-        options.onValueChange?.(parsed.data as output<TSchema>);
-      }
+      // Fire on every field change so the consumer's state tracks user input
+      // keystroke-by-keystroke. The auto-save codegen path does the same thing
+      // (see packages/codegen/src/generate.ts — `watch((values) => ...)` with
+      // no validity gate), so runtime + generated output stay consistent.
+      //
+      // If the current form state parses cleanly, hand back the coerced data
+      // (numbers become numbers, empty-string enums become undefined, etc.).
+      // Otherwise surface the normalized raw values — the consumer's state is
+      // "what the user last typed" either way. Callers who care about validity
+      // should gate on `formState.isValid` or render errors via the resolver.
+      const normalized = normalizeFormValues(values);
+      const parsed = schema.safeParse(normalized);
+      const next = parsed.success
+        ? (parsed.data as output<TSchema>)
+        : (normalized as output<TSchema>);
+      options.onValueChange?.(next);
     });
 
     return () => {
