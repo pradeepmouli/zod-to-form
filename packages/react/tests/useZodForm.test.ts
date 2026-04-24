@@ -55,10 +55,13 @@ describe('useZodForm', () => {
       });
     });
 
-    // Invalid (below min) — but we still surface the edit so consumers
-    // can keep their mirror of the form in sync.
+    // Invalid (below min) — but we still surface the edit so consumers can
+    // keep their mirror of the form in sync. The second arg signals validity
+    // so consumers don't have to call safeParse themselves.
     await waitFor(() => {
-      expect(onValueChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'a' }));
+      expect(onValueChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'a' }), {
+        isValid: false
+      });
     });
 
     await act(async () => {
@@ -69,7 +72,9 @@ describe('useZodForm', () => {
     });
 
     await waitFor(() => {
-      expect(onValueChange).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'Ada' }));
+      expect(onValueChange).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'Ada' }), {
+        isValid: true
+      });
     });
   });
 
@@ -119,8 +124,10 @@ describe('useZodForm', () => {
       expect(onValueChange).toHaveBeenCalled();
     });
 
-    // Empty string should be coerced to undefined, not rejected
-    expect(onValueChange).toHaveBeenLastCalledWith(expect.objectContaining({ label: 'hello' }));
+    // Empty string should be coerced to undefined, not rejected.
+    expect(onValueChange).toHaveBeenLastCalledWith(expect.objectContaining({ label: 'hello' }), {
+      isValid: true
+    });
     // mode should be undefined (coerced from "")
     const lastCall = onValueChange.mock.calls.at(-1)![0];
     expect(lastCall.mode).toBeUndefined();

@@ -739,6 +739,17 @@
   .hero {
     padding: 4rem 1rem 3rem;
   }
+  /* Restore horizontal scroll on narrow viewports. We override to
+     `display: table` on desktop so table-layout: fixed can distribute
+     columns evenly, but at mobile widths the table's 5 columns become
+     too cramped to fit — switch back to Docusaurus's scrollable default
+     (block + overflow-x: auto) so content stays readable by swipe. */
+  .compareTable {
+    display: block;
+    overflow-x: auto;
+    /* table-layout: fixed is moot on block elements, but leave it set
+       so that any future display override re-enables even columns. */
+  }
   .compareTable th,
   .compareTable td {
     padding: 10px 12px;

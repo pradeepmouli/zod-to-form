@@ -4,7 +4,7 @@ import type { FormField, WalkResult, OptimizationConfig } from '@zod-to-form/cor
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import type { $ZodType } from 'zod/v4/core';
-import type { output, ZodObject } from 'zod';
+import type { input, output, ZodObject } from 'zod';
 import type { FieldConfig, FormMeta, FormProcessor, ZodFormRegistry } from '@zod-to-form/core';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -18,7 +18,17 @@ type UseZodFormOptions<TSchema extends ZodObject> = {
   fields?: Record<string, FieldConfig>;
   processors?: Record<string, FormProcessor>;
   mode?: 'onSubmit' | 'onChange' | 'onBlur';
-  onValueChange?: (values: output<TSchema>) => void;
+  /**
+   * Fires on every field mutation (and on programmatic `form.reset()`).
+   *
+   * The first arg is the form's current data — it's `output<TSchema>` when
+   * `meta.isValid` is true (schema parsed cleanly, coerced values applied)
+   * or `input<TSchema>` when false (normalized raw values — strings from
+   * `<input type=number>`, empty-string enums, partial entries mid-edit).
+   * The union is honest about what you actually get: gate on `meta.isValid`
+   * before treating a field as its coerced type.
+   */
+  onValueChange?: (values: output<TSchema> | input<TSchema>, meta: { isValid: boolean }) => void;
   /** Validation optimization config. When set, skips zodResolver and uses per-field validation. */
   optimization?: OptimizationConfig;
 };
@@ -157,35 +167,48 @@ export function useZodForm<TSchema extends ZodObject>(
     mode: options?.mode
   });
 
+  // `useRef` via `useMemo({}, [])` keeps this effect's dep array clean while
+  // still giving us a mutable "have we emitted for the initial mount yet"
+  // flag. Filtering on `!info?.name` alone would swallow legitimate
+  // `form.reset()` events too — callers that reset the form (to load
+  // persisted state or switch schemas) would never hear about it.
+  const mountedRef = useMemo(() => ({ current: false }), []);
+
   useEffect(() => {
     if (!options?.onValueChange) return;
 
     const subscription = form.watch((values, info) => {
-      // `info.name` is absent on programmatic resets / mount — skip those.
-      if (!info?.name) return;
+      // Skip only the synthetic mount emission (fires with no `info.name` on
+      // the very first subscription). Subsequent unnamed events are
+      // programmatic resets, which the consumer wants to hear about.
+      if (!mountedRef.current) {
+        mountedRef.current = true;
+        if (!info?.name) return;
+      }
 
       // Fire on every field change so the consumer's state tracks user input
       // keystroke-by-keystroke. The auto-save codegen path does the same thing
       // (see packages/codegen/src/generate.ts — `watch((values) => ...)` with
       // no validity gate), so runtime + generated output stay consistent.
       //
-      // If the current form state parses cleanly, hand back the coerced data
-      // (numbers become numbers, empty-string enums become undefined, etc.).
-      // Otherwise surface the normalized raw values — the consumer's state is
-      // "what the user last typed" either way. Callers who care about validity
-      // should gate on `formState.isValid` or render errors via the resolver.
+      // When the form parses cleanly, hand back the coerced output (numbers
+      // as numbers, empty-string enums as undefined). Otherwise surface the
+      // normalized raw input — the consumer's state is "what the user last
+      // typed" either way. The callback's second arg signals which shape you
+      // got so consumers can gate on validity without calling safeParse again.
       const normalized = normalizeFormValues(values);
       const parsed = schema.safeParse(normalized);
-      const next = parsed.success
-        ? (parsed.data as output<TSchema>)
-        : (normalized as output<TSchema>);
-      options.onValueChange?.(next);
+      if (parsed.success) {
+        options.onValueChange?.(parsed.data as output<TSchema>, { isValid: true });
+      } else {
+        options.onValueChange?.(normalized as input<TSchema>, { isValid: false });
+      }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [options?.onValueChange, schema, form]);
+  }, [options?.onValueChange, schema, form, mountedRef]);
 
   return {
     form,
