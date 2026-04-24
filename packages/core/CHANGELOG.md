@@ -1,5 +1,13 @@
 # @zod-to-form/core
 
+## 0.7.1
+
+### Patch Changes
+
+- [#102](https://github.com/pradeepmouli/zod-to-form/pull/102) [`cbe7397`](https://github.com/pradeepmouli/zod-to-form/commit/cbe739744e877c094741f02673890b20c9e1db5f) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - fix(react,playground): onValueChange fires on every edit + config pane styling
+  - docs(landing): center Performance trailing explanation + show 26× math
+  - style(docs): even grid columns on landing page
+
 ## 0.7.0
 
 ### Minor Changes
