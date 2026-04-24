@@ -404,6 +404,11 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  /* Grid cells default to min-width: auto, which lets long code lines push
+     the `1fr` out wider than its share. Forcing min-width: 0 keeps the two
+     columns equal and leaves the CodeBlock's own overflow-x to handle the
+     horizontal scroll. */
+  min-width: 0;
 }
 
 .pathColumnHeader {
@@ -479,10 +484,26 @@
 
 /* ── COMPARISON TABLE ─────────────────────────────────────────────── */
 .compareTable {
+  /* Override Docusaurus's `display: block` (which it applies for mobile
+     horizontal scroll) so `table-layout: fixed` can actually distribute
+     columns evenly. With block display the anonymous-table-box layout
+     sizes columns by content, collapsing sparse cells to the left. */
+  display: table;
   width: 100%;
   border-collapse: collapse;
   margin: 3rem auto 0;
-  overflow-x: auto;
+  /* Fixed layout so columns distribute evenly instead of collapsing to
+     content width — sparse cells (✓ / — / short numbers) otherwise leave
+     the right half of the table empty. */
+  table-layout: fixed;
+}
+
+/* Give the first column (feature/row label) a bit more breathing room so
+   long capability names don't wrap to 3 lines while single-glyph check
+   cells keep the rest of the width. */
+.compareTable th:first-child,
+.compareTable td:first-child {
+  width: 32%;
 }
 
 .compareTable th,
