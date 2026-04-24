@@ -245,13 +245,17 @@ function ArchitectureSection(): ReactNode {
   return (
     <section className={styles.section}>
       <div className={styles.container}>
-        <div className={styles.sectionLabel}>Quick Start</div>
-        <h2 className={styles.sectionTitle}>One walker. Three integration paths.</h2>
-        <p className={styles.sectionDesc}>
-          Walk your Zod schema once. Pick the path that fits: render at runtime, generate static
-          code with the CLI, or let the Vite plugin compile on demand. Same config, same output —
-          zero runtime dependency on <code>@zod-to-form/*</code> in the code you ship.
-        </p>
+        <div className={styles.sectionHeader}>
+          <div>
+            <div className={styles.sectionLabel}>Quick Start</div>
+            <h2 className={styles.sectionTitle}>One walker. Three integration paths.</h2>
+          </div>
+          <p className={styles.sectionDesc}>
+            Walk your Zod schema once. Pick the path that fits: render at runtime, generate static
+            code with the CLI, or let the Vite plugin compile on demand. Same config, same output —
+            zero runtime dependency on <code>@zod-to-form/*</code> in the code you ship.
+          </p>
+        </div>
 
         <div className={styles.pathTabs} role="tablist" aria-label="Integration paths">
           {PATHS.map((path) => {
@@ -395,17 +399,21 @@ function PerformanceSection(): ReactNode {
   return (
     <section className={styles.section}>
       <div className={styles.container}>
-        <div className={styles.sectionLabel}>Performance</div>
-        <h2 className={styles.sectionTitle}>
-          Faster than hand-wiring a form. <span className={styles.accentTeal}>By a lot.</span>
-        </h2>
-        <p className={styles.sectionDesc}>
-          We measure the full form lifecycle — mount + keystrokes + submit — against a hand-wired{' '}
-          <code>useForm + zodResolver</code> baseline. The build-time walk eliminates per-mount
-          optimizer cost, and <strong>native-rules mode</strong> bypasses Zod entirely for fields
-          whose constraints can be expressed via <code>minLength</code>, <code>pattern</code>,{' '}
-          <code>min</code>, <code>max</code>, and friends.
-        </p>
+        <div className={styles.sectionHeader}>
+          <div>
+            <div className={styles.sectionLabel}>Performance</div>
+            <h2 className={styles.sectionTitle}>
+              Faster than hand-wiring a form. <span className={styles.accentTeal}>By a lot.</span>
+            </h2>
+          </div>
+          <p className={styles.sectionDesc}>
+            We measure the full form lifecycle — mount + keystrokes + submit — against a hand-wired{' '}
+            <code>useForm + zodResolver</code> baseline. The build-time walk eliminates per-mount
+            optimizer cost, and <strong>native-rules mode</strong> bypasses Zod entirely for fields
+            whose constraints can be expressed via <code>minLength</code>, <code>pattern</code>,{' '}
+            <code>min</code>, <code>max</code>, and friends.
+          </p>
+        </div>
         <table className={styles.compareTable}>
           <thead>
             <tr>
@@ -456,12 +464,16 @@ function ComparisonSection(): ReactNode {
   return (
     <section className={styles.section}>
       <div className={styles.container}>
-        <div className={styles.sectionLabel}>Comparison</div>
-        <h2 className={styles.sectionTitle}>What sets zod-to-form apart</h2>
-        <p className={styles.sectionDesc}>
-          The Zod v4 form generation space has several players. None offer codegen, and none use the
-          APIs Zod v4 designed for library authors.
-        </p>
+        <div className={styles.sectionHeader}>
+          <div>
+            <div className={styles.sectionLabel}>Comparison</div>
+            <h2 className={styles.sectionTitle}>What sets zod-to-form apart</h2>
+          </div>
+          <p className={styles.sectionDesc}>
+            The Zod v4 form generation space has several players. None offer codegen, and none use
+            the APIs Zod v4 designed for library authors.
+          </p>
+        </div>
         <table className={styles.compareTable}>
           <thead>
             <tr>
