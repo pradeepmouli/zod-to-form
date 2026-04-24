@@ -20,9 +20,6 @@ const playgroundRoot = join(repoRoot, 'apps', 'playground');
 const docsBuild = join(docsRoot, 'build');
 const playgroundDist = join(playgroundRoot, 'dist');
 const playgroundTarget = join(docsBuild, 'play');
-const playgroundFunctions = join(playgroundRoot, 'cf-functions');
-const functionsTarget = join(docsBuild, 'functions');
-
 const env: NodeJS.ProcessEnv = { ...process.env, CF_PAGES: '1' };
 
 function run(label: string, command: string, cwd: string): void {
@@ -48,17 +45,8 @@ const redirects = `/play/* /play/index.html 200\n`;
 writeFileSync(join(docsBuild, '_redirects'), redirects);
 console.log('[build-combined] Wrote _redirects with SPA fallback for /play/*');
 
-// Copy playground-owned CF Pages Functions into the combined build so the
-// shadcn registry proxy (used by the Component Explorer) works in prod.
-// Source lives at apps/playground/cf-functions/** and maps 1:1 to
-// apps/docs/build/functions/** which Cloudflare auto-discovers.
-if (existsSync(playgroundFunctions)) {
-  console.log(`\n[build-combined] Copying ${playgroundFunctions} → ${functionsTarget}`);
-  mkdirSync(functionsTarget, { recursive: true });
-  cpSync(playgroundFunctions, functionsTarget, { recursive: true });
-  console.log('[build-combined] CF Pages Functions copied (api/shadcn/*)');
-} else {
-  console.log(`[build-combined] No cf-functions/ at ${playgroundFunctions} — skipping`);
-}
+// shadcn registry proxy is served by the standalone `apps/shadcn-proxy`
+// Cloudflare Worker (bound to zod.toform.dev/api/shadcn/*), not by this
+// Pages build. Deploy it separately via `pnpm --filter @zod-to-form/shadcn-proxy deploy`.
 
 console.log('\n[build-combined] Done.');

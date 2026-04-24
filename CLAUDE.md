@@ -1,6 +1,6 @@
 # zod-to-form Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-20
+Auto-generated from all feature plans. Last updated: 2026-04-23
 
 ## Active Technologies
 - TypeScript 5.x (strict mode) + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), commander, jiti, prettier, chokidar (CLI direct) (refactor/001-1-componentconfig-config)
@@ -13,6 +13,8 @@ Auto-generated from all feature plans. Last updated: 2026-04-20
 - N/A — plugin is stateless between sessions; in-memory compilation cache only (007-vite-codegen-plugin)
 - TypeScript 5.x (existing playground is a Vite + React app) + Vite (build), React 18+, CodeMirror 6 (existing playground deps — no new deps added) (008-deploy-playground)
 - N/A (static SPA; session state in localStorage — no server) (008-deploy-playground)
+- TypeScript 5.x (strict) + React 18+, Vite (playground), `shadcn/registry` (dev middleware), standalone **Cloudflare Worker** at `apps/shadcn-proxy/` bound to `zod.toform.dev/api/shadcn/*` (prod proxy), browser `fetch` + `localStorage` (client) (009-fix-component-download)
+- `localStorage` for 24h visitor-side cache; no server-side state (009-fix-component-download)
 
 - TypeScript 5.x (strict mode)
 - Zod v4 (v4.0.0+) — `_zod` substrate API
@@ -33,6 +35,12 @@ packages/
 ├── codegen/  # @zod-to-form/codegen — TSX form component generator
 ├── cli/      # @zod-to-form/cli — build-time codegen CLI
 └── vite/     # @zod-to-form/vite — Vite plugin (?z2f imports + generate mode + tree-shake)
+
+apps/
+├── docs/            # Docusaurus docs site (zod.toform.dev)
+├── playground/      # Vite + React playground (zod.toform.dev/play/)
+└── shadcn-proxy/    # Cloudflare Worker (zod.toform.dev/api/shadcn/*)
+                     # Deployed via `pnpm --filter @zod-to-form/shadcn-proxy deploy`
 
 specs/
 └── <feature>/  # Feature specification, plan, and design artifacts (one dir per feature)
@@ -64,9 +72,9 @@ pnpm run dev           # Dev mode (parallel)
 - Metadata precedence: form registry → global registry → inferred defaults
 
 ## Recent Changes
+- 009-fix-component-download: Added TypeScript 5.x (strict) + React 18+, Vite (playground), `shadcn/registry` (dev middleware), Cloudflare Pages Functions (prod proxy), browser `fetch` + `localStorage` (client)
 - 008-deploy-playground: Added TypeScript 5.x (existing playground is a Vite + React app) + Vite (build), React 18+, CodeMirror 6 (existing playground deps — no new deps added)
 - 007-vite-codegen-plugin: New `@zod-to-form/vite` package shipping the Vite plugin (query mode `?z2f`, generate mode, config auto-discovery + watch, resolver tree-shake). `@zod-to-form/core/loader` subpath added (jiti as optional peer); `@zod-to-form/cli/loader` is now a thin re-export. CodegenConfig + canonicalizeConfig moved to core.
-- 006-validation-optimization: Added TypeScript 5.x with strict mode + Zod v4 (peer), React 18+ (peer), React Hook Form 7+ (peer), @hookform/resolvers (peer — conditional after optimization)
 
 
 <!-- MANUAL ADDITIONS START -->

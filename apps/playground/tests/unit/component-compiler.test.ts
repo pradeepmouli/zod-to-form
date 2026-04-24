@@ -177,4 +177,22 @@ describe('component-compiler', () => {
       expect(typeof result.component).toBe('function');
     }
   });
+
+  // Regression: resolveComponentSlotName fallback used to PascalCase the raw
+  // registry name including the `ui/` prefix, producing slot names like
+  // "Ui/customWidget". The fix strips the path prefix before PascalCasing.
+  it('strips ui/ prefix before PascalCase fallback for non-slot components', () => {
+    const source = `
+      import * as React from "react";
+      export function CustomWidget() {
+        return React.createElement("div", null, "custom");
+      }
+    `;
+    const result = compileComponent('ui/custom-widget', source);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Must be "CustomWidget" (stripped), not "Ui/customWidget" / "UiCustomWidget".
+      expect(result.exportName).toBe('CustomWidget');
+    }
+  });
 });

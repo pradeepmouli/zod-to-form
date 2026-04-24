@@ -186,7 +186,7 @@
 .sectionDesc {
   font-size: 1rem;
   color: var(--z2f-text-secondary);
-  max-width: 540px;
+  max-width: 620px;
   margin-bottom: 4rem;
   line-height: 1.65;
 }
@@ -198,6 +198,41 @@
 .sectionCentered .sectionDesc {
   margin-left: auto;
   margin-right: auto;
+}
+
+/* ── SECTION HEADER (two-column intro) ────────────────────────────────
+   Keeps the short title left-aligned while the description fills the
+   remaining width — avoids a half-empty row at the top of left-aligned
+   sections. Falls back to a single column on tablet widths. */
+.sectionHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 2.5rem 4rem;
+  align-items: end;
+  margin-bottom: 4rem;
+}
+
+.sectionHeader .sectionLabel,
+.sectionHeader .sectionTitle {
+  margin-bottom: 0;
+}
+
+.sectionHeader .sectionDesc {
+  /* Inherit max-width cap so long paragraphs stay readable even when the
+     right column widens on large screens. */
+  margin-bottom: 0;
+  max-width: 580px;
+}
+
+@media (max-width: 960px) {
+  .sectionHeader {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+  .sectionHeader .sectionDesc {
+    max-width: 620px;
+  }
 }
 
 /* ── FEATURE CARDS ────────────────────────────────────────────────── */

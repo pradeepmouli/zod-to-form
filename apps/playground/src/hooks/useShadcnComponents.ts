@@ -9,14 +9,14 @@ import {
 import { fetchShadcnSources } from '../lib/shadcn-registry.js';
 import { compileComponents } from '../lib/component-compiler.js';
 
-/**
- * Wrap the fetched shadcn Button as an ArrayAddButton: applies outline variant
- * and sm size, sets type="button" defensively, default label "+ Add".
- */
 // Tight inline-row button sizing. shadcn's built-in `sm` is 32px tall which
 // feels oversized in array rows — override via className to get ~24px height.
 const COMPACT_BUTTON_CLASS = 'h-7 px-2 text-xs gap-1';
 
+/**
+ * Wrap the fetched shadcn Button as an ArrayAddButton: applies outline variant
+ * and sm size, sets type="button" defensively, default label "+ Add".
+ */
 function wrapAsArrayAddButton(
   Button: ComponentType<Record<string, unknown>>
 ): ComponentType<Record<string, unknown>> {
@@ -63,12 +63,27 @@ interface ShadcnComponentsState {
 /**
  * Fetches and compiles real shadcn/ui components from the public registry.
  * Only activates when `enabled` is true (i.e., shadcn preset is selected).
+ *
+ * `extra` lets callers demand-load extra components (e.g., when a rendered
+ * schema needs a control outside the 7 pre-fetched core components). The
+ * hook deduplicates + sorts the list so new renders with the same set don't
+ * re-trigger the effect.
+ *
  * Results are cached in localStorage for 24h.
  */
-export function useShadcnComponents(enabled: boolean): ShadcnComponentsState {
+export function useShadcnComponents(
+  enabled: boolean,
+  extra: readonly string[] = []
+): ShadcnComponentsState {
   const [sources, setSources] = useState<Record<string, string> | null>(null);
   const [loading, setLoading] = useState(false);
-  const [fetchErrors, setFetchErrors] = useState<string[]>([]);
+  const [fetchErrors, setFetchErrors] = useState<readonly string[]>([]);
+
+  // Stable key for the effect so identical `extra` arrays don't re-fire.
+  const extraKey = useMemo(() => {
+    const unique = Array.from(new Set(extra.filter(Boolean))).sort();
+    return unique.join(',');
+  }, [extra]);
 
   useEffect(() => {
     if (!enabled) {
@@ -80,17 +95,27 @@ export function useShadcnComponents(enabled: boolean): ShadcnComponentsState {
     let cancelled = false;
     setLoading(true);
 
-    fetchShadcnSources().then((result) => {
-      if (cancelled) return;
-      setSources(result.sources);
-      setFetchErrors(result.errors);
-      setLoading(false);
-    });
+    const extraList = extraKey ? extraKey.split(',') : [];
+    fetchShadcnSources(extraList)
+      .then((result) => {
+        if (cancelled) return;
+        setSources(result.sources);
+        setFetchErrors(result.errors);
+        setLoading(false);
+      })
+      .catch((err: unknown) => {
+        // fetchShadcnSources is contractually fail-soft, but defensively handle
+        // any regression so the UI never gets stuck in a spinner.
+        if (cancelled) return;
+        const msg = err instanceof Error ? err.message : String(err);
+        setFetchErrors([`Unexpected: ${msg}`]);
+        setLoading(false);
+      });
 
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, [enabled, extraKey]);
 
   const compiled = useMemo(() => {
     if (!sources || Object.keys(sources).length === 0) {
