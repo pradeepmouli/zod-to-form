@@ -17,6 +17,21 @@ const RESOLVE_URL = '/api/shadcn/resolve';
 const CACHE_KEY = 'z2f-shadcn-registry-cache';
 /** Bumped from 1 to 2 when the transport changed to the proxy. */
 const CACHE_VERSION = 2;
+/** Matches the MAX_ITEMS cap in apps/shadcn-proxy/src/resolve.ts — the Worker
+ *  will 400 past this, so cap client-side to avoid a guaranteed-degraded path. */
+const MAX_RESOLVE_ITEMS = 20;
+
+/** Dedupe + strip empties from a request list, preserving insertion order. */
+function normalizeItems(items: readonly string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const name of items) {
+    if (!name || seen.has(name)) continue;
+    seen.add(name);
+    out.push(name);
+  }
+  return out;
+}
 
 /** Components needed for form rendering in the playground. */
 const CORE_COMPONENTS = [
@@ -59,14 +74,34 @@ function loadCache(): Record<string, string> | null {
     if (Date.now() - entry.timestamp > ONE_DAY_MS) return null;
     return entry.sources;
   } catch (err) {
-    // SyntaxError from a partially-written entry + SecurityError on locked-down
-    // localStorage are both benign (cache miss). Surface anything else so
-    // genuine bugs don't hide behind a silent cache miss forever.
-    if (!(err instanceof SyntaxError)) {
+    // SyntaxError from a partially-written entry and DOMException from
+    // locked-down localStorage (e.g. SecurityError in private mode) are
+    // both benign → silent cache miss. Surface anything else so genuine
+    // bugs don't hide forever.
+    if (!isBenignStorageError(err)) {
       console.warn('[zod-to-form] unexpected shadcn cache read error:', err);
     }
     return null;
   }
+}
+
+/** True for the set of errors that are expected when localStorage is
+ *  restricted, corrupted, or out of quota. These should not log a warning. */
+function isBenignStorageError(err: unknown): boolean {
+  if (err instanceof SyntaxError) return true;
+  if (typeof DOMException !== 'undefined' && err instanceof DOMException) return true;
+  // Some legacy runtimes throw plain objects with a `name` field.
+  if (err && typeof err === 'object' && 'name' in err) {
+    const name = String((err as { name: unknown }).name);
+    if (
+      name === 'QuotaExceededError' ||
+      name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+      name === 'SecurityError'
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function saveCache(sources: Record<string, string>): void {
@@ -78,11 +113,10 @@ function saveCache(sources: Record<string, string>): void {
     };
     localStorage.setItem(CACHE_KEY, JSON.stringify(entry));
   } catch (err) {
-    // Quota exceeded / private mode / disabled storage are all expected.
-    // Other throws (e.g. TypeError from non-stringifiable sources) would
-    // indicate a bug worth surfacing.
-    const isQuota = err instanceof Error && /quota|storage/i.test(err.name);
-    if (!isQuota) {
+    // Quota exceeded / private mode / disabled storage are all expected
+    // (and typically surface as DOMException, not Error). Other throws
+    // (e.g. TypeError from non-stringifiable sources) would indicate a bug.
+    if (!isBenignStorageError(err)) {
       console.warn('[zod-to-form] unexpected shadcn cache write error:', err);
     }
   }
@@ -105,10 +139,17 @@ function filesToSources(files: ResolveFile[]): Record<string, string> {
 }
 
 async function resolveItems(items: readonly string[]): Promise<Record<string, string>> {
+  const normalized = normalizeItems(items);
+  if (normalized.length === 0) return {};
+  if (normalized.length > MAX_RESOLVE_ITEMS) {
+    throw new Error(
+      `Too many components to resolve in one request (${normalized.length} > ${MAX_RESOLVE_ITEMS})`
+    );
+  }
   const res = await fetch(RESOLVE_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ items })
+    body: JSON.stringify({ items: normalized })
   });
   if (!res.ok) {
     throw new Error(`Failed to resolve (${items.join(',')}): HTTP ${res.status}`);

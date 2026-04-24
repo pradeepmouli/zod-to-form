@@ -22,11 +22,15 @@ export default defineConfig({
     }
   ],
   webServer: {
-    // Use `vite preview` against a prebuilt bundle for a deterministic, fast-startup
-    // server. Build runs on-demand — CI will pre-build before `test:e2e`.
-    command: 'pnpm exec vite preview --host 127.0.0.1 --port ' + PORT + ' --strictPort',
+    // Build + preview in one command so `pnpm test:e2e` works from a clean
+    // checkout without a separate build step. `vite preview` needs an
+    // existing `dist/` or it errors.
+    command:
+      'pnpm exec vite build && pnpm exec vite preview --host 127.0.0.1 --port ' +
+      PORT +
+      ' --strictPort',
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
-    timeout: 60_000
+    timeout: 120_000
   }
 });

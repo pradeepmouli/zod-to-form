@@ -26,19 +26,29 @@ const CORE_SHADCN = new Set([
   'Textarea'
 ]);
 
-/** Kebab-case registry name → PascalCase shadcn component name. */
-function toRegistryName(slot: string): string {
-  // Kebab-case → lower: 'RadioGroup' → 'radio-group'.
-  return slot.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
-}
+/**
+ * Whitelist mapping `FormField.component` slot names to shadcn registry names
+ * for components that are NOT in the core pre-fetch set but SHOULD be
+ * on-demand fetched if a schema ever uses them.
+ *
+ * Structural slots produced by the core walker (`ArrayField`, `Fieldset`,
+ * `Field`, etc.) are intentionally absent — they have no shadcn registry
+ * entry and fetching them would 404 and trigger the degraded banner for
+ * every schema with arrays/records/objects.
+ */
+const EXTRA_SHADCN_SLOTS: Readonly<Record<string, string>> = {
+  RadioGroup: 'radio-group'
+  // Extend here when new shadcn-backed slots land in core.
+};
 
-/** Walk an IR tree and collect every `component` slot that isn't in the core set. */
+/** Walk an IR tree and collect every whitelisted non-core shadcn slot. */
 function collectExtraShadcnNames(fields: readonly FormField[] | null): string[] {
   if (!fields) return [];
   const extras = new Set<string>();
   const visit = (f: FormField) => {
     if (f.component && !CORE_SHADCN.has(f.component)) {
-      extras.add(toRegistryName(f.component));
+      const registryName = EXTRA_SHADCN_SLOTS[f.component];
+      if (registryName) extras.add(registryName);
     }
     if (f.arrayItem) visit(f.arrayItem);
     if (f.children) for (const c of f.children) visit(c);

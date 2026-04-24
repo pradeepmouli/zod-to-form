@@ -141,7 +141,21 @@ export const handleResolve = async (request: Request): Promise<Response> => {
       }
 
       const item = (await res.json()) as RegistryItem;
+      await processItem(item, ref.registry, depth);
+    }
 
+    /**
+     * Merge an already-fetched `RegistryItem` into the aggregators and recurse
+     * into its `registryDependencies`. Extracted so URL-resolved items (where
+     * we don't have a named registry) get the same treatment as registry-named
+     * items — including `devDependencies`, `cssVars`, and transitive
+     * `registryDependencies` which were previously dropped.
+     */
+    async function processItem(
+      item: RegistryItem,
+      currentRegistry: string,
+      depth: number
+    ): Promise<void> {
       if (Array.isArray(item.files)) {
         for (const f of item.files) {
           if (!f || typeof f.path !== 'string') continue;
@@ -153,7 +167,6 @@ export const handleResolve = async (request: Request): Promise<Response> => {
           });
         }
       }
-
       for (const d of item.dependencies ?? []) {
         if (typeof d === 'string' && d) dependencies.add(d);
       }
@@ -170,43 +183,41 @@ export const handleResolve = async (request: Request): Promise<Response> => {
       const deps = Array.isArray(item.registryDependencies) ? item.registryDependencies : [];
       for (const dep of deps) {
         if (typeof dep !== 'string' || !dep) continue;
-        if (dep.startsWith('http://') || dep.startsWith('https://')) {
-          if (!isAllowedUrl(dep, allowedHosts)) continue;
-          const visitKeyUrl = `url::${dep}`;
-          if (visited.has(visitKeyUrl)) continue;
-          visited.add(visitKeyUrl);
-          if (fetchCount >= MAX_REGISTRY_FETCHES) return;
-          fetchCount++;
-          const subRes = await fetch(dep, {
-            headers: { Accept: 'application/json' },
-            cf: { cacheTtl: 300, cacheEverything: true }
-          });
-          if (subRes.status === 404) continue;
-          if (!subRes.ok) {
-            throw new Error(`Upstream error for transitive dep ${dep}: HTTP ${subRes.status}`);
-          }
-          const subItem = (await subRes.json()) as RegistryItem;
-          for (const f of subItem.files ?? []) {
-            if (!f || typeof f.path !== 'string') continue;
-            if (filesByPath.has(f.path)) continue;
-            filesByPath.set(f.path, {
-              path: f.path,
-              type: typeof f.type === 'string' ? f.type : 'registry:ui',
-              content: typeof f.content === 'string' ? f.content : null
-            });
-          }
-          for (const d of subItem.dependencies ?? []) {
-            if (typeof d === 'string' && d) dependencies.add(d);
-          }
-          continue;
-        }
-
-        const nextRef = dep.startsWith('@')
-          ? parseItemRef(dep)
-          : { registry: ref.registry, name: dep };
-        if (!nextRef) continue;
-        await resolveOne(nextRef, depth + 1);
+        await resolveDep(dep, currentRegistry, depth);
       }
+    }
+
+    /** Resolve one registryDependency reference (URL or name). Bounded by
+     *  depth + fetch caps; skips already-visited refs. URL-resolved items
+     *  are processed through `processItem` so they recurse and merge
+     *  devDependencies/cssVars consistently with name-resolved items. */
+    async function resolveDep(dep: string, currentRegistry: string, depth: number): Promise<void> {
+      if (dep.startsWith('http://') || dep.startsWith('https://')) {
+        if (!isAllowedUrl(dep, allowedHosts)) return;
+        const visitKeyUrl = `url::${dep}`;
+        if (visited.has(visitKeyUrl)) return;
+        visited.add(visitKeyUrl);
+        if (fetchCount >= MAX_REGISTRY_FETCHES) return;
+        if (depth > MAX_DEPTH) return;
+        fetchCount++;
+        const subRes = await fetch(dep, {
+          headers: { Accept: 'application/json' },
+          cf: { cacheTtl: 300, cacheEverything: true }
+        });
+        if (subRes.status === 404) return;
+        if (!subRes.ok) {
+          throw new Error(`Upstream error for transitive dep ${dep}: HTTP ${subRes.status}`);
+        }
+        const subItem = (await subRes.json()) as RegistryItem;
+        await processItem(subItem, currentRegistry, depth + 1);
+        return;
+      }
+
+      const nextRef = dep.startsWith('@')
+        ? parseItemRef(dep)
+        : { registry: currentRegistry, name: dep };
+      if (!nextRef) return;
+      await resolveOne(nextRef, depth + 1);
     }
 
     try {

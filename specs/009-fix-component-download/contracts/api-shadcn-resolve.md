@@ -2,10 +2,11 @@
 
 Same-origin proxy. Implemented by:
 - Dev: Vite middleware (`apps/playground/vite.config.ts` — `shadcnRegistryPlugin`).
-- Prod: Cloudflare Pages Function (`apps/playground/cf-functions/api/shadcn/resolve.ts`, copied to `apps/docs/build/functions/api/shadcn/resolve.ts` by the combined build).
+- Prod: Standalone Cloudflare Worker at `apps/shadcn-proxy/` (`src/resolve.ts`), bound to the Route `zod.toform.dev/api/shadcn/*`. Deployed independently via `pnpm --filter @zod-to-form/shadcn-proxy deploy` (or the `deploy-shadcn-proxy` CI workflow).
 
-This contract describes the surface the new client consumes. The server
-implementations already exist and are not modified by this feature.
+This contract describes the surface the client consumes. The Worker handler
+code was migrated from the previous (unused) `apps/playground/cf-functions/`
+tree during this feature; the wire format is unchanged.
 
 ## Request
 
