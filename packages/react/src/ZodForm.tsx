@@ -8,12 +8,18 @@ import { FieldRenderer, warnRemovedConfigKeys } from './FieldRenderer.js';
 import { defaultComponentMap } from './components/index.js';
 import type { RuntimeComponentConfig } from './FieldRenderer.js';
 import { useZodForm } from './useZodForm.js';
+import type { input } from 'zod';
 
 type ZodFormProps<TSchema extends ZodObject> = {
   schema: TSchema;
   onSubmit?: (data: output<TSchema>) => unknown;
   onInvalid?: (errors: Record<string, unknown>) => void;
-  onValueChange?: (data: output<TSchema>) => void;
+  /**
+   * Fires on every field change (and programmatic `form.reset()`). The first
+   * arg is `output<TSchema>` when `meta.isValid` is true, `input<TSchema>`
+   * otherwise (raw/partial values mid-edit). See `useZodForm` for details.
+   */
+  onValueChange?: (data: output<TSchema> | input<TSchema>, meta: { isValid: boolean }) => void;
   mode?: 'onSubmit' | 'onChange' | 'onBlur';
   defaultValues?: Partial<output<TSchema>>;
   components?: Partial<typeof defaultComponentMap>;

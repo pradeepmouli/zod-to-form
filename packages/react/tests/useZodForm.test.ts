@@ -30,7 +30,12 @@ describe('useZodForm', () => {
     expect(result.current.fields).toBe(firstFieldsRef);
   });
 
-  it('emits onValueChange for valid changes and suppresses invalid changes', async () => {
+  it('emits onValueChange on every user edit — both invalid and valid states', async () => {
+    // Previously this callback was gated on `schema.safeParse(...).success`,
+    // which silently dropped every keystroke until the ENTIRE form parsed
+    // cleanly. That made edits appear to "not stick" whenever any required
+    // field was still empty. New contract: fire on every change, passing
+    // coerced data on success and raw-but-normalized values otherwise.
     const schema = z.object({
       name: z.string().min(2)
     });
@@ -50,8 +55,13 @@ describe('useZodForm', () => {
       });
     });
 
+    // Invalid (below min) — but we still surface the edit so consumers can
+    // keep their mirror of the form in sync. The second arg signals validity
+    // so consumers don't have to call safeParse themselves.
     await waitFor(() => {
-      expect(onValueChange).not.toHaveBeenCalled();
+      expect(onValueChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'a' }), {
+        isValid: false
+      });
     });
 
     await act(async () => {
@@ -62,14 +72,10 @@ describe('useZodForm', () => {
     });
 
     await waitFor(() => {
-      expect(onValueChange).toHaveBeenCalled();
+      expect(onValueChange).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'Ada' }), {
+        isValid: true
+      });
     });
-
-    expect(onValueChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        name: 'Ada'
-      })
-    );
   });
 
   it('does not emit onValueChange on initial mount with default values', async () => {
@@ -118,8 +124,10 @@ describe('useZodForm', () => {
       expect(onValueChange).toHaveBeenCalled();
     });
 
-    // Empty string should be coerced to undefined, not rejected
-    expect(onValueChange).toHaveBeenLastCalledWith(expect.objectContaining({ label: 'hello' }));
+    // Empty string should be coerced to undefined, not rejected.
+    expect(onValueChange).toHaveBeenLastCalledWith(expect.objectContaining({ label: 'hello' }), {
+      isValid: true
+    });
     // mode should be undefined (coerced from "")
     const lastCall = onValueChange.mock.calls.at(-1)![0];
     expect(lastCall.mode).toBeUndefined();

@@ -239,9 +239,8 @@ describe('ZodForm', () => {
 
     await waitFor(() => {
       expect(onValueChange).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: 'Al'
-        })
+        expect.objectContaining({ name: 'Al' }),
+        expect.objectContaining({ isValid: expect.any(Boolean) })
       );
     });
 

@@ -440,17 +440,60 @@ function PerformanceSection(): ReactNode {
             ))}
           </tbody>
         </table>
-        <p className={styles.sectionDesc} style={{ marginTop: '1.5rem' }}>
-          On heavy editing sessions (500 edits), the gap widens to{' '}
-          <strong>2.08× on medium forms</strong> and <strong>2.00× on large forms</strong> — every
-          keystroke in z2f costs ~100ns (a native-rule check) vs ~2.6μs (a full Zod parse) for the
-          baseline. That's a{' '}
-          <strong>
-            <span className={styles.accentPink}>24× per-keystroke speedup</span>
-          </strong>{' '}
-          on the hot path.
-        </p>
-        <div className={styles.heroActions} style={{ marginTop: '1rem' }}>
+        <div className={styles.costAnatomy}>
+          <h3 className={styles.costAnatomyTitle}>
+            Where does the gap come from?{' '}
+            <span className={styles.costAnatomyLead}>
+              Session cost = fixed (mount + submit) + per-edit × K.
+            </span>
+          </h3>
+          <div className={styles.costAnatomyGrid}>
+            <div className={styles.costAnatomyCard}>
+              <div className={styles.costAnatomyLabel}>Mount + submit (fixed)</div>
+              <div className={styles.costAnatomyRow}>
+                <span>baseline ~700μs</span>
+                <span>z2f ~700μs</span>
+              </div>
+              <div className={styles.costAnatomyRatio}>
+                1.0× <span className={styles.costAnatomyRatioNote}>equal startup cost</span>
+              </div>
+            </div>
+            <div className={styles.costAnatomyCard}>
+              <div className={styles.costAnatomyLabel}>Per keystroke (hot path)</div>
+              <div className={styles.costAnatomyRow}>
+                <span>
+                  baseline ~2.6<span className={styles.unit}>μs</span>
+                </span>
+                <span>
+                  z2f ~100<span className={styles.unit}>ns</span>
+                </span>
+              </div>
+              <div className={styles.costAnatomyRatio}>
+                <span className={styles.accentPink}>26×</span>{' '}
+                <span className={styles.costAnatomyRatioNote}>native check vs full Zod parse</span>
+              </div>
+            </div>
+            <div className={styles.costAnatomyCard}>
+              <div className={styles.costAnatomyLabel}>Session @ 500 edits (medium)</div>
+              <div className={styles.costAnatomyRow}>
+                <span>baseline ~2.0ms</span>
+                <span>z2f ~960μs</span>
+              </div>
+              <div className={styles.costAnatomyRatio}>
+                <span className={styles.accentTeal}>2.08×</span>{' '}
+                <span className={styles.costAnatomyRatioNote}>fixed cost dilutes</span>
+              </div>
+            </div>
+          </div>
+          <p className={styles.costAnatomyProse}>
+            The per-keystroke gap is <strong>26×</strong> — a native-rule check (
+            <code>minLength</code>, <code>pattern</code>, …) vs a full Zod parse. Session speedup is
+            always lower because both paths share the same fixed mount + submit cost. As edits scale
+            (K=20 → K=500 → steady-state typing), the session ratio climbs from{' '}
+            <strong>1.77×</strong> toward the per-keystroke limit of <strong>26×</strong>.
+          </p>
+        </div>
+        <div className={styles.heroActions} style={{ marginTop: '2rem', justifyContent: 'center' }}>
           <Link className="button button--outline button--lg" to="/docs/guides/benchmarks">
             See the full benchmarks →
           </Link>
