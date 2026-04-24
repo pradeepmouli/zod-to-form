@@ -541,6 +541,111 @@
   color: var(--z2f-text-muted);
 }
 
+/* ── PERFORMANCE COST ANATOMY ─────────────────────────────────────── */
+.costAnatomy {
+  margin-top: 3rem;
+  text-align: center;
+}
+
+.costAnatomyTitle {
+  font-family: var(--ifm-heading-font-family);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--z2f-text-primary);
+  margin: 0 auto 1.75rem;
+  max-width: 720px;
+  letter-spacing: -0.01em;
+}
+
+.costAnatomyLead {
+  font-weight: 400;
+  color: var(--z2f-text-secondary);
+}
+
+.costAnatomyGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.costAnatomyCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem 1.25rem 1rem;
+  border: 1px solid var(--z2f-border-subtle);
+  border-radius: var(--z2f-radius-lg);
+  background: var(--z2f-bg-surface);
+  text-align: left;
+}
+
+.costAnatomyLabel {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--z2f-text-muted);
+}
+
+.costAnatomyRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.875rem;
+  color: var(--z2f-text-secondary);
+}
+
+.costAnatomyRow .unit {
+  font-size: 0.75em;
+  color: var(--z2f-text-muted);
+}
+
+.costAnatomyRatio {
+  font-family: var(--ifm-heading-font-family);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--z2f-text-primary);
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.costAnatomyRatioNote {
+  font-family: var(--ifm-font-family-base);
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--z2f-text-muted);
+  letter-spacing: 0;
+}
+
+.costAnatomyProse {
+  max-width: 720px;
+  margin: 0 auto;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--z2f-text-secondary);
+}
+
+.costAnatomyProse code {
+  font-size: 0.8125rem;
+  color: var(--z2f-teal);
+  background: var(--z2f-teal-muted);
+  border: 1px solid var(--z2f-border-subtle);
+  padding: 0 4px;
+  border-radius: 3px;
+}
+
+@media (max-width: 768px) {
+  .costAnatomyGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── ECOSYSTEM BADGES ─────────────────────────────────────────────── */
 .ecoBadges {
   display: flex;
