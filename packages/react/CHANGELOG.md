@@ -1,5 +1,19 @@
 # @zod-to-form/react
 
+## 0.7.0
+
+### Minor Changes
+
+- [#100](https://github.com/pradeepmouli/zod-to-form/pull/100) [`6e2696a`](https://github.com/pradeepmouli/zod-to-form/commit/6e2696ac606f1319b02b9106934911269549059d) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - fix: address Copilot PR review comments
+  - fix(playground,shadcn-proxy): address review findings from PR [#100](https://github.com/pradeepmouli/zod-to-form/issues/100)
+  - chore: add auto-generated changeset (minor)
+  - feat(playground): fix shadcn component download in prod via standalone Worker
+
+### Patch Changes
+
+- Updated dependencies [[`6e2696a`](https://github.com/pradeepmouli/zod-to-form/commit/6e2696ac606f1319b02b9106934911269549059d)]:
+  - @zod-to-form/core@0.7.0
+
 ## 0.6.7
 
 ### Patch Changes
