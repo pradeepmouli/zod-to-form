@@ -110,4 +110,55 @@ describe('ZodFormsConfig generics', () => {
 
     expectTypeOf(config.fields).toEqualTypeOf<Record<string, TypedFieldConfig> | undefined>();
   });
+
+  // ─── ArrayConfig extension (010-editor-primitives) ─────────────────
+
+  it('ArrayConfig accepts reorder + onReorder + ghost rows', () => {
+    const config: ZodFormsConfig = {
+      components: { source: '@app/components', overrides: {} },
+      fields: {
+        members: {
+          arrayConfig: {
+            addLabel: '+ Add member',
+            removeLabel: '− Remove',
+            reorder: true,
+            onReorder: (from, to) => {
+              expectTypeOf(from).toEqualTypeOf<number>();
+              expectTypeOf(to).toEqualTypeOf<number>();
+            },
+            before: [
+              {
+                id: 'inherited-1',
+                render: (ctx) => {
+                  expectTypeOf(ctx.isFirst).toEqualTypeOf<boolean>();
+                  expectTypeOf(ctx.isLast).toEqualTypeOf<boolean>();
+                  return null;
+                }
+              }
+            ],
+            after: [{ id: 'computed-1', render: () => null }]
+          }
+        }
+      }
+    };
+
+    expect(config.fields?.['members']?.arrayConfig?.reorder).toBe(true);
+    expect(config.fields?.['members']?.arrayConfig?.before?.[0]?.id).toBe('inherited-1');
+  });
+
+  it('ArrayConfig.reorder rejects non-boolean values', () => {
+    const _bad: ZodFormsConfig['fields'] = {
+      // @ts-expect-error reorder must be boolean
+      members: { arrayConfig: { reorder: 'yes' } }
+    };
+    void _bad;
+  });
+
+  it('GhostRow.id is required', () => {
+    const _bad: ZodFormsConfig['fields'] = {
+      // @ts-expect-error missing id
+      members: { arrayConfig: { before: [{ render: () => null }] } }
+    };
+    void _bad;
+  });
 });

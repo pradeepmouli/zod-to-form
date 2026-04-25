@@ -52,6 +52,8 @@ export type {
   FormMeta,
   FieldConfig,
   FieldExpression,
+  GhostRow,
+  GhostRowContext,
   ProcessParams,
   WalkOptions,
   ZodFormRegistry,

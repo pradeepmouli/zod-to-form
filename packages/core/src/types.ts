@@ -171,6 +171,63 @@ export interface ArrayConfig {
   addLabel?: string;
   /** Label for the "remove item" button (default: "− Remove") */
   removeLabel?: string;
+  /**
+   * Enable per-row reorder affordance. When true, the renderer mounts a
+   * registered `ArrayReorderHandle` component per row and wires it to
+   * `useFieldArray.move()`. Off by default — existing arrays are unchanged.
+   */
+  reorder?: boolean;
+  /**
+   * Optional callback fired after a reorder completes. Adopters who hold a
+   * parallel copy of the array (e.g. a graph store) mirror the change here.
+   * `from` and `to` are zero-based indices into the form-driven array
+   * (excluding ghost rows).
+   */
+  onReorder?: (from: number, to: number) => void;
+  /**
+   * Non-form rows rendered before the first form-driven row. Each entry is
+   * a self-contained renderable; the library never inspects its contents.
+   * Ghost rows do not participate in form state, validation, or submission.
+   */
+  before?: GhostRow[];
+  /**
+   * Non-form rows rendered after the last form-driven row. Same semantics as
+   * `before`.
+   */
+  after?: GhostRow[];
+}
+
+/**
+ * A renderable row that lives inside an array section without participating
+ * in form state. Used for inherited rows, computed defaults, or read-only
+ * informational entries.
+ *
+ * @category Types
+ */
+export interface GhostRow {
+  /**
+   * Stable identifier within a `before` or `after` group. The renderer
+   * combines this with the group name to form the React key
+   * (`ghost-before-${id}` / `ghost-after-${id}`), so the same `id` may
+   * safely appear in both groups without collision. Duplicates *within*
+   * a single group emit a one-time development warning. Required so
+   * that reorders of real rows don't remount ghost rows.
+   */
+  id: string;
+  /** Render function. Receives positional context relative to other ghost rows. */
+  render: (ctx: GhostRowContext) => unknown;
+}
+
+/**
+ * Positional context passed to a `GhostRow`'s render function.
+ *
+ * @category Types
+ */
+export interface GhostRowContext {
+  /** True if this row is the first ghost row in its `before` or `after` group. */
+  isFirst: boolean;
+  /** True if this row is the last ghost row in its `before` or `after` group. */
+  isLast: boolean;
 }
 
 type FieldConfigBase = {

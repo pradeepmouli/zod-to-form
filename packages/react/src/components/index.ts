@@ -9,6 +9,7 @@ import { RadioGroup } from './RadioGroup.js';
 import { Select } from './Select.js';
 import { Switch } from './Switch.js';
 import { Textarea } from './Textarea.js';
+import { ArrayReorderHandle } from './ArrayReorderHandle.js';
 
 function Field(props: HTMLAttributes<HTMLDivElement>) {
   return createElement('div', props);
@@ -41,7 +42,8 @@ const WRAPPER_NAMES = new Set([
   'FieldDescription',
   'FieldMessage',
   'ArrayAddButton',
-  'ArrayRemoveButton'
+  'ArrayRemoveButton',
+  'ArrayReorderHandle'
 ]);
 
 /**
@@ -70,7 +72,8 @@ export const defaultComponentMap = {
   FieldDescription,
   FieldMessage,
   ArrayAddButton,
-  ArrayRemoveButton
+  ArrayRemoveButton,
+  ArrayReorderHandle
 };
 
 /** User-facing field component names derived from defaultComponentMap, excluding internal wrappers */

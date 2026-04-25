@@ -49,6 +49,10 @@ export type {
 // Runtime renderer
 export { ZodForm } from './ZodForm.js';
 export { useZodForm } from './useZodForm.js';
+export { useExternalSync } from './useExternalSync.js';
+export type { UseExternalSyncOptions } from './useExternalSync.js';
+export { ZodFormSwitch } from './ZodFormSwitch.js';
+export type { ZodFormSwitchProps } from './ZodFormSwitch.js';
 // Re-export normalizeFormValues from core for backward compatibility
 export { normalizeFormValues } from '@zod-to-form/core';
 export { wrapWithSchemaLite } from './SchemaLiteSubmit.js';

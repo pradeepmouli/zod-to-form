@@ -35,3 +35,10 @@ This repository is designed for multi-agent collaboration (Copilot, Claude, Gemi
 ## Deliverables Expectation
 - Summaries should include what changed, where, and how to verify.
 - For automation runs, report commands executed and their results.
+
+## Active Technologies
+- TypeScript 5.x (strict) (010-editor-primitives)
+- N/A — runtime only, no persistence (010-editor-primitives)
+
+## Recent Changes
+- 010-editor-primitives: Added TypeScript 5.x (strict)

@@ -27,6 +27,7 @@ export type RuntimeComponentConfig = {
 };
 
 const _warned = new Set<string>();
+const _warnedGhostIds = new Set<string>();
 
 /**
  * One-time validation of component config for removed keys.
@@ -409,7 +410,7 @@ const ArrayBlock = memo(function ArrayBlock({
 }: FieldRendererProps) {
   const componentMap = { ...defaultComponentMap, ...components };
   const { control } = useFormContext();
-  const { fields: items, append, remove } = useFieldArray({ control, name: field.key });
+  const { fields: items, append, remove, move } = useFieldArray({ control, name: field.key });
   const minLength = field.constraints.minLength ?? 0;
   const maxLength = field.constraints.maxLength;
   const isSet = field.props['_isSet'] === true;
@@ -423,13 +424,57 @@ const ArrayBlock = memo(function ArrayBlock({
 
   const AddButton = componentMap.ArrayAddButton;
   const RemoveButton = componentMap.ArrayRemoveButton;
+  const ReorderHandle = componentMap.ArrayReorderHandle;
 
-  // Resolve custom labels from field metadata (arrayConfig)
+  // Resolve custom labels and editor primitives from field metadata (arrayConfig)
   const arrayConfig = field.props['_arrayConfig'] as
-    | { addLabel?: string; removeLabel?: string }
+    | {
+        addLabel?: string;
+        removeLabel?: string;
+        reorder?: boolean;
+        onReorder?: (from: number, to: number) => void;
+        before?: Array<{
+          id: string;
+          render: (ctx: { isFirst: boolean; isLast: boolean }) => unknown;
+        }>;
+        after?: Array<{
+          id: string;
+          render: (ctx: { isFirst: boolean; isLast: boolean }) => unknown;
+        }>;
+      }
     | undefined;
   const addLabel = arrayConfig?.addLabel;
   const removeLabel = arrayConfig?.removeLabel;
+  const reorderEnabled = arrayConfig?.reorder === true;
+  const onReorder = arrayConfig?.onReorder;
+  const beforeRows = arrayConfig?.before;
+  const afterRows = arrayConfig?.after;
+
+  // One-time dev warning for duplicate ghost-row ids
+  if (typeof process !== 'undefined' && process.env?.['NODE_ENV'] !== 'production') {
+    for (const group of [beforeRows, afterRows]) {
+      if (!group) continue;
+      const seen = new Set<string>();
+      for (const row of group) {
+        if (seen.has(row.id) && !_warnedGhostIds.has(row.id)) {
+          _warnedGhostIds.add(row.id);
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[zod-to-form] ArrayBlock: duplicate ghost-row id ${JSON.stringify(row.id)} ` +
+              `detected. React reconciliation may misattribute state.`
+          );
+        }
+        seen.add(row.id);
+      }
+    }
+  }
+
+  const handleReorder = (from: number, to: number) => {
+    if (field.disabled || field.readOnly) return;
+    if (from === to || to < 0 || to >= items.length) return;
+    move(from, to);
+    onReorder?.(from, to);
+  };
 
   // For sets: build a Set of stringified values for O(1) duplicate lookup.
   // Uses a safe serializer that handles BigInt/Symbol and falls back to a
@@ -457,6 +502,16 @@ const ArrayBlock = memo(function ArrayBlock({
   return (
     <fieldset>
       <legend>{field.label}</legend>
+      {beforeRows?.map((row, i) => (
+        <div key={`ghost-before-${row.id}`}>
+          {
+            row.render({
+              isFirst: i === 0,
+              isLast: i === beforeRows.length - 1
+            }) as ReactNode
+          }
+        </div>
+      ))}
       {items.map((item, index) => {
         if (!field.arrayItem) return null;
         const itemField: FormField = { ...field.arrayItem, key: `${field.key}.${index}` };
@@ -473,12 +528,30 @@ const ArrayBlock = memo(function ArrayBlock({
                 Duplicate value
               </span>
             )}
+            {reorderEnabled && ReorderHandle ? (
+              <ReorderHandle
+                index={index}
+                total={items.length}
+                disabled={field.disabled || field.readOnly}
+                onMove={handleReorder}
+              />
+            ) : null}
             <RemoveButton onClick={() => remove(index)} disabled={items.length <= minLength}>
               {removeLabel}
             </RemoveButton>
           </div>
         );
       })}
+      {afterRows?.map((row, i) => (
+        <div key={`ghost-after-${row.id}`}>
+          {
+            row.render({
+              isFirst: i === 0,
+              isLast: i === afterRows.length - 1
+            }) as ReactNode
+          }
+        </div>
+      ))}
       <AddButton
         onClick={() => append(getDefaultAppendValue(field.arrayItem))}
         disabled={maxLength != null && items.length >= maxLength}

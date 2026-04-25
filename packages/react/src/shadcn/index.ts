@@ -203,6 +203,58 @@ function ShadcnArrayRemoveButton(props: ButtonHTMLAttributes<HTMLButtonElement>)
   );
 }
 
+// ─── Shadcn-style ArrayReorderHandle ─────────────────────────────────────────
+
+interface ShadcnArrayReorderHandleProps {
+  index: number;
+  total: number;
+  disabled?: boolean;
+  onMove: (from: number, to: number) => void;
+}
+
+function ShadcnArrayReorderHandle(props: ShadcnArrayReorderHandleProps) {
+  const { index, total, disabled, onMove } = props;
+  const rowLabel = `row ${index + 1}`;
+  const upDisabled = !!disabled || index === 0;
+  const downDisabled = !!disabled || index === total - 1;
+  const buttonClass = [
+    'inline-flex h-7 w-7 items-center justify-center rounded-md',
+    'text-muted-foreground hover:text-foreground hover:bg-accent',
+    'disabled:pointer-events-none disabled:opacity-50'
+  ].join(' ');
+
+  return createElement(
+    'span',
+    {
+      role: 'group',
+      'aria-label': `Reorder ${rowLabel}`,
+      className: 'inline-flex flex-col gap-0.5'
+    },
+    createElement(
+      'button',
+      {
+        type: 'button',
+        className: buttonClass,
+        'aria-label': `Move ${rowLabel} up`,
+        disabled: upDisabled,
+        onClick: () => onMove(index, index - 1)
+      },
+      '↑'
+    ),
+    createElement(
+      'button',
+      {
+        type: 'button',
+        className: buttonClass,
+        'aria-label': `Move ${rowLabel} down`,
+        disabled: downDisabled,
+        onClick: () => onMove(index, index + 1)
+      },
+      '↓'
+    )
+  );
+}
+
 // ─── Assembled shadcn component map ──────────────────────────────────────────
 //
 // Inherits Checkbox, Switch, DatePicker, FileInput, RadioGroup, Combobox from
@@ -235,5 +287,6 @@ export const shadcnComponentMap = {
   FieldDescription: ShadcnFieldDescription,
   FieldMessage: ShadcnFieldMessage,
   ArrayAddButton: ShadcnArrayAddButton,
-  ArrayRemoveButton: ShadcnArrayRemoveButton
+  ArrayRemoveButton: ShadcnArrayRemoveButton,
+  ArrayReorderHandle: ShadcnArrayReorderHandle
 };
