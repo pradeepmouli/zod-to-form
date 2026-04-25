@@ -36,10 +36,11 @@ const config: ZodFormsConfig<typeof Components, typeof Schemas> = {
    `onMove` is wired to RHF's `useFieldArray.move(from, to)`. The
    library performs the state mutation; the handle component decides
    the gesture (default: ↑/↓ buttons).
-3. After `move()` resolves, the library invokes
-   `arrayConfig.onReorder?.(from, to)` exactly once on the next
-   microtask. The callback receives indices in the *post-reorder*
-   array.
+3. After `move()` returns, the library invokes
+   `arrayConfig.onReorder?.(from, to)` exactly once, synchronously.
+   The callback receives indices in the *post-reorder* array. RHF's
+   `move()` is synchronous, so `form.getValues()` from inside the
+   callback observes the post-reorder state.
 4. Ghost rows (`arrayConfig.before`/`arrayConfig.after`) are NOT
    reorderable. Their position in the rendered list is fixed by the
    adopter's array config; only form-driven rows participate in

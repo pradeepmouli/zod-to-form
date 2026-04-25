@@ -23,8 +23,12 @@ export interface ZodFormSwitchProps<
   TKey extends keyof TSource & string,
   TSchemas extends Record<string, ZodObject>
 > {
-  /** Source object whose `[discriminator]` value selects the schema. */
-  source: TSource;
+  /**
+   * Source object whose `[discriminator]` value selects the schema.
+   * `null` / `undefined` are valid and route to `fallback` (or to a one-time
+   * warning + `null` render if no fallback is provided).
+   */
+  source: TSource | null | undefined;
   /** Property name on `source` to use as the discriminator. */
   discriminator: TKey;
   /** Map from discriminator values to Zod schemas. */
@@ -32,8 +36,9 @@ export interface ZodFormSwitchProps<
   /**
    * Component(s) to render when the discriminator value matches no
    * schema. ReactNode for static fallback; function for dynamic.
+   * The function form receives the (possibly nullish) source.
    */
-  fallback?: ReactNode | ((source: TSource) => ReactNode);
+  fallback?: ReactNode | ((source: TSource | null | undefined) => ReactNode);
   /** Forwarded to the rendered <ZodForm>. */
   components?: Partial<typeof defaultComponentMap>;
   /** Forwarded to the rendered <ZodForm>. */
@@ -45,8 +50,8 @@ export interface ZodFormSwitchProps<
 }
 
 function isFunctionFallback<TSource>(
-  fallback: ReactNode | ((source: TSource) => ReactNode)
-): fallback is (source: TSource) => ReactNode {
+  fallback: ReactNode | ((source: TSource | null | undefined) => ReactNode)
+): fallback is (source: TSource | null | undefined) => ReactNode {
   return typeof fallback === 'function';
 }
 
@@ -111,7 +116,16 @@ export function ZodFormSwitch<
     return isFunctionFallback(fallback) ? fallback(source) : fallback;
   }
 
-  const warnKey = `unmapped:${String(key)}`;
+  // De-dup by the actual discriminator value, not the local string-narrowed
+  // `key` (which is `undefined` for non-string values and would collapse all
+  // invalid types into a single warning).
+  let warnTag: string;
+  try {
+    warnTag = JSON.stringify(value);
+  } catch {
+    warnTag = String(value);
+  }
+  const warnKey = `unmapped:${typeof value}:${warnTag}`;
   if (!_warnedKeys.has(warnKey)) {
     _warnedKeys.add(warnKey);
     // eslint-disable-next-line no-console

@@ -78,7 +78,10 @@ The library guarantees:
 - `index` is the row's current index.
 - `total` is the count of form-driven rows (excludes ghost rows).
 - `onMove(from, to)` calls RHF's `move()` and then your `onReorder`.
-- `disabled` is true when the array hits its `min`/`max` length.
+- `disabled` is true when the field is `disabled` or `readOnly`. Reorder
+  is *not* tied to `min`/`max` length — fixed-length arrays remain
+  reorderable. The default handle additionally disables the "move up"
+  button on the first row and the "move down" button on the last row.
 
 ## Accessibility
 

@@ -106,6 +106,23 @@ describe('ArrayReorder', () => {
     expect(upRow2).not.toBeDisabled();
     expect(downRow1).not.toBeDisabled();
   });
+
+  // PR #104 follow-up: disabled / readOnly field disables every handle button
+  it('disables every handle button when the field itself is disabled', () => {
+    function Harness() {
+      const form = useForm({ defaultValues: { items: ['a', 'b', 'c'] } });
+      const disabledField: FormField = { ...makeArrayField({ reorder: true }), disabled: true };
+      return (
+        <FormProvider {...form}>
+          <FieldRenderer field={disabledField} components={defaultComponentMap} />
+        </FormProvider>
+      );
+    }
+    render(<Harness />);
+    const allButtons = screen.getAllByRole('button', { name: /move row/i });
+    expect(allButtons).toHaveLength(6);
+    for (const btn of allButtons) expect(btn).toBeDisabled();
+  });
 });
 
 function RenderHarness({

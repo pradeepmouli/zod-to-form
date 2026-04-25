@@ -14,6 +14,7 @@ const SCHEMAS = { A: schemaA, B: schemaB } as const;
 
 describe('ZodFormSwitch', () => {
   beforeEach(() => {
+    vi.restoreAllMocks();
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   });
 
@@ -54,7 +55,9 @@ describe('ZodFormSwitch', () => {
 
   // T027
   it('calls fallback function with source when provided as function', () => {
-    const fallback = vi.fn((s: { kind: string }) => <span>FN:{s.kind}</span>);
+    const fallback = vi.fn((s: { kind: string } | null | undefined) =>
+      s ? <span>FN:{s.kind}</span> : <span>FN:none</span>
+    );
     render(
       <ZodFormSwitch
         source={{ kind: 'C' as 'A' }}
@@ -80,6 +83,32 @@ describe('ZodFormSwitch', () => {
       <ZodFormSwitch source={{ kind: 'C' as 'A' }} discriminator="kind" schemas={SCHEMAS} />
     );
     expect(warn).toHaveBeenCalledTimes(1);
+  });
+
+  // PR #104 follow-up: warn-once is per-discriminator-value, not collapsed across all unmapped types
+  it('warns once per unique unmapped discriminator value, not once globally', () => {
+    const warn = vi.mocked(console.warn);
+    // Different unmapped values should each produce one warning
+    const { rerender } = render(
+      <ZodFormSwitch source={{ kind: 'X' as 'A' }} discriminator="kind" schemas={SCHEMAS} />
+    );
+    rerender(
+      <ZodFormSwitch source={{ kind: 'Y' as 'A' }} discriminator="kind" schemas={SCHEMAS} />
+    );
+    rerender(
+      <ZodFormSwitch source={{ kind: 'Z' as 'A' }} discriminator="kind" schemas={SCHEMAS} />
+    );
+    expect(warn).toHaveBeenCalledTimes(3);
+  });
+
+  // PR #104 follow-up: nullish source goes to fallback path
+  it('routes nullish source to fallback', () => {
+    const fallback = vi.fn(() => <span data-testid="nullish-fb">no source</span>);
+    render(
+      <ZodFormSwitch source={null} discriminator="kind" schemas={SCHEMAS} fallback={fallback} />
+    );
+    expect(screen.getByTestId('nullish-fb')).toBeDefined();
+    expect(fallback).toHaveBeenCalledWith(null);
   });
 
   // T029

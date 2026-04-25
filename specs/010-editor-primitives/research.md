@@ -43,15 +43,18 @@
 ## R3: Reorder event surface
 
 - **Decision**: `arrayConfig.onReorder?: (from: number, to: number) =>
-  void` fires *after* RHF state updates. Adopters who hold a parallel
-  copy (graph store, server) mirror the change here. The library does
-  not buffer or coalesce events.
+  void` fires *synchronously* immediately after `move(from, to)`.
+  Adopters who hold a parallel copy (graph store, server) mirror the
+  change here. The library does not buffer or coalesce events.
 - **Rationale**: FR-002 requires emission with source and destination
-  indices. Calling on the next microtask after `move()` keeps `form.
-  getValues()` consistent with the indices reported.
+  indices. RHF's `move()` is synchronous: form state is updated by the
+  time `move()` returns, so a synchronous callback observes the
+  post-reorder values via `form.getValues()`. A `queueMicrotask` defer
+  was considered but adds no semantic value, complicates synchronous
+  test assertions, and produces no observable state difference.
 - **Alternatives considered**: Event-bus pattern (rejected: too heavy);
   re-using `onValueChange` (rejected: callers can't tell a reorder
-  apart from an edit).
+  apart from an edit); `queueMicrotask` defer (rejected: no benefit).
 
 ## R4: External-data sync
 

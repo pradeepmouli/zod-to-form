@@ -470,6 +470,7 @@ const ArrayBlock = memo(function ArrayBlock({
   }
 
   const handleReorder = (from: number, to: number) => {
+    if (field.disabled || field.readOnly) return;
     if (from === to || to < 0 || to >= items.length) return;
     move(from, to);
     onReorder?.(from, to);
@@ -528,7 +529,12 @@ const ArrayBlock = memo(function ArrayBlock({
               </span>
             )}
             {reorderEnabled && ReorderHandle ? (
-              <ReorderHandle index={index} total={items.length} onMove={handleReorder} />
+              <ReorderHandle
+                index={index}
+                total={items.length}
+                disabled={field.disabled || field.readOnly}
+                onMove={handleReorder}
+              />
             ) : null}
             <RemoveButton onClick={() => remove(index)} disabled={items.length <= minLength}>
               {removeLabel}

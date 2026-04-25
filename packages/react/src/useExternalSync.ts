@@ -7,7 +7,7 @@
 // user edits while a source object is being held, and snaps the form to a
 // new source's projection only when the adopter swaps the reference.
 
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import type { FieldValues, UseFormReturn } from 'react-hook-form';
 
 /**
@@ -47,15 +47,19 @@ export function useExternalSync<TSource, TValues extends FieldValues>(
   const previousRef = useRef<{ source: TSource; initialised: true } | { initialised: false }>({
     initialised: false
   });
+  const keepDirty = options?.keepDirty ?? false;
 
-  const prev = previousRef.current;
-  if (!prev.initialised) {
-    previousRef.current = { source, initialised: true };
-    return;
-  }
-
-  if (!Object.is(prev.source, source)) {
-    form.reset(toValues(source), { keepDirtyValues: options?.keepDirty ?? false });
-    previousRef.current = { source, initialised: true };
-  }
+  // Side effects in an effect — never during render — so React 18 StrictMode's
+  // double-invocation doesn't trigger spurious resets.
+  useEffect(() => {
+    const prev = previousRef.current;
+    if (!prev.initialised) {
+      previousRef.current = { source, initialised: true };
+      return;
+    }
+    if (!Object.is(prev.source, source)) {
+      form.reset(toValues(source), { keepDirtyValues: keepDirty });
+      previousRef.current = { source, initialised: true };
+    }
+  }, [source, form, toValues, keepDirty]);
 }

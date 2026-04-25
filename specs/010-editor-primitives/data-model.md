@@ -52,7 +52,13 @@ export interface ArrayConfig {
  * informational entries.
  */
 export interface GhostRow {
-  /** Stable React key. Required so reorders of real rows don't remount ghost rows. */
+  /**
+   * Stable identifier within a `before` or `after` group. The renderer
+   * combines this with the group name (`ghost-before-${id}` /
+   * `ghost-after-${id}`) to form the React key, so the same `id` may
+   * safely appear in both groups without collision. Required so that
+   * reorders of real rows don't remount ghost rows.
+   */
   id: string;
   /** Render function. Receives positional context relative to other ghost rows. */
   render: (ctx: GhostRowContext) => import('react').ReactNode;

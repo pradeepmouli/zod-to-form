@@ -205,7 +205,14 @@ export interface ArrayConfig {
  * @category Types
  */
 export interface GhostRow {
-  /** Stable React key. Required so reorders of real rows don't remount ghost rows. */
+  /**
+   * Stable identifier within a `before` or `after` group. The renderer
+   * combines this with the group name to form the React key
+   * (`ghost-before-${id}` / `ghost-after-${id}`), so the same `id` may
+   * safely appear in both groups without collision. Duplicates *within*
+   * a single group emit a one-time development warning. Required so
+   * that reorders of real rows don't remount ghost rows.
+   */
   id: string;
   /** Render function. Receives positional context relative to other ghost rows. */
   render: (ctx: GhostRowContext) => unknown;

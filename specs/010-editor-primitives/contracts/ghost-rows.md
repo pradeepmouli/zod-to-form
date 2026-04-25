@@ -38,9 +38,13 @@ const config: ZodFormsConfig<typeof Components, typeof Schemas> = {
 3. Each ghost row's `render(ctx)` receives `{ isFirst, isLast }`
    relative to its own group (`before` or `after`), not the overall
    list.
-4. Ghost rows are rendered with their own React `key` (= `GhostRow.id`)
-   inside the same `<fieldset>` as form rows. They participate in
-   focus order naturally; styling is the adopter's responsibility.
+4. Ghost rows are rendered inside the same `<fieldset>` as form rows
+   with React keys of the form `ghost-before-${id}` / `ghost-after-${id}`.
+   The group prefix means the same `id` may safely appear in both
+   `before` and `after` without collision, while a duplicate within a
+   single group still triggers the development warning. They
+   participate in focus order naturally; styling is the adopter's
+   responsibility.
 
 ## Form state isolation
 

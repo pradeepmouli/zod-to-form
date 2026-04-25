@@ -52,8 +52,9 @@ Ghost rows are pure render output. They:
 - Do **NOT** appear in `useFieldArray.fields`.
 - Do **NOT** contribute to `form.formState.errors`.
 - Do **NOT** appear in the value submitted via `form.handleSubmit`.
-- Do **NOT** survive a `form.reset` — they're rendered from
-  `arrayConfig`, which lives outside form state.
+- *Do* remain rendered across a `form.reset` — they live in
+  `arrayConfig`, which is outside form state. `reset` clears form-driven
+  values; ghost rows are unaffected.
 
 If you need a row to participate in form state, it's not a ghost row —
 it's a form row. Append it to the array using `useFieldArray.append()`
