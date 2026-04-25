@@ -1,0 +1,9 @@
+{
+  "label": "Editor Primitives",
+  "position": 3,
+  "collapsed": false,
+  "link": {
+    "type": "generated-index",
+    "description": "Primitives for graph- and document-driven schema editors: array reorder, external-data sync, discriminator host, ghost rows, custom row renderer."
+  }
+}
