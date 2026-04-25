@@ -12,6 +12,35 @@ Two modes: `?z2f` query imports (transform per-import, HMR works) vs `generate` 
 (static JSX rewriting, no HMR integration). Use `?z2f` for new forms, `generate` for
 migrating existing `<ZodForm>` call sites.
 
+## Setup
+
+The plugin emits standard React + react-hook-form code, so the consumer
+app needs the form runtime as a regular dep — even if no source file
+imports from `@zod-to-form/react` directly.
+
+```bash
+pnpm add -D @zod-to-form/vite
+pnpm add zod react react-dom react-hook-form @hookform/resolvers
+```
+
+Wire the plugin BEFORE `@vitejs/plugin-react` so the generated TSX flows
+through React's JSX transform normally:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import z2fVite from '@zod-to-form/vite';
+
+export default defineConfig({ plugins: [z2fVite(), react()] });
+```
+
+Add the ambient declarations for `?z2f` imports to your `tsconfig.json`:
+
+```jsonc
+{ "compilerOptions": { "types": ["@zod-to-form/vite/client"] } }
+```
+
 ## When to Use
 
 **Use this skill when:**

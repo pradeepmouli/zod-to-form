@@ -4,11 +4,23 @@ Vite plugin for [zod-to-form](https://github.com/pradeepmouli/zod-to-form). Tran
 
 > **Status**: In active development. See [`specs/007-vite-codegen-plugin/`](../../specs/007-vite-codegen-plugin/) for the full specification, plan, and implementation tasks.
 
+## Install
+
+The plugin emits standard React + react-hook-form code, so the consumer
+app needs the form runtime even when nothing else imports from
+`@zod-to-form/react`:
+
+```bash
+pnpm add -D @zod-to-form/vite
+pnpm add zod react react-dom react-hook-form @hookform/resolvers
+```
+
+`@zod-to-form/vite` is the only build-time dep. The other packages are
+runtime peers that the generated form components import.
+
 ## Quickstart
 
 See the full walkthrough in [quickstart.md](../../specs/007-vite-codegen-plugin/quickstart.md).
-
-Minimal usage:
 
 ```ts
 // vite.config.ts
@@ -17,8 +29,20 @@ import react from '@vitejs/plugin-react';
 import z2fVite from '@zod-to-form/vite';
 
 export default defineConfig({
+  // Plugin order matters: z2fVite BEFORE react() so the generated TSX
+  // flows through React's JSX transform normally.
   plugins: [z2fVite(), react()]
 });
+```
+
+Add the ambient declarations for `?z2f` imports to your `tsconfig.json`:
+
+```jsonc
+{
+  "compilerOptions": {
+    "types": ["@zod-to-form/vite/client"]
+  }
+}
 ```
 
 ```tsx

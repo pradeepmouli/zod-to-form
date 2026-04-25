@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-04-25 — `@zod-to-form/vite`
+
+### Fixed
+- `@zod-to-form/vite`: `dist/virtual-types.d.ts` was missing from the published 0.2.1 build because `tsgo` doesn't propagate hand-written `.d.ts` files. The build script now copies it explicitly. Consumers that set `"types": ["@zod-to-form/vite/client"]` in their `tsconfig.json` no longer hit `TS2688: Cannot find type definition file`.
+- `@zod-to-form/vite`: declared `react`, `react-hook-form`, `@hookform/resolvers`, and `zod` as `peerDependencies`. The generated form code imports from each at runtime; consumers used to install them by trial-and-error after a build failure. pnpm/npm now warn at install time when any peer is missing.
+
+### Changed
+- `@zod-to-form/vite`: README + skill rewritten with explicit install step (the four runtime peers + the dev dep), the `tsconfig.json` `types` entry, and the plugin-order requirement (`z2fVite()` BEFORE `react()`).
+
+
 ## [0.6.0] - 2026-03-19
 
 ### Changed
