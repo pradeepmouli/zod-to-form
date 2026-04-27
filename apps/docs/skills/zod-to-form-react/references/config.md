@@ -42,6 +42,20 @@ here as the single source of truth for the walker.
 
 **Type:** `{ level: 1 | 2 | 3; optimizers?: Record<string, FormOptimizer[]> }`
 
+## UseExternalSyncOptions
+
+Options for useExternalSync.
+
+### Properties
+
+#### keepDirty
+
+If true, preserve dirty fields across an external reset.
+Defaults to false (matches the common "I switched contexts; discard edits"
+intent).
+
+**Type:** `boolean`
+
 ## RuntimeComponentConfig
 
 ### Properties

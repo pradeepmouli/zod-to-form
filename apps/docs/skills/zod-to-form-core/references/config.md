@@ -2,8 +2,9 @@
 
 ## ArrayConfig
 
-Configuration for array field add/remove buttons.
-Applied via FormMeta registry on `z.array()` schemas.
+Configuration for collection-style field add/remove buttons.
+Applied via FormMeta registry on schemas rendered as `ArrayField`:
+`z.array()`, `z.set()`, and `z.map()`.
 
 ### Properties
 
@@ -18,6 +19,38 @@ Label for the "add item" button (default: "+ Add")
 Label for the "remove item" button (default: "− Remove")
 
 **Type:** `string`
+
+#### reorder
+
+Enable per-row reorder affordance. When true, the renderer mounts a
+registered `ArrayReorderHandle` component per row and wires it to
+`useFieldArray.move()`. Off by default — existing arrays are unchanged.
+
+**Type:** `boolean`
+
+#### onReorder
+
+Optional callback fired after a reorder completes. Adopters who hold a
+parallel copy of the array (e.g. a graph store) mirror the change here.
+`from` and `to` are zero-based indices into the form-driven array
+(excluding ghost rows).
+
+**Type:** `(from: number, to: number) => void`
+
+#### before
+
+Non-form rows rendered before the first form-driven row. Each entry is
+a self-contained renderable; the library never inspects its contents.
+Ghost rows do not participate in form state, validation, or submission.
+
+**Type:** `GhostRow[]`
+
+#### after
+
+Non-form rows rendered after the last form-driven row. Same semantics as
+`before`.
+
+**Type:** `GhostRow[]`
 
 ## FieldConfig
 
