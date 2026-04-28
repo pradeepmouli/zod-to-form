@@ -1,5 +1,12 @@
 # @zod-to-form/cli
 
+## 0.7.3
+
+### Patch Changes
+
+- Updated dependencies [[`422c66b`](https://github.com/pradeepmouli/zod-to-form/commit/422c66b6ca87f469eff3f3ecdf0dbd24fc2e8e1d)]:
+  - @zod-to-form/codegen@0.8.0
+
 ## 0.7.2
 
 ### Patch Changes

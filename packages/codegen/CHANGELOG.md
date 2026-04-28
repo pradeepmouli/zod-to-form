@@ -1,5 +1,13 @@
 # @zod-to-form/codegen
 
+## 0.8.0
+
+### Minor Changes
+
+- [`422c66b`](https://github.com/pradeepmouli/zod-to-form/commit/422c66b6ca87f469eff3f3ecdf0dbd24fc2e8e1d) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Add generated-form `fieldProps` support for per-field runtime component props and
+  fix Vite generate/query mode so rewritten forms can resolve workspace schemas in
+  monorepos, including multi-export schema modules.
+
 ## 0.7.2
 
 ### Patch Changes
