@@ -41,6 +41,7 @@ import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
 import {
   defineConfig,
+  isZodSchema,
   validateConfig,
   resolveFieldConfig,
   registerFlat,
@@ -115,15 +116,6 @@ function resolveOutputPath(cwd: string, out: string | undefined, componentName: 
   }
 
   return path.join(absoluteOut, `${componentName}.tsx`);
-}
-
-function isZodSchema(value: unknown): boolean {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-
-  const zodInternal = (value as { _zod?: unknown })._zod;
-  return typeof zodInternal === 'object' && zodInternal !== null;
 }
 
 function resolveSchemaExportFromModule(

@@ -121,7 +121,8 @@ function processField(
   if (metadata.title) {
     field.label = metadata.title;
   }
-  if (metadata.component) {
+  const hasCustomProcessor = options?.processors?.[zodType] !== undefined;
+  if (metadata.component !== undefined && !hasCustomProcessor) {
     field.component = metadata.component;
   }
   if (metadata.description) {

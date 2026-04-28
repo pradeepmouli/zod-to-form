@@ -284,6 +284,22 @@ normalizeFormValues(value: unknown): unknown
 
 **Returns:** `unknown`
 
+### isZodSchema
+
+Structural Zod v4 check shared across loader/registration/codegen entrypoints.
+
+The project intentionally duck-types on a non-null `_zod` object so callers
+do not depend on a specific runtime `zod` instance or `instanceof` behavior.
+
+```ts
+isZodSchema(value: unknown): value is $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>
+```
+
+**Parameters:**
+- `value: unknown` — 
+
+**Returns:** `value is $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>`
+
 ### walkSchema
 
 Walk a Zod schema and produce a FormField[] tree.
@@ -395,6 +411,23 @@ registerFlat(formRegistry, schema, {
   'address.city':   { component: 'Input', hidden: true },
 });
 ```
+
+### registerSchemaConfigs
+
+Register `defineConfig({ schemas: ... })` entries by exported schema identity.
+
+Any configured export that resolves to a Zod schema in `moduleExports` is
+attached to the registry via `registerDeep()`, so a reused exported subschema
+carries its default component + nested field config everywhere it appears.
+
+```ts
+registerSchemaConfigs(registry: $ZodRegistry<FormMeta>, moduleExports: Record<string, unknown>, schemaConfigs: { [key: string]: ZodTypeConfig<string, Record<string, unknown>> | undefined } | undefined): void
+```
+
+**Parameters:**
+- `registry: $ZodRegistry<FormMeta>` — 
+- `moduleExports: Record<string, unknown>` — 
+- `schemaConfigs: { [key: string]: ZodTypeConfig<string, Record<string, unknown>> | undefined } | undefined` — 
 
 ### processArray
 
