@@ -1,5 +1,13 @@
 # @zod-to-form/core
 
+## 0.8.1
+
+### Patch Changes
+
+- [`f241cec`](https://github.com/pradeepmouli/zod-to-form/commit/f241cec28759c0fe72e06f06a362adba1d64c290) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Fix `z.lazy()` processing so self-referential schemas reached through wrapper chains
+  are marked in the `seen` set before recursion, preventing infinite recursion and
+  stack overflows in deeply nested or cyclic schema graphs.
+
 ## 0.8.0
 
 ### Minor Changes
