@@ -15,7 +15,23 @@ import type { TraverseOptions } from '@babel/traverse';
 
 type TraverseFn = <S = unknown>(ast: unknown, opts: TraverseOptions<S>) => void;
 
-const traverseAny = traverseModule as unknown as TraverseFn | { default: TraverseFn };
+type TraverseInterop =
+  | TraverseFn
+  | {
+      default?: TraverseFn | { default?: TraverseFn };
+    };
+
+const traverseAny = traverseModule as unknown as TraverseInterop;
+const traverseDefault =
+  typeof traverseAny === 'function'
+    ? traverseAny
+    : typeof traverseAny.default === 'function'
+      ? traverseAny.default
+      : traverseAny.default?.default;
 
 export const traverse: TraverseFn =
-  typeof traverseAny === 'function' ? traverseAny : traverseAny.default;
+  typeof traverseDefault === 'function'
+    ? traverseDefault
+    : () => {
+        throw new TypeError('@babel/traverse did not resolve to a callable function');
+      };

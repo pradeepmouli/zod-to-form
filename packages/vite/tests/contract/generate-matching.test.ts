@@ -130,6 +130,29 @@ const App = () => <ZodForm schema={s} />;`,
     expect(result.skipped.some((r) => /outside the Vite root/.test(r))).toBe(true);
   });
 
+  it('row: aliased workspace schema outside the Vite root → MATCH', async () => {
+    const scan = scanJsx(
+      `import { ZodForm } from '@zod-to-form/react';
+import { s } from '../generated/schema';
+const App = () => <ZodForm schema={s} />;`
+    );
+    const resolved = await resolveSchemas({
+      source:
+        `import { ZodForm } from '@zod-to-form/react';\n` +
+        `import { s } from '../generated/schema';\n` +
+        `const App = () => <ZodForm schema={s} />;`,
+      candidates: scan!.candidates,
+      sourceFile: '/repo/packages/visual-editor/src/components/TypeAliasForm.tsx',
+      resolveImport: async (specifier) =>
+        specifier === '../generated/schema'
+          ? '/repo/packages/visual-editor/src/generated/schema.ts'
+          : null,
+      viteRoot: VITE_ROOT
+    });
+    expect(resolved.resolved).toHaveLength(1);
+    expect(resolved.skipped).toHaveLength(0);
+  });
+
   it('row: re-exported ZodForm from a local module → SKIP', async () => {
     // The local re-export means the import origin isn't @zod-to-form/react.
     const result = await pipeline(

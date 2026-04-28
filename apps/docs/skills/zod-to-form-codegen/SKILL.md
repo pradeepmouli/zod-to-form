@@ -1,6 +1,6 @@
 ---
 name: zod-to-form-codegen
-description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Browser-safe code generation utilities for Zod v4 form components. Use when: Building a custom codegen pipeline that assembles `FormField[]` and needs the TSX string; Writing codegen tests that verify output structure without spawning a CLI process; Building a custom codegen backend that needs the same override resolution logic as the CLI."
+description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Use when: Building a custom codegen pipeline that assembles `FormField[]` and needs the...."
 ---
 
 # @zod-to-form/codegen
@@ -9,22 +9,24 @@ Documentation site for zod-to-form (Docusaurus 3 + TypeDoc)
 
 ## When to Use
 
+**Use this skill when:**
+- Building a custom codegen pipeline that assembles `FormField[]` and needs the TSX string → use `generateFormComponent`
+- Writing codegen tests that verify output structure without spawning a CLI process → use `generateFormComponent`
+- Building a custom codegen backend that needs the same override resolution logic as the CLI → use `resolveFieldMapping`
+- Writing tests that verify field-to-component mapping for a given config → use `resolveFieldMapping`
 
-| Task | Use |
-|------|-----|
-| Building a custom codegen pipeline that assembles `FormField[]` and needs the TSX string | `generateFormComponent` |
-| Writing codegen tests that verify output structure without spawning a CLI process | `generateFormComponent` |
-| Building a custom codegen backend that needs the same override resolution logic as the CLI | `resolveFieldMapping` |
-| Writing tests that verify field-to-component mapping for a given config | `resolveFieldMapping` |
+**Do NOT use when:**
+- You want file-writing behavior — use `runGenerate()` from `@zod-to-form/cli` instead (`generateFormComponent`)
+- You are using the Vite plugin — `compileTarget` wraps this and handles esbuild transformation (`generateFormComponent`)
+- You are using the CLI or Vite plugin — this is called internally and you don't need it (`resolveFieldMapping`)
 
-**Avoid when:**
+API surface: 8 functions, 1 constants
 
-| Don't Use | When | Use Instead |
-|-----------|------|-------------|
-| `generateFormComponent` | You want file-writing behavior | use `runGenerate()` from `@zod-to-form/cli` instead |
-| `generateFormComponent` | You are using the Vite plugin | `compileTarget` wraps this and handles esbuild transformation |
-| `resolveFieldMapping` | You are using the CLI or Vite plugin | this is called internally and you don't need it |
-- API surface: 8 functions, 1 constants
+## NEVER
+
+- NEVER call `generateFormComponent` with a stale `fields` array from a previous schema version — there is no cache invalidation; callers must re-run `walkSchema` on schema change
+- NEVER use the returned string as a module cache key — it is not content-addressed; use `configHash` from `@zod-to-form/core` on the config object instead
+- NEVER assume `source: 'none'` means the field has no component — the schema walker may have inferred one; `resolveFieldMapping` only resolves user-provided config overrides
 
 ## Configuration
 

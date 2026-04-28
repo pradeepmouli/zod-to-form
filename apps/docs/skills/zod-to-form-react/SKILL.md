@@ -1,6 +1,6 @@
 ---
 name: zod-to-form-react
-description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Runtime React renderer for Zod v4 form schemas — wraps react-hook-form with a schema walker that maps Zod types to form components. Use when: You want a zero-config form from a Zod v4 schema at runtime, no build step; You need form rendering in storybook, playgrounds, or low-traffic admin UIs; You are prototyping before committing to CLI codegen."
+description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Use when: You need form rendering in storybook, playgrounds, or low-traffic admin UIs —...."
 ---
 
 # @zod-to-form/react
@@ -13,44 +13,42 @@ flexibility.
 
 ## When to Use
 
+**Use this skill when:**
+- You need form rendering in storybook, playgrounds, or low-traffic admin UIs → use `ZodForm` — where bundle overhead is acceptable and a build step would add friction
+- You are prototyping before committing to CLI codegen → use `ZodForm` — `<ZodForm>` and the CLI share the same walkSchema output so the migration is mechanical
+- You need direct access to the RHF `form` instance (e.g. to call `form.setValue`) → use `useZodForm`
+- You are building a custom renderer on top of `FormField[]` → use `useZodForm`
+- You want to colocate form state management with your own layout logic → use `useZodForm`
+- You are using codegen output with `validationLevel: 1` or higher and need the lite schema to run before your submit handler → use `wrapWithSchemaLite` — this is the only function that wires `schemaLite` into RHF's `handleSubmit` flow
 
-| Task | Use |
-|------|-----|
-| You want a zero-config form from a Zod v4 schema at runtime, no build step | `ZodForm` |
-| You need form rendering in storybook, playgrounds, or low-traffic admin UIs | `ZodForm` |
-| You are prototyping before committing to CLI codegen | `ZodForm` |
-| You need direct access to the RHF `form` instance (e.g. to call `form.setValue`) | `useZodForm` |
-| You are building a custom renderer on top of `FormField[]` | `useZodForm` |
-| You want to colocate form state management with your own layout logic | `useZodForm` |
-| You are using a codegen output with `validationLevel: 1` or higher (schema-lite mode) | `wrapWithSchemaLite` |
-| You need to map server validation errors back to form fields via RHF's `setError` | `wrapWithSchemaLite` |
+**Do NOT use when:**
+- Bundle size is critical — use CLI codegen (`@zod-to-form/cli`) instead; runtime schema walking includes the full Zod type graph traversal, which does not tree-shake (`ZodForm`)
+- You need forms for complex schemas with cyclic references — the walker does not handle cycles and hits the max-depth guard silently with no error (`ZodForm`)
+- You just need a working form UI — use `<ZodForm>` instead; `useZodForm` returns `fields[]` and `form`, but rendering those fields requires wiring up each field component yourself (`useZodForm`)
+- You are using the default `zodResolver` path (no `validationLevel`) — validation is handled by RHF's resolver and adding this wrapper causes double-validation with no benefit (`wrapWithSchemaLite`)
 
-**Avoid when:**
+API surface: 5 functions, 6 types, 3 constants
 
-| Don't Use | When | Use Instead |
-|-----------|------|-------------|
-| `ZodForm` | Bundle size is critical | use CLI codegen (`@zod-to-form/cli`) instead for production; runtime schema walking adds tree-size overhead |
-| `ZodForm` | You need forms for complex schemas with cyclic references | the walker does not handle cycles and will hit the max-depth guard silently |
-| `ZodForm` | You are on Zod v3 | the schema walker requires Zod v4's `_zod` internals |
-| `useZodForm` | You just need a working form UI | use `<ZodForm>` instead, which handles rendering |
-| `useZodForm` | You are on Zod v3 | the hook requires Zod v4 schema internals |
-| `wrapWithSchemaLite` | You are using the default `zodResolver` path (no `validationLevel`) | validation is handled by RHF's resolver and this wrapper is redundant |
-| `wrapWithSchemaLite` | Your schema has cross-field refinements in the lite schema | the lite schema intentionally strips root-level refinements, so cross-field rules are NOT checked |
-- API surface: 3 functions, 5 types, 3 constants
+## NEVER
 
-## Pitfalls
-
-- NEVER pass `componentConfig` without a matching `components` map that covers the component names referenced — missing components are silently dropped at render time with no console error
-- NEVER expect controlled component prop expressions (e.g. `field.value`) to work without a `propMap` in `componentConfig` — uncontrolled mode is the default; controlled mode requires explicit opt-in via field config
+- NEVER pass `componentConfig` without a matching `components` map that covers the component names referenced — missing components are silently dropped at render time with no console error; add each name to `components` or use `defaultComponentMap` as the base
+- NEVER expect controlled component prop expressions (e.g. `field.value`) to work without a `propMap` in `componentConfig` — uncontrolled mode is the default; add `propMap: { value: 'value', onChange: 'onChange' }` in field config to opt in to controlled mode
+- NEVER pass a new schema object on every render — `walkSchema` is memoized by schema identity; an unstable reference causes re-walking on every render cycle; FIX: declare the schema outside the component or wrap in `useMemo`
+- NEVER forget `normalizeFormValues()` before manually calling `schema.safeParse()` — the hook's internal resolver applies normalization, but manual calls do not; FIX: always call `schema.safeParse(normalizeFormValues(values))`
+- NEVER mix `formRegistry` and `fields` options on the same call — when `formRegistry` is provided, `fields` is ignored entirely with no merge and no warning; FIX: pick one or merge field config into the registry manually before passing it
+- NEVER pass the full schema as `schemaLite` — it defeats the optimization and adds double-validation overhead; FIX: only pass the schema produced by `walkSchema`'s `result.schemaLite` field (never the original `z.object({...})`)
+- NEVER use this with schemas that have root-level `.superRefine()` — root refinements are stripped from `schemaLite` by design and will not run through this wrapper; FIX: use full `zodResolver` path and skip `wrapWithSchemaLite` entirely
 
 ## Configuration
 
-3 configuration interfaces — see references/config.md for details.
+4 configuration interfaces — see references/config.md for details.
 
 ## Quick Reference
 
-**Components:** `ZodForm` (Runtime React component that renders a type-safe form from a Zod v4 schema), `defaultComponentMap` (The default HTML-based component map used by `<ZodForm>` and `<FieldRenderer>`), `shadcnComponentMap` (Component map pre-wired with shadcn/ui-styled implementations)
-**Hooks:** `useZodForm` (React Hook Form integration hook for Zod v4 schemas)
+**Components:** `ZodForm` (Runtime React component that renders a type-safe form from a Zod v4 schema), `ZodFormSwitch` (Render the form matching `source[discriminator]`, unmounting on changes via
+a React `key`), `ZodFormSwitchProps` (Props for ZodFormSwitch), `defaultComponentMap` (The default HTML-based component map used by `<ZodForm>` and `<FieldRenderer>`), `shadcnComponentMap` (Component map pre-wired with shadcn/ui-styled implementations)
+**Hooks:** `useZodForm` (React Hook Form integration hook for Zod v4 schemas), `useExternalSync` (Reset a form's values when an externally-supplied source object's reference
+changes; preserve in-progress edits while the reference is stable)
 **Optimization:** `wrapWithSchemaLite` (Wraps a form `onSubmit` handler with `schemaLite` client-side validation)
 **Types:** `FormField` (Intermediate representation of a single form field produced by `walkSchema`), `FormFieldOption` (An individual option in a Select, RadioGroup, or similar enum-driven component), `FormFieldConstraints` (Structural constraints extracted from Zod's `_zod), `FormMeta` (Per-schema annotation stored in a `z), `FieldTemplateProps` (Props passed to the field template component that wraps each rendered form field)
 **components:** `FIELD_COMPONENT_NAMES` (User-facing field component names derived from defaultCom...)

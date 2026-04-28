@@ -377,10 +377,11 @@ function renderArrayBlock(
       indexedItemField.key,
       mappedItem.componentName,
       propMap,
-      overrideProps
+      overrideProps,
+      renderFieldPropsSpread(indexedItemField.key)
     );
   } else if (mappedItem.source === 'fields' && mappedItem.componentName) {
-    itemJsx = `<${mappedItem.componentName} {...${registerPathExpr(indexedItemField.key)}}${renderOverrideProps(mappedItem.override?.props)} />`;
+    itemJsx = `<${mappedItem.componentName} {...${registerPathExpr(indexedItemField.key)}}${renderOverrideProps(mappedItem.override?.props)}${renderFieldPropsSpread(indexedItemField.key)} />`;
   } else {
     itemJsx = renderFieldBlockWithConfig(
       indexedItemField,
@@ -455,7 +456,8 @@ function renderControlledComponent(
   fieldKey: string,
   componentName: string,
   propMap: Record<string, string> | undefined,
-  overrideProps: string
+  overrideProps: string,
+  fieldPropsSpread: string
 ): string {
   const defaultFieldProps: Record<string, string> = {
     value: 'field.value',
@@ -487,9 +489,14 @@ function renderControlledComponent(
 
   return [
     `<Controller name={${nameExpr}} control={control} render={({ field }) => (`,
-    `  <${componentName} id=${idExpr} ${propsStr}${overrideProps} />`,
+    `  <${componentName} id=${idExpr} ${propsStr}${overrideProps}${fieldPropsSpread} />`,
     `)} />`
   ].join('\n');
+}
+
+function renderFieldPropsSpread(fieldKey: string): string {
+  const keyExpr = fieldKey.includes('${') ? `\`${fieldKey}\`` : `"${fieldKey}"`;
+  return ` {...(props.fieldProps?.[${keyExpr}] ?? {})}`;
 }
 
 function renderMappedComponent(
@@ -499,11 +506,19 @@ function renderMappedComponent(
   override: FieldConfig | undefined,
   overrideProps: string
 ): string {
+  const fieldPropsSpread = renderFieldPropsSpread(field.key);
+  const idExpr = field.key.includes('${') ? `{${'`'}${field.key}${'`'}}` : `"${field.key}"`;
   if (componentOverride?.controlled) {
     const propMap = resolvePropMap(componentOverride, override);
-    return renderControlledComponent(field.key, componentName, propMap, overrideProps);
+    return renderControlledComponent(
+      field.key,
+      componentName,
+      propMap,
+      overrideProps,
+      fieldPropsSpread
+    );
   }
-  return `<${componentName} id="${field.key}" {...${registerPathExpr(field.key)}}${overrideProps} />`;
+  return `<${componentName} id=${idExpr} {...${registerPathExpr(field.key)}}${overrideProps}${fieldPropsSpread} />`;
 }
 
 function renderFieldBlockWithConfig(
@@ -755,6 +770,7 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
   }
   propsLines.push(`  defaultValues?: Partial<FormData>;`);
   propsLines.push(`  values?: FormData;`);
+  propsLines.push(`  fieldProps?: Record<string, Record<string, unknown>>;`);
 
   const autoSaveEffect =
     config.mode === 'auto-save'

@@ -79,6 +79,9 @@ Template literals have a fixed structure; no constraints are extracted.
 - `FormProcessorContext`: Runtime context passed to every processor during a walkSchema traversal.
 - `FormMeta`: Per-schema annotation stored in a `z.
 - `FieldExpression`: Known RHF field expression strings that can be used as values in `props`.
+- `GhostRow`: A renderable row that lives inside an array section without participating
+in form state.
+- `GhostRowContext`: Positional context passed to a `GhostRow`'s render function.
 - `ProcessParams`: Optional parameters passed to each processor alongside the schema, context, and field.
 - `ZodFormRegistry`: Zod v4 registry parameterized with FormMeta. Create via `z.registry<FormMeta>()`.
 - `NativeRules`: Native HTML and RHF validation rules extracted from Zod constraints.
@@ -101,6 +104,10 @@ Template literals have a fixed structure; no constraints are extracted.
 
 - `ZodForm`: Runtime React component that renders a type-safe form from a Zod v4 schema.
 - `useZodForm`: React Hook Form integration hook for Zod v4 schemas.
+- `useExternalSync`: Reset a form's values when an externally-supplied source object's reference
+changes; preserve in-progress edits while the reference is stable.
+- `ZodFormSwitch`: Render the form matching `source[discriminator]`, unmounting on changes via
+a React `key`.
 - `wrapWithSchemaLite`: Wraps a form `onSubmit` handler with `schemaLite` client-side validation.
 - `defaultComponentMap`: The default HTML-based component map used by `<ZodForm>` and `<FieldRenderer>`.
 - `shadcnComponentMap`: Component map pre-wired with shadcn/ui-styled implementations.
@@ -114,6 +121,7 @@ Template literals have a fixed structure; no constraints are extracted.
 - `FormFieldOption`: An individual option in a Select, RadioGroup, or similar enum-driven component.
 - `FormFieldConstraints`: Structural constraints extracted from Zod's `_zod.
 - `FormMeta`: Per-schema annotation stored in a `z.
+- `ZodFormSwitchProps`: Props for ZodFormSwitch.
 - `FieldTemplateProps`: Props passed to the field template component that wraps each rendered form field.
 
 ## @zod-to-form/cli

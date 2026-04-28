@@ -196,6 +196,63 @@ describe('wrapper processors', () => {
     expect(field.component).toBe('Input');
   });
 
+  it('adds resolved inner schema to seen before recursing (regression: self-referential cycle)', () => {
+    // Regression test for: "Maximum call stack size exceeded" when a schema
+    // contains z.lazy(() => SelfSchema).optional() fields.
+    //
+    // Root cause: processLazy checked ctx.seen.has(innerSchema) but never
+    // called ctx.seen.add(innerSchema) before runInner. A second lazy field
+    // resolving to the same schema object would bypass the seen guard and
+    // recurse infinitely.
+    const innerSchema = z.string();
+    const schema = z.lazy(() => innerSchema);
+    const field = createBaseField('x', 'lazy');
+    const seen = new WeakSet<$ZodType>();
+    const ctx: FormProcessorContext = {
+      processors: { string: vi.fn() },
+      path: [],
+      seen,
+      maxDepth: 5,
+      currentDepth: 0
+    };
+
+    processLazy(schema, ctx, field, {});
+
+    // After processing, innerSchema must be in seen so a subsequent lazy
+    // that resolves to the same schema object short-circuits instead of
+    // recursing (e.g. z.lazy(() => ExprSchema).optional() in a sibling field).
+    expect(seen.has(innerSchema)).toBe(true);
+  });
+
+  it('second lazy resolving to the same schema bails out via seen guard', () => {
+    // Simulates: ExprSchema containing two fields both z.lazy(() => ExprSchema).
+    // First processLazy call processes normally; second must see innerSchema
+    // already in ctx.seen and return Input without calling the processor.
+    const innerSchema = z.string();
+    const seen = new WeakSet<$ZodType>();
+    const processor = vi.fn();
+    const ctx: FormProcessorContext = {
+      processors: { string: processor },
+      path: [],
+      seen,
+      maxDepth: 5,
+      currentDepth: 0
+    };
+
+    // First lazy: processes normally, adds innerSchema to seen
+    const firstLazy = z.lazy(() => innerSchema);
+    const field1 = createBaseField('left', 'lazy');
+    processLazy(firstLazy, ctx, field1, {});
+    expect(processor).toHaveBeenCalledTimes(1);
+
+    // Second lazy resolving to the same innerSchema: must bail out
+    const secondLazy = z.lazy(() => innerSchema);
+    const field2 = createBaseField('right', 'lazy');
+    processLazy(secondLazy, ctx, field2, {});
+    expect(processor).toHaveBeenCalledTimes(1); // NOT called again
+    expect(field2.component).toBe('Input');
+  });
+
   it('chained wrappers unwrap to leaf type', () => {
     const schema = z.string().optional().default('foo');
     const field = createBaseField('val', 'default');

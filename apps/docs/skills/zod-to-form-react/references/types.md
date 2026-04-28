@@ -75,3 +75,16 @@ Override the default template by providing a `FieldTemplate` export in `componen
 - `required: boolean` (optional) — Whether the field is required (drives asterisk or `aria-required`).
 - `disabled: boolean` (optional) — Whether the field is disabled (drives `disabled` on the wrapper).
 - `deprecated: boolean` (optional) — Whether the field is deprecated (drives strikethrough on the label).
+
+## Components
+
+### `ZodFormSwitchProps`
+Props for ZodFormSwitch.
+**Properties:**
+- `source: TSource` — Source object whose `[discriminator]` value selects the schema.
+- `discriminator: TKey` — Property name on `source` to use as the discriminator.
+- `schemas: TSchemas` — Map from discriminator values to Zod schemas.
+- `fallback: ReactNode | ((source: TSource) => ReactNode)` (optional) — Component(s) to render when the discriminator value matches no
+schema. ReactNode for static fallback; function for dynamic.
+
+<!-- truncated -->

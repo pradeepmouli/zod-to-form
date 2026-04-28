@@ -84,6 +84,20 @@ Used with `registerDeep()` / `registerFlat()` to attach form metadata to Zod sch
 FieldConfig<T> & { render?: (field: FormField, props: unknown) => unknown }
 ```
 
+### `GhostRow`
+A renderable row that lives inside an array section without participating
+in form state. Used for inherited rows, computed defaults, or read-only
+informational entries.
+**Properties:**
+- `id: string` — Stable React key. Required so reorders of real rows don't remount ghost rows.
+- `render: (ctx: GhostRowContext) => unknown` — Render function. Receives positional context relative to other ghost rows.
+
+### `GhostRowContext`
+Positional context passed to a `GhostRow`'s render function.
+**Properties:**
+- `isFirst: boolean` — True if this row is the first ghost row in its `before` or `after` group.
+- `isLast: boolean` — True if this row is the last ghost row in its `before` or `after` group.
+
 ### `ProcessParams`
 Optional parameters passed to each processor alongside the schema, context, and field.
 Provides parent key and array-item metadata needed for path construction.

@@ -27,6 +27,7 @@ declare module '*?z2f' {
     onSubmit: (data: TData) => void | Promise<void>;
     defaultValues?: Partial<TData>;
     values?: TData;
+    fieldProps?: Record<string, Record<string, unknown>>;
     children?: ReactNode;
   }
 
@@ -51,6 +52,7 @@ declare module '*?z2f=*' {
     onSubmit: (data: TData) => void | Promise<void>;
     defaultValues?: Partial<TData>;
     values?: TData;
+    fieldProps?: Record<string, Record<string, unknown>>;
     children?: ReactNode;
   }
 
