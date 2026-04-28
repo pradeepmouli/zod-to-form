@@ -201,5 +201,13 @@ export function processLazy(
     return;
   }
 
+  // Mark the resolved inner schema as seen BEFORE recursing so that
+  // self-referential lazy schemas (e.g. z.lazy(() => ExprSchema) where
+  // ExprSchema itself contains more z.lazy(() => ExprSchema) fields) are
+  // detected on the next encounter, even when the lazy getter is reached
+  // via a wrapper chain (optional/nullable/default) that does not pass
+  // through processField (which would otherwise add it via seen.add).
+  ctx.seen.add(innerSchema);
+
   runInner(innerSchema, { ...ctx, currentDepth: ctx.currentDepth + 1 }, field, params);
 }
