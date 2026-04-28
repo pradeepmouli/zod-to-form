@@ -1,5 +1,17 @@
 # @zod-to-form/cli
 
+## 0.8.0
+
+### Minor Changes
+
+- [#116](https://github.com/pradeepmouli/zod-to-form/pull/116) [`4ada01d`](https://github.com/pradeepmouli/zod-to-form/commit/4ada01d2b052a97d59926eba28a66f1ebaf28ccf) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - feat(config): support schema-level subschema defaults
+
+### Patch Changes
+
+- Updated dependencies [[`4ada01d`](https://github.com/pradeepmouli/zod-to-form/commit/4ada01d2b052a97d59926eba28a66f1ebaf28ccf)]:
+  - @zod-to-form/codegen@0.9.0
+  - @zod-to-form/core@0.9.0
+
 ## 0.7.4
 
 ### Patch Changes
