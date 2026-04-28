@@ -138,6 +138,45 @@ describe('compileTarget', () => {
     expect(result.generatedSource).toContain('SignupEditForm');
   });
 
+  it('applies configured nested schema defaults by exported schema identity', () => {
+    const expressionSchema = z.object({
+      source: z.string()
+    });
+    const ns = {
+      pageSchema: z.object({
+        expression: expressionSchema
+      }),
+      expressionSchema
+    };
+
+    const result = compileTarget({
+      namespace: ns,
+      schemaFile: '/abs/src/schemas/page.ts',
+      variant: '',
+      config: {
+        exportName: 'pageSchema',
+        componentName: 'PageForm',
+        mode: 'submit',
+        ui: 'html',
+        componentConfig: {
+          components: {
+            source: './components'
+          },
+          schemas: {
+            expressionSchema: {
+              component: 'ExpressionEditor'
+            }
+          }
+        }
+      }
+    });
+
+    expect(result.generatedSource).toContain("import { ExpressionEditor } from './components';");
+    expect(result.generatedSource).toContain(
+      '<ExpressionEditor id="expression" {...register(\'expression\')}'
+    );
+  });
+
   it('throws UNKNOWN_VARIANT for variants that are not declared in config.variants', () => {
     expect(() =>
       compileTarget({

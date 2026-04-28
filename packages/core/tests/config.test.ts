@@ -95,6 +95,7 @@ describe('defineConfig', () => {
       schemas: {
         UserSchema: {
           name: 'UserForm',
+          component: 'UserEditor',
           mode: 'auto-save',
           fields: {
             email: { component: 'Input', order: 1 }
@@ -105,6 +106,7 @@ describe('defineConfig', () => {
 
     expect(config.defaults?.mode).toBe('submit');
     expect(config.schemas?.['UserSchema']?.name).toBe('UserForm');
+    expect(config.schemas?.['UserSchema']?.component).toBe('UserEditor');
     expect(config.schemas?.['UserSchema']?.fields?.['email']?.order).toBe(1);
   });
 });
@@ -127,6 +129,7 @@ describe('validateConfig', () => {
       schemas: {
         UserSchema: {
           name: 'UserForm',
+          component: 'UserEditor',
           mode: 'auto-save',
           out: './forms',
           serverAction: true,
@@ -140,6 +143,7 @@ describe('validateConfig', () => {
     expect(result.components.source).toBe('@/components/ui');
     expect(result.defaults?.mode).toBe('submit');
     expect(result.schemas?.['UserSchema']?.name).toBe('UserForm');
+    expect(result.schemas?.['UserSchema']?.component).toBe('UserEditor');
   });
 
   it('accepts old shape without defaults/schemas (backward compat) (T010)', () => {

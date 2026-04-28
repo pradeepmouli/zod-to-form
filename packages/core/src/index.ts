@@ -114,5 +114,5 @@ export {
 export { normalizeFormValues } from './normalize.js';
 export { walkSchema } from './walker.js';
 export { builtinProcessors, createProcessors } from './registry.js';
-export { registerDeep, registerFlat } from './register.js';
+export { registerDeep, registerFlat, registerSchemaConfigs } from './register.js';
 export * as processors from './processors/index.js';

@@ -44,6 +44,7 @@ import {
   validateConfig,
   resolveFieldConfig,
   registerFlat,
+  registerSchemaConfigs,
   type ComponentOverride,
   type FieldConfig,
   type FormMeta,
@@ -52,7 +53,7 @@ import {
 } from '@zod-to-form/core';
 import { z } from 'zod';
 import { generateFormComponent, generateSchemaLiteFile } from './codegen.js';
-import { loadConfig, loadSchema, resolveSchemaExportNames } from './loader.js';
+import { loadConfig, loadSchemaModule, resolveSchemaExportNames } from './loader.js';
 import { runInit, type InitOptions } from './init.js';
 import { generateServerAction } from './server-action.js';
 import { startWatch } from './watcher.js';
@@ -114,6 +115,32 @@ function resolveOutputPath(cwd: string, out: string | undefined, componentName: 
   }
 
   return path.join(absoluteOut, `${componentName}.tsx`);
+}
+
+function isZodSchema(value: unknown): boolean {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const zodInternal = (value as { _zod?: unknown })._zod;
+  return typeof zodInternal === 'object' && zodInternal !== null;
+}
+
+function resolveSchemaExportFromModule(
+  moduleExports: Record<string, unknown>,
+  schemaPath: string,
+  exportName: string
+): unknown {
+  if (!(exportName in moduleExports)) {
+    throw new Error(`Export "${exportName}" was not found in schema file "${schemaPath}".`);
+  }
+
+  const candidate = moduleExports[exportName];
+  if (!isZodSchema(candidate)) {
+    throw new Error(`Export "${exportName}" from "${schemaPath}" is not a Zod schema.`);
+  }
+
+  return candidate;
 }
 
 /**
@@ -197,7 +224,8 @@ export async function runGenerate(options: GenerateOptions): Promise<{
   const effectiveOptimization = componentConfig.defaults?.optimization;
 
   const outputPath = resolveOutputPath(cwd, effectiveOut, componentName);
-  const schema = await loadSchema(schemaPath, exportName);
+  const schemaModule = await loadSchemaModule(schemaPath);
+  const schema = resolveSchemaExportFromModule(schemaModule, schemaPath, exportName);
 
   // Merge field configs: schemas.X.fields over global fields
   const mergedFields = resolveFieldConfig(componentConfig.fields, schemaConfig?.fields);
@@ -205,6 +233,7 @@ export async function runGenerate(options: GenerateOptions): Promise<{
   // Populate a fresh registry from the merged flat config so walkSchema
   // sees the same overrides that codegen templates used to apply manually.
   const formRegistry = z.registry<FormMeta>();
+  registerSchemaConfigs(formRegistry, schemaModule, componentConfig.schemas);
   if (Object.keys(mergedFields).length > 0) {
     // SAFETY: ZodObject extends $ZodType at runtime but TS nominal typing requires the cast
     registerFlat(formRegistry, schema as never, mergedFields);

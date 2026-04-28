@@ -121,6 +121,9 @@ function processField(
   if (metadata.title) {
     field.label = metadata.title;
   }
+  if (metadata.component) {
+    field.component = metadata.component;
+  }
   if (metadata.description) {
     field.description = metadata.description;
   }

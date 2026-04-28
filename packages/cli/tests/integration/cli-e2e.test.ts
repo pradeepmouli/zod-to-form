@@ -223,6 +223,60 @@ describe('CLI generate command', () => {
       process.chdir(originalCwd);
     }
   });
+
+  it('applies exported subschema defaults from config.schemas during generation', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'zodform-cli-subschema-'));
+    const schemaPath = path.join(dir, 'schema.ts');
+    const outDir = path.join(dir, 'out');
+    const configPath = path.join(dir, 'component-config.ts');
+
+    await writeFile(
+      schemaPath,
+      [
+        "import { z } from 'zod';",
+        'export const expressionSchema = z.object({ source: z.string() });',
+        'export const pageSchema = z.object({ expression: expressionSchema });'
+      ].join('\n'),
+      'utf8'
+    );
+
+    await writeFile(
+      configPath,
+      [
+        'export default {',
+        '  components: {',
+        "    source: './components',",
+        '  },',
+        '  schemas: {',
+        '    expressionSchema: {',
+        "      component: 'ExpressionEditor',",
+        '    },',
+        '  },',
+        '};'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const originalCwd = process.cwd();
+    process.chdir(dir);
+
+    try {
+      await runGenerate({
+        config: './component-config.ts',
+        schema: './schema.ts',
+        export: 'pageSchema',
+        out: outDir
+      });
+
+      const outputPath = path.join(outDir, 'PageForm.tsx');
+      const content = await readFile(outputPath, 'utf8');
+      expect(content).toContain('ExpressionEditor');
+      expect(content).toContain("from './components';");
+      expect(content).toContain('<ExpressionEditor id="expression" {...register(\'expression\')}');
+    } finally {
+      process.chdir(originalCwd);
+    }
+  });
 });
 
 // --- Watch Mode (US7) ---

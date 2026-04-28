@@ -1,5 +1,6 @@
 import type { $ZodRegistry, $ZodType, $replace } from 'zod/v4/core';
-import type { FieldConfig } from './types.js';
+import type { ZodFormsConfig } from './config.js';
+import type { FieldConfig, FormMeta } from './types.js';
 
 // Structural keys used to drive recursive traversal in registerDeep.
 // These are not field metadata, so they are stripped before calling registry.add().
@@ -178,6 +179,12 @@ function resolveSchemaPath(schema: $ZodType, path: string): $ZodType | undefined
   return current;
 }
 
+function isZodSchema(value: unknown): value is $ZodType {
+  if (typeof value !== 'object' || value === null) return false;
+  const zodInternal = (value as { _zod?: unknown })._zod;
+  return typeof zodInternal === 'object' && zodInternal !== null;
+}
+
 /**
  * Register flat dot-path field configs against a schema's registry.
  *
@@ -251,5 +258,42 @@ export function registerFlat<Meta extends object>(
       // SAFETY: flatMeta is built from the user's FieldConfig which matches Meta at runtime
       registry.add(target, flatMeta as $replace<Meta, $ZodType>);
     }
+  }
+}
+
+/**
+ * Register `defineConfig({ schemas: ... })` entries by exported schema identity.
+ *
+ * Any configured export that resolves to a Zod schema in `moduleExports` is
+ * attached to the registry via `registerDeep()`, so a reused exported subschema
+ * carries its default component + nested field config everywhere it appears.
+ */
+export function registerSchemaConfigs(
+  registry: $ZodRegistry<FormMeta>,
+  moduleExports: Record<string, unknown>,
+  schemaConfigs: ZodFormsConfig<Record<string, unknown>>['schemas'] | undefined
+): void {
+  if (!schemaConfigs) {
+    return;
+  }
+
+  for (const [exportName, schemaConfig] of Object.entries(schemaConfigs)) {
+    if (!schemaConfig) {
+      continue;
+    }
+
+    const schema = moduleExports[exportName];
+    if (!isZodSchema(schema)) {
+      continue;
+    }
+
+    if (schemaConfig.component === undefined && schemaConfig.fields === undefined) {
+      continue;
+    }
+
+    registerDeep(registry, schema, {
+      ...(schemaConfig.component ? { component: schemaConfig.component } : {}),
+      ...(schemaConfig.fields ? { fields: schemaConfig.fields } : {})
+    } as FieldConfig<typeof schema>);
   }
 }
