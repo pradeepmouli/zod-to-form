@@ -1,5 +1,12 @@
 # @zod-to-form/react
 
+## 0.8.1
+
+### Patch Changes
+
+- Updated dependencies [[`f241cec`](https://github.com/pradeepmouli/zod-to-form/commit/f241cec28759c0fe72e06f06a362adba1d64c290)]:
+  - @zod-to-form/core@0.8.1
+
 ## 0.8.0
 
 ### Minor Changes
