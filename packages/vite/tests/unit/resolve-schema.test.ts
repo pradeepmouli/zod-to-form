@@ -135,6 +135,23 @@ const App = () => <ZodForm schema={s} />;
     expect(result.skipped[0]).toMatch(/outside the Vite root/);
   });
 
+  it('allows schemas outside the Vite root for aliased workspace source files', async () => {
+    const source = `
+import { ZodForm } from '@zod-to-form/react';
+import { s } from '../generated/schema';
+const App = () => <ZodForm schema={s} />;
+`;
+    const result = await scanAndResolve(
+      source,
+      {
+        '../generated/schema': '/repo/packages/visual-editor/src/generated/schema.ts'
+      },
+      '/repo/packages/visual-editor/src/components/TypeAliasForm.tsx'
+    );
+    expect(result.resolved).toBe(1);
+    expect(result.skipped).toHaveLength(0);
+  });
+
   it('skips when Vite cannot resolve the schema specifier', async () => {
     const source = `
 import { ZodForm } from '@zod-to-form/react';

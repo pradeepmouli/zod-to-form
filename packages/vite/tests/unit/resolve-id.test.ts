@@ -29,9 +29,20 @@ describe('resolveZ2FId', () => {
       resolveZ2FId(
         'some-package/schemas/x.ts?z2f',
         '/elsewhere/node_modules/some-package/schemas/x.ts',
-        '/abs/project'
+        '/abs/project',
+        '/abs/project/src/App.tsx'
       )
     ).toThrow(/Z2F_VITE_SCHEMA_OUTSIDE_ROOT/);
+  });
+
+  it('allows out-of-root workspace sources when the importer is also outside the Vite root', () => {
+    const id = resolveZ2FId(
+      '../generated/schema.ts?z2f',
+      '/repo/packages/visual-editor/src/generated/schema.ts',
+      '/repo/apps/studio',
+      '/repo/packages/visual-editor/src/components/TypeAliasForm.tsx'
+    );
+    expect(id).toBe('/repo/packages/visual-editor/src/generated/schema.ts?z2f');
   });
 
   it('accepts paths nested deep inside the root', () => {
@@ -40,9 +51,14 @@ describe('resolveZ2FId', () => {
   });
 
   it('rejects relative paths that escape the root via ../', () => {
-    expect(() => resolveZ2FId('../escape.ts?z2f', '/elsewhere/escape.ts', '/abs/project')).toThrow(
-      /Z2F_VITE_SCHEMA_OUTSIDE_ROOT/
-    );
+    expect(() =>
+      resolveZ2FId(
+        '../escape.ts?z2f',
+        '/elsewhere/escape.ts',
+        '/abs/project',
+        '/abs/project/src/App.tsx'
+      )
+    ).toThrow(/Z2F_VITE_SCHEMA_OUTSIDE_ROOT/);
   });
 
   it('throws on malformed specifiers (delegates to parseSpecifier)', () => {

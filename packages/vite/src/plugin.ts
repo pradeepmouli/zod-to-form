@@ -86,6 +86,8 @@ interface PluginState {
   configGeneration: number;
   /** Resolved absolute path to z2f.config.ts (or null if none). */
   configFilePath: string | null;
+  /** Export-name hints for generate-mode synthesized virtual modules. */
+  generatedExportNames: Map<string, string>;
 }
 
 /**
@@ -169,7 +171,8 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
     z2fConfig: null,
     lastValidConfig: null,
     configGeneration: 0,
-    configFilePath: null
+    configFilePath: null,
+    generatedExportNames: new Map()
   };
 
   const isGenerateEnabled = options.generate !== undefined;
@@ -200,6 +203,7 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
         await state.buildModeServer.close();
         state.buildModeServer = null;
       }
+      state.generatedExportNames.clear();
     },
 
     async resolveId(source, importer): Promise<string | null> {
@@ -219,7 +223,7 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
       }
 
       const root = state.resolvedConfig?.root ?? process.cwd();
-      return resolveZ2FId(source, resolvedPath.id, root);
+      return resolveZ2FId(source, resolvedPath.id, root, importer);
     },
 
     async load(id): Promise<string | null> {
@@ -227,6 +231,13 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
       if (parsed === null) return null;
 
       const z2fConfig = await ensureConfig(state);
+      const generatedExportName = /^__generate_\d+$/.test(parsed.variant)
+        ? state.generatedExportNames.get(id)
+        : undefined;
+      const compileConfig =
+        generatedExportName === undefined
+          ? z2fConfig
+          : { ...z2fConfig, exportName: generatedExportName };
       // Hash the full z2fConfig (including `variants`). The variant name is
       // carried separately by the cache key, so buildEffectiveConfig's
       // per-variant merge doesn't need to be reflected in the hash — any
@@ -238,10 +249,10 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
       // name lands on `finalTarget` below after compileTarget resolves it.
       const target: GenerationTarget = {
         schemaFile: parsed.schemaFile,
-        exportName: z2fConfig.exportName ?? '',
+        exportName: generatedExportName ?? z2fConfig.exportName ?? '',
         variant: parsed.variant,
         configHash: hash,
-        componentName: z2fConfig.componentName ?? 'Form',
+        componentName: compileConfig.componentName ?? 'Form',
         sourceKind: 'query'
       };
 
@@ -257,7 +268,7 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
         namespace,
         schemaFile: parsed.schemaFile,
         variant: parsed.variant,
-        config: z2fConfig
+        config: compileConfig
       });
 
       // generateFormComponent emits TSX, but the virtual module id keeps
@@ -396,6 +407,13 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
         resolved: resolved.resolved,
         onWarn: (message) => state.logger.warn(`${filePath}: ${message}`)
       });
+      for (let i = 0; i < resolved.resolved.length; i++) {
+        const site = resolved.resolved[i]!;
+        state.generatedExportNames.set(
+          `${site.schemaFile}?z2f=__generate_${i + 1}`,
+          site.schemaExportName
+        );
+      }
       state.generateSitesRewritten += result.rewritten;
       return { code: result.code, map: result.map };
     },

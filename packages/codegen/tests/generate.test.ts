@@ -164,6 +164,46 @@ describe('generateFormComponent', () => {
     expect(result).toContain('function normalizeFormValues');
   });
 
+  it('passes dynamic fieldProps through to mapped components', () => {
+    const fields = [
+      makeField({
+        key: 'typeCall.type',
+        label: 'Wrapped Type',
+        component: 'Select'
+      })
+    ];
+
+    const result = generateFormComponent(fields, {
+      exportName: 'schema',
+      componentName: 'MappedForm',
+      mode: 'submit',
+      ui: 'html',
+      componentConfig: {
+        components: {
+          source: './components',
+          overrides: {
+            TypeSelector: {
+              controlled: true,
+              props: {
+                value: 'field.value',
+                onChange: 'field.onChange'
+              }
+            }
+          }
+        },
+        fields: {
+          'typeCall.type': {
+            component: 'TypeSelector'
+          }
+        }
+      }
+    });
+
+    expect(result).toContain('fieldProps?: Record<string, Record<string, unknown>>;');
+    expect(result).toContain('<TypeSelector');
+    expect(result).toContain('{...(props.fieldProps?.["typeCall.type"] ?? {})}');
+  });
+
   it('generates auto-save mode with watch and FormProvider', () => {
     const fields = [makeField({ key: 'name' })];
 

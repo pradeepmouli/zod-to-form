@@ -13,7 +13,7 @@
  *
  * Throws:
  * - `Z2F_VITE_SCHEMA_OUTSIDE_ROOT` when the resolved path is outside the
- *   Vite root (FR-021 — schemas must live in project source)
+ *   Vite root and not being imported from an aliased workspace source file
  * - Any error parseSpecifier throws (composition errors, invalid variants)
  */
 import { parseSpecifier } from './parse-specifier.js';
@@ -33,15 +33,37 @@ function isInsideRoot(child: string, root: string): boolean {
   return c === r || c.startsWith(normalizedRoot);
 }
 
+function isNodeModulesPath(filePath: string): boolean {
+  return filePath.replace(/\\/g, '/').includes('/node_modules/');
+}
+
+function isTransformableSchemaPath(
+  resolvedAbsolutePath: string,
+  viteRoot: string,
+  importer?: string
+): boolean {
+  if (isInsideRoot(resolvedAbsolutePath, viteRoot)) {
+    return true;
+  }
+
+  return (
+    importer != null &&
+    !isInsideRoot(importer, viteRoot) &&
+    !isNodeModulesPath(importer) &&
+    !isNodeModulesPath(resolvedAbsolutePath)
+  );
+}
+
 export function resolveZ2FId(
   specifier: string,
   resolvedAbsolutePath: string,
-  viteRoot: string
+  viteRoot: string,
+  importer?: string
 ): string | null {
   const parsed = parseSpecifier(specifier);
   if (parsed === null) return null;
 
-  if (!isInsideRoot(resolvedAbsolutePath, viteRoot)) {
+  if (!isTransformableSchemaPath(resolvedAbsolutePath, viteRoot, importer)) {
     throw new Z2FViteError(
       'Z2F_VITE_SCHEMA_OUTSIDE_ROOT',
       `Schema '${resolvedAbsolutePath}' is outside the Vite root '${viteRoot}'. The plugin only compiles schemas in your project's own source. Move the schema into the project, or use the codegen CLI for cross-project schemas.`,

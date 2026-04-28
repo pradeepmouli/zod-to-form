@@ -111,6 +111,34 @@ describe('generate-mode integration', () => {
     expect(code).toContain('signupSchema');
   });
 
+  it('rewrites against the selected named export when the schema file exports multiple schemas', async () => {
+    const schemaRel = `./schemas/multi-${randomUUID().slice(0, 8)}`;
+    const schemaPath = path.join(FIXTURE_ROOT, `src/${schemaRel}.ts`.replace('./', ''));
+    createdFiles.push(schemaPath);
+    await fs.writeFile(
+      schemaPath,
+      `import { z } from 'zod';\n` +
+        `export const firstSchema = z.object({ first: z.string() });\n` +
+        `export const secondSchema = z.object({ second: z.string().min(1) });\n`
+    );
+    await fs.writeFile(
+      APP_PATH,
+      `import { ZodForm } from '@zod-to-form/react';\n` +
+        `import { secondSchema } from '${schemaRel}';\n` +
+        `export function App(): unknown {\n` +
+        `  return <ZodForm schema={secondSchema} onSubmit={(d: unknown) => console.log(d)} />;\n` +
+        `}\n`
+    );
+
+    const { output } = await runBuild({ generate: true });
+    const code = joinChunks(output);
+
+    expect(code).not.toMatch(/createElement\(\s*ZodForm\b/);
+    expect(code).toMatch(/(function|const)\s+Form\b/);
+    expect(code).toContain('secondSchema');
+    expect(code).toContain('"second"');
+  });
+
   it('leaves <ZodForm> alone when rewrite is NOT enabled', async () => {
     const { output } = await runBuild({ generate: false });
     const code = joinChunks(output);

@@ -5,7 +5,8 @@
  *   1. The `ZodForm` identifier resolves to a named import from the literal
  *      specifier `'@zod-to-form/react'` (no aliased re-exports).
  *   2. The `schema` identifier resolves to a named import whose source
- *      module path is inside the Vite root.
+ *      module path is either inside the Vite root, or outside the root
+ *      alongside an aliased workspace source file being transformed.
  *
  * Returns a fully-resolved `GenerateSite` on success, or a `SkipReason`
  * string on failure. The caller buffers the skip reason through the
@@ -63,7 +64,7 @@ export interface ResolveSchemaInput {
    * resolver can't find it. Wraps Vite's `this.resolve` in the caller.
    */
   resolveImport: (specifier: string, importer: string) => Promise<string | null>;
-  /** Vite root — schema files outside this dir are skipped. */
+  /** Vite root — generate mode may still accept workspace source outside it. */
   viteRoot: string;
 }
 
@@ -190,8 +191,11 @@ export async function resolveSchemas(input: ResolveSchemaInput): Promise<Resolve
       continue;
     }
 
-    // 3. The schema source must resolve to an absolute path inside the
-    // Vite root. Wrap the resolver call in try/catch — Vite's
+    // 3. The schema source must resolve to an absolute path. Monorepo
+    // source files aliased into the current build may legitimately live
+    // outside the Vite root, so allow that shape as long as both the
+    // importer and schema stay out of node_modules. Wrap the resolver
+    // call in try/catch — Vite's
     // `this.resolve` can throw (rather than return null) if a downstream
     // resolveId hook errors during the lookup. Treat that as a skip with
     // the underlying error attached, not an uncaught reject.
@@ -214,7 +218,7 @@ export async function resolveSchemas(input: ResolveSchemaInput): Promise<Resolve
       });
       continue;
     }
-    if (!isInsideRoot(absoluteSchemaPath, viteRoot)) {
+    if (!isTransformableSchemaPath(absoluteSchemaPath, sourceFile, viteRoot)) {
       skipped.push({
         candidate,
         reason: `schema identifier '${schemaIdName}' resolves to '${absoluteSchemaPath}', which is outside the Vite root`
@@ -239,4 +243,24 @@ function isInsideRoot(child: string, root: string): boolean {
   const r = root.replace(/\\/g, '/');
   const normalizedRoot = r.endsWith('/') ? r : r + '/';
   return c === r || c.startsWith(normalizedRoot);
+}
+
+function isNodeModulesPath(filePath: string): boolean {
+  return filePath.replace(/\\/g, '/').includes('/node_modules/');
+}
+
+function isTransformableSchemaPath(
+  schemaPath: string,
+  sourceFile: string,
+  viteRoot: string
+): boolean {
+  if (isInsideRoot(schemaPath, viteRoot)) {
+    return true;
+  }
+
+  return (
+    !isInsideRoot(sourceFile, viteRoot) &&
+    !isNodeModulesPath(sourceFile) &&
+    !isNodeModulesPath(schemaPath)
+  );
 }
