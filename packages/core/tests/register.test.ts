@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { registerDeep, registerFlat } from '../src/register.js';
+import { registerDeep, registerFlat, registerSchemaConfigs } from '../src/register.js';
 import { walkSchema } from '../src/walker.js';
 import type { FormMeta } from '../src/types.js';
 
@@ -391,5 +391,61 @@ describe('registerFlat', () => {
     expect(fields[0]?.component).toBe('Input');
     expect(fields[1]?.component).toBe('Textarea');
     expect(fields[1]?.disabled).toBe(true);
+  });
+});
+
+describe('registerSchemaConfigs', () => {
+  it('registers schema-level component and nested field config by exported schema identity', () => {
+    const reg = z.registry<FormMeta>();
+    const value = z.string();
+    const expressionSchema = z.object({ value });
+    const pageSchema = z.object({ expression: expressionSchema });
+
+    registerSchemaConfigs(
+      reg,
+      {
+        ExpressionSchema: expressionSchema,
+        PageSchema: pageSchema
+      },
+      {
+        ExpressionSchema: {
+          component: 'ExpressionEditor',
+          fields: {
+            value: { component: 'Textarea', helpText: 'Expression source' }
+          }
+        }
+      }
+    );
+
+    expect(reg.get(expressionSchema)).toEqual({ component: 'ExpressionEditor' });
+    expect(reg.get(value)).toEqual({ component: 'Textarea', helpText: 'Expression source' });
+
+    const fields = walkSchema(pageSchema, { formRegistry: reg });
+    expect(fields[0]?.component).toBe('ExpressionEditor');
+    expect(fields[0]?.children?.[0]?.component).toBe('Textarea');
+    expect(fields[0]?.children?.[0]?.helpText).toBe('Expression source');
+  });
+
+  it('ignores schema config entries that do not resolve to a zod export', () => {
+    const reg = z.registry<FormMeta>();
+    const pageSchema = z.object({ name: z.string() });
+
+    registerSchemaConfigs(
+      reg,
+      {
+        PageSchema: pageSchema,
+        notSchema: { value: true }
+      },
+      {
+        notSchema: {
+          component: 'NotUsed',
+          fields: {
+            value: { component: 'Textarea' }
+          }
+        }
+      }
+    );
+
+    expect(reg.get(pageSchema)).toBeUndefined();
   });
 });

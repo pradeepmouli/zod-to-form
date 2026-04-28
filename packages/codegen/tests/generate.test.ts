@@ -124,6 +124,15 @@ describe('resolveFieldMapping', () => {
     const result = resolveFieldMapping('name', undefined, config);
     expect(result.source).toBe('none');
   });
+
+  it('treats non-builtin schema-driven component names as mapped components', () => {
+    const config = {
+      components: { source: './components', overrides: {} }
+    };
+    const result = resolveFieldMapping('expression', 'ExpressionEditor', config);
+    expect(result.source).toBe('components');
+    expect(result.componentName).toBe('ExpressionEditor');
+  });
 });
 
 describe('generateFormComponent', () => {
@@ -202,6 +211,35 @@ describe('generateFormComponent', () => {
     expect(result).toContain('fieldProps?: Record<string, Record<string, unknown>>;');
     expect(result).toContain('<TypeSelector');
     expect(result).toContain('{...(props.fieldProps?.["typeCall.type"] ?? {})}');
+  });
+
+  it('imports and renders schema-driven custom component names', () => {
+    const fields = [
+      makeField({
+        key: 'expression',
+        label: 'Expression',
+        component: 'ExpressionEditor',
+        zodType: 'object'
+      })
+    ];
+
+    const result = generateFormComponent(fields, {
+      exportName: 'schema',
+      componentName: 'ExpressionForm',
+      mode: 'submit',
+      ui: 'html',
+      componentConfig: {
+        components: {
+          source: './components',
+          overrides: {}
+        }
+      }
+    });
+
+    expect(result).toContain("import { ExpressionEditor } from './components';");
+    expect(result).toContain(
+      '<ExpressionEditor id="expression" {...register(\'expression\')} {...(props.fieldProps?.["expression"] ?? {})} />'
+    );
   });
 
   it('generates auto-save mode with watch and FormProvider', () => {

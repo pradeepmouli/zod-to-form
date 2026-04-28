@@ -28,6 +28,7 @@ and structure.
 Replaces `.0.`, `.${index}.`, and any `.<digits>.` segments with `[].`.
 - `collectFieldSections`: Collect section groupings from fields and a config override lookup.
 - `normalizeFormValues`: Normalize raw HTML form values for Zod parsing.
+- `isZodSchema`: Structural Zod v4 check shared across loader/registration/codegen entrypoints.
 - `walkSchema`: Walk a Zod schema and produce a FormField[] tree.
 When optimization option is set, returns WalkResult with fields + schemaLite.
 - `createProcessors`: Create a custom processor registry by merging with built-in processors.
@@ -35,6 +36,7 @@ Custom entries override built-in processors for the same `def.type` key.
 - `registerDeep`: Register a schema and all its nested fields in a registry using a
 path-structured FieldConfig tree.
 - `registerFlat`: Register flat dot-path field configs against a schema's registry.
+- `registerSchemaConfigs`: Register `defineConfig({ schemas: .
 - `processArray`: Process `z.
 - `processTuple`: Process `z.
 - `processBoolean`: Process `z.

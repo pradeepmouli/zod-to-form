@@ -35,6 +35,23 @@ const RHF_FIELD_EXPRESSIONS = new Set([
   'field.name'
 ]);
 
+const BUILTIN_COMPONENT_NAMES = new Set([
+  'Input',
+  'Checkbox',
+  'DatePicker',
+  'FileInput',
+  'Select',
+  'RadioGroup',
+  'Textarea',
+  'Switch',
+  'Fieldset',
+  'ArrayField'
+]);
+
+function isCustomConfiguredComponent(componentName: string | undefined): componentName is string {
+  return componentName !== undefined && !BUILTIN_COMPONENT_NAMES.has(componentName);
+}
+
 function renderOverrideProps(props: Record<string, unknown> | undefined): string {
   if (!props) {
     return '';
@@ -89,7 +106,12 @@ function collectMappedComponentNames(
 ): Set<string> {
   for (const field of fields) {
     const mapping = getMappedFieldComponent(field, componentConfig);
-    if (mapping.componentName && (mapping.componentOverride || mapping.override)) {
+    if (
+      mapping.componentName &&
+      (mapping.componentOverride ||
+        mapping.override ||
+        isCustomConfiguredComponent(mapping.componentName))
+    ) {
       out.add(mapping.componentName);
     }
 
@@ -558,7 +580,12 @@ function renderFieldBlockWithConfig(
     return renderArrayBlock(field, componentConfig, indent, optimized);
   }
 
-  if (mapping.componentName && (mapping.componentOverride || mapping.override)) {
+  if (
+    mapping.componentName &&
+    (mapping.componentOverride ||
+      mapping.override ||
+      isCustomConfiguredComponent(mapping.componentName))
+  ) {
     const overrideProps = renderOverrideProps(mapping.override?.props);
     const content = renderMappedComponent(
       field,

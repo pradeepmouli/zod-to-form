@@ -1,5 +1,7 @@
 import type { $ZodRegistry, $ZodType, $replace } from 'zod/v4/core';
-import type { FieldConfig } from './types.js';
+import type { ZodFormsConfig } from './config.js';
+import type { FieldConfig, FormMeta } from './types.js';
+import { isZodSchema } from './is-zod-schema.js';
 
 // Structural keys used to drive recursive traversal in registerDeep.
 // These are not field metadata, so they are stripped before calling registry.add().
@@ -251,5 +253,42 @@ export function registerFlat<Meta extends object>(
       // SAFETY: flatMeta is built from the user's FieldConfig which matches Meta at runtime
       registry.add(target, flatMeta as $replace<Meta, $ZodType>);
     }
+  }
+}
+
+/**
+ * Register `defineConfig({ schemas: ... })` entries by exported schema identity.
+ *
+ * Any configured export that resolves to a Zod schema in `moduleExports` is
+ * attached to the registry via `registerDeep()`, so a reused exported subschema
+ * carries its default component + nested field config everywhere it appears.
+ */
+export function registerSchemaConfigs(
+  registry: $ZodRegistry<FormMeta>,
+  moduleExports: Record<string, unknown>,
+  schemaConfigs: ZodFormsConfig<Record<string, unknown>>['schemas'] | undefined
+): void {
+  if (!schemaConfigs) {
+    return;
+  }
+
+  for (const [exportName, schemaConfig] of Object.entries(schemaConfigs)) {
+    if (!schemaConfig) {
+      continue;
+    }
+
+    const schema = moduleExports[exportName];
+    if (!isZodSchema(schema)) {
+      continue;
+    }
+
+    if (schemaConfig.component === undefined && schemaConfig.fields === undefined) {
+      continue;
+    }
+
+    registerDeep(registry, schema, {
+      ...(schemaConfig.component !== undefined ? { component: schemaConfig.component } : {}),
+      ...(schemaConfig.fields ? { fields: schemaConfig.fields } : {})
+    } as FieldConfig<typeof schema>);
   }
 }

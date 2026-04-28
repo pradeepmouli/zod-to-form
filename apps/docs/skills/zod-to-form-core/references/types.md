@@ -89,7 +89,12 @@ A renderable row that lives inside an array section without participating
 in form state. Used for inherited rows, computed defaults, or read-only
 informational entries.
 **Properties:**
-- `id: string` — Stable React key. Required so reorders of real rows don't remount ghost rows.
+- `id: string` — Stable identifier within a `before` or `after` group. The renderer
+combines this with the group name to form the React key
+(`ghost-before-${id}` / `ghost-after-${id}`), so the same `id` may
+safely appear in both groups without collision. Duplicates *within*
+a single group emit a one-time development warning. Required so
+that reorders of real rows don't remount ghost rows.
 - `render: (ctx: GhostRowContext) => unknown` — Render function. Receives positional context relative to other ghost rows.
 
 ### `GhostRowContext`
