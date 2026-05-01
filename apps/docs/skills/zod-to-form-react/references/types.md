@@ -81,10 +81,13 @@ Override the default template by providing a `FieldTemplate` export in `componen
 ### `ZodFormSwitchProps`
 Props for ZodFormSwitch.
 **Properties:**
-- `source: TSource` — Source object whose `[discriminator]` value selects the schema.
+- `source: TSource | null | undefined` — Source object whose `[discriminator]` value selects the schema.
+`null` / `undefined` are valid and route to `fallback` (or to a one-time
+warning + `null` render if no fallback is provided).
 - `discriminator: TKey` — Property name on `source` to use as the discriminator.
 - `schemas: TSchemas` — Map from discriminator values to Zod schemas.
-- `fallback: ReactNode | ((source: TSource) => ReactNode)` (optional) — Component(s) to render when the discriminator value matches no
+- `fallback: ReactNode | ((source: TSource | null | undefined) => ReactNode)` (optional) — Component(s) to render when the discriminator value matches no
 schema. ReactNode for static fallback; function for dynamic.
+The function form receives the (possibly nullish) source.
 
 <!-- truncated -->

@@ -50,7 +50,26 @@ Labels inferred from field names. Select rendered for enums. Validation wired au
 
 ```bash
 pnpm add -D @zod-to-form/cli zod
-npx z2f generate --schema src/schemas/signup.ts --export signupSchema --out src/components/
+```
+
+```ts
+// z2f.config.ts
+import { defineConfig } from '@zod-to-form/core';
+
+export default defineConfig({
+  components: {
+    source: '@/components/ui',
+    preset: 'shadcn',
+  },
+  defaults: {
+    out: 'src/components',
+    overwrite: true,
+  },
+});
+```
+
+```bash
+npx z2f generate --config z2f.config.ts --schema src/schemas/signup.ts --export signupSchema
 ```
 
 Produces `src/components/SignupForm.tsx` — a hand-readable `.tsx` file that imports only `react-hook-form`, `zod`, and your UI components. Inspect it, modify it, commit it. Use `--watch` to regenerate when the schema changes.
@@ -166,7 +185,42 @@ export default defineConfig({
 });
 ```
 
-### 8. Section grouping without schema restructuring
+### 8. Exported subschema defaults
+
+`defineConfig({ schemas: ... })` does two jobs at once:
+
+1. **Root-only generation settings** like `name`, `mode`, `out`, and `serverAction`
+2. **Schema-identity defaults** like `component` and nested `fields`
+
+That second part means config can follow a reused exported subschema anywhere it appears.
+
+```typescript
+import { defineConfig } from '@zod-to-form/core';
+import * as schemaModule from './schemas';
+
+export default defineConfig<typeof import('@/components/ui'), typeof schemaModule>({
+  components: {
+    source: '@/components/ui',
+    preset: 'shadcn',
+  },
+  schemas: {
+    ExpressionSchema: {
+      component: 'ExpressionEditor',
+      fields: {
+        language: { hidden: true },
+      },
+    },
+    RuleSchema: {
+      name: 'RuleEditor',
+      out: 'src/forms',
+    },
+  },
+});
+```
+
+If `RuleSchema` or `WorkflowSchema` both reuse the same exported `ExpressionSchema` object, they both inherit `ExpressionEditor` and the nested `language` override automatically. Usage-site path overrides still win, while `name`/`mode`/`out`/`serverAction` stay root-only.
+
+### 9. Section grouping without schema restructuring
 
 Group fields from a flat schema into visual sections without changing the schema. Fields sharing the same `section` key are rendered as a group.
 
@@ -187,7 +241,6 @@ RJSF and JSON Forms require restructuring your schema or maintaining a separate 
 
 | Feature | Description |
 |---|---|
-| **Vite plugin** | `z2f` as a Vite plugin — auto-regenerates forms when schemas change, no CLI step. HMR-aware. |
 | **Studio** | Four-quadrant IDE: schema editor, live form preview, config editor, code output. Visual form design with codegen parity. |
 | **Standard Schema adapters** | The core walker's processor registry architecture provides the seam to support Standard Schema, Valibot, and ArkType without a rewrite. |
 | **zod-aot integration** | `--aot` flag that uses [zod-aot](https://github.com/wakita181009/zod-aot) compiled validators for schemaLite submit-time validation. Flat compiled function instead of `safeParse`. |
@@ -203,6 +256,7 @@ RJSF and JSON Forms require restructuring your schema or maintaining a separate 
 | [`@zod-to-form/react`](packages/react) | `<ZodForm>` runtime renderer + shadcn/ui component map |
 | [`@zod-to-form/cli`](packages/cli) | `z2f generate` CLI for static codegen |
 | [`@zod-to-form/codegen`](packages/codegen) | Codegen engine — used by CLI and Studio |
+| [`@zod-to-form/vite`](packages/vite) | Vite plugin for query-mode form generation and build integration |
 
 ## Architecture
 
@@ -243,6 +297,7 @@ pnpm run build      # Build all packages
 - [CLI Codegen](apps/docs/docs/guides/cli.md)
 - [Core Config](apps/docs/docs/guides/core-config.md)
 - [Component Config](apps/docs/docs/guides/component-config.md)
+- [Vite Plugin](apps/docs/docs/guides/vite-plugin.md)
 - [AOT Optimization](apps/docs/docs/guides/optimization.md)
 - [Examples](apps/docs/docs/guides/examples.md)
 - [Feature Spec](specs/001-zodform/spec.md)

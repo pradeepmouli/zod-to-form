@@ -1,189 +1,153 @@
 ---
-title: Component Config
+title: Runtime Component Config
 sidebar_position: 4
-description: Shared component configuration format used by both the ZodForm runtime and the zodform generate CLI.
+description: Runtime-only componentConfig for ZodForm — bind pre-imported React components, apply field overrides, and layer per-component props on top of walker output.
 ---
 
-# Component Config
+# Runtime Component Config
 
-Both the runtime `<ZodForm>` and the CLI `zodform generate` accept an identical component config shape. Define the config once and use it in both paths to produce functionally identical forms.
+`componentConfig` customizes runtime rendering for `<ZodForm>`. It is **not** the same thing as `defineConfig()` from `@zod-to-form/core`.
+
+- Use `defineConfig()` when you want shared codegen defaults in `z2f.config.ts`
+- Use `componentConfig` when you already have React components imported in the browser and want runtime-only overrides
 
 ## Config Shape
 
-```typescript
-type ComponentConfig = {
-  // Module specifier — npm package, relative path, or alias
-  components: string;
-
-  // Map field component types to named exports from that module
-  fieldTypes: Record<
-    string,
-    {
-      component: string;
-      render?: () => Promise<unknown>; // runtime only
-    }
-  >;
-
-  // Per-field overrides (highest priority)
-  fields?: Record<
-    string,
-    {
-      fieldType: string; // must exist in fieldTypes
-      props?: Record<string, unknown>; // pass-through props
-    }
-  >;
+```ts
+type RuntimeComponentConfig = {
+  components: {
+    source: string;
+    overrides?: Record<string, ComponentOverride>;
+  };
+  componentModule?: Record<string, unknown>;
+  fields?: Record<string, FieldConfig>;
 };
 ```
 
-## Defining the Config
+### What each key does
 
-```typescript
-// src/config/form-components.ts
-import { defineComponentConfig } from '@zod-to-form/cli';
+| Key | Purpose |
+|---|---|
+| `components.source` | Source string kept for parity with codegen docs and diagnostics |
+| `components.overrides` | Per-component defaults such as `controlled: true` and default `props` |
+| `componentModule` | The imported module object used to resolve component functions by name at runtime |
+| `fields` | Per-path field overrides, merged over the walker's inferred output |
 
-export default defineComponentConfig({
-  components: '@/components/ui',
-  fieldTypes: {
-    Input: { component: 'TextInput' },
-    Textarea: { component: 'TextareaInput' },
-    Select: { component: 'SelectInput' },
-    Checkbox: { component: 'CheckboxInput' },
-    DatePicker: { component: 'DateInput' },
-    'cross-ref': { component: 'TypeSelector' }
+## Example
+
+```ts
+import type { RuntimeComponentConfig } from '@zod-to-form/react';
+import * as formComponents from '@/components/ui';
+
+const componentConfig: RuntimeComponentConfig = {
+  components: {
+    source: '@/components/ui',
+    overrides: {
+      ExpressionEditor: {
+        controlled: true,
+        props: {
+          onChange: 'field.onChange',
+          value: 'field.value',
+        },
+      },
+    },
   },
+  componentModule: formComponents,
   fields: {
-    bio: { fieldType: 'Textarea', props: { rows: 6 } },
-    'address.country': { fieldType: 'cross-ref', props: { refType: 'Country' } }
-  }
-});
+    bio: { component: 'Textarea', props: { rows: 6 } },
+    'rules[].expression': { component: 'ExpressionEditor' },
+  },
+};
 ```
 
-## Using with the CLI
-
-```bash
-npx zodform generate \
-  --schema src/schemas/user.ts \
-  --export userSchema \
-  --component-config src/config/form-components.ts \
-  --out src/components/
-```
-
-The CLI resolves the config at build time and emits static imports and JSX:
-
-```tsx
-import { TextInput, TextareaInput, TypeSelector } from '@/components/ui';
-
-// Per-field override applied statically:
-<TextareaInput id="bio" {...register('bio')} rows={6} />
-<TypeSelector id="address.country" {...register('address.country')} refType="Country" />
-```
-
-## Using with the Runtime
+## Using with ZodForm
 
 ```tsx
 import { ZodForm } from '@zod-to-form/react';
-import componentConfig from '@/config/form-components';
-
-<ZodForm schema={userSchema} componentConfig={componentConfig} onSubmit={handleSubmit}>
-  <button type="submit">Save</button>
-</ZodForm>
-```
-
-The runtime resolves the config at render time and dynamically loads components from the module path.
-
-## Resolution Priority
-
-Both paths use the same 3-level lookup order:
-
-1. **Per-field override** — `config.fields['bio']` checked first. If found, its `fieldType` resolves through `fieldTypes`, and its `props` are merged into the rendered component.
-2. **Field type mapping** — `config.fieldTypes['Textarea']` checked next. Maps the walker's inferred component type to a named export.
-3. **Default rendering** — Falls back to built-in `<input>`, `<select>`, `<textarea>`, etc.
-
-## Type-Safe Config
-
-`defineComponentConfig<TComponents, TValues>()` provides compile-time autocomplete for component names and field paths:
-
-```typescript
-import { defineComponentConfig } from '@zod-to-form/cli';
-import type { z } from 'zod';
-
-type Values = z.infer<typeof userSchema>;
-type Components = {
-  TextInput: unknown;
-  TextareaInput: unknown;
-  SelectInput: unknown;
-  TypeSelector: unknown;
-};
-
-export default defineComponentConfig<Components, Values>({
-  components: '@/components/ui',
-  fieldTypes: {
-    Input: { component: 'TextInput' }, // autocompletes component names
-    Textarea: { component: 'TextareaInput' }
-  },
-  fields: {
-    bio: { fieldType: 'Textarea', props: { rows: 6 } }, // autocompletes field paths
-    'address.country': { fieldType: 'cross-ref' }
-  }
-});
-```
-
-## Extending a Base Preset (e.g. shadcn/ui)
-
-Define a config that overrides only the field types that need custom components. Combine with a base preset so unmatched fields fall through to defaults.
-
-```typescript
-// src/config/form-components.ts
-import { defineComponentConfig } from '@zod-to-form/cli';
-
-export default defineComponentConfig({
-  components: '@/components/ui',
-  fieldTypes: {
-    DatePicker: { component: 'MyDatePicker' },
-    Textarea: { component: 'MyRichTextEditor' }
-    // Other field types (Input, Select, Checkbox, etc.) are not listed —
-    // they fall through to the base preset (shadcn or unstyled)
-  },
-  fields: {
-    bio: { fieldType: 'Textarea', props: { rows: 6 } }
-  }
-});
-```
-
-### Runtime — shadcn base + config overrides
-
-```tsx
-import { shadcnComponentMap } from '@zod-to-form/react/shadcn';
-import componentConfig from '@/config/form-components';
+import * as formComponents from '@/components/ui';
 
 <ZodForm
-  schema={schema}
-  components={shadcnComponentMap}
-  componentConfig={componentConfig}
+  schema={workflowSchema}
+  componentConfig={{
+    components: {
+      source: '@/components/ui',
+      overrides: {
+        ExpressionEditor: {
+          controlled: true,
+          props: {
+            onChange: 'field.onChange',
+            value: 'field.value',
+          },
+        },
+      },
+    },
+    componentModule: formComponents,
+    fields: {
+      'rules[].expression': { component: 'ExpressionEditor' },
+    },
+  }}
   onSubmit={handleSubmit}
 >
   <button type="submit">Save</button>
 </ZodForm>
 ```
 
-### CLI — `--ui shadcn` base + `--component-config` overrides
+Runtime component resolution happens in this order:
 
-```bash
-npx zodform generate \
-  --schema src/schemas/user.ts \
-  --export userSchema \
-  --ui shadcn \
-  --component-config src/config/form-components.ts \
-  --out src/components/
+1. `fields[path]` override
+2. `components.overrides[field.component]`
+3. the `components` prop passed to `<ZodForm>` (or built-in defaults)
+
+## Controlled Components
+
+If a custom component does not support the plain `register()` spread, mark it `controlled: true` and use field-expression props:
+
+```ts
+components: {
+  source: '@/components/ui',
+  overrides: {
+    Select: {
+      controlled: true,
+      props: {
+        onValueChange: 'field.onChange',
+        value: 'field.value',
+      },
+    },
+  },
+}
 ```
 
-In both paths, `componentConfig` field/type overrides take precedence. Unmatched fields resolve through the base component map (shadcn), then fall back to built-in HTML elements.
+Field-expression strings such as `field.onChange`, `field.value`, `field.onBlur`, and `field.ref` are resolved by the runtime when the override is marked controlled.
 
-## When to Use Shared Config
+## Field Overrides
 
-- Use the same config for both paths when prototyping with runtime and deploying with codegen.
-- Start with `<ZodForm>` + `componentConfig` during development for instant feedback.
-- Switch to `zodform generate --component-config` for production to eliminate the runtime dependency.
-- The generated output uses the exact same components and props — so the forms are functionally identical.
+`fields` uses the same path syntax as `defineConfig().fields`:
 
-See also: [Runtime Rendering](./runtime.md) and [CLI Codegen](./cli.md).
+| Pattern | Matches |
+|---|---|
+| `name` | Top-level field |
+| `address.city` | Nested object field |
+| `items[].title` | Field within array items |
+| `rules[].expression.body` | Deep nested array/object field |
+
+## How This Relates to `defineConfig()`
+
+For shared config that the CLI and Vite plugin consume, use `defineConfig()` from `@zod-to-form/core`:
+
+```ts
+import { defineConfig } from '@zod-to-form/core';
+
+export default defineConfig({
+  components: {
+    source: '@/components/ui',
+    preset: 'shadcn',
+  },
+  fields: {
+    bio: { component: 'Textarea', props: { rows: 6 } },
+  },
+});
+```
+
+Use runtime `componentConfig` in addition to that when you need to bind already-imported React components in the browser via `componentModule`.
+
+See also: [Runtime Rendering](./runtime.md), [Core Configuration](./core-config.md), and [CLI Codegen](./cli.md).

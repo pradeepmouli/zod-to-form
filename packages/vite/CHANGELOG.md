@@ -1,5 +1,38 @@
 # @zod-to-form/vite
 
+## 0.4.0
+
+### Minor Changes
+
+- [#116](https://github.com/pradeepmouli/zod-to-form/pull/116) [`4ada01d`](https://github.com/pradeepmouli/zod-to-form/commit/4ada01d2b052a97d59926eba28a66f1ebaf28ccf) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - feat(config): support schema-level subschema defaults
+
+### Patch Changes
+
+- Updated dependencies [[`4ada01d`](https://github.com/pradeepmouli/zod-to-form/commit/4ada01d2b052a97d59926eba28a66f1ebaf28ccf)]:
+  - @zod-to-form/codegen@0.9.0
+  - @zod-to-form/core@0.9.0
+
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies [[`f241cec`](https://github.com/pradeepmouli/zod-to-form/commit/f241cec28759c0fe72e06f06a362adba1d64c290)]:
+  - @zod-to-form/core@0.8.1
+  - @zod-to-form/codegen@0.8.1
+
+## 0.3.0
+
+### Minor Changes
+
+- [`422c66b`](https://github.com/pradeepmouli/zod-to-form/commit/422c66b6ca87f469eff3f3ecdf0dbd24fc2e8e1d) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Add generated-form `fieldProps` support for per-field runtime component props and
+  fix Vite generate/query mode so rewritten forms can resolve workspace schemas in
+  monorepos, including multi-export schema modules.
+
+### Patch Changes
+
+- Updated dependencies [[`422c66b`](https://github.com/pradeepmouli/zod-to-form/commit/422c66b6ca87f469eff3f3ecdf0dbd24fc2e8e1d)]:
+  - @zod-to-form/codegen@0.8.0
+
 ## 0.2.3
 
 ### Patch Changes

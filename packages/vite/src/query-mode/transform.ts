@@ -9,10 +9,16 @@
  * `plugin.ts` handles all of that.
  */
 import path from 'node:path';
-import { walkSchema } from '@zod-to-form/core';
-import type { CodegenConfig, SchemaLiteInfo, WalkResult } from '@zod-to-form/core';
+import {
+  registerFlat,
+  registerSchemaConfigs,
+  resolveFieldConfig,
+  walkSchema
+} from '@zod-to-form/core';
+import type { CodegenConfig, FormMeta, SchemaLiteInfo, WalkResult } from '@zod-to-form/core';
 import { generateFormComponent, generateSchemaLiteFile } from '@zod-to-form/codegen';
 import type { $ZodType } from 'zod/v4/core';
+import { z } from 'zod';
 import { buildEffectiveConfig, selectExport } from '../config/load.js';
 import type { ModuleNamespace } from '../config/load.js';
 import type { Z2FViteConfig } from '../types.js';
@@ -67,6 +73,16 @@ export function compileTarget(input: CompileTargetInput): CompileTargetResult {
   const expectedName = effectiveConfig.exportName || undefined;
 
   const { name, schema } = selectExport(namespace, schemaFile, expectedName);
+  const componentConfig = effectiveConfig.componentConfig;
+  const mergedFields = resolveFieldConfig(
+    componentConfig?.fields,
+    componentConfig?.schemas?.[name]?.fields
+  );
+  const formRegistry = z.registry<FormMeta>();
+  registerSchemaConfigs(formRegistry, namespace, componentConfig?.schemas);
+  if (Object.keys(mergedFields).length > 0) {
+    registerFlat(formRegistry, schema, mergedFields);
+  }
 
   // Walk the schema, optionally with the optimization level the user
   // configured. The result type depends on whether optimization is set.
@@ -79,12 +95,12 @@ export function compileTarget(input: CompileTargetInput): CompileTargetResult {
   let schemaLiteInfo: SchemaLiteInfo = null;
 
   if (optimization) {
-    const result = walkSchema(schema, optimization) as WalkResult;
+    const result = walkSchema(schema, { ...optimization, formRegistry }) as WalkResult;
     fields = result.fields;
     schemaLite = result.schemaLite;
     schemaLiteInfo = result.schemaLiteInfo;
   } else {
-    fields = walkSchema(schema);
+    fields = walkSchema(schema, { formRegistry });
   }
 
   // Build the codegen-facing config: take the effective config but
@@ -102,6 +118,12 @@ export function compileTarget(input: CompileTargetInput): CompileTargetResult {
   const isGenerateVariant = /^__generate_\d+$/.test(variant);
   const codegenConfig: CodegenConfig = {
     ...effectiveConfig,
+    componentConfig: componentConfig
+      ? {
+          ...componentConfig,
+          fields: Object.keys(mergedFields).length > 0 ? mergedFields : componentConfig.fields
+        }
+      : undefined,
     exportName: name,
     componentName: isGenerateVariant ? 'Form' : (effectiveConfig.componentName ?? 'Form'),
     schemaImportPath: effectiveConfig.schemaImportPath ?? defaultSchemaImportPath(schemaFile),

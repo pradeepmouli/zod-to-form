@@ -99,14 +99,52 @@ export type ConfigDefaults = {
   optimization?: OptimizationConfig;
 };
 
+/**
+ * Configuration for a single named schema export in `defineConfig({ schemas: ... })`.
+ *
+ * This type mixes two scopes:
+ * - **root-export generation settings** like `name`, `mode`, `out`, and `serverAction`
+ * - **schema-identity defaults** like `component` and nested `fields`, which follow
+ *   the same exported schema object anywhere it is reused as a subschema
+ *
+ * Usage-site path overrides still win over these schema defaults.
+ *
+ * @category Configuration
+ */
 export type ZodTypeConfig<
   TFieldKeys extends string = string,
   TComponents extends Record<string, unknown> = Record<string, unknown>
 > = {
+  /**
+   * Override the generated top-level form component name when this schema is
+   * selected as the root export in CLI or Vite codegen.
+   *
+   * Root-only: nested appearances of the same subschema do not use this name.
+   */
   name?: string;
+  /**
+   * Default renderer for this schema wherever the same exported schema object
+   * is encountered.
+   *
+   * When set on a reusable subschema export (for example `ExpressionSchema`),
+   * any parent schema that references that exact schema instance will render it
+   * with this component unless a usage-site path override wins.
+   */
+  component?: string;
+  /** Root-only generation mode override for this schema export. */
   mode?: 'submit' | 'auto-save';
+  /** Root-only output path override for this schema export. */
   out?: string;
+  /** Root-only server action override for this schema export. */
   serverAction?: boolean;
+  /**
+   * Schema-local field configuration applied relative to this schema's own
+   * shape.
+   *
+   * For a root schema, these entries merge over global `fields`. For a reused
+   * exported subschema, the same config follows that schema by identity and
+   * becomes its default nested behavior everywhere it appears.
+   */
   fields?: Partial<Record<TFieldKeys, TypedFieldConfig<TComponents>>>;
 };
 
@@ -254,6 +292,7 @@ const defaultsSchema = z
 const zodTypeConfigSchema = z
   .object({
     name: z.string().optional(),
+    component: z.string().optional(),
     mode: z.string().optional(),
     out: z.string().optional(),
     serverAction: z.boolean().optional(),
