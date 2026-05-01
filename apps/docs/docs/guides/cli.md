@@ -1,22 +1,23 @@
 ---
 title: CLI Codegen
 sidebar_position: 2
-description: Generate static React form components at build time from Zod v4 schemas using the zodform generate CLI.
+description: Generate static React form components at build time from Zod v4 schemas using the z2f generate CLI.
 ---
 
 # CLI Codegen
 
-Generate static `.tsx` form components at build time using `@zod-to-form/cli`. This guide covers installation, the `zodform generate` command, generated output structure, component configuration, auto-save mode, server actions, watch mode, and the programmatic API.
+Generate static `.tsx` form components at build time using `@zod-to-form/cli`. This guide covers the current `z2f generate` command, the required `z2f.config.ts`, export selection, watch mode, server actions, and the programmatic API.
 
 ## When to Use
 
-Use the CLI codegen path when a project needs static, hand-readable `.tsx` form components generated from Zod v4 schemas at build time. Best suited for production forms, design system integration, and cases where the generated code should be inspected, customized, and committed — with zero runtime dependency on zod-to-form.
+Use the CLI codegen path when a project needs static, hand-readable `.tsx` form components generated from Zod v4 schemas at build time. It is best suited for production forms, design system integration, and cases where the generated code should be inspected, customized, and committed.
 
 ## Prerequisites
 
 - Node.js >= 20
-- Zod v4 (`zod@^4.0.0`) — Zod v3 is **not** supported
-- A Zod schema file with a named export
+- Zod v4 (`zod@^4.0.0`)
+- A `z2f.config.ts` file
+- A schema module that exports one or more Zod schemas
 
 ## Installation
 
@@ -24,13 +25,32 @@ Use the CLI codegen path when a project needs static, hand-readable `.tsx` form 
 pnpm add -D @zod-to-form/cli zod
 ```
 
-The CLI is a dev dependency — it runs at build time, not in production.
+The package exposes both `z2f` and `zod-to-form` binaries. The examples below use the shorter `z2f` alias.
 
 ## Basic Usage
 
-### 1. Define a Schema File
+### 1. Create `z2f.config.ts`
 
-```typescript
+```ts
+// z2f.config.ts
+import { defineConfig } from '@zod-to-form/core';
+
+export default defineConfig({
+  components: {
+    source: '@/components/ui',
+    preset: 'shadcn',
+  },
+  defaults: {
+    out: 'src/components',
+    overwrite: true,
+    mode: 'submit',
+  },
+});
+```
+
+### 2. Define a Schema File
+
+```ts
 // src/schemas/user.ts
 import { z } from 'zod';
 
@@ -39,60 +59,24 @@ export const userSchema = z.object({
   email: z.string().email('Invalid email address'),
   role: z.enum(['admin', 'editor', 'viewer']),
   bio: z.string().optional(),
-  newsletter: z.boolean().default(false)
+  newsletter: z.boolean().default(false),
 });
 ```
 
-### 2. Generate the Form Component
+### 3. Generate the Form Component
 
 ```bash
-npx zodform generate \
+npx z2f generate \
+  --config z2f.config.ts \
   --schema src/schemas/user.ts \
   --export userSchema \
   --out src/components/ \
   --name UserForm
 ```
 
-### 3. Generated Output
+### 4. Generated Output
 
-The generated `src/components/UserForm.tsx` imports only `react-hook-form`, `@hookform/resolvers`, and the schema — no `@zod-to-form/*` imports appear:
-
-```tsx
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { userSchema } from '../schemas/user';
-
-type FormData = z.output<typeof userSchema>;
-
-export function UserForm(props: { onSubmit: (data: FormData) => void }) {
-  const { register, handleSubmit } = useForm<FormData>({
-    resolver: zodResolver(userSchema)
-  });
-
-  return (
-    <form onSubmit={handleSubmit(props.onSubmit)}>
-      <div>
-        <label htmlFor="name">Name</label>
-        <input id="name" type="text" {...register('name')} />
-      </div>
-      <div>
-        <label htmlFor="email">Email</label>
-        <input id="email" type="email" {...register('email')} />
-      </div>
-      <div>
-        <label htmlFor="role">Role</label>
-        <select id="role" {...register('role')}>
-          <option value="admin">Admin</option>
-          <option value="editor">Editor</option>
-          <option value="viewer">Viewer</option>
-        </select>
-      </div>
-      <button type="submit">Submit</button>
-    </form>
-  );
-}
-```
+The generated `src/components/UserForm.tsx` imports your schema, React Hook Form, and the selected UI components. No `@zod-to-form/*` imports remain in the emitted file.
 
 ## CLI Options
 
@@ -100,22 +84,35 @@ export function UserForm(props: { onSubmit: (data: FormData) => void }) {
 
 | Flag | Description |
 |---|---|
-| `--schema <path>` | Path to the TypeScript/JavaScript module containing the Zod schema |
-| `--export <name>` | Named export that contains the `z.object(...)` schema |
+| `--config <path>` | Path to `z2f.config.ts` (or `.json`) |
+| `--schema <path>` | Path to the TypeScript/JavaScript module containing the Zod schema exports |
 
 ### Optional Flags
 
 | Flag | Default | Description |
 |---|---|---|
-| `--out <path>` | `./<Name>Form.tsx` | Output directory or `.tsx` file path |
-| `--name <name>` | Derived from `--export` | Component name. If omitted, derived by stripping `Schema` suffix and appending `Form` |
-| `--mode <mode>` | `submit` | `submit` — standard `handleSubmit` pattern; `auto-save` — `watch` + `useEffect` pattern |
-| `--ui <preset>` | `shadcn` | `shadcn` or `unstyled` |
-| `--component-config <path>` | — | Path to component config file (`.json` or `.ts`) |
-| `--force` | `false` | Overwrite existing output file |
-| `--dry-run` | `false` | Print generated code to stdout without writing files |
+| `--export <name>` | Derived from config | Named export containing the root schema |
+| `--out <path>` | `config.defaults.out` or local default | Output directory or `.tsx` file path |
+| `--name <name>` | Derived from export name | Generated component name |
+| `--mode <mode>` | `config.defaults.mode` or `submit` | `submit` or `auto-save` |
+| `--ui <preset>` | `config.defaults.ui` or `shadcn` | `shadcn` or `html` |
+| `--dry-run` | `false` | Print generated code without writing files |
 | `--server-action` | `false` | Generate a Next.js server action alongside the form |
 | `--watch` | `false` | Watch the schema file and regenerate on changes |
+
+Overwrite behavior is controlled by `config.defaults.overwrite`; there is no separate `--force` flag for `generate`.
+
+## Export Selection
+
+`--export` is optional when your config already tells the CLI which exports to generate.
+
+Resolution order:
+
+1. `--export`
+2. `config.types`
+3. exported schemas discovered from the module, filtered by `config.include` / `config.exclude`
+
+That lets one command generate a single form, a curated list, or every matching export in a schema module.
 
 ## Naming Conventions
 
@@ -128,132 +125,137 @@ export function UserForm(props: { onSubmit: (data: FormData) => void }) {
 Override with `--name`:
 
 ```bash
-zodform generate --schema src/user.ts --export userSchema --name ProfileEditor
+npx z2f generate --config z2f.config.ts --schema src/user.ts --export userSchema --name ProfileEditor
 # ProfileEditor.tsx
 ```
 
 ## Generation Modes
 
-### Submit Mode (default)
+### Submit Mode
 
-Generates `handleSubmit` + `onSubmit` prop pattern:
+Generates a standard `handleSubmit` + `onSubmit` pattern:
 
 ```bash
-npx zodform generate --schema src/schemas/user.ts --export userSchema
+npx z2f generate --config z2f.config.ts --schema src/schemas/user.ts --export userSchema
 ```
 
 ### Auto-Save Mode
 
-Generates `watch` + `useEffect` pattern with `onValueChange` callback and no submit button:
+Generates a `watch` + `useEffect` pattern with `onValueChange`:
 
 ```bash
-npx zodform generate --schema src/schemas/user.ts --export userSchema --mode auto-save
+npx z2f generate \
+  --config z2f.config.ts \
+  --schema src/schemas/user.ts \
+  --export userSchema \
+  --mode auto-save
 ```
 
-Output uses `mode: 'onChange'` in `useForm` and fires `onValueChange` on every field update:
+## Multiple Exports from One Schema Module
 
-```tsx
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+If the schema module exports several forms, list them in config and omit `--export`:
 
-export function UserForm(props: {
-  onValueChange?: (data: FormData) => void;
-  onSubmit?: (data: FormData) => void;
-}) {
-  const { register, watch } = useForm<FormData>({
-    resolver: zodResolver(userSchema),
-    mode: 'onChange'
-  });
+```ts
+// z2f.config.ts
+import { defineConfig } from '@zod-to-form/core';
 
-  useEffect(() => {
-    const subscription = watch((values) => {
-      props.onValueChange?.(values as FormData);
-    });
-    return () => subscription.unsubscribe();
-  }, [watch, props.onValueChange]);
-
-  return <form>{/* fields, no submit button */}</form>;
-}
-```
-
-### Arrays
-
-When the schema contains `z.array()`, the output includes `useFieldArray`:
-
-```tsx
-import { useForm, useFieldArray } from 'react-hook-form';
-
-const { register, handleSubmit, control } = useForm<FormData>({ /* ... */ });
-const { fields: itemsFields, append: appendItems, remove: removeItems } = useFieldArray({
-  control, name: 'items'
+export default defineConfig({
+  components: {
+    source: '@/components/ui',
+    preset: 'shadcn',
+  },
+  types: ['UserSchema', 'AdminSchema'],
+  defaults: {
+    out: 'src/components',
+    overwrite: true,
+  },
 });
 ```
 
-## Component Configuration
-
-Map field types to custom components using a config file. This same format works with the runtime `<ZodForm>` — see [Component Config](./component-config.md).
-
 ```bash
-npx zodform generate \
-  --schema src/schemas/user.ts \
-  --export userSchema \
-  --component-config src/config/form-components.ts \
-  --out src/components/
+npx z2f generate --config z2f.config.ts --schema src/schemas/index.ts
 ```
 
-The generated file will include static imports from the config's `components` path and apply per-field props:
+The CLI will emit both selected forms in one pass.
 
-```tsx
-import { TextInput, TextareaInput } from '@/components/ui';
+## Config-Driven Schema Defaults
 
-<TextareaInput id="bio" {...register('bio')} rows={6} />
+The CLI reads `schemas[ExportName]` from `z2f.config.ts` in two ways:
+
+1. **Root-only generation settings** such as `name`, `mode`, `out`, and `serverAction`
+2. **Schema-identity defaults** such as `component` and nested `fields`
+
+That means reusable exported subschemas can carry their own default editor wherever they are reused.
+
+```ts
+import { defineConfig } from '@zod-to-form/core';
+import * as schemaModule from './src/schemas';
+
+export default defineConfig<typeof import('@/components/ui'), typeof schemaModule>({
+  components: {
+    source: '@/components/ui',
+    preset: 'shadcn',
+  },
+  schemas: {
+    ExpressionSchema: {
+      component: 'ExpressionEditor',
+      fields: {
+        language: { hidden: true },
+      },
+    },
+    WorkflowSchema: {
+      name: 'WorkflowForm',
+    },
+  },
+});
 ```
+
+If `WorkflowSchema` reuses the exact exported `ExpressionSchema` object, the generated form will render that nested schema with `ExpressionEditor` unless a more specific path override wins.
 
 ## Server Actions
 
 Generate a paired Next.js server action alongside the form:
 
 ```bash
-npx zodform generate \
+npx z2f generate \
+  --config z2f.config.ts \
   --schema src/schemas/user.ts \
   --export userSchema \
-  --server-action \
-  --out src/components/
+  --server-action
 ```
 
-Produces both `UserForm.tsx` and `user-form-action.ts`.
+This produces both `UserForm.tsx` and `user-form-action.ts`.
 
 ## Watch Mode
 
 Regenerate automatically when the schema file changes:
 
 ```bash
-npx zodform generate \
+npx z2f generate \
+  --config z2f.config.ts \
   --schema src/schemas/user.ts \
   --export userSchema \
-  --out src/components/ \
   --watch
 ```
 
-Combine with `--force` to overwrite on each regeneration.
+`--watch` tracks the schema file passed to `--schema`. If your config changes, rerun the command.
 
 ## Programmatic API
 
-### runGenerate(options)
+### `runGenerate(options)`
 
-```typescript
+```ts
 import { runGenerate } from '@zod-to-form/cli';
 
 const result = await runGenerate({
+  config: './z2f.config.ts',
   schema: './src/schemas/user.ts',
   export: 'userSchema',
   out: './src/components/',
   name: 'UserForm',
   mode: 'submit',
   ui: 'shadcn',
-  force: true,
-  serverAction: true
+  serverAction: true,
 });
 ```
 
@@ -263,51 +265,21 @@ Returns:
 |---|---|---|
 | `outputPath` | `string` | Absolute path to the generated `.tsx` file |
 | `code` | `string` | Generated TypeScript source |
-| `wroteFile` | `boolean` | Whether the file was written (false in dry-run or if exists without `--force`) |
-| `actionPath` | `string \| undefined` | Path to server action file (when `serverAction: true`) |
-| `actionCode` | `string \| undefined` | Server action source |
+| `wroteFile` | `boolean` | Whether the file was written to disk |
+| `actionPath` | `string \| undefined` | Path to the generated server action file |
+| `actionCode` | `string \| undefined` | Generated server action source |
 
-### createProgram()
+### `createProgram()`
 
 Returns a Commander.js `Command` instance for embedding in custom CLIs:
 
-```typescript
+```ts
 import { createProgram } from '@zod-to-form/cli';
 
 const program = createProgram();
-await program.parseAsync(['node', 'zodform', 'generate', '--schema', /* ... */]);
+await program.parseAsync(['node', 'z2f', 'generate', '--config', 'z2f.config.ts', '--schema', 'src/schemas/user.ts']);
 ```
-
-### defineComponentConfig(config)
-
-Type-safe helper for component config files — see [Component Config](./component-config.md).
-
-### validateComponentConfig(value, source?)
-
-Runtime validation for externally loaded config objects:
-
-```typescript
-import { validateComponentConfig } from '@zod-to-form/cli';
-
-const parsed = validateComponentConfig(loadedConfig, 'my-config.json');
-```
-
-Throws with descriptive error messages if the config shape is invalid.
-
-## CI Integration
-
-Add to a build script in `package.json`:
-
-```json
-{
-  "scripts": {
-    "generate:forms": "zodform generate --schema src/schemas/user.ts --export userSchema --out src/components/ --force"
-  }
-}
-```
-
-Or add as a pre-build step in CI pipelines to ensure generated forms stay in sync with schema changes.
 
 ## Relationship to Runtime
 
-The CLI codegen and runtime `<ZodForm>` share `@zod-to-form/core` — the same walker produces the same `FormField[]` tree. A component config file can drive both paths. See [Runtime Rendering](./runtime.md).
+The CLI and runtime `<ZodForm>` share `@zod-to-form/core`, but the CLI consumes `defineConfig()` while runtime-only component binding happens through `componentConfig`. See [Core Configuration](./core-config.md) and [Runtime Component Config](./component-config.md).
