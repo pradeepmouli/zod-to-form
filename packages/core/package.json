@@ -51,8 +51,8 @@
     "type-check": "tsgo --noEmit"
   },
   "peerDependencies": {
-    "zod": "^4.0.0",
-    "jiti": "^2.0.0"
+    "jiti": "^2.0.0",
+    "zod": "^4.0.0"
   },
   "peerDependenciesMeta": {
     "jiti": {
@@ -60,9 +60,9 @@
     }
   },
   "devDependencies": {
-    "jiti": "^2.6.1",
-    "type-fest": "^5.5.0",
-    "zod": "^4.3.6"
+    "jiti": "^2.7.0",
+    "type-fest": "^5.6.0",
+    "zod": "^4.4.3"
   },
   "author": "Pradeep Mouli <pmouli@mac.com> (https://github.com/pradeepmouli)",
   "publishConfig": {

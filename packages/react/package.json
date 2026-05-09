@@ -59,11 +59,11 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@zod-to-form/codegen": "workspace:*",
-    "jsdom": "^29.0.2",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "react-hook-form": "^7.72.1",
-    "zod": "^4.3.6"
+    "jsdom": "^29.1.1",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-hook-form": "^7.75.0",
+    "zod": "^4.4.3"
   },
   "dependencies": {
     "@zod-to-form/core": "workspace:*"
