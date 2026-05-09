@@ -69,16 +69,16 @@ function applyNativeRules(rules: NativeRules | undefined, value: unknown): void 
     /* error */
   }
   if (rules.minLength && typeof value === 'string') {
-    value.length >= rules.minLength.value;
+    void (value.length >= rules.minLength.value);
   }
   if (rules.maxLength && typeof value === 'string') {
-    value.length <= rules.maxLength.value;
+    void (value.length <= rules.maxLength.value);
   }
   if (rules.min && typeof value === 'number') {
-    value >= rules.min.value;
+    void (value >= rules.min.value);
   }
   if (rules.max && typeof value === 'number') {
-    value <= rules.max.value;
+    void (value <= rules.max.value);
   }
   if (rules.pattern && typeof value === 'string') {
     rules.pattern.value.test(value);

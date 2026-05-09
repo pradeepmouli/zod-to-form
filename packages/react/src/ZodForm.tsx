@@ -2,7 +2,7 @@ import type { ComponentType, ReactNode } from 'react';
 import { useMemo } from 'react';
 import { FormProvider } from 'react-hook-form';
 import type { output, ZodObject } from 'zod';
-import type { FormField, FormProcessor, ZodFormRegistry } from '@zod-to-form/core';
+import type { FormProcessor, ZodFormRegistry } from '@zod-to-form/core';
 import { normalizeFieldKey, collectFieldSections } from '@zod-to-form/core';
 import { FieldRenderer, warnRemovedConfigKeys } from './FieldRenderer.js';
 import { defaultComponentMap } from './components/index.js';

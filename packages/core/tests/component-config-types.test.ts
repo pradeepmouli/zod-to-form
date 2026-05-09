@@ -2,7 +2,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import { defineConfig } from '../src/config.js';
 import type { ZodFormsConfig, TypedFieldConfig } from '../src/config.js';
 
-type Values = {
+type _Values = {
   user: {
     name: string;
   };

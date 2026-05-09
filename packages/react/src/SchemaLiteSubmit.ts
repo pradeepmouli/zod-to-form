@@ -1,5 +1,5 @@
 import type { $ZodType } from 'zod/v4/core';
-import type { UseFormSetError, FieldPath, FieldValues } from 'react-hook-form';
+import type { UseFormSetError, FieldPath } from 'react-hook-form';
 import { normalizeFormValues } from '@zod-to-form/core';
 
 type SafeParseable = {

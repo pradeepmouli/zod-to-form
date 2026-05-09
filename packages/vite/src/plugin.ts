@@ -376,14 +376,13 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
 
       // Resolve schemas via Vite's resolver so aliases / tsconfig paths fire.
       const root = state.resolvedConfig?.root ?? process.cwd();
-      const resolvePluginContext = this;
       const resolved = await resolveSchemas({
         source: code,
         candidates: scan.candidates,
         sourceFile: filePath,
         viteRoot: root,
         resolveImport: async (specifier, importer): Promise<string | null> => {
-          const r = await resolvePluginContext.resolve(specifier, importer, { skipSelf: true });
+          const r = await this.resolve(specifier, importer, { skipSelf: true });
           return r === null ? null : r.id;
         }
       });

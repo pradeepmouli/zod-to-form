@@ -338,7 +338,7 @@ function tryComposeSelect(exports: Record<string, unknown>): ComposedResult | nu
         disabled,
         required,
         id,
-        name: fieldName,
+        name: _fieldName,
         className,
         ...rest
       } = props as {
@@ -423,7 +423,7 @@ export function compileComponents(sources: Record<string, string>): {
   let maxPasses = remaining.size + 1;
   while (remaining.size > 0 && maxPasses-- > 0) {
     let progress = false;
-    for (const name of [...remaining]) {
+    for (const name of remaining) {
       const source = sources[name]!;
       const result = compileComponent(name, source, compiledModules);
       if (result.ok) {

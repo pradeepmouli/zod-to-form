@@ -323,7 +323,8 @@ const charMap: Record<string, string> = {
 };
 
 function escapeUnsafeChars(str: string): string {
-  return str.replace(/[<>/\\\b\f\n\r\t\0\u2028\u2029]/g, (x) => charMap[x] ?? x);
+  // oxlint-disable-next-line no-control-regex -- intentionally matches null byte (U+0000) for JSON serialization safety
+  return str.replace(/[<>/\\\b\f\n\r\t\u0000\u2028\u2029]/g, (x) => charMap[x] ?? x);
 }
 
 function serializeDefaultValue(value: unknown): string {

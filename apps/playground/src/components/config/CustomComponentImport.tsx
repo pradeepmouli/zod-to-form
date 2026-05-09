@@ -603,7 +603,7 @@ function ComponentBrowser({
   onSearchChange,
   components,
   loading,
-  searchTerm,
+  searchTerm: _searchTerm,
   library,
   isFetching,
   fetchedNames,

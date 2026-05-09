@@ -1,4 +1,4 @@
-import type { $ZodDate, $ZodISODate, $ZodStringFormat, $ZodType as ZodType } from 'zod/v4/core';
+import type { $ZodDate, $ZodISODate } from 'zod/v4/core';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
 
 /**

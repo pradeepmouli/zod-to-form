@@ -2,15 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import type { FormField } from '@zod-to-form/core';
 import type {
   PlaygroundState,
-  ComponentMapType,
-  ActiveTab,
-  ActivePane,
-  ConfigTab,
-  CodeOutputMode,
-  PaneSizes,
-  EvaluationError,
-  SubmitResult,
-  PlaygroundConfig
+  EvaluationError
 } from '../types/playground.ts';
 import { DEFAULT_PANE_SIZES, clampPaneSizes } from '../types/playground.ts';
 import { loadPlaygroundState, savePlaygroundState } from '../lib/storage.ts';

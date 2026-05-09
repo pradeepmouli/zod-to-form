@@ -10,7 +10,7 @@ import { defaultComponentMap } from '../../src/index.js';
 import { useZodForm } from '../../src/useZodForm.js';
 import { smallSchema, mediumSchema, largeSchema } from './schemas.js';
 
-const noop = () => {};
+const _noop = () => {};
 
 /**
  * Test component: renders a form via useZodForm with a specific optimization level.
