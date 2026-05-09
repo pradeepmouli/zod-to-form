@@ -1,6 +1,6 @@
 {
   "name": "@zod-to-form/codegen",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Browser-safe code generation for Zod v4 form components",
   "license": "MIT",
   "homepage": "https://github.com/pradeepmouli/zod-to-form#readme",
