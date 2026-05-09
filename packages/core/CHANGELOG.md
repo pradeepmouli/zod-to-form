@@ -1,5 +1,11 @@
 # @zod-to-form/core
 
+## 0.9.1
+
+### Patch Changes
+
+- [`92a313f`](https://github.com/pradeepmouli/zod-to-form/commit/92a313f42bbc2884bb740a8da1a79520a53747d3) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Update production dependencies (zod, jiti, type-fest, react, react-hook-form)
+
 ## 0.9.0
 
 ### Minor Changes
