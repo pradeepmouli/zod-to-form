@@ -31,8 +31,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 10.32.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -46,7 +44,7 @@ jobs:
         id: audit
         run: |
           # Run audit and capture output
-          pnpm audit --audit-level moderate --json > audit-report.json || audit_exit_code=$?
+          pnpm audit -r --audit-level moderate --json > audit-report.json || audit_exit_code=$?
           audit_exit_code=${audit_exit_code:-0}
 
           # If pnpm audit failed for reasons other than "vulnerabilities found",
@@ -71,7 +69,7 @@ jobs:
         if: steps.audit.outputs.found_vulnerabilities == 'true'
         run: |
           echo "⚠️ Found ${{ steps.audit.outputs.vulnerability_count }} security vulnerabilities"
-          pnpm audit --audit-level moderate
+          pnpm audit -r --audit-level moderate
 
       - name: Comment on PR
         if: github.event_name == 'pull_request' && steps.audit.outputs.found_vulnerabilities == 'true'
@@ -124,8 +122,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 10.32.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
