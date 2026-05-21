@@ -49,9 +49,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-
-      - name: Install npm v11 (OIDC fix)
-        run: npm install -g npm@11
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -69,8 +67,6 @@ jobs:
           title: 'chore: version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
 
       - name: Enable auto-merge on version PR
