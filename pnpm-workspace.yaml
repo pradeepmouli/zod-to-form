@@ -1,3 +1,38 @@
 packages:
   - 'packages/*'
   - 'apps/*'
+
+allowBuilds:
+  core-js: false
+  esbuild: true
+  msw: false
+  sharp: true
+  simple-git-hooks: true
+  workerd: true
+
+# Security overrides — drop each once the upstream dep ships a version with the fix.
+# - webpack: docusaurus 3.10.1 pins 5.97.1; affected by GHSA-38r7-794h-5758 and
+#   GHSA-8fgc-7cc6-rx7x (SSRF). Patched in 5.104.1+.
+# - serialize-javascript: docusaurus → copy-webpack-plugin pulls 6.0.2; affected by
+#   GHSA-5c6j-r48x-rmvq (RCE) and GHSA-76p7-773f-r4q5 (DoS). Patched in 7.0.5+.
+overrides:
+  webpack: '>=5.104.1'
+  serialize-javascript: '>=7.0.5'
+  # wrangler→miniflare→ws 8.x affected by GHSA-58qx-3vcg-4xpx (memory disclosure). Patched in 8.20.1+.
+  # Scoped to 8.x so docusaurus's ws@7 is untouched.
+  'ws@8': '>=8.20.1'
+
+minimumReleaseAgeExclude:
+  - '@cloudflare/workers-types@4.20260520.1'
+  - '@vitest/browser-playwright@4.1.7'
+  - '@vitest/browser@4.1.7'
+  - '@vitest/coverage-v8@4.1.7'
+  - '@vitest/expect@4.1.7'
+  - '@vitest/mocker@4.1.7'
+  - '@vitest/pretty-format@4.1.7'
+  - '@vitest/runner@4.1.7'
+  - '@vitest/snapshot@4.1.7'
+  - '@vitest/spy@4.1.7'
+  - '@vitest/ui@4.1.7'
+  - '@vitest/utils@4.1.7'
+  - vitest@4.1.7
