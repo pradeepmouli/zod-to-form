@@ -15,12 +15,15 @@ allowBuilds:
 #   GHSA-8fgc-7cc6-rx7x (SSRF). Patched in 5.104.1+.
 # - serialize-javascript: docusaurus → copy-webpack-plugin pulls 6.0.2; affected by
 #   GHSA-5c6j-r48x-rmvq (RCE) and GHSA-76p7-773f-r4q5 (DoS). Patched in 7.0.5+.
+# - uuid: docusaurus → webpack-dev-server → sockjs pulls uuid@8.3.2; affected by
+#   GHSA-w5hq-g745-h8pq (buffer bounds check). Patched in 11.1.1+.
 overrides:
   webpack: '>=5.104.1'
   serialize-javascript: '>=7.0.5'
   # wrangler→miniflare→ws 8.x affected by GHSA-58qx-3vcg-4xpx (memory disclosure). Patched in 8.20.1+.
   # Scoped to 8.x so docusaurus's ws@7 is untouched.
   'ws@8': '>=8.20.1'
+  uuid: '>=11.1.1'
 
 minimumReleaseAgeExclude:
   - '@cloudflare/workers-types@4.20260520.1'
