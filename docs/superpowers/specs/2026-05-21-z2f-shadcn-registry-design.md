@@ -1,6 +1,6 @@
 # Design: zod-to-form shadcn Registry (`@zod-to-form`)
 
-**Date:** 2026-05-21
+**Date:** 2026-05-21 (revised 2026-05-23)
 **Status:** Approved (design); pending spec review → implementation plan
 **Namespace:** `@zod-to-form` (permanent — the install command users type)
 
@@ -8,157 +8,167 @@
 
 Make zod-to-form installable via the shadcn CLI (`npx shadcn add @zod-to-form/...`)
 and listable in the shadcn directory (https://ui.shadcn.com/docs/directory). The
-registry seeds a working starter (sample Zod schema + a `z2f.config.ts` generated
-by the same code path as `z2f init`) and points users to `z2f init` for real
-per-project wiring and to the playground for visual iteration.
+registry seeds a working starter (sample Zod schema + a `z2f.config.ts`) and points
+users to `z2f init` for real per-project wiring and to the playground for visual
+iteration.
 
 ## Non-goals
 
-- Generating a config wired to the user's *actual* components. The registry server
-  never sees the consumer's `components.json` aliases or component sources, so it
-  cannot do deep wiring. That is `z2f init`'s job (it runs locally with filesystem
-  access). The registry ships a sensible sample only.
-- Replacing or changing the existing consumer-side proxy (`/api/shadcn/*`), which
-  forwards to ui.shadcn.com and community registries for the playground. That stays
-  as-is. This registry is a separate concern (publishing z2f's own items).
-- Per-field component items. We ship a starter block, not nine individual field
-  wrappers.
+- Generating a config wired to the user's *actual* components. **Verified against the
+  shadcn docs:** when the CLI resolves a registry item, the server receives only the
+  item `{name}`, the `{style}` placeholder (if the URL template uses it), and any
+  static `params`/`headers` the user hand-wrote. It transmits **no** project files —
+  not `components.json`, not aliases, not schemas. So server-side per-user config
+  generation is impossible. Deep wiring is `z2f init`'s job (it runs locally with
+  filesystem access). The registry ships a sensible sample only.
+- Replacing the existing consumer-side proxy (`/api/shadcn/*`), which forwards to
+  ui.shadcn.com and community registries for the playground. That stays as-is.
+- Per-field component items. We ship starter blocks, not nine field wrappers.
 
 ## Key decisions (and why)
 
-1. **Dynamic registry served by a Worker, not static files.**
-   The consumption mode (`react` / `codegen` / `vite`) is exposed as a shadcn
-   `params` value, which arrives as a query string (`?mode=react`). Only a dynamic
-   server can branch its output on that param; a static CDN file ignores query
-   strings. See "Mode parameter" below.
+1. **Static registry files, no Worker.**
+   Because no per-user input ever reaches the server (see Non-goals), every item's
+   output is fully precomputable at build time. A dynamic server would emit identical
+   bytes on every request, so it buys nothing. We generate static files at build time
+   and serve them from the existing Cloudflare Pages deploy. This removes the Worker,
+   the `mode` query param, the Workers-runtime risk, new secrets, and the (currently
+   red) Worker deploy CI from scope.
 
-2. **Items inline file `content` (the universal shadcn contract).**
+2. **Three statically-named items, one per consumption mode.**
+   The three z2f consumption modes are genuinely different installables, so each is
+   its own named item under the `@zod-to-form` namespace:
+   - `@zod-to-form/starter-react` — runtime `<ZodForm>` renderer
+   - `@zod-to-form/starter-codegen` — build-time generated component (owned)
+   - `@zod-to-form/starter-vite` — Vite plugin integration
+
+   Mode is selected by the install command (`add @zod-to-form/starter-codegen`),
+   which is more discoverable than a hidden `components.json` param. All three ship at
+   launch.
+
+3. **Items inline file `content` (the universal shadcn contract).**
    Empirical review of real registries (@nuqs, @formcn, @nessra-ui, @shadcnhooks)
    confirms every item inlines full file source in `files[].content`; the CLI writes
    that to disk. We follow this — no `path`-only items.
 
-3. **Default mode is `react`: thin owned glue files + npm dependency.**
-   The dominant pattern for library-backed registries (nuqs adapters, @nessra-ui
-   `form`) is to ship thin *owned* files that `import` the npm package and list the
-   package in `dependencies` — they do NOT copy the library source into `files[]`.
-   `mode=react` follows this exactly. `mode=codegen` is the rarer "own the whole
-   generated `.tsx`, no runtime dep" model (@shadcnhooks-style) offered as opt-in.
+4. **`starter-react` = thin owned glue + npm dep (the dominant pattern).**
+   nuqs adapters and @nessra-ui's `form` ship thin *owned* files that `import` the npm
+   package and list it in `dependencies`; they don't copy library source into
+   `files[]`. `starter-react` follows this. `starter-codegen` is the rarer "own the
+   whole generated `.tsx`, no runtime dep" model (@shadcnhooks-style).
 
-4. **Config generation reuses `init`'s `buildConfigSource`.**
+5. **Config generation runs at BUILD time, reusing `init`/`buildConfigSource`.**
    The `z2f.config.ts` shipped in items is produced by the same `buildConfigSource`
-   (from `@zod-to-form/codegen`) that `z2f init` uses, so the registry can never
-   drift from z2f's real config format. This is the concrete meaning of "leverage
-   init."
+   (from `@zod-to-form/codegen`) that `z2f init` uses — run once during
+   `registry:build`, not per request. This is the concrete "leverage init," and it
+   keeps the registry from drifting from z2f's real config format. Because it runs in
+   Node at build time, there is no Workers-runtime concern.
+
+6. **Files target shadcn aliases for correct placement.**
+   Item `files[].target` uses shadcn alias placeholders (`@/components/...`, etc.),
+   which the CLI resolves to the user's configured dirs locally. The sample config
+   targets the conventional `@/components/zod-form-components` path — the same default
+   `init`'s `inferComponentModulePath` uses — so it works for convention-following
+   shadcn projects without knowing their real aliases.
 
 ## Architecture
 
 ```
-Consumer components.json                Worker (dynamic)                 z2f packages
-────────────────────────                ────────────────                 ────────────
-"registries": {                         GET /r/{name}.json?mode=react    @zod-to-form/codegen
-  "@zod-to-form": {                        ├─ mode=react   → block w/       buildConfigSource()
-    "url": ".../r/{name}.json",            │   thin <ZodForm> usage          (shared generator)
-    "params": { "mode": "react" }          │   + schema + config
-  }                                         ├─ mode=codegen → block w/
-}                                           │   generated .tsx (owned)
-                                            └─ mode=vite    → schema +
-npx shadcn add @zod-to-form/starter             config + plugin docs
-   → GET .../r/starter.json?mode=react
+Source (in repo)                Build (Node, build time)        Served (Pages CDN)
+─────────────────               ────────────────────────        ──────────────────
+apps/docs/registry/             pnpm registry:build         →   apps/docs/static/r/
+  sample/schema.ts                ├─ buildConfigSource()          registry.json
+  (templates per mode)            │   → z2f.config.ts             starter-react.json
+                                  ├─ codegen → generated.tsx      starter-codegen.json
+                                  └─ shadcn build                 starter-vite.json
+                                      → schema-valid item JSON   (committed; served at
+                                                                  zod.toform.dev/r/*)
+
+Consumer:  npx shadcn add @zod-to-form/starter-codegen
+           → GET https://zod.toform.dev/r/starter-codegen.json  (static)
 ```
 
-- **Route:** the Worker serves `zod.toform.dev/r/*`. Cloudflare Worker routes take
-  precedence over Pages for matching path patterns, so `/r/*` is handled by the
-  Worker while the rest of `zod.toform.dev` stays on Pages (docs + `/play/`).
-- **Worker placement:** add a `/r/*` route + a dedicated handler module to the
-  existing `apps/shadcn-proxy/` Worker (it already owns a route on this zone). The
-  publish concern (`registry/*.ts`) is kept in separate modules from the proxy
-  concern (`registries.ts` / `search.ts` / `resolve.ts`) so the two don't tangle.
-- **No new secrets beyond what the Worker already needs.** Deploy uses the same
-  `wrangler deploy` path the team runs manually today. (CI auto-deploy of the
-  Worker remains a separate, pre-existing gap — missing `CLOUDFLARE_*` secrets —
-  out of scope here.)
+- **Hosting:** Docusaurus serves `static/` at the site root, so files in
+  `apps/docs/static/r/` are served at `zod.toform.dev/r/*`. No changes to
+  `build-combined.mts` needed (it already publishes the docs build, including
+  `static/`).
+- **No new infra, no secrets, no Worker.** Ships with the existing docs/Pages deploy.
 
 ## Registry items
 
 ### `registry.json` (index)
 Served at `/r/registry.json`. Conforms to `https://ui.shadcn.com/schema/registry.json`.
 Fields: `$schema`, `name` (`@zod-to-form`), `homepage` (`https://zod.toform.dev`),
-`items: [ starter ]`.
+`items: [ starter-react, starter-codegen, starter-vite ]`.
 
-### `starter` item (`registry:block`)
-Served at `/r/starter.json?mode=…`. Searchable `description` containing the tokens
-users type: "zod", "react hook form", "form", "schema", "validation", "codegen".
-
-Common to all modes:
+### Common to all three items (`type: registry:block`)
+- `description`: contains tokens users search for — "zod", "react hook form", "form",
+  "schema", "validation", "codegen".
 - `registryDependencies`: shadcn primitives the sample maps to — `input`, `select`,
   `checkbox`, `label`, `button` (exact set finalized against the sample schema).
+- `files[].target`: shadcn alias placeholders for correct local placement.
 - `docs`: instructs the user to (1) run `npx @zod-to-form/cli init` to regenerate
   `z2f.config.ts` wired to their components, and (2) visit `zod.toform.dev/play/` to
   design/iterate the schema.
 
-Per-mode output:
+### Per-item output
 
-| mode | files[] (inlined content) | dependencies |
+| item | files[] (inlined content) | dependencies |
 |---|---|---|
-| `react` (default) | `schema.ts` (sample), `z2f.config.ts` (via buildConfigSource), thin `zod-form.tsx` mounting `<ZodForm>` | `@zod-to-form/react`, `zod`, `react-hook-form`, `@hookform/resolvers` |
-| `codegen` | `schema.ts`, `z2f.config.ts`, generated `generated-form.tsx` (owned) | `zod`, `react-hook-form`, `@hookform/resolvers` (no `@zod-to-form/react` runtime dep) |
-| `vite` | `schema.ts`, `z2f.config.ts`; `docs` covers adding the `@zod-to-form/vite` plugin + `?z2f` import | `@zod-to-form/vite` (dev), `zod`, `react-hook-form`, `@hookform/resolvers` |
-
-- **Default when `mode` absent** (e.g. directory-driven installs with no params):
-  serve `mode=react`.
-- **Invalid `mode`:** fall back to `react` (don't error — keep installs working).
-
-## Mode parameter
-
-- Consumers opt into a non-default mode via `params` in their `components.json`
-  registry config: `"params": { "mode": "codegen" }` → query `?mode=codegen`.
-- The shadcn **directory entry** carries a single static `url`
-  (`https://zod.toform.dev/r/{name}.json`) with no params — discovery installs hit
-  the `react` default. Params are an opt-in power feature, documented in z2f's docs.
+| `starter-react` | `schema.ts`, `z2f.config.ts` (buildConfigSource), thin `zod-form.tsx` mounting `<ZodForm>` | `@zod-to-form/react`, `zod`, `react-hook-form`, `@hookform/resolvers` |
+| `starter-codegen` | `schema.ts`, `z2f.config.ts`, generated `generated-form.tsx` (owned) | `zod`, `react-hook-form`, `@hookform/resolvers` (no `@zod-to-form/react` runtime dep) |
+| `starter-vite` | `schema.ts`, `z2f.config.ts`, a `?z2f` usage example | `@zod-to-form/vite` (dev), `zod`, `react-hook-form`, `@hookform/resolvers` |
 
 ## Source layout & build
 
-- Sample source (`schema.ts` and any fixed template fragments) lives in the repo
-  (e.g. `apps/shadcn-proxy/registry/` or a shared fixtures dir) so the served output
-  is reviewable and testable.
-- The Worker composes each item JSON at request time: reads the sample schema,
-  calls `buildConfigSource` for the `z2f.config.ts`, assembles the per-mode
-  `files[]` + deps, returns shadcn-schema-conformant JSON.
-- `buildConfigSource` is imported from `@zod-to-form/codegen`; verify it runs in the
-  Workers runtime (no Node-only APIs). If it has Node deps, precompute the config
-  variants at build time and bundle them.
+- Sample sources live in `apps/docs/registry/` (sample `schema.ts`, per-mode template
+  fragments). Reviewable and testable in the repo.
+- A `registry:build` script (Node) generates the three item JSONs + `registry.json`
+  into `apps/docs/static/r/`:
+  - runs `buildConfigSource` for the shared `z2f.config.ts`,
+  - runs codegen for `starter-codegen`'s `generated-form.tsx`,
+  - assembles per-item `files[]`/deps and emits schema-valid JSON (prefer the official
+    `shadcn build` so the output format tracks the current schema).
+- Generated output is committed so the served bytes are reviewable in PRs.
+- Wired into the docs build (or a pre-build step) so a stale registry can't ship.
 
 ## Directory submission (follow-on, after registry is live)
 
-1. Confirm `/r/registry.json` and `/r/starter.json` return schema-valid JSON, and a
-   real `npx shadcn add https://zod.toform.dev/r/starter.json` works against a fresh
-   Next.js + shadcn project (smoke test).
+1. Confirm `/r/registry.json` + each `starter-*.json` return schema-valid JSON, and a
+   real `npx shadcn add https://zod.toform.dev/r/starter-react.json` (and the others)
+   works against a fresh Next.js + shadcn project (smoke test).
 2. Add a 6-field entry to `shadcn-ui/ui` → `apps/v4/registry/directory.json`
    (`name`, `homepage`, `url`, `description`, `author`, `logo`), run
    `pnpm registry:build`, open PR `feat(registry): add @zod-to-form`.
-3. Provide an SVG `logo` using `var(--foreground)`/`var(--background)` (directory
-   convention).
+3. Provide an SVG `logo` using `var(--foreground)`/`var(--background)` (convention).
+
+### Competitive context (directory, as of 2026-05-23)
+Form-related registries already listed: **@formcn** (click-to-build forms),
+**@nessra-ui** (TanStack Form integration), **@wandry-ui** (Inertia form elements),
+**@tailwind-builder** (AI-generated forms/tables/charts), **@flowkit-ui** (combobox).
+None are Zod-schema-driven codegen. z2f's differentiator — "your Zod schema is the
+source of truth; generate or render the form" — should lead the `description`.
 
 ## Testing
 
-- **Worker unit tests** (vitest, existing harness in `apps/shadcn-proxy/tests/`):
-  each mode returns schema-valid JSON; absent/invalid `mode` falls back to `react`;
-  `dependencies`/`registryDependencies` correct per mode; `docs` present.
-- **Schema conformance:** validate output against `registry.json` /
+- **Build-script tests** (vitest): `registry:build` emits schema-valid `registry.json`
+  + each `starter-*.json`; correct `dependencies`/`registryDependencies`/`docs` per
+  item; config content matches `buildConfigSource` output.
+- **Schema conformance:** validate output against the `registry.json` /
   `registry-item.json` JSON Schemas.
 - **End-to-end smoke:** `npx shadcn add` against a throwaway Next.js + shadcn app for
-  each mode; confirm files land and the sample form renders.
+  each of the three items; confirm files land at the aliased paths and the sample form
+  renders.
 
 ## Scope for launch
 
-- `react` (default) + `codegen` modes, plus the directory submission follow-on.
-- `vite` mode: the branching is built to accommodate it; ship as a fast follow-up
-  unless explicitly pulled into launch.
+- All three items (`starter-react`, `starter-codegen`, `starter-vite`) + the directory
+  submission follow-on.
 
 ## Open questions / risks
 
-- `buildConfigSource` Workers-runtime compatibility (see Source layout). Mitigation:
-  precompute + bundle config variants if it can't run in the Worker.
-- `/r/*` Worker-route vs Pages precedence — confirm in a deploy preview before
-  submitting to the directory.
 - Final `registryDependencies` set depends on the chosen sample schema's field types.
+- Confirm `shadcn build` (or our generator) produces directory-acceptable JSON; settle
+  via the smoke test before submitting.
+- Decide whether generated `/r/*` files are committed (reviewable) or generated in the
+  Pages build only. Leaning committed.
