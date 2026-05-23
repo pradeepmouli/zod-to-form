@@ -3,6 +3,8 @@ node_modules
 
 # Production
 build
+# registry/build is source code (build-time scripts), not the Docusaurus output
+!registry/build
 
 # Generated files
 .docusaurus
