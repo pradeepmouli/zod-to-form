@@ -28,6 +28,7 @@ function run(label: string, command: string, cwd: string): void {
   execSync(command, { cwd, env, stdio: 'inherit' });
 }
 
+run('Building registry (shadcn)', 'pnpm registry:build', repoRoot);
 run('Building Docusaurus docs', 'pnpm --filter @zod-to-form/docs build', repoRoot);
 run('Building playground (Vite)', 'pnpm --filter @zod-to-form/playground build', repoRoot);
 
