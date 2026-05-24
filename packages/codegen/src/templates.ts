@@ -1,4 +1,5 @@
 import type { FormField } from '@zod-to-form/core';
+import { getFieldRegisterHints } from '@zod-to-form/core';
 
 // ─── Inlined type utility (zero-dep codegen) ─────────────────────────
 //
@@ -163,32 +164,100 @@ export function registerPathExpr(path: string): string {
   return path.includes('${') ? `register(\`${path}\`)` : `register('${path}')`;
 }
 
+/**
+ * Build a register-options object literal string from a field's coercion hints.
+ *
+ * Returns the options parts that should appear inside `register(key, { ... })`.
+ * Only emits coercion options (valueAsNumber, valueAsDate, setValueAs).
+ * Validation rules (nativeRules, validate) are handled separately by
+ * `renderOptimizedRegister` in the optimized path and are NOT included here,
+ * so the non-optimized path stays compatible with the existing zodResolver flow.
+ *
+ * Returns an empty array when no coercion options apply (bare register).
+ *
+ * @internal
+ */
+function buildCoercionOptionParts(field: FormField): string[] {
+  const hints = getFieldRegisterHints(field);
+  const parts: string[] = [];
+
+  if (hints.valueAsNumber) {
+    parts.push('valueAsNumber: true');
+  }
+  if (hints.valueAsDate) {
+    parts.push('valueAsDate: true');
+  }
+  if (hints.setValueAs === 'file') {
+    // Mirror the exact lambda that @zod-to-form/react uses at runtime so that
+    // generated forms and the runtime renderer behave identically.
+    parts.push(
+      'setValueAs: (value: unknown) => { if (value instanceof FileList) { return value.length > 0 ? value.item(0) : undefined; } return value; }'
+    );
+  }
+
+  return parts;
+}
+
+/**
+ * Build a complete `register(path, { coercion })` expression string for a field.
+ *
+ * When the field has no coercion hints the result is identical to `registerPathExpr(path)`.
+ * Extra option parts (validation rules) may be merged in by passing `extraParts`.
+ *
+ * Exported so `generate.ts` can use it for custom mapped components.
+ *
+ * @internal
+ */
+export function buildRegisterExpr(field: FormField, extraParts: string[] = []): string {
+  const coercionParts = buildCoercionOptionParts(field);
+  const allParts = [...coercionParts, ...extraParts];
+
+  const path = field.key;
+  const pathToken = path.includes('${') ? `\`${path}\`` : `'${path}'`;
+
+  if (allParts.length === 0) {
+    return `register(${pathToken})`;
+  }
+  return `register(${pathToken}, { ${allParts.join(', ')} })`;
+}
+
 function disabledAttr(field: FormField): string {
   return field.disabled ? ' disabled' : '';
 }
 
 function renderInput(field: FormField, regExpr?: string): string {
   const inputType = typeof field.props['type'] === 'string' ? field.props['type'] : 'text';
-  const reg = regExpr ?? registerPathExpr(field.key);
+  const reg = regExpr ?? buildRegisterExpr(field);
   return `<input id="${field.key}" type="${inputType}"${disabledAttr(field)} {...${reg}} />`;
 }
 
 function renderCheckbox(field: FormField, regExpr?: string): string {
+  // Checkbox/Switch fields are boolean — no numeric/date coercion applies.
   const reg = regExpr ?? registerPathExpr(field.key);
   return `<input id="${field.key}" type="checkbox"${disabledAttr(field)} {...${reg}} />`;
 }
 
 function renderDatePicker(field: FormField, regExpr?: string): string {
-  const reg =
-    regExpr ??
-    (field.key.includes('${')
-      ? `register(\`${field.key}\`, { valueAsDate: true })`
-      : `register('${field.key}', { valueAsDate: true })`);
+  // DatePicker always renders <input type="date"> so valueAsDate: true is always
+  // required — hardcode it as the baseline and merge any additional coercion hints.
+  // When a pre-built regExpr is passed (e.g. from renderOptimizedRegister) use it as-is.
+  if (regExpr) {
+    return `<input id="${field.key}" type="date"${disabledAttr(field)} {...${regExpr}} />`;
+  }
+  // Derive coercion parts from hints; ensure valueAsDate is always present.
+  const coercionParts = buildCoercionOptionParts(field);
+  if (!coercionParts.includes('valueAsDate: true')) {
+    coercionParts.unshift('valueAsDate: true');
+  }
+  const path = field.key;
+  const pathToken = path.includes('${') ? `\`${path}\`` : `'${path}'`;
+  const reg = `register(${pathToken}, { ${coercionParts.join(', ')} })`;
   return `<input id="${field.key}" type="date"${disabledAttr(field)} {...${reg}} />`;
 }
 
 function renderFileInput(field: FormField, regExpr?: string): string {
-  const reg = regExpr ?? registerPathExpr(field.key);
+  // File fields carry setValueAs coercion (derived from zodType === 'file').
+  const reg = regExpr ?? buildRegisterExpr(field);
   return `<input id="${field.key}" type="file"${disabledAttr(field)} {...${reg}} />`;
 }
 
@@ -196,71 +265,82 @@ function renderSelect(field: FormField, regExpr?: string): string {
   const options = (field.options ?? [])
     .map((option) => `<option value="${String(option.value)}">${option.label}</option>`)
     .join('');
-  const reg = regExpr ?? registerPathExpr(field.key);
+  // Select values are strings/enums — no coercion normally applies.
+  // buildRegisterExpr handles the no-op case gracefully (returns bare register).
+  const reg = regExpr ?? buildRegisterExpr(field);
   return `<select id="${field.key}"${disabledAttr(field)} {...${reg}}>${options}</select>`;
 }
 
 export function renderOptimizedRegister(field: FormField, fieldKey: string): string {
   const mode = field.validation?.mode;
+  // Coercion options (valueAsNumber, valueAsDate, setValueAs) always come first
+  // so that RHF parses the value before running validation rules.
+  const coercionParts = buildCoercionOptionParts(field);
+  const pathToken = fieldKey.includes('${') ? `\`${fieldKey}\`` : `'${fieldKey}'`;
 
   if (mode === 'native') {
     const rules = field.validation?.rules;
-    if (!rules || Object.keys(rules).length === 0) {
-      return registerPathExpr(fieldKey);
+    const validationParts: string[] = [];
+    if (rules && Object.keys(rules).length > 0) {
+      if (rules.required !== undefined) {
+        validationParts.push(`required: ${JSON.stringify(rules.required)}`);
+      }
+      if (rules.minLength !== undefined) {
+        validationParts.push(
+          `minLength: { value: ${rules.minLength.value}, message: ${JSON.stringify(rules.minLength.message)} }`
+        );
+      }
+      if (rules.maxLength !== undefined) {
+        validationParts.push(
+          `maxLength: { value: ${rules.maxLength.value}, message: ${JSON.stringify(rules.maxLength.message)} }`
+        );
+      }
+      if (rules.min !== undefined) {
+        validationParts.push(
+          `min: { value: ${rules.min.value}, message: ${JSON.stringify(rules.min.message)} }`
+        );
+      }
+      if (rules.max !== undefined) {
+        validationParts.push(
+          `max: { value: ${rules.max.value}, message: ${JSON.stringify(rules.max.message)} }`
+        );
+      }
+      if (rules.pattern !== undefined) {
+        validationParts.push(
+          `pattern: { value: ${rules.pattern.value}, message: ${JSON.stringify(rules.pattern.message)} }`
+        );
+      }
     }
-    const parts: string[] = [];
-    if (rules.required !== undefined) {
-      parts.push(`required: ${JSON.stringify(rules.required)}`);
+    const allParts = [...coercionParts, ...validationParts];
+    if (allParts.length === 0) {
+      return `register(${pathToken})`;
     }
-    if (rules.minLength !== undefined) {
-      parts.push(
-        `minLength: { value: ${rules.minLength.value}, message: ${JSON.stringify(rules.minLength.message)} }`
-      );
-    }
-    if (rules.maxLength !== undefined) {
-      parts.push(
-        `maxLength: { value: ${rules.maxLength.value}, message: ${JSON.stringify(rules.maxLength.message)} }`
-      );
-    }
-    if (rules.min !== undefined) {
-      parts.push(
-        `min: { value: ${rules.min.value}, message: ${JSON.stringify(rules.min.message)} }`
-      );
-    }
-    if (rules.max !== undefined) {
-      parts.push(
-        `max: { value: ${rules.max.value}, message: ${JSON.stringify(rules.max.message)} }`
-      );
-    }
-    if (rules.pattern !== undefined) {
-      parts.push(
-        `pattern: { value: ${rules.pattern.value}, message: ${JSON.stringify(rules.pattern.message)} }`
-      );
-    }
-    const rulesStr = parts.join(', ');
-    if (fieldKey.includes('${')) {
-      return `register(\`${fieldKey}\`, { ${rulesStr} })`;
-    }
-    return `register('${fieldKey}', { ${rulesStr} })`;
+    return `register(${pathToken}, { ${allParts.join(', ')} })`;
   }
 
   if (mode === 'zodSchema') {
     const safeKey = fieldKey.replace(/[^a-zA-Z0-9_]/g, '_');
-    if (fieldKey.includes('${')) {
-      return `register(\`${fieldKey}\`, { validate: _validate_${safeKey} })`;
-    }
-    return `register('${fieldKey}', { validate: _validate_${safeKey} })`;
+    const validatePart = `validate: _validate_${safeKey}`;
+    const allParts = [...coercionParts, validatePart];
+    return `register(${pathToken}, { ${allParts.join(', ')} })`;
   }
 
   if (mode === 'component-enforced') {
-    return registerPathExpr(fieldKey);
+    // component-enforced: no validation emitted, but coercion still applies
+    if (coercionParts.length === 0) {
+      return `register(${pathToken})`;
+    }
+    return `register(${pathToken}, { ${coercionParts.join(', ')} })`;
   }
 
   // TODO(L3): Handle watch mode when cross-field optimization is implemented
   // if (mode === 'watch') { ... }
 
-  // undefined validation — backward compatible
-  return registerPathExpr(fieldKey);
+  // undefined validation — emit coercion if present, otherwise bare register
+  if (coercionParts.length === 0) {
+    return `register(${pathToken})`;
+  }
+  return `register(${pathToken}, { ${coercionParts.join(', ')} })`;
 }
 
 /**
@@ -289,7 +369,7 @@ export function renderField(field: FormField, regExpr?: string): string {
     case 'RadioGroup':
       return renderSelect(field, regExpr);
     case 'Textarea': {
-      const reg = regExpr ?? registerPathExpr(field.key);
+      const reg = regExpr ?? buildRegisterExpr(field);
       return `<textarea id="${field.key}"${disabledAttr(field)} {...${reg}} />`;
     }
     default:

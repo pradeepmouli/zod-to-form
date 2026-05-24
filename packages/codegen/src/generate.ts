@@ -5,7 +5,8 @@ import {
   getFileHeader,
   renderField,
   registerPathExpr,
-  renderOptimizedRegister
+  renderOptimizedRegister,
+  buildRegisterExpr
 } from './templates.js';
 import { PRESET_TEMPLATE_IMPORTS } from './field-templates.js';
 
@@ -404,7 +405,7 @@ function renderArrayBlock(
       renderFieldPropsSpread(indexedItemField.key)
     );
   } else if (mappedItem.source === 'fields' && mappedItem.componentName) {
-    itemJsx = `<${mappedItem.componentName} {...${registerPathExpr(indexedItemField.key)}}${renderOverrideProps(mappedItem.override?.props)}${renderFieldPropsSpread(indexedItemField.key)} />`;
+    itemJsx = `<${mappedItem.componentName} {...${buildRegisterExpr(indexedItemField)}}${renderOverrideProps(mappedItem.override?.props)}${renderFieldPropsSpread(indexedItemField.key)} />`;
   } else {
     itemJsx = renderFieldBlockWithConfig(
       indexedItemField,
@@ -541,7 +542,7 @@ function renderMappedComponent(
       fieldPropsSpread
     );
   }
-  return `<${componentName} id=${idExpr} {...${registerPathExpr(field.key)}}${overrideProps}${fieldPropsSpread} />`;
+  return `<${componentName} id=${idExpr} {...${buildRegisterExpr(field)}}${overrideProps}${fieldPropsSpread} />`;
 }
 
 function renderFieldBlockWithConfig(
