@@ -4,8 +4,17 @@
   "type": "registry:block",
   "title": "zod-to-form starter (codegen)",
   "description": "Build-time generated React Hook Form component from a Zod schema — you own the .tsx, no runtime zod-to-form dependency. Zod + react-hook-form + shadcn/ui validation and codegen.",
-  "dependencies": ["zod", "react-hook-form", "@hookform/resolvers"],
-  "registryDependencies": ["input", "label", "checkbox", "button"],
+  "dependencies": [
+    "zod",
+    "react-hook-form",
+    "@hookform/resolvers"
+  ],
+  "registryDependencies": [
+    "input",
+    "label",
+    "checkbox",
+    "button"
+  ],
   "files": [
     {
       "path": "schema.ts",
