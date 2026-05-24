@@ -138,6 +138,9 @@ importers:
       '@zod-to-form/core':
         specifier: workspace:*
         version: link:../../packages/core
+      ajv:
+        specifier: ^8.20.0
+        version: 8.20.0
       docusaurus-plugin-typedoc:
         specifier: ^1.4.2
         version: 1.4.2(typedoc-plugin-markdown@4.11.0(typedoc@0.28.19(typescript@6.0.3)))

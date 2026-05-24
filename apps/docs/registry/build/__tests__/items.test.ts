@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
+import Ajv from 'ajv';
 import { walkSchema } from '@zod-to-form/core';
 import { schema } from '../../sample/schema.js';
 import { buildReactItem, buildCodegenItem, buildViteItem, buildRegistryIndex } from '../items.js';
 import { REGISTRY_DEPENDENCIES, STARTER_DOCS } from '../docs.js';
+import itemSchema from '../../schema/registry-item.schema.json';
 
 describe('sample schema', () => {
   it('walks to four named fields', () => {
@@ -88,4 +90,22 @@ describe('buildRegistryIndex', () => {
       'starter-vite'
     ]);
   });
+});
+
+describe('schema conformance', () => {
+  const ajv = new Ajv({ allErrors: true, strict: false });
+  // Ajv 8 ships with draft-07 support but registers it under "http://" while
+  // the vendored schema declares "$schema" with "https://". Strip the $schema
+  // key before compiling so Ajv uses its built-in draft-07 support without a
+  // meta-schema URL mismatch.
+  const { $schema: _ignored, ...schemaWithoutRef } = itemSchema;
+  const validate = ajv.compile(schemaWithoutRef);
+
+  for (const build of [buildReactItem, buildCodegenItem, buildViteItem]) {
+    it(`${build.name} output conforms to registry-item schema`, () => {
+      const ok = validate(build());
+      if (!ok) console.error(validate.errors);
+      expect(ok).toBe(true);
+    });
+  }
 });
