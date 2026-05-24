@@ -254,11 +254,21 @@ export function buildViteItem(): RegistryItem {
   };
 }
 
+/**
+ * Strip `files[].content` from a registry item so it is safe to embed in the
+ * registry INDEX (`registry.json`). The shadcn convention is that the index
+ * lists items with file REFERENCES (path/type/target) only; inlined file bodies
+ * belong exclusively in the per-item `r/<name>.json` files.
+ */
+function toIndexItem(item: RegistryItem): RegistryItem {
+  return { ...item, files: item.files.map(({ content: _content, ...ref }) => ref) };
+}
+
 export function buildRegistryIndex(): RegistryIndex {
   return {
     $schema: 'https://ui.shadcn.com/schema/registry.json',
     name: '@zod-to-form',
     homepage: 'https://zod.toform.dev',
-    items: [buildReactItem(), buildCodegenItem(), buildViteItem()]
+    items: [buildReactItem(), buildCodegenItem(), buildViteItem()].map(toIndexItem)
   };
 }

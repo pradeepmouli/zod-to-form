@@ -43,7 +43,7 @@ describe('buildReactItem', () => {
       ])
     );
     for (const f of item.files) {
-      expect(f.content.length).toBeGreaterThan(0);
+      expect(f.content!.length).toBeGreaterThan(0);
       // targets use shadcn registry placeholders (@components/, @ui/, @lib/, @hooks/)
       // not the project import prefix @/
       expect(f.target).toMatch(/^@(components|ui|lib|hooks)\//);
@@ -99,7 +99,7 @@ describe('buildCodegenItem', () => {
 
   it('imports every Form* primitive it references (no undefined identifiers)', () => {
     const gen = item.files.find((f) => f.path === 'generated-form.tsx')!;
-    const content = gen.content;
+    const content = gen.content!;
 
     // At minimum, the shadcn field template references <FormItem>.
     expect(content).toMatch(/import \{[^}]*FormItem[^}]*\} from/);
@@ -165,6 +165,7 @@ describe('buildViteItem', () => {
 
 describe('buildRegistryIndex', () => {
   const index = buildRegistryIndex();
+
   it('lists all three starter items under the @zod-to-form namespace', () => {
     expect(index.name).toBe('@zod-to-form');
     expect(index.items.map((i) => i.name)).toEqual([
@@ -172,6 +173,26 @@ describe('buildRegistryIndex', () => {
       'starter-codegen',
       'starter-vite'
     ]);
+  });
+
+  it('index items have NO files[].content (reference-only, not inlined)', () => {
+    for (const item of index.items) {
+      const { name } = item;
+      for (const file of item.files) {
+        expect(
+          file.content,
+          `${name}/${file.path} must not have content in the index`
+        ).toBeUndefined();
+      }
+    }
+  });
+
+  it('per-item builders still return files WITH content (content split is index-only)', () => {
+    const reactFiles = buildReactItem().files;
+    for (const f of reactFiles) {
+      expect(f.content, `buildReactItem file ${f.path} must have content`).toBeDefined();
+      expect(f.content!.length).toBeGreaterThan(0);
+    }
   });
 });
 
@@ -191,4 +212,13 @@ describe('schema conformance', () => {
       expect(ok).toBe(true);
     });
   }
+
+  it('index items (content-stripped) also conform to registry-item schema', () => {
+    for (const item of buildRegistryIndex().items) {
+      const { name } = item;
+      const ok = validate(item);
+      if (!ok) console.error(name, validate.errors);
+      expect(ok, `${name} index item failed schema validation`).toBe(true);
+    }
+  });
 });
