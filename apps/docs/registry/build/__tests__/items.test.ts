@@ -70,6 +70,53 @@ describe('buildCodegenItem', () => {
     expect(gen!.content).toContain('useForm');
     expect(gen!.content).toContain('zodResolver');
   });
+
+  it('imports the schema via the @/ alias, not a relative path', () => {
+    const gen = item.files.find((f) => f.path === 'generated-form.tsx')!;
+    expect(gen.content).toContain("from '@/lib/zod-form/schema'");
+    expect(gen.content).not.toMatch(/from '\.\/schema'/);
+  });
+
+  it('imports every Form* primitive it references (no undefined identifiers)', () => {
+    const gen = item.files.find((f) => f.path === 'generated-form.tsx')!;
+    const content = gen.content;
+
+    // At minimum, the shadcn field template references <FormItem>.
+    expect(content).toMatch(/import \{[^}]*FormItem[^}]*\} from/);
+
+    // Collect every identifier that is in scope: imported, or declared as a
+    // local `type`/`function`/`const`. Local type aliases like FormData /
+    // FormOutput appear as generic args (Partial<FormData>) — they are in
+    // scope and must not be flagged as missing imports.
+    const inScope = new Set<string>();
+    for (const m of content.matchAll(/import\s+(?:type\s+)?\{([^}]*)\}\s+from/g)) {
+      const names = m[1] ?? '';
+      for (const raw of names.split(',')) {
+        const name = (raw.trim().split(/\s+as\s+/)[0] ?? '').trim();
+        if (name) inScope.add(name);
+      }
+    }
+    for (const m of content.matchAll(/\b(?:type|function|const)\s+([A-Za-z_$][\w$]*)/g)) {
+      if (m[1]) inScope.add(m[1]);
+    }
+
+    // Every Form* identifier used as a JSX element (opening/closing tag) must be
+    // in scope, so the generated component compiles in a consumer's project.
+    // Match `<Form...` / `</Form...` only when followed by whitespace, `/`, or
+    // `>` — this excludes generic type args like `Partial<FormData>`.
+    const usedFormTags = new Set<string>();
+    for (const m of content.matchAll(/<\/?(Form[A-Za-z]*)(?=[\s/>])/g)) {
+      if (m[1]) usedFormTags.add(m[1]);
+    }
+    expect(usedFormTags.size).toBeGreaterThan(0);
+    for (const token of usedFormTags) {
+      expect(inScope.has(token), `${token} is used as a JSX tag but not imported`).toBe(true);
+    }
+  });
+
+  it('declares the shadcn `form` registry dependency', () => {
+    expect(item.registryDependencies).toContain('form');
+  });
 });
 
 describe('buildViteItem', () => {
