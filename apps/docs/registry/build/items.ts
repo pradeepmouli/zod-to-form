@@ -11,10 +11,20 @@ const SAMPLE_SCHEMA_SRC = readFileSync(
   'utf8'
 );
 
-function sampleConfigSource(): string {
+/**
+ * Generate the sample z2f.config.ts source.
+ *
+ * @param componentSource - The import path written into `componentSource` and
+ *   `componentTypeImport`. Differs per item:
+ *   - React item: `'@/components/zod-form-components'` — the runtime component
+ *     map module shipped alongside the item.
+ *   - Codegen/vite items: `'@/components/ui/form'` — the shadcn `form` registry
+ *     item that `generated-form.tsx` (and `?z2f`-generated forms) actually import.
+ */
+function sampleConfigSource(componentSource: string): string {
   return buildConfigSource({
-    componentSource: '@/components/zod-form-components',
-    componentTypeImport: '@/components/zod-form-components',
+    componentSource,
+    componentTypeImport: componentSource,
     schemaTypeImport: './schema',
     schemaExports: ['schema'],
     preset: 'shadcn',
@@ -146,7 +156,7 @@ export function buildReactItem(): RegistryItem {
       {
         path: 'z2f.config.ts',
         type: 'registry:lib',
-        content: sampleConfigSource(),
+        content: sampleConfigSource('@/components/zod-form-components'),
         target: '@lib/zod-form/z2f.config.ts'
       },
       {
@@ -186,14 +196,8 @@ export function buildCodegenItem(): RegistryItem {
       {
         path: 'z2f.config.ts',
         type: 'registry:lib',
-        content: sampleConfigSource(),
+        content: sampleConfigSource('@/components/ui/form'),
         target: '@lib/zod-form/z2f.config.ts'
-      },
-      {
-        path: 'zod-form-components.tsx',
-        type: 'registry:component',
-        content: ZOD_FORM_COMPONENTS_SRC,
-        target: '@components/zod-form-components.tsx'
       },
       {
         path: 'generated-form.tsx',
@@ -236,14 +240,8 @@ export function buildViteItem(): RegistryItem {
       {
         path: 'z2f.config.ts',
         type: 'registry:lib',
-        content: sampleConfigSource(),
+        content: sampleConfigSource('@/components/ui/form'),
         target: '@lib/zod-form/z2f.config.ts'
-      },
-      {
-        path: 'zod-form-components.tsx',
-        type: 'registry:component',
-        content: ZOD_FORM_COMPONENTS_SRC,
-        target: '@components/zod-form-components.tsx'
       },
       {
         path: 'vite-usage.tsx',
