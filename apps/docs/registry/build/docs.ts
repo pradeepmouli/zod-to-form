@@ -6,9 +6,11 @@ export const REGISTRY_DEPENDENCIES = ['input', 'label', 'checkbox', 'button'];
  * The `form` registry item installs them to `@/components/ui/form`.
  *
  * Only the codegen and vite items need `form` — the react item renders at
- * runtime via `shadcnComponentMap`, whose self-contained Tailwind stubs do not
- * import shadcn's Form* primitives. So `form` is a per-item dependency rather
- * than part of the shared `REGISTRY_DEPENDENCIES`.
+ * runtime via the shipped `zod-form-components` map, which imports the
+ * consumer's installed shadcn Input/Checkbox/Label primitives and provides
+ * lightweight Field wrapper components. It does not use shadcn's Form*
+ * primitives, so `form` is a per-item dependency rather than part of the
+ * shared `REGISTRY_DEPENDENCIES`.
  */
 export const CODEGEN_REGISTRY_DEPENDENCIES = [...REGISTRY_DEPENDENCIES, 'form'];
 

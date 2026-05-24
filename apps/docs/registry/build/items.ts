@@ -28,13 +28,72 @@ function sampleConfigSource(): string {
   });
 }
 
+/**
+ * Ships a `zod-form-components.tsx` module that maps field component names to the
+ * consumer's installed shadcn/ui components. The map shape mirrors `defaultComponentMap`
+ * from `@zod-to-form/react` — each key is a field component name (e.g. `Input`,
+ * `Checkbox`, `Field`, `FieldLabel`, `FieldDescription`, `FieldMessage`) and each
+ * value is the React component to render for that field type.
+ *
+ * Covers the components needed by the sample schema's four fields:
+ *   name/email/age → Input (string/number)
+ *   subscribe      → Checkbox (boolean)
+ * Plus the wrapper components (`Field`, `FieldLabel`, `FieldDescription`, `FieldMessage`)
+ * used by every field regardless of type.
+ */
+const ZOD_FORM_COMPONENTS_SRC = `import { defaultComponentMap } from '@zod-to-form/react';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import type { ComponentPropsWithoutRef } from 'react';
+
+// ── Thin wrappers so the map matches ZodForm's expected component signatures ──
+
+function Field({ children, ...props }: ComponentPropsWithoutRef<'div'>) {
+  return <div className="space-y-2" {...props}>{children}</div>;
+}
+
+function FieldLabel(props: ComponentPropsWithoutRef<typeof Label>) {
+  return <Label {...props} />;
+}
+
+function FieldDescription({ children, ...props }: ComponentPropsWithoutRef<'p'>) {
+  return <p className="text-sm text-muted-foreground" {...props}>{children}</p>;
+}
+
+function FieldMessage({ children, ...props }: ComponentPropsWithoutRef<'p'>) {
+  return <p className="text-sm font-medium text-destructive" {...props}>{children}</p>;
+}
+
+/**
+ * Component map wired to the project's installed shadcn/ui components.
+ * Pass this to ZodForm via the components prop so the runtime renderer
+ * uses the real shadcn Input, Checkbox, and Label instead of the built-in HTML stubs.
+ *
+ * Add or override entries to customise individual field components:
+ *   import { Textarea } from '@/components/ui/textarea';
+ *   export const components = { ...baseComponents, Textarea };
+ */
+export const components = {
+  ...defaultComponentMap,
+  Input,
+  Checkbox,
+  Field,
+  FieldLabel,
+  FieldDescription,
+  FieldMessage,
+} satisfies typeof defaultComponentMap;
+`;
+
 const ZOD_FORM_USAGE = `import { ZodForm } from '@zod-to-form/react';
 import { schema } from '@/lib/zod-form/schema';
+import { components } from '@/components/zod-form-components';
 
 export function ExampleForm() {
   return (
     <ZodForm
       schema={schema}
+      components={components}
       onSubmit={(_data) => {
         // handle submission
       }}
@@ -82,19 +141,25 @@ export function buildReactItem(): RegistryItem {
         path: 'schema.ts',
         type: 'registry:lib',
         content: SAMPLE_SCHEMA_SRC,
-        target: '@/lib/zod-form/schema.ts'
+        target: '@lib/zod-form/schema.ts'
       },
       {
         path: 'z2f.config.ts',
         type: 'registry:lib',
         content: sampleConfigSource(),
-        target: '@/lib/zod-form/z2f.config.ts'
+        target: '@lib/zod-form/z2f.config.ts'
+      },
+      {
+        path: 'zod-form-components.tsx',
+        type: 'registry:component',
+        content: ZOD_FORM_COMPONENTS_SRC,
+        target: '@components/zod-form-components.tsx'
       },
       {
         path: 'zod-form.tsx',
         type: 'registry:component',
         content: ZOD_FORM_USAGE,
-        target: '@/components/zod-form.tsx'
+        target: '@components/zod-form.tsx'
       }
     ],
     docs: STARTER_DOCS
@@ -116,19 +181,25 @@ export function buildCodegenItem(): RegistryItem {
         path: 'schema.ts',
         type: 'registry:lib',
         content: SAMPLE_SCHEMA_SRC,
-        target: '@/lib/zod-form/schema.ts'
+        target: '@lib/zod-form/schema.ts'
       },
       {
         path: 'z2f.config.ts',
         type: 'registry:lib',
         content: sampleConfigSource(),
-        target: '@/lib/zod-form/z2f.config.ts'
+        target: '@lib/zod-form/z2f.config.ts'
+      },
+      {
+        path: 'zod-form-components.tsx',
+        type: 'registry:component',
+        content: ZOD_FORM_COMPONENTS_SRC,
+        target: '@components/zod-form-components.tsx'
       },
       {
         path: 'generated-form.tsx',
         type: 'registry:component',
         content: generatedComponentSource(),
-        target: '@/components/generated-form.tsx'
+        target: '@components/generated-form.tsx'
       }
     ],
     docs: STARTER_DOCS
@@ -160,19 +231,25 @@ export function buildViteItem(): RegistryItem {
         path: 'schema.ts',
         type: 'registry:lib',
         content: SAMPLE_SCHEMA_SRC,
-        target: '@/lib/zod-form/schema.ts'
+        target: '@lib/zod-form/schema.ts'
       },
       {
         path: 'z2f.config.ts',
         type: 'registry:lib',
         content: sampleConfigSource(),
-        target: '@/lib/zod-form/z2f.config.ts'
+        target: '@lib/zod-form/z2f.config.ts'
+      },
+      {
+        path: 'zod-form-components.tsx',
+        type: 'registry:component',
+        content: ZOD_FORM_COMPONENTS_SRC,
+        target: '@components/zod-form-components.tsx'
       },
       {
         path: 'vite-usage.tsx',
         type: 'registry:component',
         content: VITE_USAGE,
-        target: '@/components/zod-form-vite.tsx'
+        target: '@components/zod-form-vite.tsx'
       }
     ],
     docs: STARTER_DOCS
