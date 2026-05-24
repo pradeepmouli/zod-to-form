@@ -54,7 +54,8 @@
     "docs": "typedoc --plugin typedoc-plugin-to-skills",
     "docs:md": "typedoc",
     "docs:dev": "pnpm --filter @zod-to-form/docs start",
-    "docs:build": "pnpm --filter @zod-to-form/docs build"
+    "docs:build": "pnpm --filter @zod-to-form/docs build",
+    "registry:build": "tsx scripts/build-registry.mts"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged",

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "starter-vite",
+  "type": "registry:block",
+  "title": "zod-to-form starter (Vite plugin)",
+  "description": "Generate React Hook Form components from a Zod schema at build time with the zod-to-form Vite plugin (?z2f imports). Zod + react-hook-form + shadcn/ui.",
+  "dependencies": ["zod", "react-hook-form", "@hookform/resolvers"],
+  "devDependencies": ["@zod-to-form/vite"],
+  "registryDependencies": ["input", "label", "checkbox", "button"],
+  "files": [
+    {
+      "path": "schema.ts",
+      "type": "registry:lib",
+      "content": "import { z } from 'zod';\n\nexport const schema = z.object({\n  name: z\n    .string()\n    .min(2, 'Name must be at least 2 characters')\n    .meta({ title: 'Name', examples: ['Jane Doe'] }),\n  email: z\n    .string()\n    .email('Please enter a valid email')\n    .meta({ title: 'Email', examples: ['jane@example.com'] }),\n  age: z.number().min(18, 'Must be at least 18').optional().meta({ title: 'Age' }),\n  subscribe: z.boolean().default(false).meta({ title: 'Subscribe to updates' })\n});\n",
+      "target": "@/lib/zod-form/schema.ts"
+    },
+    {
+      "path": "z2f.config.ts",
+      "type": "registry:lib",
+      "content": "import { defineConfig, SHADCN_OVERRIDES } from '@zod-to-form/core';\n\nimport type * as Components from '@/components/zod-form-components';\nimport type * as ZodSchemas from './schema';\n\nexport default defineConfig<typeof Components, typeof ZodSchemas>({\n  components: {\n    source: '@/components/zod-form-components',\n    preset: 'shadcn',\n    overrides: {\n      ...SHADCN_OVERRIDES\n    }\n  },\n  defaults: {\n    mode: 'submit',\n    ui: 'shadcn',\n    overwrite: false,\n    serverAction: false,\n    formProvider: false,\n    // optimization: { level: 2 }  // 1 = decompose, 2 = native rules, 3 = cross-field\n  },\n  include: [],\n  exclude: [],\n  schemas: {\n    schema: {}\n  }\n});\n",
+      "target": "@/lib/zod-form/z2f.config.ts"
+    },
+    {
+      "path": "vite-usage.tsx",
+      "type": "registry:component",
+      "content": "// vite.config.ts — add the z2f plugin:\n//   import { z2f } from '@zod-to-form/vite';\n//   export default defineConfig({ plugins: [z2f()] });\n//\n// then import the generated form from your schema:\nimport Form from '@/lib/zod-form/schema.ts?z2f';\nexport default Form;\n",
+      "target": "@/components/zod-form-vite.tsx"
+    }
+  ],
+  "docs": "This starter ships a sample Zod schema and a z2f config wired to shadcn components.\n\nNext steps:\n1. Re-generate the config for YOUR components and schemas:\n   npx @zod-to-form/cli init\n2. Design and iterate your schema visually in the playground:\n   https://zod.toform.dev/play/"
+}
