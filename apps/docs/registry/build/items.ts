@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { buildConfigSource, generateFormComponent } from '@zod-to-form/codegen';
 import { walkSchema } from '@zod-to-form/core';
 import { schema } from '../sample/schema.js';
-import type { RegistryItem } from './types.js';
+import type { RegistryItem, RegistryIndex } from './types.js';
 import { REGISTRY_DEPENDENCIES, STARTER_DOCS } from './docs.js';
 
 const SAMPLE_SCHEMA_SRC = readFileSync(
@@ -120,5 +120,58 @@ export function buildCodegenItem(): RegistryItem {
       }
     ],
     docs: STARTER_DOCS
+  };
+}
+
+const VITE_USAGE = `// vite.config.ts — add the z2f plugin:
+//   import { z2f } from '@zod-to-form/vite';
+//   export default defineConfig({ plugins: [z2f()] });
+//
+// then import the generated form from your schema:
+import Form from '@/lib/zod-form/schema.ts?z2f';
+export default Form;
+`;
+
+export function buildViteItem(): RegistryItem {
+  return {
+    $schema: 'https://ui.shadcn.com/schema/registry-item.json',
+    name: 'starter-vite',
+    type: 'registry:block',
+    title: 'zod-to-form starter (Vite plugin)',
+    description:
+      'Generate React Hook Form components from a Zod schema at build time with the zod-to-form Vite plugin (?z2f imports). Zod + react-hook-form + shadcn/ui.',
+    dependencies: ['zod', 'react-hook-form', '@hookform/resolvers'],
+    devDependencies: ['@zod-to-form/vite'],
+    registryDependencies: REGISTRY_DEPENDENCIES,
+    files: [
+      {
+        path: 'schema.ts',
+        type: 'registry:lib',
+        content: SAMPLE_SCHEMA_SRC,
+        target: '@/lib/zod-form/schema.ts'
+      },
+      {
+        path: 'z2f.config.ts',
+        type: 'registry:lib',
+        content: sampleConfigSource(),
+        target: '@/lib/zod-form/z2f.config.ts'
+      },
+      {
+        path: 'vite-usage.tsx',
+        type: 'registry:component',
+        content: VITE_USAGE,
+        target: '@/components/zod-form-vite.tsx'
+      }
+    ],
+    docs: STARTER_DOCS
+  };
+}
+
+export function buildRegistryIndex(): RegistryIndex {
+  return {
+    $schema: 'https://ui.shadcn.com/schema/registry.json',
+    name: '@zod-to-form',
+    homepage: 'https://zod.toform.dev',
+    items: [buildReactItem(), buildCodegenItem(), buildViteItem()]
   };
 }
