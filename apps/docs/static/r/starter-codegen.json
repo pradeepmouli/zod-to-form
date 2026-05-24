@@ -9,6 +9,9 @@
     "react-hook-form",
     "@hookform/resolvers"
   ],
+  "devDependencies": [
+    "@zod-to-form/core"
+  ],
   "registryDependencies": [
     "input",
     "label",

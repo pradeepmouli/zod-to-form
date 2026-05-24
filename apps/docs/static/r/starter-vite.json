@@ -10,7 +10,8 @@
     "@hookform/resolvers"
   ],
   "devDependencies": [
-    "@zod-to-form/vite"
+    "@zod-to-form/vite",
+    "@zod-to-form/core"
   ],
   "registryDependencies": [
     "input",
