@@ -1,10 +1,12 @@
 {
   "extends": "@docusaurus/tsconfig",
   "compilerOptions": {
-    "baseUrl": ".",
     "strict": true,
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
+    // @docusaurus/tsconfig sets baseUrl (required by its `@site/*` paths),
+    // which TS 6.0 deprecates; silence until Docusaurus migrates.
+    "ignoreDeprecations": "6.0"
   },
-  "include": ["src/", "docusaurus.config.ts", "sidebars.ts"],
+  "include": ["src/", "registry/**/*.ts", "docusaurus.config.ts", "sidebars.ts"],
   "exclude": ["node_modules", "build", ".docusaurus"]
 }
