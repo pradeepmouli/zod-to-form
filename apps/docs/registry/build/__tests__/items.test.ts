@@ -175,6 +175,12 @@ describe('buildRegistryIndex', () => {
     ]);
   });
 
+  it('every item devDepends on @zod-to-form/core (the z2f.config.ts import)', () => {
+    for (const item of index.items) {
+      expect(item.devDependencies, item.name).toContain('@zod-to-form/core');
+    }
+  });
+
   it('index items have NO files[].content (reference-only, not inlined)', () => {
     for (const item of index.items) {
       const { name } = item;
