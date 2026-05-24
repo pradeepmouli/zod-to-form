@@ -1,7 +1,7 @@
 import { useMemo, memo } from 'react';
 import type { ComponentType, ReactNode } from 'react';
 import type { FormField, FieldConfig, ComponentOverride } from '@zod-to-form/core';
-import { getEmptyDefault } from '@zod-to-form/core';
+import { getEmptyDefault, getFieldRegisterHints } from '@zod-to-form/core';
 import { useController, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { defaultComponentMap } from './components/index.js';
 
@@ -181,17 +181,18 @@ function zodSchemaValidate(field: FormField): ((value: unknown) => true | string
 }
 
 function getRegisterOptions(field: FormField): Record<string, unknown> {
+  const hints = getFieldRegisterHints(field);
   const opts: Record<string, unknown> = {};
 
-  if (field.zodType === 'number' || field.zodType === 'bigint') {
+  if (hints.valueAsNumber) {
     opts['valueAsNumber'] = true;
   }
 
-  if (field.zodType === 'date') {
+  if (hints.valueAsDate) {
     opts['valueAsDate'] = true;
   }
 
-  if (field.zodType === 'file') {
+  if (hints.setValueAs === 'file') {
     opts['setValueAs'] = (value: unknown) => {
       if (value instanceof FileList) {
         return value.length > 0 ? value.item(0) : undefined;
@@ -200,17 +201,16 @@ function getRegisterOptions(field: FormField): Record<string, unknown> {
     };
   }
 
-  // Optimized validation: per-field validation
-  if (field.validation?.mode === 'native' && field.validation.rules) {
+  if (hints.nativeRules) {
     // L2: native RHF rules — spread directly into register options
-    const rules = field.validation.rules;
+    const rules = hints.nativeRules;
     if (rules.required) opts['required'] = rules.required;
     if (rules.min) opts['min'] = rules.min;
     if (rules.max) opts['max'] = rules.max;
     if (rules.minLength) opts['minLength'] = rules.minLength;
     if (rules.maxLength) opts['maxLength'] = rules.maxLength;
     if (rules.pattern) opts['pattern'] = rules.pattern;
-  } else if (field.validation?.mode === 'zodSchema') {
+  } else if (hints.validate) {
     // L1: per-field zodSchema validation via register({ validate })
     const validate = zodSchemaValidate(field);
     if (validate) {
