@@ -31,6 +31,7 @@
     "@to-skills/cli": "^0.3.14",
     "@to-skills/core": "^1.4.0",
     "@to-skills/docusaurus": "^0.2.26",
+    "@zod-to-form/codegen": "workspace:*",
     "@zod-to-form/core": "workspace:*",
     "docusaurus-plugin-typedoc": "^1.4.2",
     "tsx": "^4.22.3",
