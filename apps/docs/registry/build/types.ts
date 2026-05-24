@@ -1,7 +1,7 @@
 export type RegistryItemFile = {
   path: string;
   type: 'registry:file' | 'registry:component' | 'registry:lib';
-  content: string;
+  content?: string;
   target: string;
 };
 
