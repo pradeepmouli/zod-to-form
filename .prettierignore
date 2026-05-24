@@ -11,6 +11,8 @@ package.json
 node_modules/
 dist/
 build/
+# registry/build is source code (build-time scripts), not a build output directory
+!apps/docs/registry/build/**
 coverage/
 pnpm-lock.yaml
 yarn.lock
