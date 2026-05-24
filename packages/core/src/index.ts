@@ -112,6 +112,8 @@ export {
 } from './utils.js';
 
 export { normalizeFormValues } from './normalize.js';
+export type { FieldRegisterHints } from './register-hints.js';
+export { getFieldRegisterHints } from './register-hints.js';
 export { isZodSchema } from './is-zod-schema.js';
 export { walkSchema } from './walker.js';
 export { builtinProcessors, createProcessors } from './registry.js';
