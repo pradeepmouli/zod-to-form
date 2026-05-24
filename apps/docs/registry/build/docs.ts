@@ -5,12 +5,24 @@ export const REGISTRY_DEPENDENCIES = ['input', 'label', 'checkbox', 'button'];
  * the shadcn field template, which wraps fields in shadcn's Form* primitives.
  * The `form` registry item installs them to `@/components/ui/form`.
  *
- * Only the codegen and vite items need `form` — the react item renders at
- * runtime via the shipped `zod-form-components` map, which imports the
- * consumer's installed shadcn Input/Checkbox/Label primitives and provides
- * lightweight Field wrapper components. It does not use shadcn's Form*
- * primitives, so `form` is a per-item dependency rather than part of the
- * shared `REGISTRY_DEPENDENCIES`.
+ * Per-item design:
+ *
+ * - **React item** (`starter-react`): renders at runtime via `<ZodForm>` from
+ *   `@zod-to-form/react`. Ships a `zod-form-components.tsx` runtime map that
+ *   imports the consumer's shadcn Input/Checkbox/Label primitives and provides
+ *   lightweight Field wrapper components. Does NOT use shadcn's Form* primitives,
+ *   so `form` is NOT in its registryDependencies.
+ *
+ * - **Codegen item** (`starter-codegen`): ships a self-contained `generated-form.tsx`
+ *   produced by `@zod-to-form/codegen`. That file imports Form* directly from
+ *   `@/components/ui/form`, so the `form` registry item is required. Does NOT
+ *   ship `zod-form-components.tsx` and does NOT depend on `@zod-to-form/react`.
+ *
+ * - **Vite item** (`starter-vite`): the `?z2f` Vite plugin emits self-contained
+ *   generated components (same codegen path as `starter-codegen`) — no runtime
+ *   `@zod-to-form/react` dependency. The plugin itself is a devDependency only.
+ *   Config and generated output import Form* from `@/components/ui/form`, so
+ *   `form` is required here too. Does NOT ship `zod-form-components.tsx`.
  */
 export const CODEGEN_REGISTRY_DEPENDENCIES = [...REGISTRY_DEPENDENCIES, 'form'];
 
