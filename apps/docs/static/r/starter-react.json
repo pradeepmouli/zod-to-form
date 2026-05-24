@@ -4,8 +4,18 @@
   "type": "registry:block",
   "title": "zod-to-form starter (runtime)",
   "description": "Schema-driven React Hook Form from a Zod schema, rendered at runtime with <ZodForm>. Zod + react-hook-form + shadcn/ui, with validation and codegen via zod-to-form.",
-  "dependencies": ["@zod-to-form/react", "zod", "react-hook-form", "@hookform/resolvers"],
-  "registryDependencies": ["input", "label", "checkbox", "button"],
+  "dependencies": [
+    "@zod-to-form/react",
+    "zod",
+    "react-hook-form",
+    "@hookform/resolvers"
+  ],
+  "registryDependencies": [
+    "input",
+    "label",
+    "checkbox",
+    "button"
+  ],
   "files": [
     {
       "path": "schema.ts",

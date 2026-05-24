@@ -18,6 +18,10 @@ pnpm-lock.yaml
 yarn.lock
 package-lock.json
 
+# Generated shadcn registry artifacts — emitted by `pnpm registry:build`
+# (JSON.stringify form); must not be reformatted or the freshness guard breaks.
+apps/docs/static/r/**
+
 # Docusaurus build output and CSS assets
 apps/docs/build/**
 apps/docs/.docusaurus/**

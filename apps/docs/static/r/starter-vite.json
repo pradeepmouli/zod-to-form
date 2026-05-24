@@ -4,9 +4,20 @@
   "type": "registry:block",
   "title": "zod-to-form starter (Vite plugin)",
   "description": "Generate React Hook Form components from a Zod schema at build time with the zod-to-form Vite plugin (?z2f imports). Zod + react-hook-form + shadcn/ui.",
-  "dependencies": ["zod", "react-hook-form", "@hookform/resolvers"],
-  "devDependencies": ["@zod-to-form/vite"],
-  "registryDependencies": ["input", "label", "checkbox", "button"],
+  "dependencies": [
+    "zod",
+    "react-hook-form",
+    "@hookform/resolvers"
+  ],
+  "devDependencies": [
+    "@zod-to-form/vite"
+  ],
+  "registryDependencies": [
+    "input",
+    "label",
+    "checkbox",
+    "button"
+  ],
   "files": [
     {
       "path": "schema.ts",
