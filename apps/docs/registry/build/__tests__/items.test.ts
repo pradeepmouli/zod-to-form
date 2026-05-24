@@ -32,12 +32,21 @@ describe('buildReactItem', () => {
     );
   });
 
-  it('ships schema.ts, z2f.config.ts, and a ZodForm usage file with inlined content', () => {
+  it('ships schema.ts, z2f.config.ts, zod-form-components.tsx, and a ZodForm usage file with inlined content', () => {
     const paths = item.files.map((f) => f.path);
-    expect(paths).toEqual(expect.arrayContaining(['schema.ts', 'z2f.config.ts', 'zod-form.tsx']));
+    expect(paths).toEqual(
+      expect.arrayContaining([
+        'schema.ts',
+        'z2f.config.ts',
+        'zod-form-components.tsx',
+        'zod-form.tsx'
+      ])
+    );
     for (const f of item.files) {
       expect(f.content.length).toBeGreaterThan(0);
-      expect(f.target.startsWith('@/')).toBe(true);
+      // targets use shadcn registry placeholders (@components/, @ui/, @lib/, @hooks/)
+      // not the project import prefix @/
+      expect(f.target).toMatch(/^@(components|ui|lib|hooks)\//);
     }
   });
 
