@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { walkSchema } from '@zod-to-form/core';
 import { schema } from '../../sample/schema.js';
-import { buildReactItem } from '../items.js';
+import { buildReactItem, buildCodegenItem } from '../items.js';
 import { REGISTRY_DEPENDENCIES, STARTER_DOCS } from '../docs.js';
 
 describe('sample schema', () => {
@@ -48,5 +48,24 @@ describe('buildReactItem', () => {
     expect(item.$schema).toBe('https://ui.shadcn.com/schema/registry-item.json');
     expect(item.registryDependencies).toEqual(REGISTRY_DEPENDENCIES);
     expect(item.docs).toBe(STARTER_DOCS);
+  });
+});
+
+describe('buildCodegenItem', () => {
+  const item = buildCodegenItem();
+
+  it('is named starter-codegen and drops the z2f runtime dep', () => {
+    expect(item.name).toBe('starter-codegen');
+    expect(item.dependencies).not.toContain('@zod-to-form/react');
+    expect(item.dependencies).toEqual(
+      expect.arrayContaining(['zod', 'react-hook-form', '@hookform/resolvers'])
+    );
+  });
+
+  it('ships a generated form component built from the sample schema', () => {
+    const gen = item.files.find((f) => f.path === 'generated-form.tsx');
+    expect(gen).toBeDefined();
+    expect(gen!.content).toContain('useForm');
+    expect(gen!.content).toContain('zodResolver');
   });
 });

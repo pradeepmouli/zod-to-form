@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { buildConfigSource } from '@zod-to-form/codegen';
+import { buildConfigSource, generateFormComponent } from '@zod-to-form/codegen';
+import { walkSchema } from '@zod-to-form/core';
+import { schema } from '../sample/schema.js';
 import type { RegistryItem } from './types.js';
 import { REGISTRY_DEPENDENCIES, STARTER_DOCS } from './docs.js';
 
@@ -41,6 +43,18 @@ export function ExampleForm() {
 }
 `;
 
+function generatedComponentSource(): string {
+  const fields = walkSchema(schema);
+  return generateFormComponent(fields, {
+    exportName: 'schema',
+    componentName: 'GeneratedForm',
+    schemaImportPath: '@/lib/zod-form/schema',
+    ui: 'shadcn',
+    mode: 'submit',
+    formProvider: false
+  });
+}
+
 export function buildReactItem(): RegistryItem {
   return {
     $schema: 'https://ui.shadcn.com/schema/registry-item.json',
@@ -69,6 +83,40 @@ export function buildReactItem(): RegistryItem {
         type: 'registry:component',
         content: ZOD_FORM_USAGE,
         target: '@/components/zod-form.tsx'
+      }
+    ],
+    docs: STARTER_DOCS
+  };
+}
+
+export function buildCodegenItem(): RegistryItem {
+  return {
+    $schema: 'https://ui.shadcn.com/schema/registry-item.json',
+    name: 'starter-codegen',
+    type: 'registry:block',
+    title: 'zod-to-form starter (codegen)',
+    description:
+      'Build-time generated React Hook Form component from a Zod schema — you own the .tsx, no runtime zod-to-form dependency. Zod + react-hook-form + shadcn/ui validation and codegen.',
+    dependencies: ['zod', 'react-hook-form', '@hookform/resolvers'],
+    registryDependencies: REGISTRY_DEPENDENCIES,
+    files: [
+      {
+        path: 'schema.ts',
+        type: 'registry:lib',
+        content: SAMPLE_SCHEMA_SRC,
+        target: '@/lib/zod-form/schema.ts'
+      },
+      {
+        path: 'z2f.config.ts',
+        type: 'registry:lib',
+        content: sampleConfigSource(),
+        target: '@/lib/zod-form/z2f.config.ts'
+      },
+      {
+        path: 'generated-form.tsx',
+        type: 'registry:component',
+        content: generatedComponentSource(),
+        target: '@/components/generated-form.tsx'
       }
     ],
     docs: STARTER_DOCS
