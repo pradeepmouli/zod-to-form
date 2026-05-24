@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { walkSchema } from '@zod-to-form/core';
 import { schema } from '../../sample/schema.js';
-import { buildReactItem, buildCodegenItem } from '../items.js';
+import { buildReactItem, buildCodegenItem, buildViteItem, buildRegistryIndex } from '../items.js';
 import { REGISTRY_DEPENDENCIES, STARTER_DOCS } from '../docs.js';
 
 describe('sample schema', () => {
@@ -67,5 +67,25 @@ describe('buildCodegenItem', () => {
     expect(gen).toBeDefined();
     expect(gen!.content).toContain('useForm');
     expect(gen!.content).toContain('zodResolver');
+  });
+});
+
+describe('buildViteItem', () => {
+  const item = buildViteItem();
+  it('is named starter-vite and dev-depends on the vite plugin', () => {
+    expect(item.name).toBe('starter-vite');
+    expect(item.devDependencies).toContain('@zod-to-form/vite');
+  });
+});
+
+describe('buildRegistryIndex', () => {
+  const index = buildRegistryIndex();
+  it('lists all three starter items under the @zod-to-form namespace', () => {
+    expect(index.name).toBe('@zod-to-form');
+    expect(index.items.map((i) => i.name)).toEqual([
+      'starter-react',
+      'starter-codegen',
+      'starter-vite'
+    ]);
   });
 });
