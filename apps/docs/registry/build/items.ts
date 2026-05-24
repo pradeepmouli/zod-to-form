@@ -27,10 +27,17 @@ function sampleConfigSource(): string {
 }
 
 const ZOD_FORM_USAGE = `import { ZodForm } from '@zod-to-form/react';
-import { schema } from './schema';
+import { schema } from '@/lib/zod-form/schema';
 
 export function ExampleForm() {
-  return <ZodForm schema={schema} onSubmit={(data) => console.log(data)} />;
+  return (
+    <ZodForm
+      schema={schema}
+      onSubmit={(_data) => {
+        // handle submission
+      }}
+    />
+  );
 }
 `;
 
