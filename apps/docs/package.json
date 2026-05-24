@@ -33,6 +33,7 @@
     "@to-skills/docusaurus": "^0.2.26",
     "@zod-to-form/codegen": "workspace:*",
     "@zod-to-form/core": "workspace:*",
+    "ajv": "^8.20.0",
     "docusaurus-plugin-typedoc": "^1.4.2",
     "tsx": "^4.22.3",
     "typedoc": "^0.28.19",
