@@ -4,7 +4,7 @@ import { buildConfigSource, generateFormComponent } from '@zod-to-form/codegen';
 import { walkSchema } from '@zod-to-form/core';
 import { schema } from '../sample/schema.js';
 import type { RegistryItem, RegistryIndex } from './types.js';
-import { REGISTRY_DEPENDENCIES, STARTER_DOCS } from './docs.js';
+import { REGISTRY_DEPENDENCIES, CODEGEN_REGISTRY_DEPENDENCIES, STARTER_DOCS } from './docs.js';
 
 const SAMPLE_SCHEMA_SRC = readFileSync(
   fileURLToPath(new URL('../sample/schema.ts', import.meta.url)),
@@ -51,7 +51,19 @@ function generatedComponentSource(): string {
     schemaImportPath: '@/lib/zod-form/schema',
     ui: 'shadcn',
     mode: 'submit',
-    formProvider: false
+    formProvider: false,
+    // The shadcn field template wraps fields in <FormItem>/<FormLabel>/
+    // <FormControl>/<FormMessage>. generate.ts only emits the import line for
+    // those primitives when componentConfig is set — so pass a minimal config
+    // whose `source` points at shadcn's form module (the `form` registry item
+    // installs to @/components/ui/form). Without this the generated .tsx
+    // references undefined Form* identifiers and won't compile.
+    componentConfig: {
+      components: {
+        source: '@/components/ui/form',
+        preset: 'shadcn'
+      }
+    }
   });
 }
 
@@ -98,7 +110,7 @@ export function buildCodegenItem(): RegistryItem {
     description:
       'Build-time generated React Hook Form component from a Zod schema — you own the .tsx, no runtime zod-to-form dependency. Zod + react-hook-form + shadcn/ui validation and codegen.',
     dependencies: ['zod', 'react-hook-form', '@hookform/resolvers'],
-    registryDependencies: REGISTRY_DEPENDENCIES,
+    registryDependencies: CODEGEN_REGISTRY_DEPENDENCIES,
     files: [
       {
         path: 'schema.ts',
@@ -142,7 +154,7 @@ export function buildViteItem(): RegistryItem {
       'Generate React Hook Form components from a Zod schema at build time with the zod-to-form Vite plugin (?z2f imports). Zod + react-hook-form + shadcn/ui.',
     dependencies: ['zod', 'react-hook-form', '@hookform/resolvers'],
     devDependencies: ['@zod-to-form/vite'],
-    registryDependencies: REGISTRY_DEPENDENCIES,
+    registryDependencies: CODEGEN_REGISTRY_DEPENDENCIES,
     files: [
       {
         path: 'schema.ts',

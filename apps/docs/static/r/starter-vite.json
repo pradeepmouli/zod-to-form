@@ -16,7 +16,8 @@
     "input",
     "label",
     "checkbox",
-    "button"
+    "button",
+    "form"
   ],
   "files": [
     {
