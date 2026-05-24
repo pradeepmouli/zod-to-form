@@ -767,10 +767,26 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
   const mappedComponents = collectMappedComponentNames(fields, config.componentConfig);
   const importNames = new Set<string>(mappedComponents);
 
-  // Add form primitive imports required by the preset's field template
+  // Generate body first so we can filter template imports to only those actually referenced.
+  // This avoids importing Form* primitives (e.g. FormDescription, FormField) that are
+  // conditionally emitted and absent when no field has a description.
+  const body = fields
+    .map((field) =>
+      renderFieldBlockWithConfig(field, config.componentConfig, '      ', preset, optimized)
+    )
+    .join('\n');
+
+  // Add form primitive imports required by the preset's field template — but only
+  // those that are actually referenced in the generated body (as JSX tags or identifiers).
   const templateImports = PRESET_TEMPLATE_IMPORTS[preset] ?? [];
   for (const name of templateImports) {
-    importNames.add(name);
+    // A name is referenced if it appears as a JSX opening/closing tag or as an identifier
+    // followed by a word boundary (covers both <FormX> tags and non-JSX references).
+    const tagPattern = new RegExp(`</?${name}[\\s/>]`);
+    const idPattern = new RegExp(`\\b${name}\\b`);
+    if (tagPattern.test(body) || idPattern.test(body)) {
+      importNames.add(name);
+    }
   }
 
   const componentImportLine =
@@ -804,12 +820,6 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
 
   // Generate hoisted validators for optimized mode
   const hoistedValidators = optimized ? generateHoistedValidators(fields, config.exportName) : [];
-
-  const body = fields
-    .map((field) =>
-      renderFieldBlockWithConfig(field, config.componentConfig, '      ', preset, optimized)
-    )
-    .join('\n');
 
   const arrayHooks = arrayFields
     .map((f) => {

@@ -26,19 +26,25 @@
           "path": "schema.ts",
           "type": "registry:lib",
           "content": "import { z } from 'zod';\n\nexport const schema = z.object({\n  name: z\n    .string()\n    .min(2, 'Name must be at least 2 characters')\n    .meta({ title: 'Name', examples: ['Jane Doe'] }),\n  email: z\n    .string()\n    .email('Please enter a valid email')\n    .meta({ title: 'Email', examples: ['jane@example.com'] }),\n  age: z.number().min(18, 'Must be at least 18').optional().meta({ title: 'Age' }),\n  subscribe: z.boolean().default(false).meta({ title: 'Subscribe to updates' })\n});\n",
-          "target": "@/lib/zod-form/schema.ts"
+          "target": "@lib/zod-form/schema.ts"
         },
         {
           "path": "z2f.config.ts",
           "type": "registry:lib",
           "content": "import { defineConfig, SHADCN_OVERRIDES } from '@zod-to-form/core';\n\nimport type * as Components from '@/components/zod-form-components';\nimport type * as ZodSchemas from './schema';\n\nexport default defineConfig<typeof Components, typeof ZodSchemas>({\n  components: {\n    source: '@/components/zod-form-components',\n    preset: 'shadcn',\n    overrides: {\n      ...SHADCN_OVERRIDES\n    }\n  },\n  defaults: {\n    mode: 'submit',\n    ui: 'shadcn',\n    overwrite: false,\n    serverAction: false,\n    formProvider: false,\n    // optimization: { level: 2 }  // 1 = decompose, 2 = native rules, 3 = cross-field\n  },\n  include: [],\n  exclude: [],\n  schemas: {\n    schema: {}\n  }\n});\n",
-          "target": "@/lib/zod-form/z2f.config.ts"
+          "target": "@lib/zod-form/z2f.config.ts"
+        },
+        {
+          "path": "zod-form-components.tsx",
+          "type": "registry:component",
+          "content": "import { defaultComponentMap } from '@zod-to-form/react';\nimport { Input } from '@/components/ui/input';\nimport { Checkbox } from '@/components/ui/checkbox';\nimport { Label } from '@/components/ui/label';\nimport type { ComponentPropsWithoutRef } from 'react';\n\n// ── Thin wrappers so the map matches ZodForm's expected component signatures ──\n\nfunction Field({ children, ...props }: ComponentPropsWithoutRef<'div'>) {\n  return <div className=\"space-y-2\" {...props}>{children}</div>;\n}\n\nfunction FieldLabel(props: ComponentPropsWithoutRef<typeof Label>) {\n  return <Label {...props} />;\n}\n\nfunction FieldDescription({ children, ...props }: ComponentPropsWithoutRef<'p'>) {\n  return <p className=\"text-sm text-muted-foreground\" {...props}>{children}</p>;\n}\n\nfunction FieldMessage({ children, ...props }: ComponentPropsWithoutRef<'p'>) {\n  return <p className=\"text-sm font-medium text-destructive\" {...props}>{children}</p>;\n}\n\n/**\n * Component map wired to the project's installed shadcn/ui components.\n * Pass this to ZodForm via the components prop so the runtime renderer\n * uses the real shadcn Input, Checkbox, and Label instead of the built-in HTML stubs.\n *\n * Add or override entries to customise individual field components:\n *   import { Textarea } from '@/components/ui/textarea';\n *   export const components = { ...baseComponents, Textarea };\n */\nexport const components = {\n  ...defaultComponentMap,\n  Input,\n  Checkbox,\n  Field,\n  FieldLabel,\n  FieldDescription,\n  FieldMessage,\n} satisfies typeof defaultComponentMap;\n",
+          "target": "@components/zod-form-components.tsx"
         },
         {
           "path": "zod-form.tsx",
           "type": "registry:component",
-          "content": "import { ZodForm } from '@zod-to-form/react';\nimport { schema } from '@/lib/zod-form/schema';\n\nexport function ExampleForm() {\n  return (\n    <ZodForm\n      schema={schema}\n      onSubmit={(_data) => {\n        // handle submission\n      }}\n    />\n  );\n}\n",
-          "target": "@/components/zod-form.tsx"
+          "content": "import { ZodForm } from '@zod-to-form/react';\nimport { schema } from '@/lib/zod-form/schema';\nimport { components } from '@/components/zod-form-components';\n\nexport function ExampleForm() {\n  return (\n    <ZodForm\n      schema={schema}\n      components={components}\n      onSubmit={(_data) => {\n        // handle submission\n      }}\n    />\n  );\n}\n",
+          "target": "@components/zod-form.tsx"
         }
       ],
       "docs": "This starter ships a sample Zod schema and a z2f config wired to shadcn components.\n\nNext steps:\n1. Re-generate the config for YOUR components and schemas:\n   npx @zod-to-form/cli init\n2. Design and iterate your schema visually in the playground:\n   https://zod.toform.dev/play/"
@@ -66,19 +72,25 @@
           "path": "schema.ts",
           "type": "registry:lib",
           "content": "import { z } from 'zod';\n\nexport const schema = z.object({\n  name: z\n    .string()\n    .min(2, 'Name must be at least 2 characters')\n    .meta({ title: 'Name', examples: ['Jane Doe'] }),\n  email: z\n    .string()\n    .email('Please enter a valid email')\n    .meta({ title: 'Email', examples: ['jane@example.com'] }),\n  age: z.number().min(18, 'Must be at least 18').optional().meta({ title: 'Age' }),\n  subscribe: z.boolean().default(false).meta({ title: 'Subscribe to updates' })\n});\n",
-          "target": "@/lib/zod-form/schema.ts"
+          "target": "@lib/zod-form/schema.ts"
         },
         {
           "path": "z2f.config.ts",
           "type": "registry:lib",
           "content": "import { defineConfig, SHADCN_OVERRIDES } from '@zod-to-form/core';\n\nimport type * as Components from '@/components/zod-form-components';\nimport type * as ZodSchemas from './schema';\n\nexport default defineConfig<typeof Components, typeof ZodSchemas>({\n  components: {\n    source: '@/components/zod-form-components',\n    preset: 'shadcn',\n    overrides: {\n      ...SHADCN_OVERRIDES\n    }\n  },\n  defaults: {\n    mode: 'submit',\n    ui: 'shadcn',\n    overwrite: false,\n    serverAction: false,\n    formProvider: false,\n    // optimization: { level: 2 }  // 1 = decompose, 2 = native rules, 3 = cross-field\n  },\n  include: [],\n  exclude: [],\n  schemas: {\n    schema: {}\n  }\n});\n",
-          "target": "@/lib/zod-form/z2f.config.ts"
+          "target": "@lib/zod-form/z2f.config.ts"
+        },
+        {
+          "path": "zod-form-components.tsx",
+          "type": "registry:component",
+          "content": "import { defaultComponentMap } from '@zod-to-form/react';\nimport { Input } from '@/components/ui/input';\nimport { Checkbox } from '@/components/ui/checkbox';\nimport { Label } from '@/components/ui/label';\nimport type { ComponentPropsWithoutRef } from 'react';\n\n// ── Thin wrappers so the map matches ZodForm's expected component signatures ──\n\nfunction Field({ children, ...props }: ComponentPropsWithoutRef<'div'>) {\n  return <div className=\"space-y-2\" {...props}>{children}</div>;\n}\n\nfunction FieldLabel(props: ComponentPropsWithoutRef<typeof Label>) {\n  return <Label {...props} />;\n}\n\nfunction FieldDescription({ children, ...props }: ComponentPropsWithoutRef<'p'>) {\n  return <p className=\"text-sm text-muted-foreground\" {...props}>{children}</p>;\n}\n\nfunction FieldMessage({ children, ...props }: ComponentPropsWithoutRef<'p'>) {\n  return <p className=\"text-sm font-medium text-destructive\" {...props}>{children}</p>;\n}\n\n/**\n * Component map wired to the project's installed shadcn/ui components.\n * Pass this to ZodForm via the components prop so the runtime renderer\n * uses the real shadcn Input, Checkbox, and Label instead of the built-in HTML stubs.\n *\n * Add or override entries to customise individual field components:\n *   import { Textarea } from '@/components/ui/textarea';\n *   export const components = { ...baseComponents, Textarea };\n */\nexport const components = {\n  ...defaultComponentMap,\n  Input,\n  Checkbox,\n  Field,\n  FieldLabel,\n  FieldDescription,\n  FieldMessage,\n} satisfies typeof defaultComponentMap;\n",
+          "target": "@components/zod-form-components.tsx"
         },
         {
           "path": "generated-form.tsx",
           "type": "registry:component",
-          "content": "import { useForm } from 'react-hook-form';\nimport { zodResolver } from '@hookform/resolvers/zod';\nimport { z } from 'zod';\nimport { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';\nimport { schema } from '@/lib/zod-form/schema';\n\ntype StripIndexSignature<T> = T extends Date | File | FileList | Blob | RegExp\n  ? T\n  : T extends readonly (infer U)[]\n    ? StripIndexSignature<U>[]\n    : T extends object\n      ? {\n          [K in keyof T as string extends K\n            ? never\n            : number extends K\n              ? never\n              : symbol extends K\n                ? never\n                : K]: StripIndexSignature<T[K]>;\n        }\n      : T;\n\ntype FormData = StripIndexSignature<z.input<typeof schema>>;\ntype FormOutput = StripIndexSignature<z.output<typeof schema>>;\n\nconst _resolver = zodResolver(schema);\n\nexport function GeneratedForm(props: {\n  onSubmit: (data: FormOutput) => void;\n  defaultValues?: Partial<FormData>;\n  values?: FormData;\n  fieldProps?: Record<string, Record<string, unknown>>;\n}) {\n  const form = useForm<FormData>({\n    resolver: _resolver,\n    defaultValues: props.defaultValues,\n    values: props.values,\n  });\n  const { register, handleSubmit } = form;\n\n  return (\n    <form onSubmit={handleSubmit((data) => props.onSubmit(data as unknown as FormOutput))}>\n      <FormItem>\n        <FormLabel htmlFor=\"name\">Name</FormLabel>\n        <FormControl><input id=\"name\" type=\"text\" {...register('name')} /></FormControl>\n        <FormMessage />\n      </FormItem>\n      <FormItem>\n        <FormLabel htmlFor=\"email\">Email</FormLabel>\n        <FormControl><input id=\"email\" type=\"email\" {...register('email')} /></FormControl>\n        <FormMessage />\n      </FormItem>\n      <FormItem>\n        <FormLabel htmlFor=\"age\">Age</FormLabel>\n        <FormControl><input id=\"age\" type=\"number\" {...register('age')} /></FormControl>\n        <FormMessage />\n      </FormItem>\n      <FormItem>\n        <FormLabel htmlFor=\"subscribe\">Subscribe to updates</FormLabel>\n        <FormControl><input id=\"subscribe\" type=\"checkbox\" {...register('subscribe')} /></FormControl>\n        <FormMessage />\n      </FormItem>\n      <button type=\"submit\">Submit</button>\n    </form>\n  );\n}\n\nexport default GeneratedForm;",
-          "target": "@/components/generated-form.tsx"
+          "content": "import { useForm } from 'react-hook-form';\nimport { zodResolver } from '@hookform/resolvers/zod';\nimport { z } from 'zod';\nimport { FormControl, FormItem, FormLabel, FormMessage } from '@/components/ui/form';\nimport { schema } from '@/lib/zod-form/schema';\n\ntype StripIndexSignature<T> = T extends Date | File | FileList | Blob | RegExp\n  ? T\n  : T extends readonly (infer U)[]\n    ? StripIndexSignature<U>[]\n    : T extends object\n      ? {\n          [K in keyof T as string extends K\n            ? never\n            : number extends K\n              ? never\n              : symbol extends K\n                ? never\n                : K]: StripIndexSignature<T[K]>;\n        }\n      : T;\n\ntype FormData = StripIndexSignature<z.input<typeof schema>>;\ntype FormOutput = StripIndexSignature<z.output<typeof schema>>;\n\nconst _resolver = zodResolver(schema);\n\nexport function GeneratedForm(props: {\n  onSubmit: (data: FormOutput) => void;\n  defaultValues?: Partial<FormData>;\n  values?: FormData;\n  fieldProps?: Record<string, Record<string, unknown>>;\n}) {\n  const form = useForm<FormData>({\n    resolver: _resolver,\n    defaultValues: props.defaultValues,\n    values: props.values,\n  });\n  const { register, handleSubmit } = form;\n\n  return (\n    <form onSubmit={handleSubmit((data) => props.onSubmit(data as unknown as FormOutput))}>\n      <FormItem>\n        <FormLabel htmlFor=\"name\">Name</FormLabel>\n        <FormControl><input id=\"name\" type=\"text\" {...register('name')} /></FormControl>\n        <FormMessage />\n      </FormItem>\n      <FormItem>\n        <FormLabel htmlFor=\"email\">Email</FormLabel>\n        <FormControl><input id=\"email\" type=\"email\" {...register('email')} /></FormControl>\n        <FormMessage />\n      </FormItem>\n      <FormItem>\n        <FormLabel htmlFor=\"age\">Age</FormLabel>\n        <FormControl><input id=\"age\" type=\"number\" {...register('age')} /></FormControl>\n        <FormMessage />\n      </FormItem>\n      <FormItem>\n        <FormLabel htmlFor=\"subscribe\">Subscribe to updates</FormLabel>\n        <FormControl><input id=\"subscribe\" type=\"checkbox\" {...register('subscribe')} /></FormControl>\n        <FormMessage />\n      </FormItem>\n      <button type=\"submit\">Submit</button>\n    </form>\n  );\n}\n\nexport default GeneratedForm;",
+          "target": "@components/generated-form.tsx"
         }
       ],
       "docs": "This starter ships a sample Zod schema and a z2f config wired to shadcn components.\n\nNext steps:\n1. Re-generate the config for YOUR components and schemas:\n   npx @zod-to-form/cli init\n2. Design and iterate your schema visually in the playground:\n   https://zod.toform.dev/play/"
@@ -109,19 +121,25 @@
           "path": "schema.ts",
           "type": "registry:lib",
           "content": "import { z } from 'zod';\n\nexport const schema = z.object({\n  name: z\n    .string()\n    .min(2, 'Name must be at least 2 characters')\n    .meta({ title: 'Name', examples: ['Jane Doe'] }),\n  email: z\n    .string()\n    .email('Please enter a valid email')\n    .meta({ title: 'Email', examples: ['jane@example.com'] }),\n  age: z.number().min(18, 'Must be at least 18').optional().meta({ title: 'Age' }),\n  subscribe: z.boolean().default(false).meta({ title: 'Subscribe to updates' })\n});\n",
-          "target": "@/lib/zod-form/schema.ts"
+          "target": "@lib/zod-form/schema.ts"
         },
         {
           "path": "z2f.config.ts",
           "type": "registry:lib",
           "content": "import { defineConfig, SHADCN_OVERRIDES } from '@zod-to-form/core';\n\nimport type * as Components from '@/components/zod-form-components';\nimport type * as ZodSchemas from './schema';\n\nexport default defineConfig<typeof Components, typeof ZodSchemas>({\n  components: {\n    source: '@/components/zod-form-components',\n    preset: 'shadcn',\n    overrides: {\n      ...SHADCN_OVERRIDES\n    }\n  },\n  defaults: {\n    mode: 'submit',\n    ui: 'shadcn',\n    overwrite: false,\n    serverAction: false,\n    formProvider: false,\n    // optimization: { level: 2 }  // 1 = decompose, 2 = native rules, 3 = cross-field\n  },\n  include: [],\n  exclude: [],\n  schemas: {\n    schema: {}\n  }\n});\n",
-          "target": "@/lib/zod-form/z2f.config.ts"
+          "target": "@lib/zod-form/z2f.config.ts"
+        },
+        {
+          "path": "zod-form-components.tsx",
+          "type": "registry:component",
+          "content": "import { defaultComponentMap } from '@zod-to-form/react';\nimport { Input } from '@/components/ui/input';\nimport { Checkbox } from '@/components/ui/checkbox';\nimport { Label } from '@/components/ui/label';\nimport type { ComponentPropsWithoutRef } from 'react';\n\n// ── Thin wrappers so the map matches ZodForm's expected component signatures ──\n\nfunction Field({ children, ...props }: ComponentPropsWithoutRef<'div'>) {\n  return <div className=\"space-y-2\" {...props}>{children}</div>;\n}\n\nfunction FieldLabel(props: ComponentPropsWithoutRef<typeof Label>) {\n  return <Label {...props} />;\n}\n\nfunction FieldDescription({ children, ...props }: ComponentPropsWithoutRef<'p'>) {\n  return <p className=\"text-sm text-muted-foreground\" {...props}>{children}</p>;\n}\n\nfunction FieldMessage({ children, ...props }: ComponentPropsWithoutRef<'p'>) {\n  return <p className=\"text-sm font-medium text-destructive\" {...props}>{children}</p>;\n}\n\n/**\n * Component map wired to the project's installed shadcn/ui components.\n * Pass this to ZodForm via the components prop so the runtime renderer\n * uses the real shadcn Input, Checkbox, and Label instead of the built-in HTML stubs.\n *\n * Add or override entries to customise individual field components:\n *   import { Textarea } from '@/components/ui/textarea';\n *   export const components = { ...baseComponents, Textarea };\n */\nexport const components = {\n  ...defaultComponentMap,\n  Input,\n  Checkbox,\n  Field,\n  FieldLabel,\n  FieldDescription,\n  FieldMessage,\n} satisfies typeof defaultComponentMap;\n",
+          "target": "@components/zod-form-components.tsx"
         },
         {
           "path": "vite-usage.tsx",
           "type": "registry:component",
           "content": "// vite.config.ts — add the z2f plugin:\n//   import { z2f } from '@zod-to-form/vite';\n//   export default defineConfig({ plugins: [z2f()] });\n//\n// then import the generated form from your schema:\nimport Form from '@/lib/zod-form/schema.ts?z2f';\nexport default Form;\n",
-          "target": "@/components/zod-form-vite.tsx"
+          "target": "@components/zod-form-vite.tsx"
         }
       ],
       "docs": "This starter ships a sample Zod schema and a z2f config wired to shadcn components.\n\nNext steps:\n1. Re-generate the config for YOUR components and schemas:\n   npx @zod-to-form/cli init\n2. Design and iterate your schema visually in the playground:\n   https://zod.toform.dev/play/"
