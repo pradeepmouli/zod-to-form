@@ -145,6 +145,9 @@ export function buildReactItem(): RegistryItem {
     description:
       'Schema-driven React Hook Form from a Zod schema, rendered at runtime with <ZodForm>. Zod + react-hook-form + shadcn/ui, with validation and codegen via zod-to-form.',
     dependencies: ['@zod-to-form/react', 'zod', 'react-hook-form', '@hookform/resolvers'],
+    // @zod-to-form/core is imported only by the shipped z2f.config.ts (build-time tooling),
+    // so it's a devDependency. A direct import needs a direct dep under pnpm strict installs.
+    devDependencies: ['@zod-to-form/core'],
     registryDependencies: REGISTRY_DEPENDENCIES,
     files: [
       {
@@ -185,6 +188,9 @@ export function buildCodegenItem(): RegistryItem {
     description:
       'Build-time generated React Hook Form component from a Zod schema — you own the .tsx, no runtime zod-to-form dependency. Zod + react-hook-form + shadcn/ui validation and codegen.',
     dependencies: ['zod', 'react-hook-form', '@hookform/resolvers'],
+    // z2f.config.ts (build-time tooling) imports @zod-to-form/core; devDep keeps the
+    // owned generated component free of a runtime zod-to-form dependency.
+    devDependencies: ['@zod-to-form/core'],
     registryDependencies: CODEGEN_REGISTRY_DEPENDENCIES,
     files: [
       {
@@ -228,7 +234,7 @@ export function buildViteItem(): RegistryItem {
     description:
       'Generate React Hook Form components from a Zod schema at build time with the zod-to-form Vite plugin (?z2f imports). Zod + react-hook-form + shadcn/ui.',
     dependencies: ['zod', 'react-hook-form', '@hookform/resolvers'],
-    devDependencies: ['@zod-to-form/vite'],
+    devDependencies: ['@zod-to-form/vite', '@zod-to-form/core'],
     registryDependencies: CODEGEN_REGISTRY_DEPENDENCIES,
     files: [
       {
