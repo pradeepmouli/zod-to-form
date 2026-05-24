@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { walkSchema } from '@zod-to-form/core';
 import { schema } from '../../sample/schema.js';
 import { buildReactItem } from '../items.js';
+import { REGISTRY_DEPENDENCIES, STARTER_DOCS } from '../docs.js';
 
 describe('sample schema', () => {
   it('walks to four named fields', () => {
@@ -40,6 +41,12 @@ describe('buildReactItem', () => {
 
   it('config content is produced by buildConfigSource (shadcn preset)', () => {
     const config = item.files.find((f) => f.path === 'z2f.config.ts')!;
-    expect(config.content).toContain('shadcn');
+    expect(config.content).toContain("preset: 'shadcn'");
+  });
+
+  it('has the correct $schema, registryDependencies, and docs', () => {
+    expect(item.$schema).toBe('https://ui.shadcn.com/schema/registry-item.json');
+    expect(item.registryDependencies).toEqual(REGISTRY_DEPENDENCIES);
+    expect(item.docs).toBe(STARTER_DOCS);
   });
 });
