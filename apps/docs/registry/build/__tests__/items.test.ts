@@ -4,7 +4,7 @@ import { schema } from '../../sample/schema.js';
 
 describe('sample schema', () => {
   it('walks to four named fields', () => {
-    const fields = walkSchema(schema, {});
+    const fields = walkSchema(schema);
     expect(fields.map((f) => f.key)).toEqual(['name', 'email', 'age', 'subscribe']);
   });
 });
