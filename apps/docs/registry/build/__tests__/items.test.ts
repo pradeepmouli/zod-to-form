@@ -73,6 +73,17 @@ describe('buildCodegenItem', () => {
     );
   });
 
+  it('does NOT ship zod-form-components.tsx (self-contained generated component, no runtime map needed)', () => {
+    const paths = item.files.map((f) => f.path);
+    expect(paths).not.toContain('zod-form-components.tsx');
+  });
+
+  it('config componentSource points at @/components/ui/form, not the missing runtime map', () => {
+    const config = item.files.find((f) => f.path === 'z2f.config.ts')!;
+    expect(config.content).toContain("'@/components/ui/form'");
+    expect(config.content).not.toContain('zod-form-components');
+  });
+
   it('ships a generated form component built from the sample schema', () => {
     const gen = item.files.find((f) => f.path === 'generated-form.tsx');
     expect(gen).toBeDefined();
@@ -130,9 +141,25 @@ describe('buildCodegenItem', () => {
 
 describe('buildViteItem', () => {
   const item = buildViteItem();
+
   it('is named starter-vite and dev-depends on the vite plugin', () => {
     expect(item.name).toBe('starter-vite');
     expect(item.devDependencies).toContain('@zod-to-form/vite');
+  });
+
+  it('does NOT depend on @zod-to-form/react at runtime (plugin emits self-contained generated components)', () => {
+    expect(item.dependencies ?? []).not.toContain('@zod-to-form/react');
+  });
+
+  it('does NOT ship zod-form-components.tsx (?z2f-generated forms are self-contained, no runtime map needed)', () => {
+    const paths = item.files.map((f) => f.path);
+    expect(paths).not.toContain('zod-form-components.tsx');
+  });
+
+  it('config componentSource points at @/components/ui/form, not the missing runtime map', () => {
+    const config = item.files.find((f) => f.path === 'z2f.config.ts')!;
+    expect(config.content).toContain("'@/components/ui/form'");
+    expect(config.content).not.toContain('zod-form-components');
   });
 });
 

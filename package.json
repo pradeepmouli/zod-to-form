@@ -56,7 +56,7 @@
     "docs:dev": "pnpm --filter @zod-to-form/docs start",
     "docs:build": "pnpm --filter @zod-to-form/docs build",
     "registry:build": "tsx scripts/build-registry.mts",
-    "registry:check": "pnpm registry:build && git diff --exit-code apps/docs/static/r/"
+    "registry:check": "pnpm registry:build && git add --intent-to-add apps/docs/static/r/ && git diff --exit-code apps/docs/static/r/"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged",
