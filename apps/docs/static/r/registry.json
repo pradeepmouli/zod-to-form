@@ -1,0 +1,98 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "@zod-to-form",
+  "homepage": "https://zod.toform.dev",
+  "items": [
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "starter-react",
+      "type": "registry:block",
+      "title": "zod-to-form starter (runtime)",
+      "description": "Schema-driven React Hook Form from a Zod schema, rendered at runtime with <ZodForm>. Zod + react-hook-form + shadcn/ui, with validation and codegen via zod-to-form.",
+      "dependencies": ["@zod-to-form/react", "zod", "react-hook-form", "@hookform/resolvers"],
+      "registryDependencies": ["input", "label", "checkbox", "button"],
+      "files": [
+        {
+          "path": "schema.ts",
+          "type": "registry:lib",
+          "content": "import { z } from 'zod';\n\nexport const schema = z.object({\n  name: z\n    .string()\n    .min(2, 'Name must be at least 2 characters')\n    .meta({ title: 'Name', examples: ['Jane Doe'] }),\n  email: z\n    .string()\n    .email('Please enter a valid email')\n    .meta({ title: 'Email', examples: ['jane@example.com'] }),\n  age: z.number().min(18, 'Must be at least 18').optional().meta({ title: 'Age' }),\n  subscribe: z.boolean().default(false).meta({ title: 'Subscribe to updates' })\n});\n",
+          "target": "@/lib/zod-form/schema.ts"
+        },
+        {
+          "path": "z2f.config.ts",
+          "type": "registry:lib",
+          "content": "import { defineConfig, SHADCN_OVERRIDES } from '@zod-to-form/core';\n\nimport type * as Components from '@/components/zod-form-components';\nimport type * as ZodSchemas from './schema';\n\nexport default defineConfig<typeof Components, typeof ZodSchemas>({\n  components: {\n    source: '@/components/zod-form-components',\n    preset: 'shadcn',\n    overrides: {\n      ...SHADCN_OVERRIDES\n    }\n  },\n  defaults: {\n    mode: 'submit',\n    ui: 'shadcn',\n    overwrite: false,\n    serverAction: false,\n    formProvider: false,\n    // optimization: { level: 2 }  // 1 = decompose, 2 = native rules, 3 = cross-field\n  },\n  include: [],\n  exclude: [],\n  schemas: {\n    schema: {}\n  }\n});\n",
+          "target": "@/lib/zod-form/z2f.config.ts"
+        },
+        {
+          "path": "zod-form.tsx",
+          "type": "registry:component",
+          "content": "import { ZodForm } from '@zod-to-form/react';\nimport { schema } from '@/lib/zod-form/schema';\n\nexport function ExampleForm() {\n  return (\n    <ZodForm\n      schema={schema}\n      onSubmit={(_data) => {\n        // handle submission\n      }}\n    />\n  );\n}\n",
+          "target": "@/components/zod-form.tsx"
+        }
+      ],
+      "docs": "This starter ships a sample Zod schema and a z2f config wired to shadcn components.\n\nNext steps:\n1. Re-generate the config for YOUR components and schemas:\n   npx @zod-to-form/cli init\n2. Design and iterate your schema visually in the playground:\n   https://zod.toform.dev/play/"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "starter-codegen",
+      "type": "registry:block",
+      "title": "zod-to-form starter (codegen)",
+      "description": "Build-time generated React Hook Form component from a Zod schema — you own the .tsx, no runtime zod-to-form dependency. Zod + react-hook-form + shadcn/ui validation and codegen.",
+      "dependencies": ["zod", "react-hook-form", "@hookform/resolvers"],
+      "registryDependencies": ["input", "label", "checkbox", "button"],
+      "files": [
+        {
+          "path": "schema.ts",
+          "type": "registry:lib",
+          "content": "import { z } from 'zod';\n\nexport const schema = z.object({\n  name: z\n    .string()\n    .min(2, 'Name must be at least 2 characters')\n    .meta({ title: 'Name', examples: ['Jane Doe'] }),\n  email: z\n    .string()\n    .email('Please enter a valid email')\n    .meta({ title: 'Email', examples: ['jane@example.com'] }),\n  age: z.number().min(18, 'Must be at least 18').optional().meta({ title: 'Age' }),\n  subscribe: z.boolean().default(false).meta({ title: 'Subscribe to updates' })\n});\n",
+          "target": "@/lib/zod-form/schema.ts"
+        },
+        {
+          "path": "z2f.config.ts",
+          "type": "registry:lib",
+          "content": "import { defineConfig, SHADCN_OVERRIDES } from '@zod-to-form/core';\n\nimport type * as Components from '@/components/zod-form-components';\nimport type * as ZodSchemas from './schema';\n\nexport default defineConfig<typeof Components, typeof ZodSchemas>({\n  components: {\n    source: '@/components/zod-form-components',\n    preset: 'shadcn',\n    overrides: {\n      ...SHADCN_OVERRIDES\n    }\n  },\n  defaults: {\n    mode: 'submit',\n    ui: 'shadcn',\n    overwrite: false,\n    serverAction: false,\n    formProvider: false,\n    // optimization: { level: 2 }  // 1 = decompose, 2 = native rules, 3 = cross-field\n  },\n  include: [],\n  exclude: [],\n  schemas: {\n    schema: {}\n  }\n});\n",
+          "target": "@/lib/zod-form/z2f.config.ts"
+        },
+        {
+          "path": "generated-form.tsx",
+          "type": "registry:component",
+          "content": "import { useForm } from 'react-hook-form';\nimport { zodResolver } from '@hookform/resolvers/zod';\nimport { z } from 'zod';\nimport { schema } from '@/lib/zod-form/schema';\n\ntype StripIndexSignature<T> = T extends Date | File | FileList | Blob | RegExp\n  ? T\n  : T extends readonly (infer U)[]\n    ? StripIndexSignature<U>[]\n    : T extends object\n      ? {\n          [K in keyof T as string extends K\n            ? never\n            : number extends K\n              ? never\n              : symbol extends K\n                ? never\n                : K]: StripIndexSignature<T[K]>;\n        }\n      : T;\n\ntype FormData = StripIndexSignature<z.input<typeof schema>>;\ntype FormOutput = StripIndexSignature<z.output<typeof schema>>;\n\nconst _resolver = zodResolver(schema);\n\nexport function GeneratedForm(props: {\n  onSubmit: (data: FormOutput) => void;\n  defaultValues?: Partial<FormData>;\n  values?: FormData;\n  fieldProps?: Record<string, Record<string, unknown>>;\n}) {\n  const form = useForm<FormData>({\n    resolver: _resolver,\n    defaultValues: props.defaultValues,\n    values: props.values,\n  });\n  const { register, handleSubmit } = form;\n\n  return (\n    <form onSubmit={handleSubmit((data) => props.onSubmit(data as unknown as FormOutput))}>\n      <FormItem>\n        <FormLabel htmlFor=\"name\">Name</FormLabel>\n        <FormControl><input id=\"name\" type=\"text\" {...register('name')} /></FormControl>\n        <FormMessage />\n      </FormItem>\n      <FormItem>\n        <FormLabel htmlFor=\"email\">Email</FormLabel>\n        <FormControl><input id=\"email\" type=\"email\" {...register('email')} /></FormControl>\n        <FormMessage />\n      </FormItem>\n      <FormItem>\n        <FormLabel htmlFor=\"age\">Age</FormLabel>\n        <FormControl><input id=\"age\" type=\"number\" {...register('age')} /></FormControl>\n        <FormMessage />\n      </FormItem>\n      <FormItem>\n        <FormLabel htmlFor=\"subscribe\">Subscribe to updates</FormLabel>\n        <FormControl><input id=\"subscribe\" type=\"checkbox\" {...register('subscribe')} /></FormControl>\n        <FormMessage />\n      </FormItem>\n      <button type=\"submit\">Submit</button>\n    </form>\n  );\n}\n\nexport default GeneratedForm;",
+          "target": "@/components/generated-form.tsx"
+        }
+      ],
+      "docs": "This starter ships a sample Zod schema and a z2f config wired to shadcn components.\n\nNext steps:\n1. Re-generate the config for YOUR components and schemas:\n   npx @zod-to-form/cli init\n2. Design and iterate your schema visually in the playground:\n   https://zod.toform.dev/play/"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "starter-vite",
+      "type": "registry:block",
+      "title": "zod-to-form starter (Vite plugin)",
+      "description": "Generate React Hook Form components from a Zod schema at build time with the zod-to-form Vite plugin (?z2f imports). Zod + react-hook-form + shadcn/ui.",
+      "dependencies": ["zod", "react-hook-form", "@hookform/resolvers"],
+      "devDependencies": ["@zod-to-form/vite"],
+      "registryDependencies": ["input", "label", "checkbox", "button"],
+      "files": [
+        {
+          "path": "schema.ts",
+          "type": "registry:lib",
+          "content": "import { z } from 'zod';\n\nexport const schema = z.object({\n  name: z\n    .string()\n    .min(2, 'Name must be at least 2 characters')\n    .meta({ title: 'Name', examples: ['Jane Doe'] }),\n  email: z\n    .string()\n    .email('Please enter a valid email')\n    .meta({ title: 'Email', examples: ['jane@example.com'] }),\n  age: z.number().min(18, 'Must be at least 18').optional().meta({ title: 'Age' }),\n  subscribe: z.boolean().default(false).meta({ title: 'Subscribe to updates' })\n});\n",
+          "target": "@/lib/zod-form/schema.ts"
+        },
+        {
+          "path": "z2f.config.ts",
+          "type": "registry:lib",
+          "content": "import { defineConfig, SHADCN_OVERRIDES } from '@zod-to-form/core';\n\nimport type * as Components from '@/components/zod-form-components';\nimport type * as ZodSchemas from './schema';\n\nexport default defineConfig<typeof Components, typeof ZodSchemas>({\n  components: {\n    source: '@/components/zod-form-components',\n    preset: 'shadcn',\n    overrides: {\n      ...SHADCN_OVERRIDES\n    }\n  },\n  defaults: {\n    mode: 'submit',\n    ui: 'shadcn',\n    overwrite: false,\n    serverAction: false,\n    formProvider: false,\n    // optimization: { level: 2 }  // 1 = decompose, 2 = native rules, 3 = cross-field\n  },\n  include: [],\n  exclude: [],\n  schemas: {\n    schema: {}\n  }\n});\n",
+          "target": "@/lib/zod-form/z2f.config.ts"
+        },
+        {
+          "path": "vite-usage.tsx",
+          "type": "registry:component",
+          "content": "// vite.config.ts — add the z2f plugin:\n//   import { z2f } from '@zod-to-form/vite';\n//   export default defineConfig({ plugins: [z2f()] });\n//\n// then import the generated form from your schema:\nimport Form from '@/lib/zod-form/schema.ts?z2f';\nexport default Form;\n",
+          "target": "@/components/zod-form-vite.tsx"
+        }
+      ],
+      "docs": "This starter ships a sample Zod schema and a z2f config wired to shadcn components.\n\nNext steps:\n1. Re-generate the config for YOUR components and schemas:\n   npx @zod-to-form/cli init\n2. Design and iterate your schema visually in the playground:\n   https://zod.toform.dev/play/"
+    }
+  ]
+}
