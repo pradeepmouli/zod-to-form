@@ -216,9 +216,13 @@ export function buildCodegenItem(): RegistryItem {
   };
 }
 
-const VITE_USAGE = `// vite.config.ts — add the z2f plugin:
-//   import { z2f } from '@zod-to-form/vite';
-//   export default defineConfig({ plugins: [z2f()] });
+const VITE_USAGE = `// vite.config.ts — add the z2f plugin BEFORE @vitejs/plugin-react:
+//   import z2fVite from '@zod-to-form/vite';
+//   import react from '@vitejs/plugin-react';
+//   export default defineConfig({ plugins: [z2fVite(), react()] });
+//
+// tsconfig.json — register the ambient ?z2f types so the import below type-checks:
+//   { "compilerOptions": { "types": ["@zod-to-form/vite/client"] } }
 //
 // then import the generated form from your schema:
 import Form from '@/lib/zod-form/schema.ts?z2f';
