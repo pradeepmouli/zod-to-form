@@ -216,10 +216,15 @@ export function buildCodegenItem(): RegistryItem {
   };
 }
 
-const VITE_USAGE = `// vite.config.ts — add the z2f plugin BEFORE @vitejs/plugin-react:
+const VITE_USAGE = `// vite.config.ts — add the z2f plugin BEFORE @vitejs/plugin-react.
+// Point configPath at the z2f.config.ts this starter installed (under your @lib
+// alias — default src/lib/zod-form/). Without it the plugin only auto-discovers
+// z2f.config.* at the project ROOT and silently falls back to defaults (ui: html):
 //   import z2fVite from '@zod-to-form/vite';
 //   import react from '@vitejs/plugin-react';
-//   export default defineConfig({ plugins: [z2fVite(), react()] });
+//   export default defineConfig({
+//     plugins: [z2fVite({ configPath: 'src/lib/zod-form/z2f.config.ts' }), react()]
+//   });
 //
 // tsconfig.json — register the ambient ?z2f types so the import below type-checks:
 //   { "compilerOptions": { "types": ["@zod-to-form/vite/client"] } }
