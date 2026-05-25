@@ -24,24 +24,24 @@ function makeField(overrides: Partial<FormField>): FormField {
 // ─── zodType coercions ────────────────────────────────────────────────────────
 
 describe('getFieldRegisterHints — zodType coercions', () => {
-  it('returns valueAsNumber:true for number fields', () => {
+  it("returns coerce:'number' for number fields", () => {
     const hints = getFieldRegisterHints(makeField({ zodType: 'number' }));
-    expect(hints).toEqual({ valueAsNumber: true });
+    expect(hints).toEqual({ coerce: 'number' });
   });
 
-  it('returns valueAsNumber:true for bigint fields', () => {
+  it("returns coerce:'bigint' for bigint fields (distinct from number — no precision loss)", () => {
     const hints = getFieldRegisterHints(makeField({ zodType: 'bigint' }));
-    expect(hints).toEqual({ valueAsNumber: true });
+    expect(hints).toEqual({ coerce: 'bigint' });
   });
 
-  it('returns valueAsDate:true for date fields', () => {
+  it("returns coerce:'date' for date fields", () => {
     const hints = getFieldRegisterHints(makeField({ zodType: 'date' }));
-    expect(hints).toEqual({ valueAsDate: true });
+    expect(hints).toEqual({ coerce: 'date' });
   });
 
-  it("returns setValueAs:'file' for file fields", () => {
+  it("returns coerce:'file' for file fields", () => {
     const hints = getFieldRegisterHints(makeField({ zodType: 'file' }));
-    expect(hints).toEqual({ setValueAs: 'file' });
+    expect(hints).toEqual({ coerce: 'file' });
   });
 
   it('returns empty hints for plain string fields', () => {
@@ -70,7 +70,7 @@ describe('getFieldRegisterHints — native validation mode (L2)', () => {
     expect(hints).toEqual({ nativeRules: { required: 'This field is required' } });
   });
 
-  it('returns nativeRules with min and max', () => {
+  it('returns nativeRules with min and max (plus coerce:number for number fields)', () => {
     const hints = getFieldRegisterHints(
       makeField({
         zodType: 'number',
@@ -84,7 +84,7 @@ describe('getFieldRegisterHints — native validation mode (L2)', () => {
       })
     );
     expect(hints).toEqual({
-      valueAsNumber: true,
+      coerce: 'number',
       nativeRules: {
         min: { value: 0, message: 'Must be at least 0' },
         max: { value: 100, message: 'Must be at most 100' }

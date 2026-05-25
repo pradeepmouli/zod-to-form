@@ -168,10 +168,16 @@ export function registerPathExpr(path: string): string {
  * Build a register-options object literal string from a field's coercion hints.
  *
  * Returns the options parts that should appear inside `register(key, { ... })`.
- * Only emits coercion options (valueAsNumber, valueAsDate, setValueAs).
+ * Only emits coercion options (`setValueAs`).
  * Validation rules (nativeRules, validate) are handled separately by
  * `renderOptimizedRegister` in the optimized path and are NOT included here,
  * so the non-optimized path stays compatible with the existing zodResolver flow.
+ *
+ * Canonical `setValueAs` semantics (must match @zod-to-form/react exactly):
+ * - number: empty→undefined, filled→Number(v)
+ * - bigint: empty→undefined, filled→BigInt(v) (precision-safe; on parse error returns raw)
+ * - date:   empty→undefined, filled→new Date(v)
+ * - file:   FileList→File|undefined, else pass-through
  *
  * Returns an empty array when no coercion options apply (bare register).
  *
@@ -181,13 +187,20 @@ function buildCoercionOptionParts(field: FormField): string[] {
   const hints = getFieldRegisterHints(field);
   const parts: string[] = [];
 
-  if (hints.valueAsNumber) {
-    parts.push('valueAsNumber: true');
-  }
-  if (hints.valueAsDate) {
-    parts.push('valueAsDate: true');
-  }
-  if (hints.setValueAs === 'file') {
+  if (hints.coerce === 'number') {
+    // P1 fix: empty→undefined (not NaN). Must match @zod-to-form/react exactly.
+    parts.push("setValueAs: (v: unknown) => (v === '' || v == null ? undefined : Number(v))");
+  } else if (hints.coerce === 'bigint') {
+    // P2 fix: use BigInt() for precision above Number.MAX_SAFE_INTEGER.
+    parts.push(
+      "setValueAs: (v: unknown) => { if (v === '' || v == null) return undefined; try { return BigInt(v as never); } catch { return v; } }"
+    );
+  } else if (hints.coerce === 'date') {
+    // empty→undefined, filled→Date object.
+    parts.push(
+      "setValueAs: (v: unknown) => (v === '' || v == null ? undefined : new Date(v as never))"
+    );
+  } else if (hints.coerce === 'file') {
     // Mirror the exact lambda that @zod-to-form/react uses at runtime so that
     // generated forms and the runtime renderer behave identically.
     parts.push(
@@ -238,16 +251,18 @@ function renderCheckbox(field: FormField, regExpr?: string): string {
 }
 
 function renderDatePicker(field: FormField, regExpr?: string): string {
-  // DatePicker always renders <input type="date"> so valueAsDate: true is always
-  // required — hardcode it as the baseline and merge any additional coercion hints.
+  // DatePicker always renders <input type="date"> with the date setValueAs coercion.
   // When a pre-built regExpr is passed (e.g. from renderOptimizedRegister) use it as-is.
   if (regExpr) {
     return `<input id="${field.key}" type="date"${disabledAttr(field)} {...${regExpr}} />`;
   }
-  // Derive coercion parts from hints; ensure valueAsDate is always present.
+  // Derive coercion parts from hints (coerce:'date' → setValueAs lambda).
+  // The date setValueAs is always required for DatePicker fields.
   const coercionParts = buildCoercionOptionParts(field);
-  if (!coercionParts.includes('valueAsDate: true')) {
-    coercionParts.unshift('valueAsDate: true');
+  const DATE_SETVALUE_AS =
+    "setValueAs: (v: unknown) => (v === '' || v == null ? undefined : new Date(v as never))";
+  if (!coercionParts.some((p) => p.startsWith('setValueAs'))) {
+    coercionParts.unshift(DATE_SETVALUE_AS);
   }
   const path = field.key;
   const pathToken = path.includes('${') ? `\`${path}\`` : `'${path}'`;

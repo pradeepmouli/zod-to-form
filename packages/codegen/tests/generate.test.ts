@@ -47,11 +47,14 @@ describe('renderField', () => {
     expect(result).toContain('type="checkbox"');
   });
 
-  it('renders DatePicker with valueAsDate', () => {
+  it('renders DatePicker with setValueAs → new Date() (not valueAsDate: true)', () => {
     const field = makeField({ key: 'dob', component: 'DatePicker' });
     const result = renderField(field);
     expect(result).toContain('type="date"');
-    expect(result).toContain('valueAsDate: true');
+    // Must emit setValueAs with new Date() — not the old valueAsDate: true flag
+    expect(result).toContain('setValueAs:');
+    expect(result).toContain('new Date(');
+    expect(result).not.toContain('valueAsDate: true');
   });
 
   it('renders FileInput', () => {
