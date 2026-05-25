@@ -184,15 +184,24 @@ function getRegisterOptions(field: FormField): Record<string, unknown> {
   const hints = getFieldRegisterHints(field);
   const opts: Record<string, unknown> = {};
 
-  if (hints.valueAsNumber) {
-    opts['valueAsNumber'] = true;
-  }
-
-  if (hints.valueAsDate) {
-    opts['valueAsDate'] = true;
-  }
-
-  if (hints.setValueAs === 'file') {
+  // Canonical setValueAs semantics — must match what codegen emits exactly.
+  // Using setValueAs instead of valueAsNumber/valueAsDate fixes:
+  //   P1: empty optional number → NaN (not undefined) with valueAsNumber: true
+  //   P2: bigint precision loss above Number.MAX_SAFE_INTEGER via Number()
+  if (hints.coerce === 'number') {
+    opts['setValueAs'] = (v: unknown) => (v === '' || v == null ? undefined : Number(v));
+  } else if (hints.coerce === 'bigint') {
+    opts['setValueAs'] = (v: unknown) => {
+      if (v === '' || v == null) return undefined;
+      try {
+        return BigInt(v as never);
+      } catch {
+        return v;
+      }
+    };
+  } else if (hints.coerce === 'date') {
+    opts['setValueAs'] = (v: unknown) => (v === '' || v == null ? undefined : new Date(v as never));
+  } else if (hints.coerce === 'file') {
     opts['setValueAs'] = (value: unknown) => {
       if (value instanceof FileList) {
         return value.length > 0 ? value.item(0) : undefined;

@@ -256,3 +256,69 @@ describe('ZodForm', () => {
     });
   });
 });
+
+// ─── setValueAs coercion behaviour (P1 regression guard) ─────────────────────
+
+describe('ZodForm — number/date setValueAs coercion', () => {
+  /**
+   * P1 regression guard: empty optional number input must submit as `undefined`,
+   * not NaN. This failed with `valueAsNumber: true` because an empty
+   * `<input type="number">` gives valueAsNumber = NaN, which is not `undefined`
+   * and therefore fails `z.number().optional()`.
+   */
+  it('submits empty optional number field as undefined (not NaN) — P1 guard', async () => {
+    const schema = z.object({
+      label: z.string(),
+      score: z.number().optional()
+    });
+    const onSubmit = vi.fn();
+
+    render(
+      <ZodForm schema={schema} onSubmit={onSubmit}>
+        <button type="submit">Submit</button>
+      </ZodForm>
+    );
+
+    // Fill only the required string field; leave score empty
+    fireEvent.change(screen.getByLabelText('Label'), { target: { value: 'test' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+
+    // score must be undefined (empty → undefined), never NaN
+    const submitted = onSubmit.mock.calls[0]![0] as Record<string, unknown>;
+    expect(submitted['score']).toBeUndefined();
+
+    // Extra: confirm z.number().optional().safeParse(undefined) passes
+    expect(z.number().optional().safeParse(submitted['score']).success).toBe(true);
+  });
+
+  /**
+   * Verify that filling a number field with a valid value submits it as a JS number.
+   */
+  it('submits filled optional number field as a number (not a string)', async () => {
+    const schema = z.object({
+      score: z.number().optional()
+    });
+    const onSubmit = vi.fn();
+
+    render(
+      <ZodForm schema={schema} onSubmit={onSubmit}>
+        <button type="submit">Submit</button>
+      </ZodForm>
+    );
+
+    fireEvent.change(screen.getByLabelText('Score'), { target: { value: '99' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+
+    const submitted = onSubmit.mock.calls[0]![0] as Record<string, unknown>;
+    expect(submitted['score']).toBe(99);
+    expect(typeof submitted['score']).toBe('number');
+  });
+});
