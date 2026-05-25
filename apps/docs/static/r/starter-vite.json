@@ -36,7 +36,7 @@
     {
       "path": "vite-usage.tsx",
       "type": "registry:component",
-      "content": "// vite.config.ts — add the z2f plugin BEFORE @vitejs/plugin-react:\n//   import z2fVite from '@zod-to-form/vite';\n//   import react from '@vitejs/plugin-react';\n//   export default defineConfig({ plugins: [z2fVite(), react()] });\n//\n// tsconfig.json — register the ambient ?z2f types so the import below type-checks:\n//   { \"compilerOptions\": { \"types\": [\"@zod-to-form/vite/client\"] } }\n//\n// then import the generated form from your schema:\nimport Form from '@/lib/zod-form/schema.ts?z2f';\nexport default Form;\n",
+      "content": "// vite.config.ts — add the z2f plugin BEFORE @vitejs/plugin-react.\n// Point configPath at the z2f.config.ts this starter installed (under your @lib\n// alias — default src/lib/zod-form/). Without it the plugin only auto-discovers\n// z2f.config.* at the project ROOT and silently falls back to defaults (ui: html):\n//   import z2fVite from '@zod-to-form/vite';\n//   import react from '@vitejs/plugin-react';\n//   export default defineConfig({\n//     plugins: [z2fVite({ configPath: 'src/lib/zod-form/z2f.config.ts' }), react()]\n//   });\n//\n// tsconfig.json — register the ambient ?z2f types so the import below type-checks:\n//   { \"compilerOptions\": { \"types\": [\"@zod-to-form/vite/client\"] } }\n//\n// then import the generated form from your schema:\nimport Form from '@/lib/zod-form/schema.ts?z2f';\nexport default Form;\n",
       "target": "@components/zod-form-vite.tsx"
     }
   ],
