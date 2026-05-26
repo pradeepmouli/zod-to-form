@@ -29,68 +29,49 @@
         "button",
         "popover",
         "calendar",
+        "date-picker",
         "form"
       ],
       "files": [
         {
-          "path": "schema.ts",
+          "path": "example-schema.ts",
           "type": "registry:lib",
-          "target": "@lib/zod-form/schema.ts"
+          "target": "@lib/example-schema.ts"
         },
         {
           "path": "z2f.config.ts",
           "type": "registry:lib",
-          "target": "@lib/zod-form/z2f.config.ts"
+          "target": "z2f.config.ts"
         },
         {
-          "path": "zod-form/types.ts",
+          "path": "z2f/types.ts",
           "type": "registry:lib",
-          "target": "@components/zod-form/types.ts"
+          "target": "@components/z2f/types.ts"
         },
         {
-          "path": "zod-form/input.tsx",
+          "path": "z2f/select.tsx",
           "type": "registry:component",
-          "target": "@components/zod-form/input.tsx"
+          "target": "@components/z2f/select.tsx"
         },
         {
-          "path": "zod-form/textarea.tsx",
+          "path": "z2f/radio-group.tsx",
           "type": "registry:component",
-          "target": "@components/zod-form/textarea.tsx"
+          "target": "@components/z2f/radio-group.tsx"
         },
         {
-          "path": "zod-form/checkbox.tsx",
+          "path": "z2f/date-picker.tsx",
           "type": "registry:component",
-          "target": "@components/zod-form/checkbox.tsx"
+          "target": "@components/z2f/date-picker.tsx"
         },
         {
-          "path": "zod-form/switch.tsx",
+          "path": "z2f/index.tsx",
           "type": "registry:component",
-          "target": "@components/zod-form/switch.tsx"
+          "target": "@components/z2f/index.tsx"
         },
         {
-          "path": "zod-form/select.tsx",
+          "path": "example-form.tsx",
           "type": "registry:component",
-          "target": "@components/zod-form/select.tsx"
-        },
-        {
-          "path": "zod-form/radio-group.tsx",
-          "type": "registry:component",
-          "target": "@components/zod-form/radio-group.tsx"
-        },
-        {
-          "path": "zod-form/date-picker.tsx",
-          "type": "registry:component",
-          "target": "@components/zod-form/date-picker.tsx"
-        },
-        {
-          "path": "zod-form/index.tsx",
-          "type": "registry:component",
-          "target": "@components/zod-form/index.tsx"
-        },
-        {
-          "path": "zod-form.tsx",
-          "type": "registry:component",
-          "target": "@components/zod-form.tsx"
+          "target": "@components/example-form.tsx"
         }
       ],
       "docs": "This starter ships a sample Zod schema and a z2f config wired to shadcn components.\n\nNext steps:\n1. Re-generate the config for YOUR components and schemas:\n   npx @zod-to-form/cli init\n2. Design and iterate your schema visually in the playground:\n   https://zod.toform.dev/play/"
@@ -120,68 +101,49 @@
         "button",
         "popover",
         "calendar",
+        "date-picker",
         "form"
       ],
       "files": [
         {
-          "path": "schema.ts",
+          "path": "example-schema.ts",
           "type": "registry:lib",
-          "target": "@lib/zod-form/schema.ts"
+          "target": "@lib/example-schema.ts"
         },
         {
           "path": "z2f.config.ts",
           "type": "registry:lib",
-          "target": "@lib/zod-form/z2f.config.ts"
+          "target": "z2f.config.ts"
         },
         {
-          "path": "zod-form/types.ts",
+          "path": "z2f/types.ts",
           "type": "registry:lib",
-          "target": "@components/zod-form/types.ts"
+          "target": "@components/z2f/types.ts"
         },
         {
-          "path": "zod-form/input.tsx",
+          "path": "z2f/select.tsx",
           "type": "registry:component",
-          "target": "@components/zod-form/input.tsx"
+          "target": "@components/z2f/select.tsx"
         },
         {
-          "path": "zod-form/textarea.tsx",
+          "path": "z2f/radio-group.tsx",
           "type": "registry:component",
-          "target": "@components/zod-form/textarea.tsx"
+          "target": "@components/z2f/radio-group.tsx"
         },
         {
-          "path": "zod-form/checkbox.tsx",
+          "path": "z2f/date-picker.tsx",
           "type": "registry:component",
-          "target": "@components/zod-form/checkbox.tsx"
+          "target": "@components/z2f/date-picker.tsx"
         },
         {
-          "path": "zod-form/switch.tsx",
+          "path": "z2f/index.tsx",
           "type": "registry:component",
-          "target": "@components/zod-form/switch.tsx"
+          "target": "@components/z2f/index.tsx"
         },
         {
-          "path": "zod-form/select.tsx",
+          "path": "example-form.tsx",
           "type": "registry:component",
-          "target": "@components/zod-form/select.tsx"
-        },
-        {
-          "path": "zod-form/radio-group.tsx",
-          "type": "registry:component",
-          "target": "@components/zod-form/radio-group.tsx"
-        },
-        {
-          "path": "zod-form/date-picker.tsx",
-          "type": "registry:component",
-          "target": "@components/zod-form/date-picker.tsx"
-        },
-        {
-          "path": "zod-form/index.tsx",
-          "type": "registry:component",
-          "target": "@components/zod-form/index.tsx"
-        },
-        {
-          "path": "generated-form.tsx",
-          "type": "registry:component",
-          "target": "@components/generated-form.tsx"
+          "target": "@components/example-form.tsx"
         }
       ],
       "docs": "This starter ships a sample Zod schema and a z2f config wired to shadcn components.\n\nNext steps:\n1. Re-generate the config for YOUR components and schemas:\n   npx @zod-to-form/cli init\n2. Design and iterate your schema visually in the playground:\n   https://zod.toform.dev/play/"
@@ -212,68 +174,49 @@
         "button",
         "popover",
         "calendar",
+        "date-picker",
         "form"
       ],
       "files": [
         {
-          "path": "schema.ts",
+          "path": "example-schema.ts",
           "type": "registry:lib",
-          "target": "@lib/zod-form/schema.ts"
+          "target": "@lib/example-schema.ts"
         },
         {
           "path": "z2f.config.ts",
           "type": "registry:lib",
-          "target": "@lib/zod-form/z2f.config.ts"
+          "target": "z2f.config.ts"
         },
         {
-          "path": "zod-form/types.ts",
+          "path": "z2f/types.ts",
           "type": "registry:lib",
-          "target": "@components/zod-form/types.ts"
+          "target": "@components/z2f/types.ts"
         },
         {
-          "path": "zod-form/input.tsx",
+          "path": "z2f/select.tsx",
           "type": "registry:component",
-          "target": "@components/zod-form/input.tsx"
+          "target": "@components/z2f/select.tsx"
         },
         {
-          "path": "zod-form/textarea.tsx",
+          "path": "z2f/radio-group.tsx",
           "type": "registry:component",
-          "target": "@components/zod-form/textarea.tsx"
+          "target": "@components/z2f/radio-group.tsx"
         },
         {
-          "path": "zod-form/checkbox.tsx",
+          "path": "z2f/date-picker.tsx",
           "type": "registry:component",
-          "target": "@components/zod-form/checkbox.tsx"
+          "target": "@components/z2f/date-picker.tsx"
         },
         {
-          "path": "zod-form/switch.tsx",
+          "path": "z2f/index.tsx",
           "type": "registry:component",
-          "target": "@components/zod-form/switch.tsx"
-        },
-        {
-          "path": "zod-form/select.tsx",
-          "type": "registry:component",
-          "target": "@components/zod-form/select.tsx"
-        },
-        {
-          "path": "zod-form/radio-group.tsx",
-          "type": "registry:component",
-          "target": "@components/zod-form/radio-group.tsx"
-        },
-        {
-          "path": "zod-form/date-picker.tsx",
-          "type": "registry:component",
-          "target": "@components/zod-form/date-picker.tsx"
-        },
-        {
-          "path": "zod-form/index.tsx",
-          "type": "registry:component",
-          "target": "@components/zod-form/index.tsx"
+          "target": "@components/z2f/index.tsx"
         },
         {
           "path": "vite-usage.tsx",
           "type": "registry:component",
-          "target": "@components/zod-form-vite.tsx"
+          "target": "@components/example-form.tsx"
         }
       ],
       "docs": "This starter ships a sample Zod schema and a z2f config wired to shadcn components.\n\nNext steps:\n1. Re-generate the config for YOUR components and schemas:\n   npx @zod-to-form/cli init\n2. Design and iterate your schema visually in the playground:\n   https://zod.toform.dev/play/"
