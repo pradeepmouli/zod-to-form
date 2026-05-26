@@ -6,8 +6,21 @@
     "resolveJsonModule": true,
     // @docusaurus/tsconfig sets baseUrl (required by its `@site/*` paths),
     // which TS 6.0 deprecates; silence until Docusaurus migrates.
-    "ignoreDeprecations": "6.0"
+    // We override baseUrl here so that our `paths` entries resolve relative to
+    // the project root (apps/docs/) rather than the node_modules tsconfig location.
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "paths": {
+      "@site/*": ["./*"],
+      "@/components/ui/*": ["registry/components/shadcn/__fixtures__/ui/*"]
+    }
   },
-  "include": ["src/", "registry/**/*.ts", "docusaurus.config.ts", "sidebars.ts"],
+  "include": [
+    "src/",
+    "registry/**/*.ts",
+    "registry/**/*.tsx",
+    "docusaurus.config.ts",
+    "sidebars.ts"
+  ],
   "exclude": ["node_modules", "build", ".docusaurus"]
 }
