@@ -173,7 +173,7 @@ describe('compileTarget', () => {
 
     expect(result.generatedSource).toContain("import { ExpressionEditor } from './components';");
     expect(result.generatedSource).toContain(
-      '<ExpressionEditor id="expression" {...register(\'expression\')}'
+      '<ExpressionEditor id="expression" required {...register(\'expression\')}'
     );
   });
 
