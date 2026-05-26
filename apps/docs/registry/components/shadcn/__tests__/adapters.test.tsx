@@ -309,6 +309,11 @@ describe('DatePicker adapter', () => {
     expect(screen.getByText('Pick a date')).toBeInTheDocument();
   });
 
+  it('shows the placeholder (no throw) when value is an invalid date string', () => {
+    expect(() => render(<DatePicker value="not-a-date" />)).not.toThrow();
+    expect(screen.getByText('Pick a date')).toBeInTheDocument();
+  });
+
   it('does not throw when onChange is omitted and a day is clicked', () => {
     render(<DatePicker />);
     expect(() => fireEvent.click(screen.getByTestId('calendar-day'))).not.toThrow();

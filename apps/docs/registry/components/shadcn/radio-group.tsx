@@ -18,8 +18,8 @@ export const RadioGroup = React.forwardRef<HTMLDivElement, Props>(
       onValueChange={(v) => onChange?.(v)}
       disabled={disabled}
     >
-      {options.map((o) => {
-        const itemId = `${name ?? 'radio'}-${String(o.value)}`;
+      {options.map((o, index) => {
+        const itemId = `${name ?? 'radio'}-${index}`;
         return (
           <div key={String(o.value)}>
             <RadioGroupItem value={String(o.value)} id={itemId} disabled={o.disabled} />
