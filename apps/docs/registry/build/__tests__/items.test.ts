@@ -1,4 +1,6 @@
 // @vitest-environment node
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import Ajv from 'ajv';
 import { walkSchema } from '@zod-to-form/core';
@@ -6,6 +8,18 @@ import { schema } from '../../sample/schema.js';
 import { buildReactItem, buildCodegenItem, buildViteItem, buildRegistryIndex } from '../items.js';
 import { REGISTRY_DEPENDENCIES, STARTER_DOCS } from '../docs.js';
 import itemSchema from '../../schema/registry-item.schema.json';
+
+/** The eight shadcn adapter files every starter ships. */
+const ADAPTER_TARGETS = [
+  '@components/zod-form/input.tsx',
+  '@components/zod-form/textarea.tsx',
+  '@components/zod-form/checkbox.tsx',
+  '@components/zod-form/switch.tsx',
+  '@components/zod-form/select.tsx',
+  '@components/zod-form/radio-group.tsx',
+  '@components/zod-form/date-picker.tsx',
+  '@components/zod-form/index.tsx'
+];
 
 describe('sample schema', () => {
   it('walks to five named fields', () => {
@@ -33,16 +47,9 @@ describe('buildReactItem', () => {
     );
   });
 
-  it('ships schema.ts, z2f.config.ts, zod-form-components.tsx, and a ZodForm usage file with inlined content', () => {
+  it('ships schema.ts, z2f.config.ts, the shadcn adapters, and a ZodForm usage file with inlined content', () => {
     const paths = item.files.map((f) => f.path);
-    expect(paths).toEqual(
-      expect.arrayContaining([
-        'schema.ts',
-        'z2f.config.ts',
-        'zod-form-components.tsx',
-        'zod-form.tsx'
-      ])
-    );
+    expect(paths).toEqual(expect.arrayContaining(['schema.ts', 'z2f.config.ts', 'zod-form.tsx']));
     for (const f of item.files) {
       expect(f.content!.length).toBeGreaterThan(0);
       // targets use shadcn registry placeholders (@components/, @ui/, @lib/, @hooks/)
@@ -51,9 +58,27 @@ describe('buildReactItem', () => {
     }
   });
 
-  it('config content is produced by buildConfigSource (shadcn preset)', () => {
+  it('no longer ships the old zod-form-components.tsx stub (replaced by the adapter module)', () => {
+    const paths = item.files.map((f) => f.path);
+    expect(paths).not.toContain('zod-form-components.tsx');
+    expect(item.files.map((f) => f.target)).not.toContain('@components/zod-form-components.tsx');
+  });
+
+  it('ships all eight shadcn adapter files at @components/zod-form/', () => {
+    const targets = item.files.map((f) => f.target);
+    expect(targets).toEqual(expect.arrayContaining(ADAPTER_TARGETS));
+  });
+
+  it('config content is produced by buildConfigSource (shadcn preset) targeting @/components/zod-form', () => {
     const config = item.files.find((f) => f.path === 'z2f.config.ts')!;
     expect(config.content).toContain("preset: 'shadcn'");
+    expect(config.content).toContain("'@/components/zod-form'");
+  });
+
+  it('ZodForm usage imports the components map from @/components/zod-form and passes it', () => {
+    const usage = item.files.find((f) => f.path === 'zod-form.tsx')!;
+    expect(usage.content).toContain("import { components } from '@/components/zod-form'");
+    expect(usage.content).toMatch(/components=\{components\}/);
   });
 
   it('has the correct $schema, registryDependencies, and docs', () => {
@@ -74,14 +99,19 @@ describe('buildCodegenItem', () => {
     );
   });
 
-  it('does NOT ship zod-form-components.tsx (self-contained generated component, no runtime map needed)', () => {
+  it('does NOT ship the old zod-form-components.tsx stub', () => {
     const paths = item.files.map((f) => f.path);
     expect(paths).not.toContain('zod-form-components.tsx');
   });
 
-  it('config componentSource points at @/components/ui/form, not the missing runtime map', () => {
+  it('ships all eight shadcn adapter files at @components/zod-form/', () => {
+    const targets = item.files.map((f) => f.target);
+    expect(targets).toEqual(expect.arrayContaining(ADAPTER_TARGETS));
+  });
+
+  it('config componentSource points at @/components/zod-form', () => {
     const config = item.files.find((f) => f.path === 'z2f.config.ts')!;
-    expect(config.content).toContain("'@/components/ui/form'");
+    expect(config.content).toContain("'@/components/zod-form'");
     expect(config.content).not.toContain('zod-form-components');
   });
 
@@ -152,15 +182,54 @@ describe('buildViteItem', () => {
     expect(item.dependencies ?? []).not.toContain('@zod-to-form/react');
   });
 
-  it('does NOT ship zod-form-components.tsx (?z2f-generated forms are self-contained, no runtime map needed)', () => {
+  it('does NOT ship the old zod-form-components.tsx stub', () => {
     const paths = item.files.map((f) => f.path);
     expect(paths).not.toContain('zod-form-components.tsx');
   });
 
-  it('config componentSource points at @/components/ui/form, not the missing runtime map', () => {
+  it('ships all eight shadcn adapter files at @components/zod-form/', () => {
+    const targets = item.files.map((f) => f.target);
+    expect(targets).toEqual(expect.arrayContaining(ADAPTER_TARGETS));
+  });
+
+  it('config componentSource points at @/components/zod-form', () => {
     const config = item.files.find((f) => f.path === 'z2f.config.ts')!;
-    expect(config.content).toContain("'@/components/ui/form'");
+    expect(config.content).toContain("'@/components/zod-form'");
     expect(config.content).not.toContain('zod-form-components');
+  });
+});
+
+describe('shipped shadcn adapter files', () => {
+  const item = buildReactItem();
+  const byTarget = (target: string) => item.files.find((f) => f.target === target)!;
+
+  it('ships the index with NO .js extensions in its relative imports', () => {
+    const index = byTarget('@components/zod-form/index.tsx');
+    expect(index.content).toBeDefined();
+    // No relative specifier may keep the .js extension after the strip transform.
+    expect(index.content).not.toMatch(/from\s+['"]\.\.?\/[^'"]+\.js['"]/);
+    // The components are still re-exported (extensionless) so the module resolves.
+    expect(index.content).toContain("from './input'");
+    expect(index.content).toContain('export const components');
+  });
+
+  it('ships the seven component files VERBATIM (matches the on-disk source)', () => {
+    for (const name of [
+      'input',
+      'textarea',
+      'checkbox',
+      'switch',
+      'select',
+      'radio-group',
+      'date-picker'
+    ]) {
+      const source = readFileSync(
+        fileURLToPath(new URL(`../../components/shadcn/${name}.tsx`, import.meta.url)),
+        'utf8'
+      );
+      const shipped = byTarget(`@components/zod-form/${name}.tsx`);
+      expect(shipped.content, `${name} must ship unchanged`).toBe(source);
+    }
   });
 });
 
