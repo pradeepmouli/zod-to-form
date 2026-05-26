@@ -5,7 +5,12 @@
  * Renders a single clickable button so DatePicker tests can:
  *   1. Find it by data-testid="calendar-day"
  *   2. Click it
- *   3. Assert onSelect was called with a Date (2026-01-02T00:00:00Z)
+ *   3. Assert onSelect was called with a Date (local 2026-01-02 00:00)
+ *
+ * The selected date is constructed in LOCAL time (year, monthIndex, day) so
+ * that `format(d, 'yyyy-MM-dd')` is deterministic regardless of the runner's
+ * timezone — a UTC-midnight Date would format to the previous day in
+ * negative-offset zones.
  */
 import * as React from 'react';
 
@@ -20,7 +25,7 @@ export function Calendar({ onSelect }: CalendarProps) {
     <button
       type="button"
       data-testid="calendar-day"
-      onClick={() => onSelect?.(new Date('2026-01-02T00:00:00Z'))}
+      onClick={() => onSelect?.(new Date(2026, 0, 2))}
     >
       day
     </button>
