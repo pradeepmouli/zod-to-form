@@ -5,13 +5,11 @@
 
 export const SHADCN_FIELD_TEMPLATE = `import type { ReactNode } from 'react';
 import {
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from './ui/form';
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel
+} from './ui/field';
 
 export interface FieldTemplateProps {
   children: ReactNode;
@@ -35,20 +33,20 @@ export function FieldTemplate({
   deprecated
 }: FieldTemplateProps) {
   return (
-    <FormItem>
-      <FormLabel htmlFor={name}>
+    <Field>
+      <FieldLabel htmlFor={name}>
         {deprecated ? <s>{label}</s> : label}
         {deprecated ? (
           <span aria-hidden="true" title="Deprecated"> ⚠</span>
         ) : null}
-      </FormLabel>
-      <FormControl>{children}</FormControl>
-      {description ? <FormDescription>{description}</FormDescription> : null}
+      </FieldLabel>
+      {children}
+      {description ? <FieldDescription>{description}</FieldDescription> : null}
       {helpText ? (
         <p className="text-sm text-muted-foreground mt-1">{helpText}</p>
       ) : null}
-      {error ? <FormMessage>{error}</FormMessage> : null}
-    </FormItem>
+      {error ? <FieldError>{error}</FieldError> : null}
+    </Field>
   );
 }
 `;
@@ -99,7 +97,7 @@ export function FieldTemplate({
 
 /** Components that each preset's field template imports from the component source */
 export const PRESET_TEMPLATE_IMPORTS: Record<string, string[]> = {
-  shadcn: ['FormControl', 'FormDescription', 'FormField', 'FormItem', 'FormLabel', 'FormMessage'],
+  shadcn: ['Field', 'FieldDescription', 'FieldError', 'FieldLabel'],
   html: []
 };
 
