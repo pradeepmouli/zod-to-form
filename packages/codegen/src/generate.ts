@@ -22,9 +22,14 @@ export type { CodegenConfig } from '@zod-to-form/core';
 
 function renderLiteralProp(value: unknown): string | undefined {
   if (typeof value === 'string') {
-    const json = JSON.stringify(value);
-    const inner = json.slice(1, -1);
-    return `"${inner}"`;
+    // Use the safe `{"..."}` JSX brace form when the value contains a double-quote
+    // so the output is always valid JSX regardless of embedded quotes.
+    // For quote-free values, emit the simpler `"value"` attribute form so that
+    // existing output (e.g. type="email") is unchanged.
+    if (value.includes('"')) {
+      return `{${JSON.stringify(value)}}`;
+    }
+    return `"${value}"`;
   }
   if (typeof value === 'number' || typeof value === 'boolean') {
     return `{${String(value)}}`;

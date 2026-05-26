@@ -7,7 +7,15 @@ import type { FormField } from './types.js';
  *
  * @category Helpers
  */
-export const NATIVE_INPUT_ATTRS = ['type'] as const;
+export const NATIVE_INPUT_ATTRS = [
+  'type',
+  'minLength',
+  'maxLength',
+  'pattern',
+  'min',
+  'max',
+  'step'
+] as const;
 
 /**
  * Extract DOM-valid native attributes from a field's props.
