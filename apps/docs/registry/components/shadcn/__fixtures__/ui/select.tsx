@@ -28,10 +28,20 @@ export function Select({ value, onValueChange, disabled, children }: SelectProps
   );
 }
 
-export function SelectTrigger({ id, children }: { id?: string; children?: React.ReactNode }) {
-  // In real shadcn this wraps the trigger button; in the stub it's a no-op wrapper.
-  return <>{children}</>;
+export interface SelectTriggerProps {
+  id?: string;
+  name?: string;
+  onBlur?: () => void;
+  children?: React.ReactNode;
 }
+
+export const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(
+  ({ children }, _ref) => {
+    // In real shadcn this wraps the trigger button; in the stub it's a no-op wrapper.
+    return <>{children}</>;
+  }
+);
+SelectTrigger.displayName = 'SelectTrigger';
 
 export function SelectValue({ placeholder }: { placeholder?: string }) {
   return <>{placeholder}</>;
