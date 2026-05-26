@@ -165,6 +165,33 @@ describe('buildCodegenItem', () => {
     }
   });
 
+  it('imports BOTH field adapters and Form* wrappers from @/components/zod-form (not @/components/ui/form)', () => {
+    const gen = item.files.find((f) => f.path === 'generated-form.tsx')!;
+    const content = gen.content!;
+    expect(content).toContain("from '@/components/zod-form'");
+    expect(content).not.toContain("from '@/components/ui/form'");
+    // The single import from the adapter module must include the field adapters
+    // used by the sample schema AND the Form* layout wrappers.
+    const adapterImport = content
+      .split('\n')
+      .find((l) => l.includes("from '@/components/zod-form'"))!;
+    for (const name of ['Input', 'Checkbox', 'DatePicker', 'FormItem', 'FormControl']) {
+      expect(adapterImport, `adapter import should include ${name}`).toContain(name);
+    }
+  });
+
+  it('renders controlled fields as named adapter components, not raw HTML inputs', () => {
+    const gen = item.files.find((f) => f.path === 'generated-form.tsx')!;
+    const content = gen.content!;
+    // The date field (joinedAt) must render via the DatePicker adapter, and the
+    // boolean field (subscribe) via the Checkbox adapter — using the adapters'
+    // value/onChange field shape, NOT raw <input>.
+    expect(content).toMatch(/<DatePicker\b/);
+    expect(content).toMatch(/<Checkbox\b/);
+    expect(content).toMatch(/<Input\b/);
+    expect(content).not.toMatch(/<input\b/);
+  });
+
   it('declares the shadcn `form` registry dependency', () => {
     expect(item.registryDependencies).toContain('form');
   });
