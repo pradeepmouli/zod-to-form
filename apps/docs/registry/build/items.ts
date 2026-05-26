@@ -15,7 +15,7 @@ const SAMPLE_SCHEMA_SRC = readFileSync(
  * The shadcn adapter component files shipped by every starter.
  * Input/Textarea/Checkbox/Switch are now raw @/components/ui/* re-exports in
  * index.tsx — they have no adapter file on disk. Only Select/RadioGroup/DatePicker
- * retain local adapter files; all four install under `@components/zod-form/`.
+ * retain local adapter files; all three install under `@components/z2f/`.
  */
 const ADAPTER_COMPONENT_NAMES = ['select', 'radio-group', 'date-picker'] as const;
 
@@ -35,7 +35,7 @@ function stripRelativeJsExtensions(source: string): string {
 
 /**
  * Read the shadcn adapter files from `registry/components/shadcn/` and return
- * `files[]` entries targeting `@components/zod-form/<name>.tsx`.
+ * `files[]` entries targeting `@components/z2f/<name>.tsx`.
  *
  * Only Select/RadioGroup/DatePicker ship as discrete adapter files.
  * Input/Textarea/Checkbox/Switch are raw @/components/ui/* re-exports in
@@ -57,54 +57,65 @@ function adapterFiles(): RegistryItemFile[] {
     );
 
   const componentFiles: RegistryItemFile[] = ADAPTER_COMPONENT_NAMES.map((name) => ({
-    path: `zod-form/${name}.tsx`,
+    path: `z2f/${name}.tsx`,
     type: 'registry:component',
     content: stripRelativeJsExtensions(read(`${name}.tsx`)),
-    target: `@components/zod-form/${name}.tsx`
+    target: `@components/z2f/${name}.tsx`
   }));
 
   return [
     {
-      path: 'zod-form/types.ts',
+      path: 'z2f/types.ts',
       type: 'registry:lib',
       content: stripRelativeJsExtensions(read('types.ts')),
-      target: '@components/zod-form/types.ts'
+      target: '@components/z2f/types.ts'
     },
     ...componentFiles,
     {
-      path: 'zod-form/index.tsx',
+      path: 'z2f/index.tsx',
       type: 'registry:component',
       content: stripRelativeJsExtensions(read('index.tsx')),
-      target: '@components/zod-form/index.tsx'
+      target: '@components/z2f/index.tsx'
     }
   ];
 }
 
 /**
- * Component overrides tuned for the shipped `@/components/zod-form` ADAPTERS.
+ * Component overrides tuned for the shipped `@/components/z2f` ADAPTERS against
+ * shadcn's **Base UI** component set.
  *
  * NOTE: This intentionally differs from core's `SHADCN_OVERRIDES`. That map
- * targets the RAW shadcn primitives (Radix props: `checked`/`onCheckedChange`,
- * `onValueChange`). The adapter components in `@/components/zod-form` deliberately
- * normalise to the plain RHF field shape — every controlled adapter accepts
- * `value`/`onChange`/`onBlur`/`ref`/`name` and translates to Radix props
- * internally. So the correct override is simply `controlled: true` with NO
- * custom `props` map, which makes codegen emit the default
- * `value={field.value} onChange={field.onChange}` binding the adapters expect.
- * Input/Textarea are uncontrolled (register-based); an empty override entry is
- * enough to make codegen render them as the named `<Input>`/`<Textarea>` adapter
- * instead of a raw `<input>`.
+ * targets the raw shadcn Radix primitives. The Base UI components in
+ * `@/components/z2f` bind Checkbox/Switch directly to the re-exported
+ * `@/components/ui/checkbox` and `@/components/ui/switch` (Base UI primitives),
+ * so they carry explicit `props` mappings for `checked`/`onCheckedChange`.
+ * Select/RadioGroup/DatePicker go through adapters that normalise to the plain
+ * `value`/`onChange` shape, so `controlled: true` without a `props` map is correct.
+ *
+ * Key Base UI facts (verified Task 0):
+ * - Checkbox/Switch `onCheckedChange(checked: boolean, eventDetails)` — value-first,
+ *   plain boolean (never `boolean | 'indeterminate'`). No `=== true` normalization needed.
+ * - `checked: '!!field.value'` guards undefined→false for React controlled/uncontrolled warning.
+ * - Checkbox/Switch have no root `ref` prop for the focusable input (Base UI uses `inputRef`);
+ *   codegen does NOT thread `field.ref` to these components.
+ * - Switch has no `onBlur` on its root prop surface.
  *
  * This single definition is SHARED by both {@link sampleConfigSource} (the
  * shipped `z2f.config.ts`) and {@link generatedComponentSource} (the
- * pre-generated `generated-form.tsx`) so the config and the codegen output stay
+ * pre-generated `example-form.tsx`) so the config and the codegen output stay
  * in lockstep.
  */
 const ADAPTER_OVERRIDES = {
   Input: {},
   Textarea: {},
-  Checkbox: { controlled: true },
-  Switch: { controlled: true },
+  Checkbox: {
+    controlled: true,
+    props: { checked: '!!field.value', onCheckedChange: 'field.onChange' }
+  },
+  Switch: {
+    controlled: true,
+    props: { checked: '!!field.value', onCheckedChange: 'field.onChange' }
+  },
   Select: { controlled: true },
   RadioGroup: { controlled: true },
   DatePicker: { controlled: true }
@@ -114,18 +125,18 @@ const ADAPTER_OVERRIDES = {
  * Generate the sample z2f.config.ts source.
  *
  * @param componentSource - The import path written into `componentSource` and
- *   `componentTypeImport`. All three items now point at `'@/components/zod-form'`
+ *   `componentTypeImport`. All three items now point at `'@/components/z2f'`
  *   — the shared shadcn adapter module shipped by every starter.
  *
  * The emitted config carries {@link ADAPTER_OVERRIDES} (the SAME overrides the
- * pre-generated `generated-form.tsx` uses) — NOT core's `SHADCN_OVERRIDES`. We
+ * pre-generated `example-form.tsx` uses) — NOT core's `SHADCN_OVERRIDES`. We
  * deliberately omit `preset: 'shadcn'` here: `buildConfigSource` force-spreads
  * `...SHADCN_OVERRIDES` whenever a preset is set, which would emit Radix prop
- * bindings (`checked`/`onCheckedChange`) the shipped adapters DON'T accept. By
- * dropping the preset and passing the adapter overrides explicitly, the config's
- * `overrides` block becomes the controlled markings the adapters expect, so any
- * codegen re-run (CLI or `?z2f`) emits the uniform `value`/`onChange` binding.
- * `defaults.ui: 'shadcn'` is preserved explicitly below.
+ * bindings the shipped Base UI adapters DON'T accept. By dropping the preset
+ * and passing the adapter overrides explicitly, the config's `overrides` block
+ * becomes the controlled markings the adapters expect, so any codegen re-run
+ * (CLI or `?z2f`) emits the correct bindings. `defaults.ui: 'shadcn'` is
+ * preserved explicitly below.
  */
 function sampleConfigSource(componentSource: string): string {
   return buildConfigSource({
@@ -145,9 +156,13 @@ function sampleConfigSource(componentSource: string): string {
 }
 
 const ZOD_FORM_USAGE = `import { ZodForm } from '@zod-to-form/react';
-import { schema } from '@/lib/zod-form/schema';
-import { components } from '@/components/zod-form';
+import { schema } from '@/lib/example-schema';
+import { components } from '@/components/z2f';
 
+// Runtime note: ZodForm renders Checkbox/Switch via the Base UI ui/* components
+// from the components map. The runtime binding uses the defaultComponentMap's
+// controlled detection. For full Base UI checked/onCheckedChange prop wiring
+// at runtime, pass componentConfig with the Base UI overrides (see z2f.config.ts).
 export function ExampleForm() {
   return (
     <ZodForm
@@ -166,22 +181,26 @@ function generatedComponentSource(): string {
   return generateFormComponent(fields, {
     exportName: 'schema',
     componentName: 'GeneratedForm',
-    schemaImportPath: '@/lib/zod-form/schema',
+    schemaImportPath: '@/lib/example-schema',
     ui: 'shadcn',
     mode: 'submit',
     formProvider: false,
     // Source BOTH the field adapters and the shadcn Form* layout wrappers from
-    // the single `@/components/zod-form` module: the adapter index.tsx ships the
-    // seven field components AND re-exports FormItem/FormControl/FormLabel/etc.
-    // The adapter-tuned overrides make every field render as its named adapter
-    // (`<Input>`, `<Checkbox>`, `<DatePicker>`, …) instead of raw HTML inputs.
+    // the single `@/components/z2f` module: the adapter index.tsx ships the
+    // Base UI field components AND re-exports FormItem/FormControl/FormLabel/etc.
+    // The Base UI adapter overrides make Checkbox/Switch bind to the checked/
+    // onCheckedChange props directly; Select/RadioGroup/DatePicker go through
+    // adapters that accept the uniform value/onChange shape.
     componentConfig: {
       components: {
-        source: '@/components/zod-form',
+        source: '@/components/z2f',
         preset: 'shadcn',
         overrides: { ...ADAPTER_OVERRIDES }
       }
-    }
+    },
+    // Import StripIndexSignature from the owned barrel instead of inlining,
+    // so the generated form has a single import surface with zero @zod-to-form/*.
+    typesModule: '@/components/z2f'
   });
 }
 
@@ -200,23 +219,23 @@ export function buildReactItem(): RegistryItem {
     registryDependencies: REGISTRY_DEPENDENCIES,
     files: [
       {
-        path: 'schema.ts',
+        path: 'example-schema.ts',
         type: 'registry:lib',
         content: SAMPLE_SCHEMA_SRC,
-        target: '@lib/zod-form/schema.ts'
+        target: '@lib/example-schema.ts'
       },
       {
         path: 'z2f.config.ts',
         type: 'registry:lib',
-        content: sampleConfigSource('@/components/zod-form'),
-        target: '@lib/zod-form/z2f.config.ts'
+        content: sampleConfigSource('@/components/z2f'),
+        target: 'z2f.config.ts'
       },
       ...adapterFiles(),
       {
-        path: 'zod-form.tsx',
+        path: 'example-form.tsx',
         type: 'registry:component',
         content: ZOD_FORM_USAGE,
-        target: '@components/zod-form.tsx'
+        target: '@components/example-form.tsx'
       }
     ],
     docs: STARTER_DOCS
@@ -238,23 +257,23 @@ export function buildCodegenItem(): RegistryItem {
     registryDependencies: CODEGEN_REGISTRY_DEPENDENCIES,
     files: [
       {
-        path: 'schema.ts',
+        path: 'example-schema.ts',
         type: 'registry:lib',
         content: SAMPLE_SCHEMA_SRC,
-        target: '@lib/zod-form/schema.ts'
+        target: '@lib/example-schema.ts'
       },
       {
         path: 'z2f.config.ts',
         type: 'registry:lib',
-        content: sampleConfigSource('@/components/zod-form'),
-        target: '@lib/zod-form/z2f.config.ts'
+        content: sampleConfigSource('@/components/z2f'),
+        target: 'z2f.config.ts'
       },
       ...adapterFiles(),
       {
-        path: 'generated-form.tsx',
+        path: 'example-form.tsx',
         type: 'registry:component',
         content: generatedComponentSource(),
-        target: '@components/generated-form.tsx'
+        target: '@components/example-form.tsx'
       }
     ],
     docs: STARTER_DOCS
@@ -262,20 +281,19 @@ export function buildCodegenItem(): RegistryItem {
 }
 
 const VITE_USAGE = `// vite.config.ts — add the z2f plugin BEFORE @vitejs/plugin-react.
-// Point configPath at the z2f.config.ts this starter installed (under your @lib
-// alias — default src/lib/zod-form/). Without it the plugin only auto-discovers
-// z2f.config.* at the project ROOT and silently falls back to defaults (ui: html):
+// The plugin auto-discovers z2f.config.ts at the project root (where this
+// starter installs it), so no extra plugin options are needed:
 //   import z2fVite from '@zod-to-form/vite';
 //   import react from '@vitejs/plugin-react';
 //   export default defineConfig({
-//     plugins: [z2fVite({ configPath: 'src/lib/zod-form/z2f.config.ts' }), react()]
+//     plugins: [z2fVite(), react()]
 //   });
 //
 // tsconfig.json — register the ambient ?z2f types so the import below type-checks:
 //   { "compilerOptions": { "types": ["@zod-to-form/vite/client"] } }
 //
 // then import the generated form from your schema:
-import Form from '@/lib/zod-form/schema.ts?z2f';
+import Form from '@/lib/example-schema.ts?z2f';
 export default Form;
 `;
 
@@ -292,23 +310,23 @@ export function buildViteItem(): RegistryItem {
     registryDependencies: CODEGEN_REGISTRY_DEPENDENCIES,
     files: [
       {
-        path: 'schema.ts',
+        path: 'example-schema.ts',
         type: 'registry:lib',
         content: SAMPLE_SCHEMA_SRC,
-        target: '@lib/zod-form/schema.ts'
+        target: '@lib/example-schema.ts'
       },
       {
         path: 'z2f.config.ts',
         type: 'registry:lib',
-        content: sampleConfigSource('@/components/zod-form'),
-        target: '@lib/zod-form/z2f.config.ts'
+        content: sampleConfigSource('@/components/z2f'),
+        target: 'z2f.config.ts'
       },
       ...adapterFiles(),
       {
         path: 'vite-usage.tsx',
         type: 'registry:component',
         content: VITE_USAGE,
-        target: '@components/zod-form-vite.tsx'
+        target: '@components/example-form.tsx'
       }
     ],
     docs: STARTER_DOCS

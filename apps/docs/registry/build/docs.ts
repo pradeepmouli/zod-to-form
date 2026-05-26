@@ -12,6 +12,9 @@
  *   (and label by field wrappers).
  * - `form` — the shadcn Form* primitives that the codegen/vite generated forms
  *   import from `@/components/ui/form`.
+ * - `date-picker` — the shadcn Base UI date-picker block (Popover + Calendar);
+ *   required for the `z.date()` field type (DatePicker wrapper). The individual
+ *   deps (popover, calendar, button) are also listed for explicit traceability.
  */
 export const REGISTRY_DEPENDENCIES = [
   'input',
@@ -24,6 +27,7 @@ export const REGISTRY_DEPENDENCIES = [
   'button',
   'popover',
   'calendar',
+  'date-picker',
   'form'
 ];
 
