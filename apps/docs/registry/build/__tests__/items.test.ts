@@ -69,10 +69,22 @@ describe('buildReactItem', () => {
     expect(targets).toEqual(expect.arrayContaining(ADAPTER_TARGETS));
   });
 
-  it('config content is produced by buildConfigSource (shadcn preset) targeting @/components/zod-form', () => {
+  it('config targets @/components/zod-form with shadcn UI defaults', () => {
     const config = item.files.find((f) => f.path === 'z2f.config.ts')!;
-    expect(config.content).toContain("preset: 'shadcn'");
     expect(config.content).toContain("'@/components/zod-form'");
+    expect(config.content).toContain("ui: 'shadcn'");
+  });
+
+  it('config carries the adapter overrides (controlled markings), NOT SHADCN_OVERRIDES', () => {
+    const config = item.files.find((f) => f.path === 'z2f.config.ts')!;
+    const content = config.content!;
+    // The shipped @/components/zod-form adapters expect plain value/onChange, so
+    // the config must mark controlled adapters via `controlled: true` and must
+    // NOT spread the Radix-prop SHADCN_OVERRIDES (which the adapters don't accept).
+    expect(content).not.toContain('SHADCN_OVERRIDES');
+    expect(content).not.toContain("preset: 'shadcn'");
+    expect(content).toContain('Checkbox: { controlled: true }');
+    expect(content).toContain('DatePicker: { controlled: true }');
   });
 
   it('ZodForm usage imports the components map from @/components/zod-form and passes it', () => {
@@ -113,6 +125,14 @@ describe('buildCodegenItem', () => {
     const config = item.files.find((f) => f.path === 'z2f.config.ts')!;
     expect(config.content).toContain("'@/components/zod-form'");
     expect(config.content).not.toContain('zod-form-components');
+  });
+
+  it('config carries the adapter overrides, NOT SHADCN_OVERRIDES', () => {
+    const config = item.files.find((f) => f.path === 'z2f.config.ts')!;
+    const content = config.content!;
+    expect(content).not.toContain('SHADCN_OVERRIDES');
+    expect(content).toContain('Checkbox: { controlled: true }');
+    expect(content).toContain('DatePicker: { controlled: true }');
   });
 
   it('ships a generated form component built from the sample schema', () => {
@@ -223,6 +243,14 @@ describe('buildViteItem', () => {
     const config = item.files.find((f) => f.path === 'z2f.config.ts')!;
     expect(config.content).toContain("'@/components/zod-form'");
     expect(config.content).not.toContain('zod-form-components');
+  });
+
+  it('config carries the adapter overrides, NOT SHADCN_OVERRIDES', () => {
+    const config = item.files.find((f) => f.path === 'z2f.config.ts')!;
+    const content = config.content!;
+    expect(content).not.toContain('SHADCN_OVERRIDES');
+    expect(content).toContain('Checkbox: { controlled: true }');
+    expect(content).toContain('DatePicker: { controlled: true }');
   });
 });
 
