@@ -272,7 +272,9 @@ describe('CLI generate command', () => {
       const content = await readFile(outputPath, 'utf8');
       expect(content).toContain('ExpressionEditor');
       expect(content).toContain("from './components';");
-      expect(content).toContain('<ExpressionEditor id="expression" {...register(\'expression\')}');
+      expect(content).toContain(
+        '<ExpressionEditor id="expression" required {...register(\'expression\')}'
+      );
     } finally {
       process.chdir(originalCwd);
     }
