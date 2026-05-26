@@ -1,18 +1,95 @@
 /**
  * TDD tests for shadcn adapter components.
- * Input/Textarea/Checkbox/Switch are now raw ui/* re-exports (no adapter file).
- * Task 4: Select (option list → onChange(string))
- * Task 5: RadioGroup (radio items → onChange(string))
- * Task 6: DatePicker (Popover+Calendar controlled bridge)
+ * Task 1: Checkbox adapter (value→checked, onChange called with boolean)
+ * Task 2: Switch adapter (value→checked, onChange called with boolean, no onBlur)
+ * Task 3: Select (option list → onChange(string))
+ * Task 4: RadioGroup (radio items → onChange(string))
+ * Task 5: DatePicker (Popover+Calendar controlled bridge)
  */
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+import { Checkbox } from '../checkbox.js';
+import { Switch } from '../switch.js';
 import { Select } from '../select.js';
 import { RadioGroup } from '../radio-group.js';
 import { DatePicker } from '../date-picker.js';
 
 // ---------------------------------------------------------------------------
-// Task 4 — Select adapter
+// Task 1 — Checkbox adapter
+// ---------------------------------------------------------------------------
+describe('Checkbox adapter', () => {
+  it('renders a checkbox', () => {
+    render(<Checkbox />);
+    expect(screen.getByRole('checkbox')).toBeInTheDocument();
+  });
+
+  it('reflects value=true as checked', () => {
+    render(<Checkbox value={true} />);
+    expect(screen.getByRole('checkbox')).toBeChecked();
+  });
+
+  it('reflects value=false as unchecked', () => {
+    render(<Checkbox value={false} />);
+    expect(screen.getByRole('checkbox')).not.toBeChecked();
+  });
+
+  it('calls onChange with boolean true when checked', () => {
+    const onChange = vi.fn();
+    render(<Checkbox value={false} onChange={onChange} />);
+    fireEvent.click(screen.getByRole('checkbox'));
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith(true);
+  });
+
+  it('calls onChange with boolean false when unchecked', () => {
+    const onChange = vi.fn();
+    render(<Checkbox value={true} onChange={onChange} />);
+    fireEvent.click(screen.getByRole('checkbox'));
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith(false);
+  });
+
+  it('does not throw when onChange is omitted', () => {
+    render(<Checkbox />);
+    expect(() => fireEvent.click(screen.getByRole('checkbox'))).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 2 — Switch adapter
+// ---------------------------------------------------------------------------
+describe('Switch adapter', () => {
+  it('renders a switch', () => {
+    render(<Switch />);
+    expect(screen.getByRole('switch')).toBeInTheDocument();
+  });
+
+  it('reflects value=true as checked', () => {
+    render(<Switch value={true} />);
+    expect(screen.getByRole('switch')).toBeChecked();
+  });
+
+  it('reflects value=false as unchecked', () => {
+    render(<Switch value={false} />);
+    expect(screen.getByRole('switch')).not.toBeChecked();
+  });
+
+  it('calls onChange with boolean true when toggled on', () => {
+    const onChange = vi.fn();
+    render(<Switch value={false} onChange={onChange} />);
+    fireEvent.click(screen.getByRole('switch'));
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith(true);
+  });
+
+  it('does not throw when onChange is omitted', () => {
+    render(<Switch />);
+    expect(() => fireEvent.click(screen.getByRole('switch'))).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 3 — Select adapter
 // ---------------------------------------------------------------------------
 describe('Select adapter', () => {
   const options = [
@@ -65,7 +142,7 @@ describe('Select adapter', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Task 5 — RadioGroup adapter
+// Task 4 — RadioGroup adapter
 // ---------------------------------------------------------------------------
 describe('RadioGroup adapter', () => {
   const options = [
@@ -107,7 +184,7 @@ describe('RadioGroup adapter', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Task 6 — DatePicker adapter
+// Task 5 — DatePicker adapter
 // ---------------------------------------------------------------------------
 describe('DatePicker adapter', () => {
   it('shows "Pick a date" when no value is provided', () => {

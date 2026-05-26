@@ -5,18 +5,24 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import type { ControlledFieldProps } from './types.js';
 
-export function DatePicker({
-  value,
-  onChange,
-  name,
-  disabled,
-  id
-}: ControlledFieldProps<Date | undefined>) {
+export const DatePicker = React.forwardRef<
+  HTMLButtonElement,
+  ControlledFieldProps<Date | undefined>
+>(({ value, onChange, name, disabled, id }, ref) => {
   const selected = value instanceof Date && !Number.isNaN(value.getTime()) ? value : undefined;
   return (
     <Popover>
       <PopoverTrigger
-        render={<Button type="button" variant="outline" id={id} name={name} disabled={disabled} />}
+        render={
+          <Button
+            ref={ref}
+            type="button"
+            variant="outline"
+            id={id}
+            name={name}
+            disabled={disabled}
+          />
+        }
       >
         {selected ? format(selected, 'PPP') : 'Pick a date'}
       </PopoverTrigger>
@@ -25,5 +31,5 @@ export function DatePicker({
       </PopoverContent>
     </Popover>
   );
-}
+});
 DatePicker.displayName = 'DatePicker';
