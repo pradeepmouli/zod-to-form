@@ -205,7 +205,7 @@ describe('generateFormComponent', () => {
     expect(output).toContain(`from '@app/components';`);
     expect(output).toContain('TypeSelector');
     expect(output).toContain(
-      `<TypeSelector id="DataForm.superType" {...register('DataForm.superType')} refType="Data" {...(props.fieldProps?.["DataForm.superType"] ?? {})} />`
+      `<TypeSelector id="DataForm.superType" type="text" {...register('DataForm.superType')} refType="Data" {...(props.fieldProps?.["DataForm.superType"] ?? {})} />`
     );
     expect(output).not.toContain(`<input id="DataForm.superType"`);
   });
