@@ -34,7 +34,11 @@ We do **not** introduce a new `FieldBinding`/`kind` model. The shared contract i
 - `resolveControlMode(field, config)` → `'register' | 'controller' | 'native'` (the controlled-vs-uncontrolled decision, currently split between `componentOverride?.controlled` checks in both renderers).
 - `resolveOptionsProps(field)` → `options` passthrough where applicable.
 
-These may be exposed individually or as one `resolveFieldProps(field, config)` returning `{ baseProps, nativeAttrs, controlMode, registerHints, options, overrideProps }`. Each is pure, unit-tested in core, and is the *single* place a given decision lives.
+**Exposed as separate, focused functions (not one monolith)** — keyed on whether the logic is shared across types or type-specific:
+- *Type-agnostic, shared across every `zodType`:* `resolveBaseProps(field)` — pure field flags, identical for all field types.
+- *Type-specific (dispatch on `zodType` internally):* `getFieldRegisterHints`, `resolveNativeAttrs`, `resolveControlMode`, `resolveOptionsProps`.
+
+Each renderer **composes the subset it needs** (`resolveBaseProps` always + the type-specific ones as applicable) rather than calling one `resolveFieldProps` that bundles shared + per-type branching. Each resolver is pure, unit-tested in core in isolation, and is the *single* place its decision lives.
 
 **Renderers materialize, don't decide.**
 - Runtime: `FieldRenderer` keeps its `FormField` traversal + `zodType`/`component` switch, but builds component props from the resolvers (spread onto the live component; `register`/`useController` per `controlMode`).
@@ -71,5 +75,6 @@ Each stage is its own spec → plan → PR. Behavior is preserved (parity) excep
 
 ## Open questions
 
-- Single `resolveFieldProps(field, config)` vs a family of `resolve*` functions — decide in the first plan based on how cleanly each renderer consumes it (lean: one `resolveFieldProps` returning a struct, mirroring `getFieldRegisterHints`'s single-entry shape).
-- Whether `resolveControlMode` fully subsumes the existing `componentOverride?.controlled` checks in both renderers, or wraps them.
+- Whether `resolveControlMode` fully subsumes the existing `componentOverride?.controlled` checks in both renderers, or wraps them — decide in the first plan.
+
+*(Decided: separate focused resolvers, not a single `resolveFieldProps` — split by shared-across-types (`resolveBaseProps`) vs type-specific. See Architecture.)*
