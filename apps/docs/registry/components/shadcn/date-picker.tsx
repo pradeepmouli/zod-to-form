@@ -3,22 +3,27 @@ import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import type { ControlledFieldProps } from './types.js';
 
-type Props = {
-  value?: Date | string;
-  onChange?: (v: Date | undefined) => void;
-  disabled?: boolean;
-  id?: string;
-};
-
-export function DatePicker({ value, onChange, disabled, id }: Props) {
+export const DatePicker = React.forwardRef<
+  HTMLButtonElement,
+  ControlledFieldProps<Date | string | undefined>
+>(({ value, onChange, onBlur, name, disabled, id }, ref) => {
   const date =
     value == null || value === '' ? undefined : value instanceof Date ? value : new Date(value);
 
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button id={id} type="button" variant="outline" disabled={disabled}>
+        <Button
+          ref={ref}
+          id={id}
+          name={name}
+          onBlur={onBlur}
+          type="button"
+          variant="outline"
+          disabled={disabled}
+        >
           {date ? format(date, 'PPP') : 'Pick a date'}
         </Button>
       </PopoverTrigger>
@@ -27,4 +32,5 @@ export function DatePicker({ value, onChange, disabled, id }: Props) {
       </PopoverContent>
     </Popover>
   );
-}
+});
+DatePicker.displayName = 'DatePicker';

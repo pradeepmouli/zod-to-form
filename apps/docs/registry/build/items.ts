@@ -42,34 +42,46 @@ function stripRelativeJsExtensions(source: string): string {
 }
 
 /**
- * Read the eight shadcn adapter files from `registry/components/shadcn/` and
- * return `files[]` entries targeting `@components/zod-form/<name>.tsx`.
+ * Read the shadcn adapter files from `registry/components/shadcn/` and return
+ * `files[]` entries targeting `@components/zod-form/<name>.tsx`.
  *
- * The seven component files ship VERBATIM — their imports (`@/components/ui/*`
- * extensionless + `@zod-to-form/core` type) are already consumer-correct.
- * `index.tsx` ships with its relative `.js` extensions stripped (see
- * {@link stripRelativeJsExtensions}).
+ * The controlled adapters import the shared `ControlledFieldProps` type from
+ * `./types.js`, and `index.tsx` re-exports its siblings via `./input.js` etc.
+ * All relative `.js` specifiers are stripped on the way out (see
+ * {@link stripRelativeJsExtensions}) — consumer bundlers (Next/webpack) resolve
+ * `./types.js` literally and fail (there is no `.js`, only `.ts`/`.tsx`); the
+ * extensionless form resolves correctly. The `@/components/ui/*` alias and
+ * `@zod-to-form/core` type imports are already consumer-correct and untouched.
+ *
+ * The shared `types.ts` MUST ship alongside the components — the controlled
+ * adapters reference it, so omitting it would break the consumer `tsc`.
  */
 function adapterFiles(): RegistryItemFile[] {
-  const read = (name: string): string =>
+  const read = (relPath: string): string =>
     readFileSync(
-      fileURLToPath(new URL(`../components/shadcn/${name}.tsx`, import.meta.url)),
+      fileURLToPath(new URL(`../components/shadcn/${relPath}`, import.meta.url)),
       'utf8'
     );
 
   const componentFiles: RegistryItemFile[] = ADAPTER_COMPONENT_NAMES.map((name) => ({
     path: `zod-form/${name}.tsx`,
     type: 'registry:component',
-    content: read(name),
+    content: stripRelativeJsExtensions(read(`${name}.tsx`)),
     target: `@components/zod-form/${name}.tsx`
   }));
 
   return [
+    {
+      path: 'zod-form/types.ts',
+      type: 'registry:lib',
+      content: stripRelativeJsExtensions(read('types.ts')),
+      target: '@components/zod-form/types.ts'
+    },
     ...componentFiles,
     {
       path: 'zod-form/index.tsx',
       type: 'registry:component',
-      content: stripRelativeJsExtensions(read('index')),
+      content: stripRelativeJsExtensions(read('index.tsx')),
       target: '@components/zod-form/index.tsx'
     }
   ];

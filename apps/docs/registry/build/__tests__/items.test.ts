@@ -9,8 +9,9 @@ import { buildReactItem, buildCodegenItem, buildViteItem, buildRegistryIndex } f
 import { REGISTRY_DEPENDENCIES, STARTER_DOCS } from '../docs.js';
 import itemSchema from '../../schema/registry-item.schema.json';
 
-/** The eight shadcn adapter files every starter ships. */
+/** The shadcn adapter files every starter ships. */
 const ADAPTER_TARGETS = [
+  '@components/zod-form/types.ts',
   '@components/zod-form/input.tsx',
   '@components/zod-form/textarea.tsx',
   '@components/zod-form/checkbox.tsx',
@@ -268,7 +269,7 @@ describe('shipped shadcn adapter files', () => {
     expect(index.content).toContain('export const components');
   });
 
-  it('ships the seven component files VERBATIM (matches the on-disk source)', () => {
+  it('ships the seven component files with NO .js extensions in their relative imports', () => {
     for (const name of [
       'input',
       'textarea',
@@ -283,8 +284,21 @@ describe('shipped shadcn adapter files', () => {
         'utf8'
       );
       const shipped = byTarget(`@components/zod-form/${name}.tsx`);
-      expect(shipped.content, `${name} must ship unchanged`).toBe(source);
+      // Relative specifiers (e.g. './types.js') must be stripped so consumer
+      // bundlers resolve them; @/ alias and bare package imports are untouched.
+      expect(shipped.content).not.toMatch(/from\s+['"]\.\.?\/[^'"]+\.js['"]/);
+      // The strip transform is the ONLY change: stripping the on-disk source must
+      // reproduce the shipped content exactly.
+      const stripped = source.replace(/(from\s+['"])(\.\.?\/[^'"]+?)\.js(['"])/g, '$1$2$3');
+      expect(shipped.content, `${name} must ship with only .js stripped`).toBe(stripped);
     }
+  });
+
+  it('ships the shared ControlledFieldProps types module the controlled adapters import', () => {
+    const types = byTarget('@components/zod-form/types.ts');
+    expect(types).toBeDefined();
+    expect(types.content).toContain('ControlledFieldProps');
+    expect(types.type).toBe('registry:lib');
   });
 });
 

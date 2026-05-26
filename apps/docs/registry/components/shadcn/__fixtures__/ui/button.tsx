@@ -8,20 +8,32 @@ import * as React from 'react';
 
 export interface ButtonProps {
   id?: string;
+  name?: string;
   type?: 'button' | 'submit' | 'reset';
   variant?: string;
   disabled?: boolean;
   asChild?: boolean;
+  onBlur?: () => void;
   children?: React.ReactNode;
 }
 
-export function Button({ id, type, variant: _variant, disabled, asChild, children }: ButtonProps) {
-  if (asChild) {
-    return <>{children}</>;
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ id, name, type, variant: _variant, disabled, asChild, onBlur, children }, ref) => {
+    if (asChild) {
+      return <>{children}</>;
+    }
+    return (
+      <button
+        ref={ref}
+        id={id}
+        name={name}
+        type={type ?? 'button'}
+        disabled={disabled}
+        onBlur={onBlur}
+      >
+        {children}
+      </button>
+    );
   }
-  return (
-    <button id={id} type={type ?? 'button'} disabled={disabled}>
-      {children}
-    </button>
-  );
-}
+);
+Button.displayName = 'Button';
