@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { buildConfigSource, generateFormComponent } from '@zod-to-form/codegen';
 import { walkSchema } from '@zod-to-form/core';
 import { schema } from '../sample/schema.js';
-import type { RegistryItem, RegistryIndex } from './types.js';
+import type { RegistryItemFile, RegistryItem, RegistryIndex } from './types.js';
 import { REGISTRY_DEPENDENCIES, CODEGEN_REGISTRY_DEPENDENCIES, STARTER_DOCS } from './docs.js';
 
 const SAMPLE_SCHEMA_SRC = readFileSync(
@@ -12,14 +12,75 @@ const SAMPLE_SCHEMA_SRC = readFileSync(
 );
 
 /**
+ * The shadcn field adapter components shipped by every starter. The seven
+ * component files wrap the consumer's installed shadcn/ui primitives; `index`
+ * re-exports them plus a keyed `components` map for the ZodForm runtime
+ * registry. All eight install under the `@components/zod-form/` alias.
+ */
+const ADAPTER_COMPONENT_NAMES = [
+  'input',
+  'textarea',
+  'checkbox',
+  'switch',
+  'select',
+  'radio-group',
+  'date-picker'
+] as const;
+
+/**
+ * Strip the `.js` extension from RELATIVE import/export specifiers only.
+ *
+ * The repo-convention adapter `index.tsx` uses `.js` relative specifiers (e.g.
+ * `from './input.js'`) so it resolves correctly under Node ESM in this repo.
+ * Consumer bundlers (Next/webpack) resolve `./input.js` literally and fail —
+ * there is no `input.js`, only `input.tsx`. Extensionless (`./input`) resolves
+ * correctly. This transform touches ONLY relative (`./` or `../`) specifiers;
+ * it never rewrites `@/` alias or bare package imports.
+ */
+function stripRelativeJsExtensions(source: string): string {
+  return source.replace(/(from\s+['"])(\.\.?\/[^'"]+?)\.js(['"])/g, '$1$2$3');
+}
+
+/**
+ * Read the eight shadcn adapter files from `registry/components/shadcn/` and
+ * return `files[]` entries targeting `@components/zod-form/<name>.tsx`.
+ *
+ * The seven component files ship VERBATIM — their imports (`@/components/ui/*`
+ * extensionless + `@zod-to-form/core` type) are already consumer-correct.
+ * `index.tsx` ships with its relative `.js` extensions stripped (see
+ * {@link stripRelativeJsExtensions}).
+ */
+function adapterFiles(): RegistryItemFile[] {
+  const read = (name: string): string =>
+    readFileSync(
+      fileURLToPath(new URL(`../components/shadcn/${name}.tsx`, import.meta.url)),
+      'utf8'
+    );
+
+  const componentFiles: RegistryItemFile[] = ADAPTER_COMPONENT_NAMES.map((name) => ({
+    path: `zod-form/${name}.tsx`,
+    type: 'registry:component',
+    content: read(name),
+    target: `@components/zod-form/${name}.tsx`
+  }));
+
+  return [
+    ...componentFiles,
+    {
+      path: 'zod-form/index.tsx',
+      type: 'registry:component',
+      content: stripRelativeJsExtensions(read('index')),
+      target: '@components/zod-form/index.tsx'
+    }
+  ];
+}
+
+/**
  * Generate the sample z2f.config.ts source.
  *
  * @param componentSource - The import path written into `componentSource` and
- *   `componentTypeImport`. Differs per item:
- *   - React item: `'@/components/zod-form-components'` — the runtime component
- *     map module shipped alongside the item.
- *   - Codegen/vite items: `'@/components/ui/form'` — the shadcn `form` registry
- *     item that `generated-form.tsx` (and `?z2f`-generated forms) actually import.
+ *   `componentTypeImport`. All three items now point at `'@/components/zod-form'`
+ *   — the shared shadcn adapter module shipped by every starter.
  */
 function sampleConfigSource(componentSource: string): string {
   return buildConfigSource({
@@ -38,66 +99,9 @@ function sampleConfigSource(componentSource: string): string {
   });
 }
 
-/**
- * Ships a `zod-form-components.tsx` module that maps field component names to the
- * consumer's installed shadcn/ui components. The map shape mirrors `defaultComponentMap`
- * from `@zod-to-form/react` — each key is a field component name (e.g. `Input`,
- * `Checkbox`, `Field`, `FieldLabel`, `FieldDescription`, `FieldMessage`) and each
- * value is the React component to render for that field type.
- *
- * Covers the components needed by the sample schema's four fields:
- *   name/email/age → Input (string/number)
- *   subscribe      → Checkbox (boolean)
- * Plus the wrapper components (`Field`, `FieldLabel`, `FieldDescription`, `FieldMessage`)
- * used by every field regardless of type.
- */
-const ZOD_FORM_COMPONENTS_SRC = `import { defaultComponentMap } from '@zod-to-form/react';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import type { ComponentPropsWithoutRef } from 'react';
-
-// ── Thin wrappers so the map matches ZodForm's expected component signatures ──
-
-function Field({ children, ...props }: ComponentPropsWithoutRef<'div'>) {
-  return <div className="space-y-2" {...props}>{children}</div>;
-}
-
-function FieldLabel(props: ComponentPropsWithoutRef<typeof Label>) {
-  return <Label {...props} />;
-}
-
-function FieldDescription({ children, ...props }: ComponentPropsWithoutRef<'p'>) {
-  return <p className="text-sm text-muted-foreground" {...props}>{children}</p>;
-}
-
-function FieldMessage({ children, ...props }: ComponentPropsWithoutRef<'p'>) {
-  return <p className="text-sm font-medium text-destructive" {...props}>{children}</p>;
-}
-
-/**
- * Component map wired to the project's installed shadcn/ui components.
- * Pass this to ZodForm via the components prop so the runtime renderer
- * uses the real shadcn Input, Checkbox, and Label instead of the built-in HTML stubs.
- *
- * Add or override entries to customise individual field components:
- *   import { Textarea } from '@/components/ui/textarea';
- *   export const components = { ...baseComponents, Textarea };
- */
-export const components = {
-  ...defaultComponentMap,
-  Input,
-  Checkbox,
-  Field,
-  FieldLabel,
-  FieldDescription,
-  FieldMessage,
-} satisfies typeof defaultComponentMap;
-`;
-
 const ZOD_FORM_USAGE = `import { ZodForm } from '@zod-to-form/react';
 import { schema } from '@/lib/zod-form/schema';
-import { components } from '@/components/zod-form-components';
+import { components } from '@/components/zod-form';
 
 export function ExampleForm() {
   return (
@@ -159,15 +163,10 @@ export function buildReactItem(): RegistryItem {
       {
         path: 'z2f.config.ts',
         type: 'registry:lib',
-        content: sampleConfigSource('@/components/zod-form-components'),
+        content: sampleConfigSource('@/components/zod-form'),
         target: '@lib/zod-form/z2f.config.ts'
       },
-      {
-        path: 'zod-form-components.tsx',
-        type: 'registry:component',
-        content: ZOD_FORM_COMPONENTS_SRC,
-        target: '@components/zod-form-components.tsx'
-      },
+      ...adapterFiles(),
       {
         path: 'zod-form.tsx',
         type: 'registry:component',
@@ -202,9 +201,10 @@ export function buildCodegenItem(): RegistryItem {
       {
         path: 'z2f.config.ts',
         type: 'registry:lib',
-        content: sampleConfigSource('@/components/ui/form'),
+        content: sampleConfigSource('@/components/zod-form'),
         target: '@lib/zod-form/z2f.config.ts'
       },
+      ...adapterFiles(),
       {
         path: 'generated-form.tsx',
         type: 'registry:component',
@@ -255,9 +255,10 @@ export function buildViteItem(): RegistryItem {
       {
         path: 'z2f.config.ts',
         type: 'registry:lib',
-        content: sampleConfigSource('@/components/ui/form'),
+        content: sampleConfigSource('@/components/zod-form'),
         target: '@lib/zod-form/z2f.config.ts'
       },
+      ...adapterFiles(),
       {
         path: 'vite-usage.tsx',
         type: 'registry:component',
