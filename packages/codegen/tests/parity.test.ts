@@ -284,3 +284,119 @@ describe('parity harness: codegen materializes shared leaf resolvers', () => {
     expect(attrString).toContain('min={18}');
   });
 });
+
+// ─── Focused parity cases: controlled boolean + string-date routing ───────────
+//
+// These tests are completely independent of the main schema above.
+// Each builds its own schema, walks it, and generates output — so a failure
+// pinpoints exactly which codegen path regressed, with no ambiguity.
+
+describe('parity harness: controlled boolean coercion (!!field.value allowlist)', () => {
+  // Walk a z.boolean() field and route it through a Checkbox component with
+  // controlled:true and the shadcn Checkbox prop shape.
+  const boolSchema = z.object({ agree: z.boolean() });
+  const boolFields = walkSchema(boolSchema);
+
+  const boolSource = generateFormComponent(boolFields, {
+    exportName: 'boolSchema',
+    componentName: 'BoolForm',
+    mode: 'submit',
+    ui: 'html',
+    componentConfig: {
+      components: {
+        source: './components',
+        overrides: {
+          Checkbox: {
+            controlled: true,
+            props: {
+              checked: '!!field.value',
+              onCheckedChange: 'field.onChange'
+            }
+          }
+        }
+      },
+      fields: {
+        agree: { component: 'Checkbox' }
+      }
+    }
+  });
+
+  it('emits checked={!!field.value} (hardcoded — !!field.value must be in the RHF_FIELD_EXPRESSIONS allowlist)', () => {
+    // If Task 1 (core !!field.value allowlist) is reverted, RHF_FIELD_EXPRESSIONS will no
+    // longer contain '!!field.value'. renderControlledComponent will fall back to the
+    // default value={field.value} prop instead of mapping checked={!!field.value}, and
+    // this literal assertion WILL FAIL.
+    expect(boolSource).toContain('checked={!!field.value}');
+  });
+
+  it('emits onCheckedChange={field.onChange} (hardcoded — shadcn Checkbox event prop)', () => {
+    // The onCheckedChange→field.onChange mapping is only emitted when:
+    //   (a) '!!field.value' is in RHF_FIELD_EXPRESSIONS (so the controlled path fires), AND
+    //   (b) resolvePropMap correctly threads the componentOverride.props through to
+    //       renderControlledComponent which remaps onChange → onCheckedChange.
+    // Reverting either would break this assertion.
+    expect(boolSource).toContain('onCheckedChange={field.onChange}');
+  });
+
+  it('does NOT emit value === true (hardcoded — boolean coercion must NOT use strict equality)', () => {
+    // The old (wrong) pattern was `value={field.value === true}`.
+    // !!field.value is the correct coercion. This gate ensures the broken pattern cannot
+    // silently reappear in the generated output.
+    expect(boolSource).not.toContain('=== true');
+  });
+
+  it('uses Controller (not register spread) because controlled:true is set', () => {
+    // Controlled components MUST use <Controller> so RHF can pass field.value/onChange.
+    // A bare register spread would break the checked binding entirely.
+    expect(boolSource).toContain('<Controller');
+    expect(boolSource).not.toMatch(/\{\.\.\.(register\()/);
+  });
+});
+
+describe('parity harness: string-date routing to native <input type="date"> via register', () => {
+  // Walk a z.string().date() field — the string processor maps it to:
+  //   component: 'Input', props.type: 'date', zodType: 'string'
+  // Critically, zodType stays 'string', so NO date coercion (setValueAs) is applied,
+  // and the field renders via register (uncontrolled), NOT via <Controller>.
+  const dateSchema = z.object({ startDate: z.string().date() });
+  const dateFields = walkSchema(dateSchema);
+
+  const dateSource = generateFormComponent(dateFields, {
+    exportName: 'dateSchema',
+    componentName: 'DateForm',
+    mode: 'submit',
+    ui: 'html',
+    componentConfig: {
+      components: {
+        source: './components',
+        overrides: {}
+      },
+      fields: {
+        startDate: { component: 'DateField' }
+      }
+    }
+  });
+
+  it('emits type="date" as a static attribute (hardcoded — string-date → native input)', () => {
+    // Task 2 routes z.string().date() → props.type='date' → resolveNativeAttrs emits type="date".
+    // If date-routing is reverted, the type prop would fall back to 'text' and this WILL FAIL.
+    expect(dateSource).toContain('type="date"');
+  });
+
+  it('binds via register spread, NOT a <Controller> wrapper (hardcoded — string keeps string value)', () => {
+    // z.string().date() stays on zodType:'string' — no date coercion is needed.
+    // The correct render is: <DateField ... {...register('startDate')} />
+    // NOT: <Controller name="startDate" ... render={({ field }) => ...} />
+    // If the routing regresses to treating z.string().date() like z.date(), a Controller
+    // would be emitted and this assertion WILL FAIL.
+    expect(dateSource).toContain('{...register(');
+    expect(dateSource).not.toContain('<Controller');
+  });
+
+  it('does NOT emit setValueAs date coercion (hardcoded — string value, no Date object needed)', () => {
+    // z.string().date() keeps a string value — Zod parses it directly.
+    // The date coercion lambda (new Date(v)) is only for z.date() (DatePicker component).
+    // Emitting it for z.string().date() would be wrong and break optional fields (empty→Date).
+    expect(dateSource).not.toContain('new Date(');
+  });
+});
