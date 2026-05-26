@@ -4,6 +4,7 @@
  * Task 3: Checkbox + Switch (controlled boolean bridge)
  * Task 4: Select (option list → onChange(string))
  * Task 5: RadioGroup (radio items → onChange(string))
+ * Task 6: DatePicker (Popover+Calendar controlled bridge)
  */
 import { render, screen, fireEvent } from '@testing-library/react';
 import { createRef } from 'react';
@@ -14,6 +15,7 @@ import { Checkbox } from '../checkbox.js';
 import { Switch } from '../switch.js';
 import { Select } from '../select.js';
 import { RadioGroup } from '../radio-group.js';
+import { DatePicker } from '../date-picker.js';
 
 // ---------------------------------------------------------------------------
 // Task 2 — Input adapter
@@ -259,5 +261,68 @@ describe('RadioGroup adapter', () => {
   it('does not throw when onChange is omitted', () => {
     render(<RadioGroup options={options} />);
     expect(() => fireEvent.click(screen.getAllByRole('radio')[0]!)).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 6 — DatePicker adapter
+// ---------------------------------------------------------------------------
+describe('DatePicker adapter', () => {
+  it('shows "Pick a date" when no value is provided', () => {
+    render(<DatePicker />);
+    expect(screen.getByText('Pick a date')).toBeInTheDocument();
+  });
+
+  it('calls onChange with a Date instance when a calendar day is clicked', () => {
+    const onChange = vi.fn();
+    render(<DatePicker onChange={onChange} />);
+    fireEvent.click(screen.getByTestId('calendar-day'));
+    expect(onChange).toHaveBeenCalledTimes(1);
+    const firstArg = onChange.mock.calls[0]?.[0];
+    expect(firstArg).toBeInstanceOf(Date);
+  });
+
+  it('shows a formatted date (not "Pick a date") when value is a Date', () => {
+    render(<DatePicker value={new Date('2026-01-02T00:00:00Z')} />);
+    // The trigger is the button that does NOT have data-testid="calendar-day"
+    const buttons = screen.getAllByRole('button');
+    const trigger = buttons.find((b) => b.getAttribute('data-testid') !== 'calendar-day')!;
+    expect(trigger.textContent).not.toBe('Pick a date');
+    expect(trigger.textContent).toContain('2026');
+  });
+
+  it('shows a formatted date when value is an ISO string', () => {
+    render(<DatePicker value="2026-03-15T00:00:00Z" />);
+    const buttons = screen.getAllByRole('button');
+    const trigger = buttons.find((b) => b.getAttribute('data-testid') !== 'calendar-day')!;
+    expect(trigger.textContent).not.toBe('Pick a date');
+    expect(trigger.textContent).toContain('2026');
+  });
+
+  it('shows "Pick a date" when value is undefined', () => {
+    render(<DatePicker value={undefined} />);
+    expect(screen.getByText('Pick a date')).toBeInTheDocument();
+  });
+
+  it('shows "Pick a date" when value is empty string', () => {
+    render(<DatePicker value="" />);
+    expect(screen.getByText('Pick a date')).toBeInTheDocument();
+  });
+
+  it('does not throw when onChange is omitted and a day is clicked', () => {
+    render(<DatePicker />);
+    expect(() => fireEvent.click(screen.getByTestId('calendar-day'))).not.toThrow();
+  });
+
+  it('forwards disabled to the trigger button', () => {
+    render(<DatePicker disabled />);
+    const buttons = screen.getAllByRole('button');
+    const trigger = buttons.find((b) => b.getAttribute('data-testid') !== 'calendar-day')!;
+    expect(trigger).toBeDisabled();
+  });
+
+  it('forwards id to the trigger button', () => {
+    render(<DatePicker id="dob" />);
+    expect(screen.getByRole('button', { name: /pick a date/i })).toHaveAttribute('id', 'dob');
   });
 });
