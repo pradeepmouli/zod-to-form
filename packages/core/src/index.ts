@@ -114,6 +114,11 @@ export {
 export { normalizeFormValues } from './normalize.js';
 export type { FieldRegisterHints } from './register-hints.js';
 export { getFieldRegisterHints } from './register-hints.js';
+export { resolveBaseProps } from './resolve-base-props.js';
+export { resolveNativeAttrs, NATIVE_INPUT_ATTRS } from './resolve-native-attrs.js';
+export type { ControlMode } from './resolve-control-mode.js';
+export { resolveControlMode } from './resolve-control-mode.js';
+export { resolveOptionsProps } from './resolve-options-props.js';
 export { isZodSchema } from './is-zod-schema.js';
 export { walkSchema } from './walker.js';
 export { builtinProcessors, createProcessors } from './registry.js';
