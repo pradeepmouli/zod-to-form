@@ -116,6 +116,31 @@ export function ExampleForm() {
 }
 `;
 
+/**
+ * Component overrides tuned for the shipped `@/components/zod-form` ADAPTERS.
+ *
+ * NOTE: This intentionally differs from core's `SHADCN_OVERRIDES`. That map
+ * targets the RAW shadcn primitives (Radix props: `checked`/`onCheckedChange`,
+ * `onValueChange`). The adapter components in `@/components/zod-form` deliberately
+ * normalise to the plain RHF field shape — every controlled adapter accepts
+ * `value`/`onChange`/`onBlur`/`ref`/`name` and translates to Radix props
+ * internally. So the correct override is simply `controlled: true` with NO
+ * custom `props` map, which makes codegen emit the default
+ * `value={field.value} onChange={field.onChange}` binding the adapters expect.
+ * Input/Textarea are uncontrolled (register-based); an empty override entry is
+ * enough to make codegen render them as the named `<Input>`/`<Textarea>` adapter
+ * instead of a raw `<input>`.
+ */
+const ADAPTER_OVERRIDES = {
+  Input: {},
+  Textarea: {},
+  Checkbox: { controlled: true },
+  Switch: { controlled: true },
+  Select: { controlled: true },
+  RadioGroup: { controlled: true },
+  DatePicker: { controlled: true }
+} as const;
+
 function generatedComponentSource(): string {
   const fields = walkSchema(schema);
   return generateFormComponent(fields, {
@@ -125,16 +150,16 @@ function generatedComponentSource(): string {
     ui: 'shadcn',
     mode: 'submit',
     formProvider: false,
-    // The shadcn field template wraps fields in <FormItem>/<FormLabel>/
-    // <FormControl>/<FormMessage>. generate.ts only emits the import line for
-    // those primitives when componentConfig is set — so pass a minimal config
-    // whose `source` points at shadcn's form module (the `form` registry item
-    // installs to @/components/ui/form). Without this the generated .tsx
-    // references undefined Form* identifiers and won't compile.
+    // Source BOTH the field adapters and the shadcn Form* layout wrappers from
+    // the single `@/components/zod-form` module: the adapter index.tsx ships the
+    // seven field components AND re-exports FormItem/FormControl/FormLabel/etc.
+    // The adapter-tuned overrides make every field render as its named adapter
+    // (`<Input>`, `<Checkbox>`, `<DatePicker>`, …) instead of raw HTML inputs.
     componentConfig: {
       components: {
-        source: '@/components/ui/form',
-        preset: 'shadcn'
+        source: '@/components/zod-form',
+        preset: 'shadcn',
+        overrides: { ...ADAPTER_OVERRIDES }
       }
     }
   });
