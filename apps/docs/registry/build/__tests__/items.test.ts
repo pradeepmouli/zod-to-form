@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest';
 import Ajv from 'ajv';
 import { walkSchema } from '@zod-to-form/core';
@@ -7,9 +8,9 @@ import { REGISTRY_DEPENDENCIES, STARTER_DOCS } from '../docs.js';
 import itemSchema from '../../schema/registry-item.schema.json';
 
 describe('sample schema', () => {
-  it('walks to four named fields', () => {
+  it('walks to five named fields', () => {
     const fields = walkSchema(schema);
-    expect(fields.map((f) => f.key)).toEqual(['name', 'email', 'age', 'subscribe']);
+    expect(fields.map((f) => f.key)).toEqual(['name', 'email', 'age', 'subscribe', 'joinedAt']);
   });
 });
 
