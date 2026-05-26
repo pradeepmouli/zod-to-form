@@ -10,5 +10,6 @@ export const schema = z.object({
     .email('Please enter a valid email')
     .meta({ title: 'Email', examples: ['jane@example.com'] }),
   age: z.number().min(18, 'Must be at least 18').optional().meta({ title: 'Age' }),
-  subscribe: z.boolean().default(false).meta({ title: 'Subscribe to updates' })
+  subscribe: z.boolean().default(false).meta({ title: 'Subscribe to updates' }),
+  joinedAt: z.date().optional().meta({ title: 'Joined' })
 });
