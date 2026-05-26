@@ -2,7 +2,10 @@ import type { $ZodString, $ZodTemplateLiteral } from 'zod/v4/core';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
 import { regexToMask } from '../utils.js';
 
-/** Map Zod v4 string format names to HTML input types */
+/**
+ * Map Zod v4 string format names to HTML input types.
+ * String date/time formats map to native inputs; `DatePicker` is reserved for `z.date()` only.
+ */
 const FORMAT_TO_INPUT_TYPE: Record<string, string> = {
   email: 'email',
   url: 'url',
@@ -12,11 +15,11 @@ const FORMAT_TO_INPUT_TYPE: Record<string, string> = {
   // Duration has no native input type — falls through to text
 };
 
-/** Formats that should render as DatePicker instead of a plain Input */
-const DATE_PICKER_FORMATS = new Set(['date', 'time', 'datetime']);
-
 /**
- * Process `z.string()` — renders as an `Input` (or `DatePicker` for date/time formats).
+ * Process `z.string()` — renders as an `Input` with appropriate `type` for all formats.
+ * String date/time formats (`date`, `time`, `datetime`) map to native HTML inputs
+ * (`type="date"`, `type="time"`, `type="datetime-local"`), keeping register-compatible
+ * string values. Only `z.date()` (Date-object schema) routes to `DatePicker`.
  * Extracts format, minLength, maxLength, and pattern constraints from the constraint bag.
  * Converts regex patterns to input masks via `regexToMask` when possible.
  *
@@ -27,7 +30,8 @@ const DATE_PICKER_FORMATS = new Set(['date', 'time', 'datetime']);
  *
  * @remarks
  * Format-to-input-type mapping: `email` → `type="email"`, `url` → `type="url"`,
- * `date`/`time`/`datetime` → `DatePicker` component. Other formats fall through to `type="text"`.
+ * `date` → `type="date"`, `time` → `type="time"`, `datetime` → `type="datetime-local"`.
+ * All string formats stay on `Input`; `DatePicker` is reserved for `z.date()` only.
  * Pattern is extracted from `bag.patterns` (a `Set<RegExp>`); only the first pattern is used.
  *
  * @category Processors
@@ -57,11 +61,10 @@ export function processString(
       ? ([...patternsSet][0] as RegExp).source
       : undefined;
 
-  // Determine component and input type from format
+  // Determine input type from format; all string formats stay on Input
   const inputType = format ? (FORMAT_TO_INPUT_TYPE[format] ?? 'text') : 'text';
-  const isDateLike = format ? DATE_PICKER_FORMATS.has(format) : false;
 
-  field.component = meta?.component ?? (isDateLike ? 'DatePicker' : 'Input');
+  field.component = meta?.component ?? 'Input';
   field.props = {
     ...field.props,
     type: inputType

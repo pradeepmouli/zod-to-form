@@ -106,35 +106,35 @@ describe('processString', () => {
     expect(field.constraints.pattern).toBeDefined();
   });
 
-  it('maps z.string().date() (ISO date) to DatePicker with type=date', () => {
+  it('maps z.string().date() (ISO date) to Input with type=date', () => {
     const schema = z.string().date();
     const field = createBaseField('birthday', 'string');
 
     processString(schema, createContext(), field, {});
 
-    expect(field.component).toBe('DatePicker');
+    expect(field.component).toBe('Input');
     expect(field.props['type']).toBe('date');
     expect(field.constraints.format).toBe('date');
   });
 
-  it('maps z.string().time() (ISO time) to DatePicker with type=time', () => {
+  it('maps z.string().time() (ISO time) to Input with type=time', () => {
     const schema = z.string().time();
     const field = createBaseField('startTime', 'string');
 
     processString(schema, createContext(), field, {});
 
-    expect(field.component).toBe('DatePicker');
+    expect(field.component).toBe('Input');
     expect(field.props['type']).toBe('time');
     expect(field.constraints.format).toBe('time');
   });
 
-  it('maps z.string().datetime() (ISO datetime) to DatePicker with type=datetime-local', () => {
+  it('maps z.string().datetime() (ISO datetime) to Input with type=datetime-local', () => {
     const schema = z.string().datetime();
     const field = createBaseField('createdAt', 'string');
 
     processString(schema, createContext(), field, {});
 
-    expect(field.component).toBe('DatePicker');
+    expect(field.component).toBe('Input');
     expect(field.props['type']).toBe('datetime-local');
     expect(field.constraints.format).toBe('datetime');
   });
