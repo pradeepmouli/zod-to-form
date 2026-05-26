@@ -105,7 +105,8 @@ export function getFileHeader(
   mode: 'submit' | 'auto-save' = 'submit',
   componentImportLine?: string,
   options?: { hasControlled?: boolean; formProvider?: boolean; preset?: 'shadcn' | 'html' },
-  optimized?: { includeZodResolver: boolean; includeZod: boolean }
+  optimized?: { includeZodResolver: boolean; includeZod: boolean },
+  typesModule?: string
 ): string {
   const rhfParts = ['useForm'];
   if (hasArrays) rhfParts.push('useFieldArray');
@@ -127,10 +128,10 @@ export function getFileHeader(
     ...(includeZodResolver ? [`import { zodResolver } from '@hookform/resolvers/zod';`] : []),
     ...(includeZod ? [`import { z } from 'zod';`] : []),
     ...(componentImportLine ? [componentImportLine] : []),
+    ...(typesModule ? [`import type { StripIndexSignature } from '${typesModule}';`] : []),
     `import { ${exportName} } from '${schemaImportPath}';`,
     ``,
-    STRIP_INDEX_SIGNATURE_TYPE,
-    ``,
+    ...(typesModule ? [] : [STRIP_INDEX_SIGNATURE_TYPE, ``]),
     // FormData: form values as handled by RHF (input side — pre-parse).
     // FormOutput: parsed values passed to onSubmit (output side — post-transform).
     // Zod defaults/transforms make input and output differ — RHF uses input.

@@ -34,4 +34,11 @@ export type CodegenConfig = {
   schemaLiteInfo?: SchemaLiteInfo;
   /** Output path of the form component — used to compute the .lite.ts import path */
   outputPath?: string;
+  /**
+   * When set, codegen emits `import type { StripIndexSignature } from '<typesModule>'`
+   * and omits the inline `StripIndexSignature` type block.
+   * When absent (default), the type is inlined for a self-contained single-file output.
+   * The shadcn registry sets this to `'@/components/z2f'`.
+   */
+  typesModule?: string;
 };

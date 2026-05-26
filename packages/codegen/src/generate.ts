@@ -801,7 +801,8 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
     config.mode,
     componentImportLine,
     { hasControlled, formProvider: useFormProvider, preset },
-    optimizedOptions
+    optimizedOptions,
+    config.typesModule
   );
 
   // When optimized with schemaLite, the form imports from the .lite.ts file
