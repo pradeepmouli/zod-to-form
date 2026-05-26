@@ -1,21 +1,18 @@
+import * as React from 'react';
 import { Checkbox as ShadcnCheckbox } from '@/components/ui/checkbox';
+import type { ControlledFieldProps } from './types.js';
 
-type Props = {
-  value?: boolean;
-  onChange?: (v: boolean) => void;
-  onBlur?: () => void;
-  disabled?: boolean;
-  id?: string;
-  name?: string;
-};
-
-export function Checkbox({ value, onChange, onBlur, disabled, id }: Props) {
-  return (
+export const Checkbox = React.forwardRef<HTMLButtonElement, ControlledFieldProps<boolean>>(
+  ({ value, onChange, onBlur, name, disabled, id }, ref) => (
     <ShadcnCheckbox
+      ref={ref}
       id={id}
+      name={name}
       disabled={disabled}
+      onBlur={onBlur}
       checked={!!value}
       onCheckedChange={(c) => onChange?.(c === true)}
     />
-  );
-}
+  )
+);
+Checkbox.displayName = 'Checkbox';

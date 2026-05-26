@@ -20,17 +20,20 @@ const Ctx = React.createContext<{ onValueChange?: (v: string) => void; disabled?
 export interface RadioGroupProps {
   value?: string;
   onValueChange?: (v: string) => void;
+  onBlur?: () => void;
+  name?: string;
   disabled?: boolean;
   children?: React.ReactNode;
 }
 
-export function RadioGroup({ onValueChange, disabled, children }: RadioGroupProps) {
-  return (
-    <div role="radiogroup">
+export const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
+  ({ onValueChange, onBlur, name, disabled, children }, ref) => (
+    <div ref={ref} role="radiogroup" data-name={name} onBlur={onBlur}>
       <Ctx.Provider value={{ onValueChange, disabled }}>{children}</Ctx.Provider>
     </div>
-  );
-}
+  )
+);
+RadioGroup.displayName = 'RadioGroup';
 
 export interface RadioGroupItemProps {
   value: string;

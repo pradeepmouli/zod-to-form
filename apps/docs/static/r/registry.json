@@ -43,6 +43,11 @@
           "target": "@lib/zod-form/z2f.config.ts"
         },
         {
+          "path": "zod-form/types.ts",
+          "type": "registry:lib",
+          "target": "@components/zod-form/types.ts"
+        },
+        {
           "path": "zod-form/input.tsx",
           "type": "registry:component",
           "target": "@components/zod-form/input.tsx"
@@ -127,6 +132,11 @@
           "path": "z2f.config.ts",
           "type": "registry:lib",
           "target": "@lib/zod-form/z2f.config.ts"
+        },
+        {
+          "path": "zod-form/types.ts",
+          "type": "registry:lib",
+          "target": "@components/zod-form/types.ts"
         },
         {
           "path": "zod-form/input.tsx",
@@ -214,6 +224,11 @@
           "path": "z2f.config.ts",
           "type": "registry:lib",
           "target": "@lib/zod-form/z2f.config.ts"
+        },
+        {
+          "path": "zod-form/types.ts",
+          "type": "registry:lib",
+          "target": "@components/zod-form/types.ts"
         },
         {
           "path": "zod-form/input.tsx",

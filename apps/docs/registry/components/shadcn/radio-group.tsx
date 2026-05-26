@@ -1,20 +1,19 @@
+import * as React from 'react';
 import { RadioGroup as ShadcnRadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import type { FormFieldOption } from '@zod-to-form/core';
+import type { ControlledFieldProps } from './types.js';
 
-type Props = {
-  value?: string | number;
-  onChange?: (v: string) => void;
-  onBlur?: () => void;
-  disabled?: boolean;
-  id?: string;
-  name?: string;
+type Props = ControlledFieldProps<string | number> & {
   options?: FormFieldOption[];
 };
 
-export function RadioGroup({ value, onChange, disabled, name, options = [] }: Props) {
-  return (
+export const RadioGroup = React.forwardRef<HTMLDivElement, Props>(
+  ({ value, onChange, onBlur, name, disabled, options = [] }, ref) => (
     <ShadcnRadioGroup
+      ref={ref}
+      name={name}
+      onBlur={onBlur}
       value={value == null ? undefined : String(value)}
       onValueChange={(v) => onChange?.(v)}
       disabled={disabled}
@@ -29,5 +28,6 @@ export function RadioGroup({ value, onChange, disabled, name, options = [] }: Pr
         );
       })}
     </ShadcnRadioGroup>
-  );
-}
+  )
+);
+RadioGroup.displayName = 'RadioGroup';
