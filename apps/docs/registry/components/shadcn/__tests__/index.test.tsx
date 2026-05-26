@@ -2,7 +2,31 @@
  * TDD test for the shadcn adapters index aggregator (Task 7).
  */
 import { describe, it, expect } from 'vitest';
+import * as adapters from '../index.js';
 import { components } from '../index.js';
+
+describe('Form* layout primitive re-exports', () => {
+  it('re-exports the shadcn Form* wrappers (so generated forms import them from the adapter module)', () => {
+    for (const k of [
+      'FormItem',
+      'FormControl',
+      'FormLabel',
+      'FormMessage',
+      'FormDescription',
+      'FormField'
+    ]) {
+      expect(typeof (adapters as Record<string, unknown>)[k], `${k} should be exported`).toBe(
+        'function'
+      );
+    }
+  });
+
+  it('does NOT add the Form* wrappers to the components field map', () => {
+    for (const k of ['FormItem', 'FormControl', 'FormLabel', 'FormMessage', 'FormField']) {
+      expect(k in components, `${k} must not be a field component`).toBe(false);
+    }
+  });
+});
 
 describe('components map', () => {
   it('exposes all core field components', () => {
