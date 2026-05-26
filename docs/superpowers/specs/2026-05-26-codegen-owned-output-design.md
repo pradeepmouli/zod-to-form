@@ -3,6 +3,8 @@
 **Date:** 2026-05-26
 **Status:** Approved (design); pending spec review → implementation plan(s)
 
+> **Superseded by** [`2026-05-26-codegen-owned-output-baseui-design.md`](./2026-05-26-codegen-owned-output-baseui-design.md) — which retargets the registry from Radix to shadcn's Base UI components. This Radix-based spec remains a valid alternative if Base UI migration is deferred (see that spec's Recommendation).
+
 ## Goal
 
 Make z2f's central marketing claim — *"eject to generated code you fully own; no runtime dependency on any `@zod-to-form` package; stop using zod-to-form entirely and the generated code keeps working"* — **literally true** for the codegen path; slim the shadcn registry adapter layer to only the components whose logic codegen bindings + native primitives genuinely cannot express; and clean up the ejected file layout so it reads as "your code + a clearly-labelled z2f integration layer."
