@@ -3,7 +3,8 @@ import {
   getEmptyDefault,
   resolveBaseProps,
   resolveNativeAttrs,
-  resolveOptionsProps
+  resolveOptionsProps,
+  RHF_FIELD_EXPRESSIONS
 } from '@zod-to-form/core';
 import type { ComponentOverride, FieldConfig, ZodFormsConfig } from '@zod-to-form/core';
 import {
@@ -54,15 +55,6 @@ function renderResolverProps(record: Record<string, unknown>): string {
     })
     .join('');
 }
-
-/** Known RHF field expressions that should be resolved, not rendered as literal props */
-const RHF_FIELD_EXPRESSIONS = new Set([
-  'field.value',
-  'field.onChange',
-  'field.onBlur',
-  'field.ref',
-  'field.name'
-]);
 
 const BUILTIN_COMPONENT_NAMES = new Set([
   'Input',
