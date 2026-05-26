@@ -201,7 +201,8 @@ describe('parity harness: codegen materializes shared leaf resolvers', () => {
         expect(baseProps['required']).toBeUndefined();
       }
 
-      // nativeAttrs only contains 'type' when the field has one set
+      // nativeAttrs extracts all allowlisted DOM attrs (type, minLength, maxLength,
+      // pattern, min, max, step); verify 'type' is correctly mirrored from props
       if (field.props['type'] !== undefined) {
         expect(nativeAttrs['type']).toBe(field.props['type']);
       } else {
@@ -259,5 +260,27 @@ describe('parity harness: codegen materializes shared leaf resolvers', () => {
     // so no type= attr should appear before the register spread
     // (the spread {...register(...)} may add type="checkbox" at runtime, but not statically)
     expect(attrString.split('{...')[0]).not.toContain('type=');
+  });
+
+  // ── Hardcoded non-tautological parity assertions ──────────────────────────
+  // These do NOT derive their expected values from the resolvers — they are
+  // explicit literal assertions. Reverting the NATIVE_INPUT_ATTRS allowlist to
+  // ['type'] only would cause these tests to fail because minLength/min would
+  // no longer appear in the generated source.
+
+  it('name field: emits minLength={2} (hardcoded — z.string().min(2) → minLength attr in codegen)', () => {
+    const attrString = extractAttrString(source, 'NameInput');
+    // z.string().min(2) sets field.props.minLength = 2
+    // resolveNativeAttrs must include 'minLength' in its allowlist for this to appear.
+    // If NATIVE_INPUT_ATTRS reverts to ['type'] only, this assertion WILL FAIL.
+    expect(attrString).toContain('minLength={2}');
+  });
+
+  it('age field: emits min={18} (hardcoded — z.number().min(18) → min attr in codegen)', () => {
+    const attrString = extractAttrString(source, 'AgeInput');
+    // z.number().min(18) sets field.props.min = 18
+    // resolveNativeAttrs must include 'min' in its allowlist for this to appear.
+    // If NATIVE_INPUT_ATTRS reverts to ['type'] only, this assertion WILL FAIL.
+    expect(attrString).toContain('min={18}');
   });
 });
