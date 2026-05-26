@@ -22,20 +22,10 @@ export function RadioGroup({ value, onChange, disabled, name, options = [] }: Pr
       {options.map((o) => {
         const itemId = `${name ?? 'radio'}-${String(o.value)}`;
         return (
-          <RadioGroupItem
-            key={String(o.value)}
-            value={String(o.value)}
-            id={itemId}
-            disabled={o.disabled}
-          />
-        );
-      })}
-      {options.map((o) => {
-        const itemId = `${name ?? 'radio'}-${String(o.value)}`;
-        return (
-          <Label key={`${String(o.value)}-label`} htmlFor={itemId}>
-            {o.label}
-          </Label>
+          <div key={String(o.value)}>
+            <RadioGroupItem value={String(o.value)} id={itemId} disabled={o.disabled} />
+            <Label htmlFor={itemId}>{o.label}</Label>
+          </div>
         );
       })}
     </ShadcnRadioGroup>
