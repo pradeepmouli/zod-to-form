@@ -1,7 +1,7 @@
 # Design: genuinely-owned codegen output, shadcn **Base UI** target (zero runtime z2f dependency)
 
 **Date:** 2026-05-26
-**Status:** Draft (design); supersedes the Radix-targeted spec (`2026-05-26-codegen-owned-output-design.md`)
+**Status:** Approved (design); supersedes the Radix-targeted spec (`2026-05-26-codegen-owned-output-design.md`). Pending plan(s).
 
 > This revises the approved Radix-based design by changing **one foundational decision**: the shadcn registry now targets shadcn's **Base UI** component set (`ui.shadcn.com/docs/components/base/*`), not the legacy Radix set (`/radix/*`). All other decisions (ownership target, ejected layout, `StripIndexSignature` opt-in, date route-by-type, docs accuracy, Plan A/B decomposition) carry forward unchanged. The motivating hope — "Base UI Select is options-native, so the `Select`/`RadioGroup` adapters disappear" — **does not hold** after verification (see §1–§2 and Risks); the practical Base UI win is elsewhere (Checkbox/Switch coercion simplifies, no `boolean | 'indeterminate'` normalization). This spec records what is actually true against Base UI 1.5.x + shadcn's Base UI registry.
 
