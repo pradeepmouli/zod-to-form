@@ -7,7 +7,8 @@
  *
  * PopoverTrigger supports both the legacy `asChild` pattern and the Base UI
  * `render` prop pattern. When `render` is provided, it is cloned and rendered
- * directly (any `children` are merged in as the render element's children).
+ * with the TRIGGER's own children (Base UI merges the component's children into
+ * the rendered element, overriding any children the render element itself had).
  * When `children` are provided without `render`, they are rendered as-is.
  */
 import * as React from 'react';
@@ -26,10 +27,10 @@ export function PopoverTrigger({
   render?: React.ReactElement;
 }) {
   if (render) {
-    // Base UI pattern: `render` is the trigger element; children are its content.
-    // Cast props to access .children safely (render is typed as ReactElement).
-    const renderProps = render.props as { children?: React.ReactNode };
-    return React.cloneElement(render, {}, children ?? renderProps.children);
+    // Base UI pattern: `render` is the trigger element; the trigger's own
+    // `children` become its content (Base UI merges component children into the
+    // rendered element, overriding the render element's own children).
+    return React.cloneElement(render, {}, children);
   }
   return <>{children}</>;
 }

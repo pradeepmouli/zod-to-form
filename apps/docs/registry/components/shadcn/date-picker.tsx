@@ -16,12 +16,10 @@ export function DatePicker({
   return (
     <Popover>
       <PopoverTrigger
-        render={
-          <Button type="button" variant="outline" id={id} name={name} disabled={disabled}>
-            {selected ? format(selected, 'PPP') : 'Pick a date'}
-          </Button>
-        }
-      />
+        render={<Button type="button" variant="outline" id={id} name={name} disabled={disabled} />}
+      >
+        {selected ? format(selected, 'PPP') : 'Pick a date'}
+      </PopoverTrigger>
       <PopoverContent>
         <Calendar mode="single" selected={selected} onSelect={(d?: Date) => onChange?.(d)} />
       </PopoverContent>
