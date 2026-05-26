@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
+import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { z } from 'zod';
+import type { ZodFormComponents } from '../src/ZodForm.js';
 import { ZodForm } from '../src/ZodForm.js';
 
 describe('ZodForm', () => {
@@ -320,5 +322,52 @@ describe('ZodForm — number/date setValueAs coercion', () => {
     const submitted = onSubmit.mock.calls[0]![0] as Record<string, unknown>;
     expect(submitted['score']).toBe(99);
     expect(typeof submitted['score']).toBe('number');
+  });
+});
+
+// ── Type-level tests ────────────────────────────────────────────────────────
+// These assertions are checked at compile time by tsc/tsgo (no runtime cost).
+// If the `components` prop type were too narrow (e.g. requiring MemoExoticComponent),
+// the assignments below would produce TS2322 errors.
+
+describe('ZodForm components prop — type-level', () => {
+  it('accepts plain function components without tsc errors', () => {
+    const schema = z.object({ email: z.string().email() });
+
+    // Plain arrow function component — this is what shadcn/Base UI exports
+    const PlainInput = (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />;
+    const PlainLabel = (props: React.LabelHTMLAttributes<HTMLLabelElement>) => <label {...props} />;
+
+    // Must assign without TS2322 — was broken before this fix
+    const map: ZodFormComponents = { Input: PlainInput, FieldLabel: PlainLabel };
+
+    // Render to ensure it actually works at runtime too
+    render(
+      <ZodForm schema={schema} components={map}>
+        <button type="submit">Submit</button>
+      </ZodForm>
+    );
+
+    // The type assertion itself is the real test — reaching here means it compiled
+    expect(map.Input).toBeDefined();
+    expect(map.FieldLabel).toBeDefined();
+  });
+
+  it('accepts React.memo-wrapped components (backward compat)', () => {
+    const schema = z.object({ name: z.string() });
+
+    const MemoInput = React.memo((props: React.InputHTMLAttributes<HTMLInputElement>) => (
+      <input {...props} />
+    ));
+
+    const map: ZodFormComponents = { Input: MemoInput };
+
+    render(
+      <ZodForm schema={schema} components={map}>
+        <button type="submit">Submit</button>
+      </ZodForm>
+    );
+
+    expect(map.Input).toBeDefined();
   });
 });

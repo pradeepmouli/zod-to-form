@@ -7,6 +7,16 @@ import { defaultComponentMap } from './components/index.js';
 
 type ComponentMap = typeof defaultComponentMap;
 
+/**
+ * Public component-map type for `<ZodForm components={…}>`.
+ *
+ * Preserves the per-key names from `defaultComponentMap` (consumers still get
+ * autocomplete on `Input`, `Checkbox`, etc.) but widens each value to
+ * `React.ComponentType<any>`, so plain function components, React.memo-wrapped
+ * components, and forwardRef components are all assignable.
+ */
+export type ZodFormComponents = Partial<Record<keyof ComponentMap, ComponentType<any>>>;
+
 export type RuntimeComponentConfig = {
   /**
    * Component source and optional per-component overrides.
@@ -282,7 +292,7 @@ function DefaultFieldTemplate({
   name,
   deprecated,
   components
-}: FieldTemplateProps & { components?: Partial<ComponentMap> }) {
+}: FieldTemplateProps & { components?: ZodFormComponents }) {
   const { FieldLabel, FieldDescription, FieldMessage } = { ...defaultComponentMap, ...components };
   return (
     <>
@@ -308,7 +318,7 @@ function DefaultFieldTemplate({
 
 type FieldRendererProps = {
   field: FormField;
-  components?: Partial<ComponentMap>;
+  components?: ZodFormComponents;
   componentConfig?: RuntimeComponentConfig;
 };
 

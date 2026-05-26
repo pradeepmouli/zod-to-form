@@ -6,9 +6,11 @@ import type { FormProcessor, ZodFormRegistry } from '@zod-to-form/core';
 import { normalizeFieldKey, collectFieldSections } from '@zod-to-form/core';
 import { FieldRenderer, warnRemovedConfigKeys } from './FieldRenderer.js';
 import { defaultComponentMap } from './components/index.js';
-import type { RuntimeComponentConfig } from './FieldRenderer.js';
+import type { RuntimeComponentConfig, ZodFormComponents } from './FieldRenderer.js';
 import { useZodForm } from './useZodForm.js';
 import type { input } from 'zod';
+
+export type { ZodFormComponents };
 
 type ZodFormProps<TSchema extends ZodObject> = {
   schema: TSchema;
@@ -22,7 +24,7 @@ type ZodFormProps<TSchema extends ZodObject> = {
   onValueChange?: (data: output<TSchema> | input<TSchema>, meta: { isValid: boolean }) => void;
   mode?: 'onSubmit' | 'onChange' | 'onBlur';
   defaultValues?: Partial<output<TSchema>>;
-  components?: Partial<typeof defaultComponentMap>;
+  components?: ZodFormComponents;
   componentConfig?: RuntimeComponentConfig;
   formRegistry?: ZodFormRegistry;
   processors?: Record<string, FormProcessor>;

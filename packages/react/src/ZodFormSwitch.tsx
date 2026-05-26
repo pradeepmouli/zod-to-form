@@ -8,8 +8,7 @@
 import type { ReactNode } from 'react';
 import type { ZodObject, input, output } from 'zod';
 import { ZodForm } from './ZodForm.js';
-import type { defaultComponentMap } from './components/index.js';
-import type { RuntimeComponentConfig } from './FieldRenderer.js';
+import type { ZodFormComponents, RuntimeComponentConfig } from './FieldRenderer.js';
 
 const _warnedKeys = new Set<string>();
 
@@ -40,7 +39,7 @@ export interface ZodFormSwitchProps<
    */
   fallback?: ReactNode | ((source: TSource | null | undefined) => ReactNode);
   /** Forwarded to the rendered <ZodForm>. */
-  components?: Partial<typeof defaultComponentMap>;
+  components?: ZodFormComponents;
   /** Forwarded to the rendered <ZodForm>. */
   componentConfig?: RuntimeComponentConfig;
   /** Forwarded to the rendered <ZodForm>. */
