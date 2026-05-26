@@ -9,13 +9,13 @@ import { buildReactItem, buildCodegenItem, buildViteItem, buildRegistryIndex } f
 import { REGISTRY_DEPENDENCIES, STARTER_DOCS } from '../docs.js';
 import itemSchema from '../../schema/registry-item.schema.json';
 
-/** The shadcn adapter files every starter ships. */
+/**
+ * The shadcn adapter files every starter ships.
+ * Input/Textarea/Checkbox/Switch are now raw ui/* re-exports — their adapter
+ * files have been deleted. Only the kept adapters ship as discrete files.
+ */
 const ADAPTER_TARGETS = [
   '@components/zod-form/types.ts',
-  '@components/zod-form/input.tsx',
-  '@components/zod-form/textarea.tsx',
-  '@components/zod-form/checkbox.tsx',
-  '@components/zod-form/switch.tsx',
   '@components/zod-form/select.tsx',
   '@components/zod-form/radio-group.tsx',
   '@components/zod-form/date-picker.tsx',
@@ -264,21 +264,14 @@ describe('shipped shadcn adapter files', () => {
     expect(index.content).toBeDefined();
     // No relative specifier may keep the .js extension after the strip transform.
     expect(index.content).not.toMatch(/from\s+['"]\.\.?\/[^'"]+\.js['"]/);
-    // The components are still re-exported (extensionless) so the module resolves.
-    expect(index.content).toContain("from './input'");
+    // The components map is still re-exported so the ZodForm runtime can consume it.
     expect(index.content).toContain('export const components');
   });
 
-  it('ships the seven component files with NO .js extensions in their relative imports', () => {
-    for (const name of [
-      'input',
-      'textarea',
-      'checkbox',
-      'switch',
-      'select',
-      'radio-group',
-      'date-picker'
-    ]) {
+  it('ships the three kept adapter files with NO .js extensions in their relative imports', () => {
+    // Input/Textarea/Checkbox/Switch are now raw @/components/ui/* re-exports —
+    // no adapter files on disk. Only Select/RadioGroup/DatePicker ship as adapters.
+    for (const name of ['select', 'radio-group', 'date-picker']) {
       const source = readFileSync(
         fileURLToPath(new URL(`../../components/shadcn/${name}.tsx`, import.meta.url)),
         'utf8'

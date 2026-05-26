@@ -12,20 +12,12 @@ const SAMPLE_SCHEMA_SRC = readFileSync(
 );
 
 /**
- * The shadcn field adapter components shipped by every starter. The seven
- * component files wrap the consumer's installed shadcn/ui primitives; `index`
- * re-exports them plus a keyed `components` map for the ZodForm runtime
- * registry. All eight install under the `@components/zod-form/` alias.
+ * The shadcn adapter component files shipped by every starter.
+ * Input/Textarea/Checkbox/Switch are now raw @/components/ui/* re-exports in
+ * index.tsx — they have no adapter file on disk. Only Select/RadioGroup/DatePicker
+ * retain local adapter files; all four install under `@components/zod-form/`.
  */
-const ADAPTER_COMPONENT_NAMES = [
-  'input',
-  'textarea',
-  'checkbox',
-  'switch',
-  'select',
-  'radio-group',
-  'date-picker'
-] as const;
+const ADAPTER_COMPONENT_NAMES = ['select', 'radio-group', 'date-picker'] as const;
 
 /**
  * Strip the `.js` extension from RELATIVE import/export specifiers only.
@@ -45,16 +37,17 @@ function stripRelativeJsExtensions(source: string): string {
  * Read the shadcn adapter files from `registry/components/shadcn/` and return
  * `files[]` entries targeting `@components/zod-form/<name>.tsx`.
  *
- * The controlled adapters import the shared `ControlledFieldProps` type from
- * `./types.js`, and `index.tsx` re-exports its siblings via `./input.js` etc.
- * All relative `.js` specifiers are stripped on the way out (see
- * {@link stripRelativeJsExtensions}) — consumer bundlers (Next/webpack) resolve
- * `./types.js` literally and fail (there is no `.js`, only `.ts`/`.tsx`); the
- * extensionless form resolves correctly. The `@/components/ui/*` alias and
- * `@zod-to-form/core` type imports are already consumer-correct and untouched.
+ * Only Select/RadioGroup/DatePicker ship as discrete adapter files.
+ * Input/Textarea/Checkbox/Switch are raw @/components/ui/* re-exports in
+ * index.tsx and have no on-disk adapter file.
  *
- * The shared `types.ts` MUST ship alongside the components — the controlled
- * adapters reference it, so omitting it would break the consumer `tsc`.
+ * Relative `.js` specifiers are stripped on the way out (see
+ * {@link stripRelativeJsExtensions}) — consumer bundlers (Next/webpack) resolve
+ * `./types.js` literally and fail; the extensionless form resolves correctly.
+ * The `@/components/ui/*` alias and bare package imports are untouched.
+ *
+ * The shared `types.ts` MUST ship alongside the adapters — Select/RadioGroup/
+ * DatePicker reference it, so omitting it would break the consumer `tsc`.
  */
 function adapterFiles(): RegistryItemFile[] {
   const read = (relPath: string): string =>
