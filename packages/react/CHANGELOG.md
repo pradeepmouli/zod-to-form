@@ -1,5 +1,22 @@
 # @zod-to-form/react
 
+## 0.9.2
+
+### Patch Changes
+
+- [#138](https://github.com/pradeepmouli/zod-to-form/pull/138) [`e47e428`](https://github.com/pradeepmouli/zod-to-form/commit/e47e428bdb3328d7241b66f506524aed0defe6d5) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Leaf-field rendering is now driven by a shared family of pure, `zodType`-keyed resolvers in `@zod-to-form/core`, so the runtime `<ZodForm>` renderer and codegen-generated components can no longer drift on a field's component props.
+
+  New core exports: `resolveBaseProps(field)` (field flags: `id`/`required`/`readOnly`/`disabled` — shared across every field type), `resolveNativeAttrs(field)` (DOM-valid native input attributes: `type`/`minLength`/`maxLength`/`pattern`/`min`/`max`/`step`), `resolveControlMode(field)` (`'register'` vs `'controller'`), and `resolveOptionsProps(field)` (`options` passthrough). Both renderers now compose these instead of hand-assembling props.
+
+  This fixes the open divergence where codegen-generated leaf components emitted only `id` (and only `type` among native attrs) while the runtime emitted `required`/`readOnly` and forwarded the native-validation attributes (`minLength`/`min`/etc.). Generated leaf components now emit the same base props and native validation attributes as the runtime. A new codegen parity test asserts generated output materializes the shared resolver composition — including hardcoded checks for `minLength`/`min` — guarding against future drift. The React renderer refactor is DOM-observably behavior-preserving.
+
+- [#130](https://github.com/pradeepmouli/zod-to-form/pull/130) [`5382a5e`](https://github.com/pradeepmouli/zod-to-form/commit/5382a5eed4289c0b1262bf0d8980544737df4e5a) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Codegen-generated forms now coerce HTML input values correctly. Generated `register()` calls emit RHF coercion options (`valueAsNumber` for number/bigint, `valueAsDate` for date, `setValueAs` for file) to match the runtime `<ZodForm>` renderer — fixing "Expected number" validation errors when a `z.number()` field is rendered as a numeric input.
+
+  The field-to-register-option decision is extracted into a new framework-agnostic `getFieldRegisterHints(field)` helper in `@zod-to-form/core`, consumed by both the runtime renderer and codegen so they can't drift. The React renderer refactor is behavior-preserving.
+
+- Updated dependencies [[`e47e428`](https://github.com/pradeepmouli/zod-to-form/commit/e47e428bdb3328d7241b66f506524aed0defe6d5), [`5382a5e`](https://github.com/pradeepmouli/zod-to-form/commit/5382a5eed4289c0b1262bf0d8980544737df4e5a)]:
+  - @zod-to-form/core@0.10.0
+
 ## 0.9.1
 
 ### Patch Changes
