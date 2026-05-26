@@ -2,55 +2,51 @@
  * Stub fixture for @/components/ui/radio-group.
  * Test-only — never shipped to consumers.
  *
- * Selection testing strategy:
- *   RadioGroup passes an `onSelect` prop down to each RadioGroupItem child
- *   via React.cloneElement. When the item's <input type="radio"> fires onChange,
- *   it calls onSelect(value) which in turn calls the parent's onValueChange.
+ * Mirrors real Radix RadioGroup: selection is wired via React context so the
+ * RadioGroupItem can live at any depth (e.g. inside a per-option <div> wrapper),
+ * not just as a direct child. RadioGroup provides onValueChange + disabled;
+ * each RadioGroupItem reads the context and fires onValueChange(value) on change.
  *
  * Usage in tests:
- *   Render <RadioGroup onValueChange={handler}><RadioGroupItem value="a" /></RadioGroup>
- *   Then fireEvent.click / fireEvent.change on the radio input for that item.
+ *   Render <RadioGroup onValueChange={handler}>...<RadioGroupItem value="a" />...</RadioGroup>
+ *   Then fireEvent.click on the radio input for that item (React 19 + jsdom does
+ *   not trigger the synthetic onChange via fireEvent.change on radio inputs).
  *   Assert that handler was called with the expected value.
  */
 import * as React from 'react';
 
+const Ctx = React.createContext<{ onValueChange?: (v: string) => void; disabled?: boolean }>({});
+
 export interface RadioGroupProps {
   value?: string;
-  onValueChange?: (value: string) => void;
+  onValueChange?: (v: string) => void;
   disabled?: boolean;
   children?: React.ReactNode;
 }
 
-export function RadioGroup({ value: _value, onValueChange, disabled, children }: RadioGroupProps) {
-  // Clone each child and inject an onSelect callback so RadioGroupItem can
-  // bubble the selection back up without needing React context.
-  const clonedChildren = React.Children.map(children, (child) => {
-    if (!React.isValidElement(child)) return child;
-    return React.cloneElement(child as React.ReactElement<RadioGroupItemProps>, {
-      onSelect: onValueChange,
-      disabled: (child.props as RadioGroupItemProps).disabled ?? disabled
-    });
-  });
-
-  return <div role="radiogroup">{clonedChildren}</div>;
+export function RadioGroup({ onValueChange, disabled, children }: RadioGroupProps) {
+  return (
+    <div role="radiogroup">
+      <Ctx.Provider value={{ onValueChange, disabled }}>{children}</Ctx.Provider>
+    </div>
+  );
 }
 
 export interface RadioGroupItemProps {
   value: string;
   id?: string;
   disabled?: boolean;
-  /** Injected by RadioGroup — not part of the public shadcn API. */
-  onSelect?: (value: string) => void;
 }
 
-export function RadioGroupItem({ value, id, disabled, onSelect }: RadioGroupItemProps) {
+export function RadioGroupItem({ value, id, disabled }: RadioGroupItemProps) {
+  const { onValueChange, disabled: groupDisabled } = React.useContext(Ctx);
   return (
     <input
       type="radio"
       id={id}
       value={value}
-      disabled={disabled}
-      onChange={() => onSelect?.(value)}
+      disabled={disabled ?? groupDisabled}
+      onChange={() => onValueChange?.(value)}
     />
   );
 }
