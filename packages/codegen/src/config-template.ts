@@ -87,19 +87,22 @@ export function buildConfigSource(opts: ConfigTemplateOptions): string {
     lines.push(`    preset: '${preset}',`);
   }
 
-  // overrides
-  const overrideEntries = opts.overrides
-    ? Object.entries(opts.overrides).filter(([, v]) => v.controlled)
-    : [];
+  // overrides — serialize ALL entries (controlled and non-controlled).
+  // A non-controlled/empty entry emits `Name: {}` (use the named component from
+  // source for this field); a controlled entry emits `Name: { controlled: true }`.
+  // Dropping non-controlled entries previously caused fields without an override
+  // to regress to raw `<input>` on regeneration.
+  const overrideEntries = opts.overrides ? Object.entries(opts.overrides) : [];
   if (presetImportName || overrideEntries.length > 0) {
     lines.push(`    overrides: {`);
     if (presetImportName) {
       const comma = overrideEntries.length > 0 ? ',' : '';
       lines.push(`      ...${presetImportName}${comma}`);
     }
-    overrideEntries.forEach(([name], i) => {
+    overrideEntries.forEach(([name, v], i) => {
       const comma = i < overrideEntries.length - 1 ? ',' : '';
-      lines.push(`      ${name}: { controlled: true }${comma}`);
+      const body = v.controlled ? '{ controlled: true }' : '{}';
+      lines.push(`      ${name}: ${body}${comma}`);
     });
     lines.push(`    }`);
   }

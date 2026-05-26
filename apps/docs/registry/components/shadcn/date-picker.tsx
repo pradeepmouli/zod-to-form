@@ -11,6 +11,9 @@ export const DatePicker = React.forwardRef<
 >(({ value, onChange, onBlur, name, disabled, id }, ref) => {
   const date =
     value == null || value === '' ? undefined : value instanceof Date ? value : new Date(value);
+  // Guard against Invalid Date (e.g. a non-empty, non-ISO string): treat as
+  // undefined so `format(...)` never throws and the placeholder is shown.
+  const valid = date && !Number.isNaN(date.getTime()) ? date : undefined;
 
   return (
     <Popover>
@@ -24,11 +27,11 @@ export const DatePicker = React.forwardRef<
           variant="outline"
           disabled={disabled}
         >
-          {date ? format(date, 'PPP') : 'Pick a date'}
+          {valid ? format(valid, 'PPP') : 'Pick a date'}
         </Button>
       </PopoverTrigger>
       <PopoverContent>
-        <Calendar mode="single" selected={date} onSelect={(d?: Date) => onChange?.(d)} />
+        <Calendar mode="single" selected={valid} onSelect={(d?: Date) => onChange?.(d)} />
       </PopoverContent>
     </Popover>
   );
