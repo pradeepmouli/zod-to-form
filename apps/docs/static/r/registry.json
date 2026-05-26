@@ -29,8 +29,7 @@
         "button",
         "popover",
         "calendar",
-        "date-picker",
-        "form"
+        "field"
       ],
       "files": [
         {
@@ -47,6 +46,16 @@
           "path": "z2f/types.ts",
           "type": "registry:lib",
           "target": "@components/z2f/types.ts"
+        },
+        {
+          "path": "z2f/checkbox.tsx",
+          "type": "registry:component",
+          "target": "@components/z2f/checkbox.tsx"
+        },
+        {
+          "path": "z2f/switch.tsx",
+          "type": "registry:component",
+          "target": "@components/z2f/switch.tsx"
         },
         {
           "path": "z2f/select.tsx",
@@ -101,8 +110,7 @@
         "button",
         "popover",
         "calendar",
-        "date-picker",
-        "form"
+        "field"
       ],
       "files": [
         {
@@ -119,6 +127,16 @@
           "path": "z2f/types.ts",
           "type": "registry:lib",
           "target": "@components/z2f/types.ts"
+        },
+        {
+          "path": "z2f/checkbox.tsx",
+          "type": "registry:component",
+          "target": "@components/z2f/checkbox.tsx"
+        },
+        {
+          "path": "z2f/switch.tsx",
+          "type": "registry:component",
+          "target": "@components/z2f/switch.tsx"
         },
         {
           "path": "z2f/select.tsx",
@@ -174,8 +192,7 @@
         "button",
         "popover",
         "calendar",
-        "date-picker",
-        "form"
+        "field"
       ],
       "files": [
         {
@@ -192,6 +209,16 @@
           "path": "z2f/types.ts",
           "type": "registry:lib",
           "target": "@components/z2f/types.ts"
+        },
+        {
+          "path": "z2f/checkbox.tsx",
+          "type": "registry:component",
+          "target": "@components/z2f/checkbox.tsx"
+        },
+        {
+          "path": "z2f/switch.tsx",
+          "type": "registry:component",
+          "target": "@components/z2f/switch.tsx"
         },
         {
           "path": "z2f/select.tsx",
