@@ -378,6 +378,66 @@ describe('generateFormComponent', () => {
     expect(result).toContain('userSchema');
   });
 
+  it('mapped leaf emits required from resolveBaseProps (runtime parity #3 fix)', () => {
+    // name is required (required: true) and mapped to a custom component
+    // codegen previously omitted `required` — this test enforces the fix
+    const fields = [
+      makeField({
+        key: 'name',
+        label: 'Name',
+        required: true,
+        component: 'Input'
+      })
+    ];
+
+    const result = generateFormComponent(fields, {
+      exportName: 'schema',
+      componentName: 'MyForm',
+      mode: 'submit',
+      ui: 'html',
+      componentConfig: {
+        components: { source: './components', overrides: {} },
+        fields: {
+          name: { component: 'CustomInput' }
+        }
+      }
+    });
+
+    // Must emit id and required — previously codegen only emitted id
+    expect(result).toContain('<CustomInput');
+    expect(result).toContain('id="name"');
+    expect(result).toContain('required');
+  });
+
+  it('mapped leaf emits type from resolveNativeAttrs (email field)', () => {
+    const fields = [
+      makeField({
+        key: 'email',
+        label: 'Email',
+        required: true,
+        props: { type: 'email' }
+      })
+    ];
+
+    const result = generateFormComponent(fields, {
+      exportName: 'schema',
+      componentName: 'MyForm',
+      mode: 'submit',
+      ui: 'html',
+      componentConfig: {
+        components: { source: './components', overrides: {} },
+        fields: {
+          email: { component: 'EmailInput' }
+        }
+      }
+    });
+
+    expect(result).toContain('<EmailInput');
+    expect(result).toContain('id="email"');
+    expect(result).toContain('required');
+    expect(result).toContain('type="email"');
+  });
+
   it('renders Fieldset with nested children', () => {
     const fields = [
       makeField({

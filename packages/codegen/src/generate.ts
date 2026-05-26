@@ -1,5 +1,10 @@
 import type { CodegenConfig, FormField } from '@zod-to-form/core';
-import { getEmptyDefault } from '@zod-to-form/core';
+import {
+  getEmptyDefault,
+  resolveBaseProps,
+  resolveNativeAttrs,
+  resolveOptionsProps
+} from '@zod-to-form/core';
 import type { ComponentOverride, FieldConfig, ZodFormsConfig } from '@zod-to-form/core';
 import {
   getFileHeader,
@@ -25,6 +30,24 @@ function renderLiteralProp(value: unknown): string | undefined {
     return `{${String(value)}}`;
   }
   return undefined;
+}
+
+/**
+ * Serialize a `Record<string, unknown>` from a core resolver into a run of JSX
+ * attribute strings, reusing `renderLiteralProp` for each value.
+ *
+ * - `true` boolean → shorthand attr (e.g. `required` not `required={true}`)
+ * - Other scalars → `key="string"` / `key={number}`
+ * - Unsupported types (objects, arrays) are silently skipped (same as renderOverrideProps)
+ */
+function renderResolverProps(record: Record<string, unknown>): string {
+  return Object.entries(record)
+    .map(([key, value]) => {
+      if (value === true) return ` ${key}`;
+      const rendered = renderLiteralProp(value);
+      return rendered ? ` ${key}=${rendered}` : '';
+    })
+    .join('');
 }
 
 /** Known RHF field expressions that should be resolved, not rendered as literal props */
@@ -542,7 +565,18 @@ function renderMappedComponent(
       fieldPropsSpread
     );
   }
-  return `<${componentName} id=${idExpr} {...${buildRegisterExpr(field)}}${overrideProps}${fieldPropsSpread} />`;
+
+  // Compose resolver-derived props: base props (id handled separately for dynamic paths),
+  // native attrs (type, etc.), and options props — in that order before register/fieldProps
+  // so that consumer overrides (last-wins) take precedence.
+  const baseProps = resolveBaseProps(field);
+  // Emit id via idExpr (dynamic-path safe); emit remaining base props (required/readOnly/disabled)
+  const { id: _id, ...restBaseProps } = baseProps;
+  const baseAttrs = renderResolverProps(restBaseProps);
+  const nativeAttrs = renderResolverProps(resolveNativeAttrs(field));
+  const optionsAttrs = renderResolverProps(resolveOptionsProps(field));
+
+  return `<${componentName} id=${idExpr}${baseAttrs}${nativeAttrs}${optionsAttrs} {...${buildRegisterExpr(field)}}${overrideProps}${fieldPropsSpread} />`;
 }
 
 function renderFieldBlockWithConfig(
