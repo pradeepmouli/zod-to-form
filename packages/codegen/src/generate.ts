@@ -518,6 +518,33 @@ function renderControlledComponent(
   ].join('\n');
 }
 
+/**
+ * Schema-derived native input attributes emitted on uncontrolled mapped
+ * components, matching the parity the raw `<input>` path carries (see
+ * `renderInput` in templates.ts, which emits only `type`).
+ *
+ * Scoped to static native DOM attributes so we never collide with the register
+ * spread / controlled bindings, and never emit non-DOM props such as `options`
+ * or `inputMask`. These come BEFORE the register/fieldProps spreads so any
+ * consumer-provided prop still wins (React last-wins).
+ */
+const NATIVE_INPUT_ATTRS = ['type'] as const;
+
+function renderNativeInputAttrs(field: FormField): string {
+  let attrs = '';
+  for (const key of NATIVE_INPUT_ATTRS) {
+    const value = field.props[key];
+    if (value === undefined || value === null) {
+      continue;
+    }
+    const rendered = renderLiteralProp(value);
+    if (rendered) {
+      attrs += ` ${key}=${rendered}`;
+    }
+  }
+  return attrs;
+}
+
 function renderFieldPropsSpread(fieldKey: string): string {
   const keyExpr = fieldKey.includes('${') ? `\`${fieldKey}\`` : `"${fieldKey}"`;
   return ` {...(props.fieldProps?.[${keyExpr}] ?? {})}`;
@@ -542,7 +569,8 @@ function renderMappedComponent(
       fieldPropsSpread
     );
   }
-  return `<${componentName} id=${idExpr} {...${buildRegisterExpr(field)}}${overrideProps}${fieldPropsSpread} />`;
+  const nativeAttrs = renderNativeInputAttrs(field);
+  return `<${componentName} id=${idExpr}${nativeAttrs} {...${buildRegisterExpr(field)}}${overrideProps}${fieldPropsSpread} />`;
 }
 
 function renderFieldBlockWithConfig(

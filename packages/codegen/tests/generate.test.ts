@@ -245,6 +245,53 @@ describe('generateFormComponent', () => {
     );
   });
 
+  it('emits schema-derived native attrs (type) on uncontrolled mapped components', () => {
+    const fields = [makeField({ key: 'email', label: 'Email', props: { type: 'email' } })];
+
+    const result = generateFormComponent(fields, {
+      exportName: 'schema',
+      componentName: 'MappedNativeForm',
+      mode: 'submit',
+      ui: 'html',
+      componentConfig: {
+        components: {
+          source: './components',
+          overrides: {}
+        },
+        fields: {
+          email: { component: 'Input' }
+        }
+      }
+    });
+
+    // type="email" must appear on the mapped <Input>, before the register spread
+    expect(result).toContain('<Input id="email" type="email" {...register(\'email\')}');
+  });
+
+  it('emits type="number" on uncontrolled mapped components for numeric fields', () => {
+    const fields = [
+      makeField({ key: 'count', label: 'Count', props: { type: 'number' }, zodType: 'number' })
+    ];
+
+    const result = generateFormComponent(fields, {
+      exportName: 'schema',
+      componentName: 'MappedNumberForm',
+      mode: 'submit',
+      ui: 'html',
+      componentConfig: {
+        components: {
+          source: './components',
+          overrides: {}
+        },
+        fields: {
+          count: { component: 'Input' }
+        }
+      }
+    });
+
+    expect(result).toContain('<Input id="count" type="number" {...register');
+  });
+
   it('generates auto-save mode with watch and FormProvider', () => {
     const fields = [makeField({ key: 'name' })];
 
