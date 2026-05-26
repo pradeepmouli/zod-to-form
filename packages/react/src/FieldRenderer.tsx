@@ -1,7 +1,7 @@
 import { useMemo, memo } from 'react';
 import type { ComponentType, ReactNode } from 'react';
 import type { FormField, FieldConfig, ComponentOverride } from '@zod-to-form/core';
-import { getEmptyDefault, getFieldRegisterHints } from '@zod-to-form/core';
+import { getEmptyDefault, getFieldRegisterHints, resolveBaseProps } from '@zod-to-form/core';
 import { useController, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { defaultComponentMap } from './components/index.js';
 
@@ -317,11 +317,8 @@ function buildBaseComponentProps(
   errorMessage: string | undefined
 ): Record<string, unknown> {
   return {
-    id: field.key,
-    'aria-invalid': errorMessage ? 'true' : 'false',
-    required: field.required,
-    readOnly: field.readOnly,
-    disabled: field.disabled
+    ...resolveBaseProps(field),
+    'aria-invalid': errorMessage ? 'true' : 'false'
   };
 }
 
