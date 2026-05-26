@@ -13,11 +13,18 @@ const SAMPLE_SCHEMA_SRC = readFileSync(
 
 /**
  * The shadcn adapter component files shipped by every starter.
- * Input/Textarea/Checkbox/Switch are now raw @/components/ui/* re-exports in
- * index.tsx — they have no adapter file on disk. Only Select/RadioGroup/DatePicker
- * retain local adapter files; all three install under `@components/z2f/`.
+ * All controlled components (Checkbox/Switch/Select/RadioGroup/DatePicker) are
+ * thin `forwardRef` adapters taking `ControlledFieldProps` and mapping internally
+ * to Base UI. Input/Textarea remain raw @/components/ui/* re-exports in index.tsx
+ * — they have no adapter file on disk.
  */
-const ADAPTER_COMPONENT_NAMES = ['select', 'radio-group', 'date-picker'] as const;
+const ADAPTER_COMPONENT_NAMES = [
+  'checkbox',
+  'switch',
+  'select',
+  'radio-group',
+  'date-picker'
+] as const;
 
 /**
  * Strip the `.js` extension from RELATIVE import/export specifiers only.
@@ -37,17 +44,17 @@ function stripRelativeJsExtensions(source: string): string {
  * Read the shadcn adapter files from `registry/components/shadcn/` and return
  * `files[]` entries targeting `@components/z2f/<name>.tsx`.
  *
- * Only Select/RadioGroup/DatePicker ship as discrete adapter files.
- * Input/Textarea/Checkbox/Switch are raw @/components/ui/* re-exports in
- * index.tsx and have no on-disk adapter file.
+ * All controlled components (Checkbox/Switch/Select/RadioGroup/DatePicker) ship
+ * as discrete adapter files. Input/Textarea are raw @/components/ui/* re-exports
+ * in index.tsx and have no on-disk adapter file.
  *
  * Relative `.js` specifiers are stripped on the way out (see
  * {@link stripRelativeJsExtensions}) — consumer bundlers (Next/webpack) resolve
  * `./types.js` literally and fail; the extensionless form resolves correctly.
  * The `@/components/ui/*` alias and bare package imports are untouched.
  *
- * The shared `types.ts` MUST ship alongside the adapters — Select/RadioGroup/
- * DatePicker reference it, so omitting it would break the consumer `tsc`.
+ * The shared `types.ts` MUST ship alongside the adapters — all adapters
+ * reference it, so omitting it would break the consumer `tsc`.
  */
 function adapterFiles(): RegistryItemFile[] {
   const read = (relPath: string): string =>
@@ -84,21 +91,12 @@ function adapterFiles(): RegistryItemFile[] {
  * Component overrides tuned for the shipped `@/components/z2f` ADAPTERS against
  * shadcn's **Base UI** component set.
  *
- * NOTE: This intentionally differs from core's `SHADCN_OVERRIDES`. That map
- * targets the raw shadcn Radix primitives. The Base UI components in
- * `@/components/z2f` bind Checkbox/Switch directly to the re-exported
- * `@/components/ui/checkbox` and `@/components/ui/switch` (Base UI primitives),
- * so they carry explicit `props` mappings for `checked`/`onCheckedChange`.
- * Select/RadioGroup/DatePicker go through adapters that normalise to the plain
- * `value`/`onChange` shape, so `controlled: true` without a `props` map is correct.
- *
- * Key Base UI facts (verified Task 0):
- * - Checkbox/Switch `onCheckedChange(checked: boolean, eventDetails)` — value-first,
- *   plain boolean (never `boolean | 'indeterminate'`). No `=== true` normalization needed.
- * - `checked: '!!field.value'` guards undefined→false for React controlled/uncontrolled warning.
- * - Checkbox/Switch have no root `ref` prop for the focusable input (Base UI uses `inputRef`);
- *   codegen does NOT thread `field.ref` to these components.
- * - Switch has no `onBlur` on its root prop surface.
+ * All controlled components (Checkbox/Switch/Select/RadioGroup/DatePicker) are
+ * thin `forwardRef` adapters taking the uniform `ControlledFieldProps`
+ * (`value`/`onChange`/`onBlur`/`ref`/`name`) and mapping internally to Base UI.
+ * Codegen emits the uniform controlled binding — NOT raw Base UI
+ * `checked`/`onCheckedChange` overrides. The adapter handles the Base UI mapping
+ * internally, so no `props` map is needed in the config overrides.
  *
  * This single definition is SHARED by both {@link sampleConfigSource} (the
  * shipped `z2f.config.ts`) and {@link generatedComponentSource} (the
@@ -108,14 +106,8 @@ function adapterFiles(): RegistryItemFile[] {
 const ADAPTER_OVERRIDES = {
   Input: {},
   Textarea: {},
-  Checkbox: {
-    controlled: true,
-    props: { checked: '!!field.value', onCheckedChange: 'field.onChange' }
-  },
-  Switch: {
-    controlled: true,
-    props: { checked: '!!field.value', onCheckedChange: 'field.onChange' }
-  },
+  Checkbox: { controlled: true },
+  Switch: { controlled: true },
   Select: { controlled: true },
   RadioGroup: { controlled: true },
   DatePicker: { controlled: true }
@@ -142,7 +134,7 @@ function sampleConfigSource(componentSource: string): string {
   return buildConfigSource({
     componentSource,
     componentTypeImport: componentSource,
-    schemaTypeImport: './schema',
+    schemaTypeImport: '@/lib/example-schema',
     schemaExports: ['schema'],
     overrides: { ...ADAPTER_OVERRIDES },
     defaults: {
@@ -159,16 +151,15 @@ const ZOD_FORM_USAGE = `import { ZodForm } from '@zod-to-form/react';
 import { schema } from '@/lib/example-schema';
 import { components } from '@/components/z2f';
 
-// componentConfig tells the runtime which components are controlled and how
-// to bind their props. Checkbox/Switch use Base UI's checked/onCheckedChange
-// API; the '!!field.value' expression coerces undefined→false, preventing
-// React's uncontrolled→controlled warning.
+// componentConfig tells the runtime which components are controlled.
+// All controlled adapters accept the uniform value/onChange/onBlur/ref/name
+// props and map internally to their Base UI primitive.
 const componentConfig = {
   components: {
     source: '@/components/z2f',
     overrides: {
-      Checkbox: { controlled: true, props: { checked: '!!field.value', onCheckedChange: 'field.onChange' } },
-      Switch:   { controlled: true, props: { checked: '!!field.value', onCheckedChange: 'field.onChange' } },
+      Checkbox:  { controlled: true },
+      Switch:    { controlled: true },
       Select:    { controlled: true },
       RadioGroup: { controlled: true },
       DatePicker: { controlled: true }
@@ -199,12 +190,11 @@ function generatedComponentSource(): string {
     ui: 'shadcn',
     mode: 'submit',
     formProvider: false,
-    // Source BOTH the field adapters and the shadcn Form* layout wrappers from
+    // Source BOTH the field adapters and the Field* layout wrappers from
     // the single `@/components/z2f` module: the adapter index.tsx ships the
-    // Base UI field components AND re-exports FormItem/FormControl/FormLabel/etc.
-    // The Base UI adapter overrides make Checkbox/Switch bind to the checked/
-    // onCheckedChange props directly; Select/RadioGroup/DatePicker go through
-    // adapters that accept the uniform value/onChange shape.
+    // Base UI field components AND re-exports Field/FieldLabel/FieldDescription/
+    // FieldError. All controlled adapters accept the uniform value/onChange/
+    // onBlur/ref/name props and map internally to Base UI.
     componentConfig: {
       components: {
         source: '@/components/z2f',

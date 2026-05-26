@@ -2,7 +2,7 @@
 // Tests for runtime resolution of '!!field.value' coercion expression.
 // Covers the Base UI Checkbox/Switch pattern: checked: '!!field.value'.
 
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { FieldRenderer } from '../src/FieldRenderer.js';
@@ -35,6 +35,7 @@ const booleanField: FormField = {
   key: 'subscribe',
   component: 'Checkbox',
   label: 'Subscribe',
+  props: {},
   required: false,
   readOnly: false,
   hidden: false,
