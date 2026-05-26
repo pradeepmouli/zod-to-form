@@ -282,6 +282,18 @@ describe('DatePicker adapter', () => {
     expect(firstArg).toBeInstanceOf(Date);
   });
 
+  it('calls onChange with a yyyy-MM-dd STRING when the bound value is string-backed', () => {
+    const onChange = vi.fn();
+    render(<DatePicker value="2026-01-01" onChange={onChange} />);
+    fireEvent.click(screen.getByTestId('calendar-day'));
+    expect(onChange).toHaveBeenCalledTimes(1);
+    const firstArg = onChange.mock.calls[0]?.[0];
+    expect(typeof firstArg).toBe('string');
+    expect(firstArg).not.toBeInstanceOf(Date);
+    // Stub selects 2026-01-02T00:00:00Z → yyyy-MM-dd string
+    expect(firstArg).toBe('2026-01-02');
+  });
+
   it('shows a formatted date (not "Pick a date") when value is a Date', () => {
     render(<DatePicker value={new Date('2026-01-02T00:00:00Z')} />);
     // The trigger is the button that does NOT have data-testid="calendar-day"
