@@ -137,6 +137,19 @@ describe('buildReactItem', () => {
     expect(usage.content).toMatch(/components=\{components\}/);
   });
 
+  it('ExampleForm usage passes componentConfig with Base UI controlled overrides to <ZodForm>', () => {
+    const usage = item.files.find((f) => f.path === 'example-form.tsx')!;
+    const content = usage.content!;
+    // componentConfig prop is wired to ZodForm
+    expect(content).toMatch(/componentConfig=\{componentConfig\}/);
+    // Checkbox and Switch carry checked/onCheckedChange Base UI binding
+    expect(content).toContain("checked: '!!field.value'");
+    expect(content).toContain("onCheckedChange: 'field.onChange'");
+    // Select/RadioGroup/DatePicker are marked controlled (value/onChange adapters)
+    expect(content).toContain('Select:    { controlled: true }');
+    expect(content).toContain('DatePicker: { controlled: true }');
+  });
+
   it('has the correct $schema, registryDependencies, and docs', () => {
     expect(item.$schema).toBe('https://ui.shadcn.com/schema/registry-item.json');
     expect(item.registryDependencies).toEqual(REGISTRY_DEPENDENCIES);

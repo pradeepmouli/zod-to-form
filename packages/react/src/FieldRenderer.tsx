@@ -609,7 +609,7 @@ const DiscriminatedUnionBlock = memo(function DiscriminatedUnionBlock({
   );
 });
 
-/** Maps field expression strings to their corresponding RHF controller field property names */
+/** Maps plain field expression strings to their corresponding RHF controller field property names */
 const EXPRESSION_TO_FIELD_PROP: Record<string, string> = {
   'field.value': 'value',
   'field.onChange': 'onChange',
@@ -618,8 +618,24 @@ const EXPRESSION_TO_FIELD_PROP: Record<string, string> = {
   'field.name': 'name'
 };
 
-/** Derived from EXPRESSION_TO_FIELD_PROP — guaranteed to stay in sync */
-const FIELD_EXPRESSIONS = new Set(Object.keys(EXPRESSION_TO_FIELD_PROP));
+/**
+ * Coerced field expressions: map to a [controllerProp, transform] pair.
+ * `'!!field.value'` reads `field.value` and applies boolean coercion (`!!`).
+ * Used by Base UI Checkbox/Switch which require `checked` to be a boolean,
+ * guarding against undefined→uncontrolled React warnings.
+ */
+const COERCED_EXPRESSIONS: Record<
+  string,
+  { controllerProp: string; transform: (v: unknown) => unknown }
+> = {
+  '!!field.value': { controllerProp: 'value', transform: (v) => !!v }
+};
+
+/** All recognized field expression strings — plain + coerced */
+const FIELD_EXPRESSIONS = new Set([
+  ...Object.keys(EXPRESSION_TO_FIELD_PROP),
+  ...Object.keys(COERCED_EXPRESSIONS)
+]);
 
 /**
  * Resolve props for a controlled component by merging preset override props,
@@ -627,6 +643,8 @@ const FIELD_EXPRESSIONS = new Set(Object.keys(EXPRESSION_TO_FIELD_PROP));
  *
  * - Props whose values match a known field expression string (e.g., `'field.onChange'`)
  *   are resolved from the RHF controller field.
+ * - `'!!field.value'` is a coerced expression: reads `field.value` and applies `!!`
+ *   (boolean coercion) — required for Base UI Checkbox/Switch `checked` prop.
  * - All other props pass through as literal values.
  * - Merge order: preset override props → field config props (field wins on conflict).
  * - RHF default props (value, onChange, onBlur, ref, name) are included unless
@@ -655,15 +673,27 @@ function resolveProps(
   // Start with default RHF controller field props
   const result: Record<string, unknown> = { ...controllerField };
 
-  // Track which RHF expressions are remapped to custom prop names
-  const remappedExprs = new Set(fieldExpressionEntries.map(([, expr]) => expr));
+  // Collect which controller properties are referenced by any field expression
+  // (both plain and coerced), so we can remove their default prop names when remapped.
+  const remappedControllerProps = new Set<string>();
+  for (const [, expr] of fieldExpressionEntries) {
+    const plain = EXPRESSION_TO_FIELD_PROP[expr];
+    const coerced = COERCED_EXPRESSIONS[expr];
+    if (plain) remappedControllerProps.add(plain);
+    if (coerced) remappedControllerProps.add(coerced.controllerProp);
+  }
 
-  // Remove default props whose RHF expression is being remapped to a different name
+  // Remove default props whose controller property is being remapped to a different name
   for (const [expr, defaultProp] of Object.entries(EXPRESSION_TO_FIELD_PROP)) {
-    if (remappedExprs.has(expr)) {
-      // Only remove if the remapped prop name differs from the default
-      const remappedPropName = fieldExpressionEntries.find(([, e]) => e === expr)?.[0];
-      if (remappedPropName !== defaultProp) {
+    if (remappedControllerProps.has(defaultProp)) {
+      // Check if any expression remaps this controller prop to a DIFFERENT prop name
+      const remappedToSameName = fieldExpressionEntries.some(
+        ([propName, e]) =>
+          (EXPRESSION_TO_FIELD_PROP[e] === defaultProp ||
+            COERCED_EXPRESSIONS[e]?.controllerProp === defaultProp) &&
+          propName === expr
+      );
+      if (!remappedToSameName) {
         delete result[defaultProp];
       }
     }
@@ -671,9 +701,14 @@ function resolveProps(
 
   // Apply field expression mappings — resolve from controller field
   for (const [propName, expr] of fieldExpressionEntries) {
-    const controllerProp = EXPRESSION_TO_FIELD_PROP[expr];
-    if (controllerProp) {
-      result[propName] = controllerField[controllerProp];
+    const plain = EXPRESSION_TO_FIELD_PROP[expr];
+    if (plain !== undefined) {
+      result[propName] = controllerField[plain];
+    } else {
+      const coerced = COERCED_EXPRESSIONS[expr];
+      if (coerced) {
+        result[propName] = coerced.transform(controllerField[coerced.controllerProp]);
+      }
     }
   }
 

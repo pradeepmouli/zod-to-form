@@ -159,15 +159,29 @@ const ZOD_FORM_USAGE = `import { ZodForm } from '@zod-to-form/react';
 import { schema } from '@/lib/example-schema';
 import { components } from '@/components/z2f';
 
-// Runtime note: ZodForm renders Checkbox/Switch via the Base UI ui/* components
-// from the components map. The runtime binding uses the defaultComponentMap's
-// controlled detection. For full Base UI checked/onCheckedChange prop wiring
-// at runtime, pass componentConfig with the Base UI overrides (see z2f.config.ts).
+// componentConfig tells the runtime which components are controlled and how
+// to bind their props. Checkbox/Switch use Base UI's checked/onCheckedChange
+// API; the '!!field.value' expression coerces undefined→false, preventing
+// React's uncontrolled→controlled warning.
+const componentConfig = {
+  components: {
+    source: '@/components/z2f',
+    overrides: {
+      Checkbox: { controlled: true, props: { checked: '!!field.value', onCheckedChange: 'field.onChange' } },
+      Switch:   { controlled: true, props: { checked: '!!field.value', onCheckedChange: 'field.onChange' } },
+      Select:    { controlled: true },
+      RadioGroup: { controlled: true },
+      DatePicker: { controlled: true }
+    }
+  }
+} as const;
+
 export function ExampleForm() {
   return (
     <ZodForm
       schema={schema}
       components={components}
+      componentConfig={componentConfig}
       onSubmit={(_data) => {
         // handle submission
       }}
