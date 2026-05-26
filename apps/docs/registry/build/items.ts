@@ -76,11 +76,51 @@ function adapterFiles(): RegistryItemFile[] {
 }
 
 /**
+ * Component overrides tuned for the shipped `@/components/zod-form` ADAPTERS.
+ *
+ * NOTE: This intentionally differs from core's `SHADCN_OVERRIDES`. That map
+ * targets the RAW shadcn primitives (Radix props: `checked`/`onCheckedChange`,
+ * `onValueChange`). The adapter components in `@/components/zod-form` deliberately
+ * normalise to the plain RHF field shape — every controlled adapter accepts
+ * `value`/`onChange`/`onBlur`/`ref`/`name` and translates to Radix props
+ * internally. So the correct override is simply `controlled: true` with NO
+ * custom `props` map, which makes codegen emit the default
+ * `value={field.value} onChange={field.onChange}` binding the adapters expect.
+ * Input/Textarea are uncontrolled (register-based); an empty override entry is
+ * enough to make codegen render them as the named `<Input>`/`<Textarea>` adapter
+ * instead of a raw `<input>`.
+ *
+ * This single definition is SHARED by both {@link sampleConfigSource} (the
+ * shipped `z2f.config.ts`) and {@link generatedComponentSource} (the
+ * pre-generated `generated-form.tsx`) so the config and the codegen output stay
+ * in lockstep.
+ */
+const ADAPTER_OVERRIDES = {
+  Input: {},
+  Textarea: {},
+  Checkbox: { controlled: true },
+  Switch: { controlled: true },
+  Select: { controlled: true },
+  RadioGroup: { controlled: true },
+  DatePicker: { controlled: true }
+} as const;
+
+/**
  * Generate the sample z2f.config.ts source.
  *
  * @param componentSource - The import path written into `componentSource` and
  *   `componentTypeImport`. All three items now point at `'@/components/zod-form'`
  *   — the shared shadcn adapter module shipped by every starter.
+ *
+ * The emitted config carries {@link ADAPTER_OVERRIDES} (the SAME overrides the
+ * pre-generated `generated-form.tsx` uses) — NOT core's `SHADCN_OVERRIDES`. We
+ * deliberately omit `preset: 'shadcn'` here: `buildConfigSource` force-spreads
+ * `...SHADCN_OVERRIDES` whenever a preset is set, which would emit Radix prop
+ * bindings (`checked`/`onCheckedChange`) the shipped adapters DON'T accept. By
+ * dropping the preset and passing the adapter overrides explicitly, the config's
+ * `overrides` block becomes the controlled markings the adapters expect, so any
+ * codegen re-run (CLI or `?z2f`) emits the uniform `value`/`onChange` binding.
+ * `defaults.ui: 'shadcn'` is preserved explicitly below.
  */
 function sampleConfigSource(componentSource: string): string {
   return buildConfigSource({
@@ -88,7 +128,7 @@ function sampleConfigSource(componentSource: string): string {
     componentTypeImport: componentSource,
     schemaTypeImport: './schema',
     schemaExports: ['schema'],
-    preset: 'shadcn',
+    overrides: { ...ADAPTER_OVERRIDES },
     defaults: {
       mode: 'submit',
       ui: 'shadcn',
@@ -115,31 +155,6 @@ export function ExampleForm() {
   );
 }
 `;
-
-/**
- * Component overrides tuned for the shipped `@/components/zod-form` ADAPTERS.
- *
- * NOTE: This intentionally differs from core's `SHADCN_OVERRIDES`. That map
- * targets the RAW shadcn primitives (Radix props: `checked`/`onCheckedChange`,
- * `onValueChange`). The adapter components in `@/components/zod-form` deliberately
- * normalise to the plain RHF field shape — every controlled adapter accepts
- * `value`/`onChange`/`onBlur`/`ref`/`name` and translates to Radix props
- * internally. So the correct override is simply `controlled: true` with NO
- * custom `props` map, which makes codegen emit the default
- * `value={field.value} onChange={field.onChange}` binding the adapters expect.
- * Input/Textarea are uncontrolled (register-based); an empty override entry is
- * enough to make codegen render them as the named `<Input>`/`<Textarea>` adapter
- * instead of a raw `<input>`.
- */
-const ADAPTER_OVERRIDES = {
-  Input: {},
-  Textarea: {},
-  Checkbox: { controlled: true },
-  Switch: { controlled: true },
-  Select: { controlled: true },
-  RadioGroup: { controlled: true },
-  DatePicker: { controlled: true }
-} as const;
 
 function generatedComponentSource(): string {
   const fields = walkSchema(schema);

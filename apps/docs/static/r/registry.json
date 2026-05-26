@@ -20,9 +20,16 @@
       ],
       "registryDependencies": [
         "input",
-        "label",
+        "textarea",
         "checkbox",
-        "button"
+        "switch",
+        "select",
+        "radio-group",
+        "label",
+        "button",
+        "popover",
+        "calendar",
+        "form"
       ],
       "files": [
         {
@@ -36,9 +43,44 @@
           "target": "@lib/zod-form/z2f.config.ts"
         },
         {
-          "path": "zod-form-components.tsx",
+          "path": "zod-form/input.tsx",
           "type": "registry:component",
-          "target": "@components/zod-form-components.tsx"
+          "target": "@components/zod-form/input.tsx"
+        },
+        {
+          "path": "zod-form/textarea.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/textarea.tsx"
+        },
+        {
+          "path": "zod-form/checkbox.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/checkbox.tsx"
+        },
+        {
+          "path": "zod-form/switch.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/switch.tsx"
+        },
+        {
+          "path": "zod-form/select.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/select.tsx"
+        },
+        {
+          "path": "zod-form/radio-group.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/radio-group.tsx"
+        },
+        {
+          "path": "zod-form/date-picker.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/date-picker.tsx"
+        },
+        {
+          "path": "zod-form/index.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/index.tsx"
         },
         {
           "path": "zod-form.tsx",
@@ -64,9 +106,15 @@
       ],
       "registryDependencies": [
         "input",
-        "label",
+        "textarea",
         "checkbox",
+        "switch",
+        "select",
+        "radio-group",
+        "label",
         "button",
+        "popover",
+        "calendar",
         "form"
       ],
       "files": [
@@ -79,6 +127,46 @@
           "path": "z2f.config.ts",
           "type": "registry:lib",
           "target": "@lib/zod-form/z2f.config.ts"
+        },
+        {
+          "path": "zod-form/input.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/input.tsx"
+        },
+        {
+          "path": "zod-form/textarea.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/textarea.tsx"
+        },
+        {
+          "path": "zod-form/checkbox.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/checkbox.tsx"
+        },
+        {
+          "path": "zod-form/switch.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/switch.tsx"
+        },
+        {
+          "path": "zod-form/select.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/select.tsx"
+        },
+        {
+          "path": "zod-form/radio-group.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/radio-group.tsx"
+        },
+        {
+          "path": "zod-form/date-picker.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/date-picker.tsx"
+        },
+        {
+          "path": "zod-form/index.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/index.tsx"
         },
         {
           "path": "generated-form.tsx",
@@ -105,9 +193,15 @@
       ],
       "registryDependencies": [
         "input",
-        "label",
+        "textarea",
         "checkbox",
+        "switch",
+        "select",
+        "radio-group",
+        "label",
         "button",
+        "popover",
+        "calendar",
         "form"
       ],
       "files": [
@@ -120,6 +214,46 @@
           "path": "z2f.config.ts",
           "type": "registry:lib",
           "target": "@lib/zod-form/z2f.config.ts"
+        },
+        {
+          "path": "zod-form/input.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/input.tsx"
+        },
+        {
+          "path": "zod-form/textarea.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/textarea.tsx"
+        },
+        {
+          "path": "zod-form/checkbox.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/checkbox.tsx"
+        },
+        {
+          "path": "zod-form/switch.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/switch.tsx"
+        },
+        {
+          "path": "zod-form/select.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/select.tsx"
+        },
+        {
+          "path": "zod-form/radio-group.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/radio-group.tsx"
+        },
+        {
+          "path": "zod-form/date-picker.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/date-picker.tsx"
+        },
+        {
+          "path": "zod-form/index.tsx",
+          "type": "registry:component",
+          "target": "@components/zod-form/index.tsx"
         },
         {
           "path": "vite-usage.tsx",
