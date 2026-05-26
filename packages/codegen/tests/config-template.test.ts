@@ -46,6 +46,15 @@ describe('buildConfigSource', () => {
     expect(result).not.toContain('Input: { controlled: true }');
   });
 
+  it('serializes both non-controlled (empty) and controlled overrides', () => {
+    const result = buildConfigSource({
+      componentSource: './components',
+      overrides: { Input: {}, Checkbox: { controlled: true } }
+    });
+    expect(result).toContain('Input: {}');
+    expect(result).toContain('Checkbox: { controlled: true }');
+  });
+
   it('renders fields block with per-field overrides', () => {
     const result = buildConfigSource({
       componentSource: './components',
