@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { RadioGroup as ShadcnRadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import type { FormFieldOption } from '@zod-to-form/core';
+import type { FormFieldOption } from './types.js';
 import type { ControlledFieldProps } from './types.js';
 
 type Props = ControlledFieldProps<string | number> & {

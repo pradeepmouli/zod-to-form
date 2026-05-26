@@ -6,7 +6,7 @@ import {
   SelectContent,
   SelectItem
 } from '@/components/ui/select';
-import type { FormFieldOption } from '@zod-to-form/core';
+import type { FormFieldOption } from './types.js';
 import type { ControlledFieldProps } from './types.js';
 
 type Props = ControlledFieldProps<string | number> & {
