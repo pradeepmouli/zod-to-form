@@ -48,16 +48,6 @@
           "target": "@components/z2f/types.ts"
         },
         {
-          "path": "z2f/checkbox.tsx",
-          "type": "registry:component",
-          "target": "@components/z2f/checkbox.tsx"
-        },
-        {
-          "path": "z2f/switch.tsx",
-          "type": "registry:component",
-          "target": "@components/z2f/switch.tsx"
-        },
-        {
           "path": "z2f/select.tsx",
           "type": "registry:component",
           "target": "@components/z2f/select.tsx"
@@ -83,7 +73,7 @@
           "target": "@components/example-form.tsx"
         }
       ],
-      "docs": "This starter ships a sample Zod schema and a z2f config wired to shadcn components.\n\nNext steps:\n1. Re-generate the config for YOUR components and schemas:\n   npx @zod-to-form/cli init\n2. Design and iterate your schema visually in the playground:\n   https://zod.toform.dev/play/"
+      "docs": "This starter ships a sample Zod schema and a z2f config wired to shadcn components.\nTargets shadcn Base UI components (`npx shadcn@latest init` with the Base UI style).\n\nNext steps:\n1. Re-generate the config for YOUR components and schemas:\n   npx @zod-to-form/cli init\n2. Design and iterate your schema visually in the playground:\n   https://zod.toform.dev/play/"
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
@@ -129,16 +119,6 @@
           "target": "@components/z2f/types.ts"
         },
         {
-          "path": "z2f/checkbox.tsx",
-          "type": "registry:component",
-          "target": "@components/z2f/checkbox.tsx"
-        },
-        {
-          "path": "z2f/switch.tsx",
-          "type": "registry:component",
-          "target": "@components/z2f/switch.tsx"
-        },
-        {
           "path": "z2f/select.tsx",
           "type": "registry:component",
           "target": "@components/z2f/select.tsx"
@@ -164,7 +144,7 @@
           "target": "@components/example-form.tsx"
         }
       ],
-      "docs": "This starter ships a sample Zod schema and a z2f config wired to shadcn components.\n\nNext steps:\n1. Re-generate the config for YOUR components and schemas:\n   npx @zod-to-form/cli init\n2. Design and iterate your schema visually in the playground:\n   https://zod.toform.dev/play/"
+      "docs": "This starter ships a sample Zod schema and a z2f config wired to shadcn components.\nTargets shadcn Base UI components (`npx shadcn@latest init` with the Base UI style).\n\nNext steps:\n1. Re-generate the config for YOUR components and schemas:\n   npx @zod-to-form/cli init\n2. Design and iterate your schema visually in the playground:\n   https://zod.toform.dev/play/"
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
@@ -211,16 +191,6 @@
           "target": "@components/z2f/types.ts"
         },
         {
-          "path": "z2f/checkbox.tsx",
-          "type": "registry:component",
-          "target": "@components/z2f/checkbox.tsx"
-        },
-        {
-          "path": "z2f/switch.tsx",
-          "type": "registry:component",
-          "target": "@components/z2f/switch.tsx"
-        },
-        {
           "path": "z2f/select.tsx",
           "type": "registry:component",
           "target": "@components/z2f/select.tsx"
@@ -246,7 +216,7 @@
           "target": "@components/example-form.tsx"
         }
       ],
-      "docs": "This starter ships a sample Zod schema and a z2f config wired to shadcn components.\n\nNext steps:\n1. Re-generate the config for YOUR components and schemas:\n   npx @zod-to-form/cli init\n2. Design and iterate your schema visually in the playground:\n   https://zod.toform.dev/play/"
+      "docs": "This starter ships a sample Zod schema and a z2f config wired to shadcn components.\nTargets shadcn Base UI components (`npx shadcn@latest init` with the Base UI style).\n\nNext steps:\n1. Re-generate the config for YOUR components and schemas:\n   npx @zod-to-form/cli init\n2. Design and iterate your schema visually in the playground:\n   https://zod.toform.dev/play/"
     }
   ]
 }

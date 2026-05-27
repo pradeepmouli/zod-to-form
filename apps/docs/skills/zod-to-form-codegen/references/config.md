@@ -125,9 +125,9 @@ Preset name: 'shadcn' | 'html'
 
 #### overrides
 
-Component overrides (name → { controlled?: boolean })
+Component overrides (name → { controlled?: boolean; props?: ... })
 
-**Type:** `Record<string, { controlled?: boolean }>`
+**Type:** `Record<string, { controlled?: boolean; props?: Record<string, string | number | boolean | null> }>`
 
 #### defaults
 

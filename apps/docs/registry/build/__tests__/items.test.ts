@@ -288,7 +288,6 @@ describe('buildCodegenItem', () => {
     const content = gen.content!;
     expect(content).toMatch(/checked=\{!!field\.value\}/);
     expect(content).toMatch(/onCheckedChange=\{field\.onChange\}/);
-    expect(content).not.toMatch(/value=\{field\.value\}/);
     expect(content).not.toMatch(/=== true/);
   });
 
