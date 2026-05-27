@@ -258,3 +258,177 @@ date-picker, missing forwardRef on DatePicker). The generated example-form has a
 error. The `@zod-to-form/react` starter has a structural incompatibility with base-nova plain-function
 components (MemoExoticComponent vs function). The `form` shadcn component is a stub in base-nova with
 no files — re-exports of Form* primitives in `z2f/index.tsx` must be rethought.
+
+---
+
+## Re-run After Fixes (2026-05-26)
+
+Branch: `feat/codegen-owned-output` (same)
+Registry: rebuilt via `pnpm registry:build`, served at `http://localhost:8899/r/`
+Scratch dirs: `/tmp/z2f-e2e2` (starter-codegen), `/tmp/z2f-e2e2b` (starter-react)
+shadcn installed: `npx shadcn@latest init -b base -p nova --yes` → `style: "base-nova"` ✓
+
+### Fixes confirmed applied in registry JSON
+
+- `registryDependencies`: `date-picker` removed (was BLOCKER 1). Now: `["input","textarea","checkbox","switch","select","radio-group","label","button","popover","calendar","field"]`
+- `field` replaces `form` in `registryDependencies` (BLOCKER 2 resolved — Base UI `field` component exists upstream)
+- `z2f.config.ts` schema import: now `@/lib/example-schema` (fixed from `./schema`)
+- `z2f/date-picker.tsx`: wrapped in `React.forwardRef` (fixes ERROR 6 from prior run)
+- `example-form.tsx`: uses `<Field>/<FieldLabel>/<FieldError>` (Form* → Field* migration done)
+- `z2f/checkbox.tsx` adapter: `forwardRef<HTMLButtonElement, ControlledFieldProps<boolean>>` uniform shape, binds `checked={!!value}` / `onCheckedChange` (Checkbox `value` error resolved)
+- `z2f/index.tsx`: exports `Field, FieldLabel, FieldDescription, FieldError, FieldGroup` from `@/components/ui/field` (no `@/components/ui/form` reference)
+
+### `shadcn add starter-codegen` result: PASS
+
+```
+npx shadcn@latest add http://localhost:8899/r/starter-codegen.json --yes
+✔ Created 22 files (no fatal errors)
+```
+
+- `date-picker` fetch error: **GONE** — PASS
+- `field.tsx` installed at `src/components/ui/field.tsx`: **YES** — PASS
+
+### `shadcn add starter-react` result: PASS
+
+```
+npx shadcn@latest add http://localhost:8899/r/starter-react.json --yes
+✔ Created 22 files (no fatal errors)
+```
+
+Both starters install successfully without any fatal fetch failures.
+
+### Files installed (both starters, after `rsync "@/." "src/"` harness step)
+
+shadcn CLI still writes `@/*` paths as literal `@/` directory (not through the alias).
+Files must be manually moved `@/ → src/` in the e2e harness. This is a shadcn CLI behaviour,
+not a z2f registry defect.
+
+```
+src/components/ui/{input,textarea,checkbox,switch,select,radio-group,label,button,popover,separator,calendar,field}.tsx
+src/lib/{utils,example-schema}.ts
+src/z2f.config.ts                         ← note: CLI placed at src/ (target was "z2f.config.ts")
+src/components/z2f/{types,checkbox,switch,select,radio-group,date-picker,index}.tsx
+src/components/example-form.tsx
+```
+
+### Layout assertions
+
+| Assertion | Result |
+|-----------|--------|
+| `shadcn add starter-codegen` succeeds (no fatal date-picker fetch) | **PASS** |
+| `src/components/ui/field.tsx` installed (Field family present) | **PASS** |
+| `z2f.config.ts` at project root | **PARTIAL** — CLI places at `src/z2f.config.ts` (target `"z2f.config.ts"` without `@/`, shadcn puts it under `src/`). Not a show-stopper for tsc since tsconfig `include: ["src"]` covers it. |
+| `src/lib/example-schema.ts` | **PASS** |
+| `src/components/z2f/{index,types,checkbox,switch,select,radio-group,date-picker}.tsx` | **PASS** (all 7 present) |
+| `src/components/example-form.tsx` | **PASS** |
+
+### z2f import grep (owned runtime tree)
+
+```
+rg "^import.*@zod-to-form/" src/components/z2f src/components/example-form.tsx src/lib/example-schema.ts
+→ NONE
+```
+
+Only `@zod-to-form/` occurrence in the tree is a comment in `types.ts` ("severs the @zod-to-form/core dependency"). **PASS**
+
+`src/z2f.config.ts` legitimately imports `@zod-to-form/core` (build-time only). **ALLOWED**
+
+### Field / Checkbox binding assertions
+
+- `example-form.tsx` imports: `{ Checkbox, DatePicker, Field, FieldError, FieldLabel, Input, Select }` from `@/components/z2f` — **PASS** (Field* not Form*)
+- Checkbox binding in generated form: `value={field.value} onChange={field.onChange} onBlur={field.onBlur} ref={field.ref}` — uniform `ControlledFieldProps<boolean>` shape — **PASS**
+- `z2f/checkbox.tsx` adapter: `forwardRef<HTMLButtonElement, ControlledFieldProps<boolean>>`, maps `checked={!!value}` / `onCheckedChange` internally — **PASS**
+- `z2f/date-picker.tsx` adapter: `forwardRef<HTMLButtonElement, ControlledFieldProps<Date | undefined>>`, `render` prop on `PopoverTrigger` — **PASS**
+
+### tsc results — starter-codegen (`/tmp/z2f-e2e2`)
+
+Exit code: **2** (2 errors)
+
+#### ERROR 1 — `src/components/ui/calendar.tsx(90,9)` — SHADCN PRIMITIVE / UPSTREAM
+
+```
+error TS2353: Object literal may only specify known properties, and 'table' does not exist in type 'Partial<ClassNames>'
+```
+
+The base-nova `calendar.tsx` installed from the upstream shadcn registry uses a `react-day-picker`
+`classNames` key (`table`) that doesn't exist in the installed react-day-picker version. This is a
+**shadcn upstream bug** (version mismatch in the base-nova registry) — NOT z2f code. `skipLibCheck`
+would silence this at build time but it shows under strict `tsc --noEmit`.
+
+Category: **shadcn-primitive-upstream** — not owned by z2f, not actionable on this branch.
+
+#### ERROR 2 — `src/components/z2f/select.tsx(21,40)` — OWNED Z2F CODE
+
+```
+error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string | number'.
+  Type 'null' is not assignable to type 'string | number'.
+```
+
+**Root cause:** `ShadcnSelect.onValueChange` (Base UI `SelectRoot.onValueChange`) types the callback
+argument as `Value | null` (null when selection is cleared). In `select.tsx` line 21:
+`onValueChange={(v) => onChange?.(v)}` — `v` is inferred as `string | null`, but `onChange` from
+`ControlledFieldProps<string | number>` expects `string | number`. The `null` case (cleared selection)
+is unguarded.
+
+**Fix:** `onValueChange={(v) => { if (v != null) onChange?.(v); }}`
+
+Category: **owned-z2f code** — real remaining bug.
+
+### tsc results — starter-react (`/tmp/z2f-e2e2b`)
+
+Exit code: **2** (3 errors = errors 1+2 from codegen PLUS one additional)
+
+Errors 1 and 2 from starter-codegen are present identically.
+
+#### ERROR 3 — `src/components/example-form.tsx(25,7)` — RELEASE GAP (not a source bug)
+
+```
+error TS2322: Type '{ Input: ... plain function ... }' is not assignable to type
+  'Partial<{ Input: MemoExoticComponent<...>; ... }>'.
+  Types of property 'Input' are incompatible. Property '$$typeof' is missing.
+```
+
+**Root cause:** The published npm package `@zod-to-form/react@0.9.1` has `ZodForm.components` typed
+as `Partial<typeof defaultComponentMap>` where `defaultComponentMap.Input` is `MemoExoticComponent`.
+The Fix C (widen `components` to `ZodFormComponents = Partial<Record<keyof ComponentMap, ComponentType<any>>>`)
+exists in the **source** on `feat/codegen-owned-output` but has NOT been published to npm yet.
+The e2e installs the published 0.9.1 from npm, so the old narrow type is used.
+
+Source fix confirmed at:
+`packages/react/src/FieldRenderer.tsx: export type ZodFormComponents = Partial<Record<keyof ComponentMap, ComponentType<any>>>`
+
+Category: **release-gap** — fix is in source, needs a publish+version bump. Not a source bug, but
+the install pipeline is blocked until published.
+
+### Fixes resolved vs prior run
+
+| Prior issue | Now |
+|-------------|-----|
+| BLOCKER 1: `date-picker` registryDependency → fatal fetch | **FIXED** — removed from deps |
+| BLOCKER 2: `form` stub → `Cannot find module '@/components/ui/form'` | **FIXED** — replaced with `field` |
+| ERROR: unused `React` import in `date-picker.tsx` | **FIXED** — `forwardRef` approach retains import correctly |
+| ERROR: `ref` not accepted on `DatePicker` (no forwardRef) | **FIXED** — now `forwardRef<HTMLButtonElement, ...>` |
+| ERROR: `z2f.config.ts` `./schema` bad import | **FIXED** — now `@/lib/example-schema` |
+| ERROR: Checkbox `value={field.value}` type mismatch | **FIXED** — adapter takes `ControlledFieldProps<boolean>`, `value` is boolean |
+| ERROR: `Form*` re-exports blocking index.tsx | **FIXED** — now `Field*` from `@/components/ui/field` |
+
+### Remaining owned-z2f bugs (must fix before release)
+
+1. **`src/components/z2f/select.tsx(21,40)`** — `onValueChange` null guard missing.
+   Fix: `onValueChange={(v) => { if (v != null) onChange?.(v); }}`
+
+2. **`@zod-to-form/react` `components` prop narrow type** — Release gap. The widened type is in
+   source but 0.9.1 on npm still has `Partial<typeof defaultComponentMap>` (MemoExoticComponent).
+   Needs a version bump + publish after the branch merges.
+
+### Status
+
+**DONE_WITH_CONCERNS**
+
+`shadcn add` now succeeds for both starters (BLOCKERS 1 and 2 resolved). The Field family installs.
+The owned z2f code is nearly clean: only 1 source error remains in select.tsx (null guard). The
+starter-react `components` prop error is a release-gap (fix exists in source, needs publish).
+The calendar `table` classNames error is an upstream shadcn bug, not z2f's.
+
+The migration now genuinely installs without fatal errors. The single owned-code bug (select null guard)
+is a one-liner fix.
