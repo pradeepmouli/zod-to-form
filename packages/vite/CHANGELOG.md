@@ -1,5 +1,13 @@
 # @zod-to-form/vite
 
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies [[`e47e428`](https://github.com/pradeepmouli/zod-to-form/commit/e47e428bdb3328d7241b66f506524aed0defe6d5), [`5382a5e`](https://github.com/pradeepmouli/zod-to-form/commit/5382a5eed4289c0b1262bf0d8980544737df4e5a), [`0afa3fa`](https://github.com/pradeepmouli/zod-to-form/commit/0afa3faca214b3937bed888a3499842624af9a4e), [`a8da28c`](https://github.com/pradeepmouli/zod-to-form/commit/a8da28c398350ffbd03dbdf6ddb11e57c1671be4)]:
+  - @zod-to-form/core@0.10.0
+  - @zod-to-form/codegen@0.9.2
+
 ## 0.4.1
 
 ### Patch Changes
