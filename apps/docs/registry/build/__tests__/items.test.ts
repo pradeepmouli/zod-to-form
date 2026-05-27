@@ -11,13 +11,11 @@ import itemSchema from '../../schema/registry-item.schema.json';
 
 /**
  * The shadcn adapter files every starter ships at the new @components/z2f/ layout.
- * All controlled components (Checkbox/Switch/Select/RadioGroup/DatePicker) are
- * thin forwardRef adapters. Input/Textarea remain raw ui/* re-exports in index.tsx.
+ * Select/RadioGroup/DatePicker ship as local wrappers.
+ * Input/Textarea/Checkbox/Switch remain raw ui/* re-exports in index.tsx.
  */
 const ADAPTER_TARGETS = [
   '@components/z2f/types.ts',
-  '@components/z2f/checkbox.tsx',
-  '@components/z2f/switch.tsx',
   '@components/z2f/select.tsx',
   '@components/z2f/radio-group.tsx',
   '@components/z2f/date-picker.tsx',
@@ -121,20 +119,20 @@ describe('buildReactItem', () => {
     expect(config.content).toContain("ui: 'shadcn'");
   });
 
-  it('config carries the adapter overrides (controlled markings), NOT SHADCN_OVERRIDES', () => {
+  it('config carries the Base UI override shape, NOT SHADCN_OVERRIDES', () => {
     const config = item.files.find((f) => f.path === 'z2f.config.ts')!;
     const content = config.content!;
-    // The shipped @/components/z2f adapters are uniform ControlledFieldProps adapters;
+    // The shipped @/components/z2f components include raw Base UI Checkbox/Switch;
     // the config must NOT spread the Radix-prop SHADCN_OVERRIDES.
     expect(content).not.toContain('SHADCN_OVERRIDES');
     expect(content).not.toContain("preset: 'shadcn'");
-    // All controlled components use uniform { controlled: true } — no props map.
-    expect(content).toContain('Checkbox: { controlled: true }');
-    expect(content).toContain('Switch: { controlled: true }');
+    // Checkbox/Switch bind to Base UI checked/onCheckedChange props.
+    expect(content).toContain("checked: '!!field.value'");
+    expect(content).toContain("onCheckedChange: 'field.onChange'");
+    expect(content).toContain('Checkbox: {');
+    expect(content).toContain('Switch: {');
+    // Select/RadioGroup/DatePicker keep uniform controlled adapter shape.
     expect(content).toContain('DatePicker: { controlled: true }');
-    // No checked/onCheckedChange props — adapter handles Base UI mapping internally.
-    expect(content).not.toContain('checked:');
-    expect(content).not.toContain('onCheckedChange:');
     // Schema import uses the installed alias, not a bare relative path.
     expect(content).toContain("'@/lib/example-schema'");
     expect(content).not.toContain("'./schema'");
@@ -147,18 +145,18 @@ describe('buildReactItem', () => {
     expect(usage.content).toMatch(/components=\{components\}/);
   });
 
-  it('ExampleForm usage passes componentConfig with uniform controlled overrides to <ZodForm>', () => {
+  it('ExampleForm usage passes componentConfig with Base UI overrides to <ZodForm>', () => {
     const usage = item.files.find((f) => f.path === 'example-form.tsx')!;
     const content = usage.content!;
     // componentConfig prop is wired to ZodForm
     expect(content).toMatch(/componentConfig=\{componentConfig\}/);
-    // All controlled components use uniform { controlled: true } — no props map.
-    expect(content).toContain('Checkbox:  { controlled: true }');
-    expect(content).toContain('Switch:    { controlled: true }');
+    // Checkbox/Switch are mapped to Base UI checked/onCheckedChange.
+    expect(content).toContain("checked: '!!field.value'");
+    expect(content).toContain("onCheckedChange: 'field.onChange'");
+    expect(content).toContain('Checkbox: {');
+    expect(content).toContain('Switch: {');
+    // Other controlled components remain uniform adapters.
     expect(content).toContain('DatePicker: { controlled: true }');
-    // No Base UI checked/onCheckedChange in the usage file — adapter handles this.
-    expect(content).not.toContain("checked: '!!field.value'");
-    expect(content).not.toContain("onCheckedChange: 'field.onChange'");
   });
 
   it('has the correct $schema, registryDependencies, and docs', () => {
@@ -196,17 +194,17 @@ describe('buildCodegenItem', () => {
     expect(config.content).not.toContain('zod-form/');
   });
 
-  it('config carries the adapter overrides (uniform controlled), NOT SHADCN_OVERRIDES', () => {
+  it('config carries the Base UI override shape, NOT SHADCN_OVERRIDES', () => {
     const config = item.files.find((f) => f.path === 'z2f.config.ts')!;
     const content = config.content!;
     expect(content).not.toContain('SHADCN_OVERRIDES');
-    // All controlled components use uniform { controlled: true }.
-    expect(content).toContain('Checkbox: { controlled: true }');
-    expect(content).toContain('Switch: { controlled: true }');
+    // Checkbox/Switch bind to Base UI checked/onCheckedChange props.
+    expect(content).toContain("checked: '!!field.value'");
+    expect(content).toContain("onCheckedChange: 'field.onChange'");
+    expect(content).toContain('Checkbox: {');
+    expect(content).toContain('Switch: {');
+    // Select/RadioGroup/DatePicker keep uniform controlled adapter shape.
     expect(content).toContain('DatePicker: { controlled: true }');
-    // No checked/onCheckedChange props — adapter handles Base UI mapping internally.
-    expect(content).not.toContain('checked:');
-    expect(content).not.toContain('onCheckedChange:');
     // Schema import uses the installed alias.
     expect(content).toContain("'@/lib/example-schema'");
     expect(content).not.toContain("'./schema'");
@@ -285,18 +283,12 @@ describe('buildCodegenItem', () => {
     }
   });
 
-  it('renders Checkbox via Controller with uniform value/onChange/onBlur/ref/name binding', () => {
+  it('renders Checkbox via Controller with Base UI checked/onCheckedChange binding', () => {
     const gen = item.files.find((f) => f.path === 'example-form.tsx')!;
     const content = gen.content!;
-    // Uniform controlled binding — adapter handles Base UI mapping internally.
-    expect(content).toMatch(/value=\{field\.value\}/);
-    expect(content).toMatch(/onChange=\{field\.onChange\}/);
-    expect(content).toMatch(/onBlur=\{field\.onBlur\}/);
-    expect(content).toMatch(/ref=\{field\.ref\}/);
-    expect(content).toMatch(/name=\{field\.name\}/);
-    // No raw Base UI props — those are hidden inside the adapter.
-    expect(content).not.toMatch(/checked=\{!!field\.value\}/);
-    expect(content).not.toMatch(/onCheckedChange=\{field\.onChange\}/);
+    expect(content).toMatch(/checked=\{!!field\.value\}/);
+    expect(content).toMatch(/onCheckedChange=\{field\.onChange\}/);
+    expect(content).not.toMatch(/value=\{field\.value\}/);
     expect(content).not.toMatch(/=== true/);
   });
 
@@ -369,17 +361,17 @@ describe('buildViteItem', () => {
     expect(config.content).not.toContain('zod-form/');
   });
 
-  it('config carries the adapter overrides (uniform controlled), NOT SHADCN_OVERRIDES', () => {
+  it('config carries the Base UI override shape, NOT SHADCN_OVERRIDES', () => {
     const config = item.files.find((f) => f.path === 'z2f.config.ts')!;
     const content = config.content!;
     expect(content).not.toContain('SHADCN_OVERRIDES');
-    // All controlled components use uniform { controlled: true }.
-    expect(content).toContain('Checkbox: { controlled: true }');
-    expect(content).toContain('Switch: { controlled: true }');
+    // Checkbox/Switch bind to Base UI checked/onCheckedChange props.
+    expect(content).toContain("checked: '!!field.value'");
+    expect(content).toContain("onCheckedChange: 'field.onChange'");
+    expect(content).toContain('Checkbox: {');
+    expect(content).toContain('Switch: {');
+    // Select/RadioGroup/DatePicker keep uniform controlled adapter shape.
     expect(content).toContain('DatePicker: { controlled: true }');
-    // No checked/onCheckedChange props — adapter handles Base UI mapping internally.
-    expect(content).not.toContain('checked:');
-    expect(content).not.toContain('onCheckedChange:');
     // Schema import uses the installed alias.
     expect(content).toContain("'@/lib/example-schema'");
     expect(content).not.toContain("'./schema'");
@@ -417,10 +409,10 @@ describe('shipped shadcn adapter files', () => {
     expect(index.content).toContain('export const components');
   });
 
-  it('ships all five adapter files with NO .js extensions in their relative imports', () => {
-    // All controlled adapters ship as discrete files. Input/Textarea remain raw
-    // @/components/ui/* re-exports in index.tsx — no adapter file on disk.
-    for (const name of ['checkbox', 'switch', 'select', 'radio-group', 'date-picker']) {
+  it('ships all owned wrapper files with NO .js extensions in their relative imports', () => {
+    // Select/RadioGroup/DatePicker ship as owned wrappers.
+    // Input/Textarea/Checkbox/Switch are raw ui/* re-exports in index.tsx.
+    for (const name of ['select', 'radio-group', 'date-picker']) {
       const source = readFileSync(
         fileURLToPath(new URL(`../../components/shadcn/${name}.tsx`, import.meta.url)),
         'utf8'

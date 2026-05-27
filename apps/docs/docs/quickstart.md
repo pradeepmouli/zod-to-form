@@ -61,11 +61,10 @@ This produces `src/components/SignupForm.tsx` — inspect it, customize it, comm
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { StripIndexSignature } from '@zod-to-form/core';
 import { signupSchema } from '../schemas/signup';
 import { Input, Select } from '@/components/ui';
 
-type FormData = StripIndexSignature<z.output<typeof signupSchema>>;
+type FormData = z.output<typeof signupSchema>;
 
 export function SignupForm(props: {
   onSubmit: (data: FormData) => void;

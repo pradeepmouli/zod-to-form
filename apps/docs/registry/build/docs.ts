@@ -2,8 +2,8 @@
  * Shared shadcn registry dependencies for all three starter items.
  *
  * Every starter ships the shared `@/components/z2f` adapter module
- * (checkbox/switch/select/radio-group/date-picker + index), whose components
- * wrap the consumer's installed shadcn/ui primitives. The full set of underlying
+ * (select/radio-group/date-picker + index), plus raw ui/* re-exports for
+ * input/textarea/checkbox/switch. The full set of underlying
  * shadcn registry items the adapters import from:
  *
  * - `input`, `textarea`, `checkbox`, `switch`, `select`, `radio-group` — the
@@ -41,6 +41,7 @@ export const CODEGEN_REGISTRY_DEPENDENCIES = REGISTRY_DEPENDENCIES;
 
 export const STARTER_DOCS = [
   'This starter ships a sample Zod schema and a z2f config wired to shadcn components.',
+  'Targets shadcn Base UI components (`npx shadcn@latest init` with the Base UI style).',
   '',
   'Next steps:',
   '1. Re-generate the config for YOUR components and schemas:',
