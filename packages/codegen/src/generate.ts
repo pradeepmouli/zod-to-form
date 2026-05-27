@@ -157,6 +157,7 @@ function renderFieldContainer(
   const labelContent = field.deprecated
     ? `<s>${field.label}</s> <span title="Deprecated">⚠</span>`
     : field.label;
+  const fieldNameExpr = field.key.includes('${') ? `\`${field.key}\`` : `"${field.key}"`;
 
   if (preset === 'shadcn') {
     const lines = [
@@ -172,7 +173,9 @@ function renderFieldContainer(
         `${indent}  <p className="text-sm text-muted-foreground mt-1">${field.helpText}</p>`
       );
     }
-    lines.push(`${indent}  <FieldError />`);
+    lines.push(
+      `${indent}  <FieldError>{form.getFieldState(${fieldNameExpr}, form.formState).error?.message}</FieldError>`
+    );
     lines.push(`${indent}</Field>`);
     return lines.join('\n');
   }
