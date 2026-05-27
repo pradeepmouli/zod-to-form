@@ -24,6 +24,26 @@ Default HTML preset — no controlled components by default
 const DEFAULT_OVERRIDES: Record<string, ComponentOverride>
 ```
 
+## Configuration
+
+### `RHF_FIELD_EXPRESSIONS`
+Known RHF field expression strings recognized in component props config.
+When a prop value matches one of these strings, codegen emits it as a JSX
+expression (`{field.value}`) rather than a literal string.
+```ts
+const RHF_FIELD_EXPRESSIONS: ReadonlySet<string>
+```
+
+## Helpers
+
+### `NATIVE_INPUT_ATTRS`
+The set of DOM-valid native input attributes extracted from `field.props`.
+This is the single source of truth so runtime and codegen agree on which props
+flow through to the native element. Extend deliberately, not blindly.
+```ts
+const NATIVE_INPUT_ATTRS: readonly ["type", "minLength", "maxLength", "pattern", "min", "max", "step"]
+```
+
 ## Registry
 
 ### `builtinProcessors`

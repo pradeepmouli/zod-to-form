@@ -2,9 +2,10 @@
  * Stub fixture for @/components/ui/checkbox.
  * Test-only — never shipped to consumers.
  *
- * Uses Radix-shaped props (onCheckedChange) rather than the native onChange.
- * Mirrors the real shadcn Checkbox: forwardRef + accepts name/onBlur so the
- * controlled adapter can forward the full RHF field shape.
+ * Mirrors the real Base UI shadcn Checkbox:
+ *   - `checked`/`onCheckedChange(boolean)` controlled props
+ *   - `inputRef` for the hidden input (NOT forwardRef root ref)
+ *   - `name`/`id`/`disabled`/`onBlur` pass-through
  */
 import * as React from 'react';
 
@@ -15,11 +16,13 @@ export interface CheckboxProps {
   name?: string;
   disabled?: boolean;
   id?: string;
+  inputRef?: React.Ref<HTMLInputElement>;
 }
 
 export const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
-  ({ checked, onCheckedChange, onBlur, name, disabled, id }, _ref) => (
+  ({ checked, onCheckedChange, onBlur, name, disabled, id, inputRef }, _ref) => (
     <input
+      ref={inputRef as React.Ref<HTMLInputElement>}
       type="checkbox"
       id={id}
       name={name}

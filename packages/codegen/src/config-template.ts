@@ -15,8 +15,14 @@ export type ConfigTemplateOptions = {
   schemaExports?: string[];
   /** Preset name: 'shadcn' | 'html' */
   preset?: 'shadcn' | 'html';
-  /** Component overrides (name → { controlled?: boolean }) */
-  overrides?: Record<string, { controlled?: boolean }>;
+  /** Component overrides (name → { controlled?: boolean; props?: ... }) */
+  overrides?: Record<
+    string,
+    {
+      controlled?: boolean;
+      props?: Record<string, string | number | boolean | null>;
+    }
+  >;
   /** Defaults block */
   defaults?: {
     mode?: 'submit' | 'auto-save';
@@ -34,6 +40,13 @@ const PRESET_IMPORT_NAME: Record<string, string> = {
   shadcn: 'SHADCN_OVERRIDES',
   html: 'DEFAULT_OVERRIDES'
 };
+
+function renderLiteral(value: string | number | boolean | null): string {
+  if (typeof value === 'string') {
+    return `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+  }
+  return JSON.stringify(value);
+}
 
 /**
  * Generate a `z2f.config.ts` starter file as a source string.
@@ -90,6 +103,7 @@ export function buildConfigSource(opts: ConfigTemplateOptions): string {
   // overrides — serialize ALL entries (controlled and non-controlled).
   // A non-controlled/empty entry emits `Name: {}` (use the named component from
   // source for this field); a controlled entry emits `Name: { controlled: true }`.
+  // When present, `props` are serialized into `props: { ... }`.
   // Dropping non-controlled entries previously caused fields without an override
   // to regress to raw `<input>` on regeneration.
   const overrideEntries = opts.overrides ? Object.entries(opts.overrides) : [];
@@ -101,7 +115,15 @@ export function buildConfigSource(opts: ConfigTemplateOptions): string {
     }
     overrideEntries.forEach(([name, v], i) => {
       const comma = i < overrideEntries.length - 1 ? ',' : '';
-      const body = v.controlled ? '{ controlled: true }' : '{}';
+      const tokens: string[] = [];
+      if (v.controlled) tokens.push('controlled: true');
+      if (v.props && Object.keys(v.props).length > 0) {
+        const renderedProps = Object.entries(v.props)
+          .map(([k, value]) => `${k}: ${renderLiteral(value)}`)
+          .join(', ');
+        tokens.push(`props: { ${renderedProps} }`);
+      }
+      const body = tokens.length > 0 ? `{ ${tokens.join(', ')} }` : '{}';
       lines.push(`      ${name}: ${body}${comma}`);
     });
     lines.push(`    }`);

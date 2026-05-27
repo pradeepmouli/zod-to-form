@@ -284,6 +284,88 @@ normalizeFormValues(value: unknown): unknown
 
 **Returns:** `unknown`
 
+### getFieldRegisterHints
+
+Derive framework-agnostic register hints from a `FormField`.
+
+The `coerce` kind drives `setValueAs` in both the runtime renderer
+(`@zod-to-form/react`) and the code generator (`@zod-to-form/codegen`).
+
+```ts
+getFieldRegisterHints(field: FormField): FieldRegisterHints
+```
+
+**Parameters:**
+- `field: FormField` — 
+
+**Returns:** `FieldRegisterHints`
+
+### resolveBaseProps
+
+Static, schema-derived base props every field's component receives, identical
+across all zodTypes. `aria-invalid` is intentionally excluded — it derives from
+runtime error state, so each renderer materializes it.
+
+```ts
+resolveBaseProps(field: FormField): Record<string, unknown>
+```
+
+**Parameters:**
+- `field: FormField` — 
+
+**Returns:** `Record<string, unknown>`
+
+### resolveNativeAttrs
+
+Extract DOM-valid native attributes from a field's props.
+
+Only keys listed in `NATIVE_INPUT_ATTRS` are included; internal props (e.g.
+`_isSet`) and component-specific props are silently ignored. Null and
+undefined values are skipped so the result only contains meaningful attrs.
+
+```ts
+resolveNativeAttrs(field: FormField): Record<string, unknown>
+```
+
+**Parameters:**
+- `field: FormField` — 
+
+**Returns:** `Record<string, unknown>`
+
+### resolveControlMode
+
+Derive the control mode from a field mapping's component override.
+
+Single source of truth so `@zod-to-form/react` (runtime) and
+`@zod-to-form/codegen` (static generation) make the same decision without
+duplicating the `componentOverride?.controlled === true` check.
+
+```ts
+resolveControlMode(mapping: { componentOverride?: ComponentOverride }): ControlMode
+```
+
+**Parameters:**
+- `mapping: { componentOverride?: ComponentOverride }` — 
+
+**Returns:** `ControlMode`
+
+### resolveOptionsProps
+
+Extract options props from a field for enum/union select-style components.
+
+Returns `{ options: field.options }` when the field carries options, or `{}`
+for fields without options (e.g. plain string/number inputs). This is the
+single source so runtime and codegen agree on how options flow to a component.
+
+```ts
+resolveOptionsProps(field: FormField): Record<string, unknown>
+```
+
+**Parameters:**
+- `field: FormField` — 
+
+**Returns:** `Record<string, unknown>`
+
 ### isZodSchema
 
 Structural Zod v4 check shared across loader/registration/codegen entrypoints.
@@ -662,7 +744,10 @@ processRecord(schema: $ZodRecord, _ctx: FormProcessorContext, field: FormField, 
 
 ### processString
 
-Process `z.string()` — renders as an `Input` (or `DatePicker` for date/time formats).
+Process `z.string()` — renders as an `Input` with appropriate `type` for all formats.
+String date/time formats (`date`, `time`, `datetime`) map to native HTML inputs
+(`type="date"`, `type="time"`, `type="datetime-local"`), keeping register-compatible
+string values. Only `z.date()` (Date-object schema) routes to `DatePicker`.
 Extracts format, minLength, maxLength, and pattern constraints from the constraint bag.
 Converts regex patterns to input masks via `regexToMask` when possible.
 
@@ -865,7 +950,7 @@ When a prop value matches one of these strings, it is resolved from the
 RHF controller field at render time instead of being passed as a literal.
 
 ```ts
-type FieldExpression = "field.value" | "field.onChange" | "field.onBlur" | "field.ref" | "field.name"
+type FieldExpression = "field.value" | "field.onChange" | "field.onBlur" | "field.ref" | "field.name" | "!!field.value"
 ```
 
 ### GhostRow
@@ -968,6 +1053,35 @@ Metadata for codegen to reconstruct the lite schema in a generated file
 type SchemaLiteInfo = SchemaLiteInfoBase & { type: "checks"; checkCount: number } | SchemaLiteInfoBase & { type: "transform"; hasInnerChecks: boolean; hasOuterChecks: boolean } | SchemaLiteInfoBase & { type: "original" } | null
 ```
 
+### FieldRegisterHints
+
+Framework-agnostic descriptor of the register options a field requires.
+
+React translates this into actual RHF `register()` options (via `setValueAs`
+functions); codegen emits the equivalent static source code.  Neither the
+type nor the builder has any dependency on RHF or React.
+
+The `coerce` kind replaces the old `valueAsNumber`/`valueAsDate` flags.
+Both consumers **must** produce the canonical `setValueAs` semantics below —
+this eliminates the P1 (NaN on empty optional number) and P2 (bigint
+precision) bugs caused by `valueAsNumber: true`.
+
+Canonical `setValueAs` semantics (single source of truth):
+- **number**: `(v) => (v === '' || v == null ? undefined : Number(v))`
+- **bigint**: `(v) => { if (v === '' || v == null) return undefined; try { return BigInt(v); } catch { return v; } }`
+- **date**:   `(v) => (v === '' || v == null ? undefined : new Date(v))`
+- **file**:   `(v) => (v instanceof FileList ? (v.length > 0 ? v.item(0) : undefined) : v)`
+
+### ControlMode
+
+The control strategy for a field's component:
+- `'register'` — use RHF's `register()` spread (uncontrolled by default)
+- `'controller'` — use `Controller` / `useController` (required for Radix/shadcn components)
+
+```ts
+type ControlMode = "register" | "controller"
+```
+
 ### builtinOptimizers
 
 The default optimizer registry — L1 (decompose) + L2 (native rules) chains merged per type.
@@ -992,6 +1106,26 @@ Default HTML preset — no controlled components by default
 
 ```ts
 const DEFAULT_OVERRIDES: Record<string, ComponentOverride>
+```
+
+### RHF_FIELD_EXPRESSIONS
+
+Known RHF field expression strings recognized in component props config.
+When a prop value matches one of these strings, codegen emits it as a JSX
+expression (`{field.value}`) rather than a literal string.
+
+```ts
+const RHF_FIELD_EXPRESSIONS: ReadonlySet<string>
+```
+
+### NATIVE_INPUT_ATTRS
+
+The set of DOM-valid native input attributes extracted from `field.props`.
+This is the single source of truth so runtime and codegen agree on which props
+flow through to the native element. Extend deliberately, not blindly.
+
+```ts
+const NATIVE_INPUT_ATTRS: readonly ["type", "minLength", "maxLength", "pattern", "min", "max", "step"]
 ```
 
 ### builtinProcessors
@@ -1181,6 +1315,19 @@ Used with `registerDeep()` / `registerFlat()` to attach form metadata to Zod sch
 
 ```ts
 type FormMeta = FieldConfig<T> & { render?: (field: FormField, props: unknown) => unknown }
+```
+
+### ZodFormComponents
+
+Public component-map type for `<ZodForm components={…}>`.
+
+Preserves the per-key names from `defaultComponentMap` (consumers still get
+autocomplete on `Input`, `Checkbox`, etc.) but widens each value to
+`React.ComponentType<any>`, so plain function components, React.memo-wrapped
+components, and forwardRef components are all assignable.
+
+```ts
+type ZodFormComponents = Partial<Record<keyof ComponentMap, ComponentType<any>>>
 ```
 
 ### ZodFormSwitchProps
@@ -1419,7 +1566,7 @@ based on the generation options. Also inlines the `StripIndexSignature` utility 
 and the `normalizeFormValues` helper for html-preset forms.
 
 ```ts
-getFileHeader(schemaImportPath: string, exportName: string, hasArrays: boolean, mode: "submit" | "auto-save", componentImportLine?: string, options?: { hasControlled?: boolean; formProvider?: boolean; preset?: "shadcn" | "html" }, optimized?: { includeZodResolver: boolean; includeZod: boolean }): string
+getFileHeader(schemaImportPath: string, exportName: string, hasArrays: boolean, mode: "submit" | "auto-save", componentImportLine?: string, options?: { hasControlled?: boolean; formProvider?: boolean; preset?: "shadcn" | "html" }, optimized?: { includeZodResolver: boolean; includeZod: boolean }, typesModule?: string): string
 ```
 
 **Parameters:**
@@ -1430,6 +1577,7 @@ getFileHeader(schemaImportPath: string, exportName: string, hasArrays: boolean, 
 - `componentImportLine: string` (optional) — Optional custom import line for the component module.
 - `options: { hasControlled?: boolean; formProvider?: boolean; preset?: "shadcn" | "html" }` (optional) — Additional flags: `hasControlled`, `formProvider`, `preset`.
 - `optimized: { includeZodResolver: boolean; includeZod: boolean }` (optional) — Whether to conditionally include `zodResolver` and `zod` imports.
+- `typesModule: string` (optional) — 
 
 **Returns:** `string`
 

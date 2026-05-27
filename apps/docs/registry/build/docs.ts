@@ -1,17 +1,22 @@
 /**
  * Shared shadcn registry dependencies for all three starter items.
  *
- * Every starter now ships the shared `@/components/zod-form` adapter module
- * (input/textarea/checkbox/switch/select/radio-group/date-picker + index),
- * whose components wrap the consumer's installed shadcn/ui primitives. The full
- * set of underlying shadcn registry items the adapters import from:
+ * Every starter ships the shared `@/components/z2f` adapter module
+ * (select/radio-group/date-picker + index), plus raw ui/* re-exports for
+ * input/textarea/checkbox/switch. The full set of underlying
+ * shadcn registry items the adapters import from:
  *
  * - `input`, `textarea`, `checkbox`, `switch`, `select`, `radio-group` — the
  *   field primitives wrapped by the matching adapter components.
  * - `label`, `button`, `popover`, `calendar` — used by the date-picker adapter
  *   (and label by field wrappers).
- * - `form` — the shadcn Form* primitives that the codegen/vite generated forms
- *   import from `@/components/ui/form`.
+ * - `field` — the shadcn Field* primitives (Field/FieldLabel/FieldDescription/
+ *   FieldError) that the codegen/vite generated forms import from `@/components/ui/field`.
+ *
+ * NOTE: `date-picker` is intentionally OMITTED — it is an embedded owned file,
+ * not a standalone shadcn registry item. Listing it would cause `shadcn add` to
+ * fatally attempt to fetch a non-existent `date-picker.json`. The date-picker
+ * wrapper is composed from `popover`, `calendar`, and `button` (all listed above).
  */
 export const REGISTRY_DEPENDENCIES = [
   'input',
@@ -24,18 +29,19 @@ export const REGISTRY_DEPENDENCIES = [
   'button',
   'popover',
   'calendar',
-  'form'
+  'field'
 ];
 
 /**
  * Codegen and vite items use the same shared dependency set as the react item:
  * all three ship the shadcn adapter module, and the codegen/vite generated forms
- * additionally import the `form` primitives (already included above).
+ * additionally import the `field` primitives (already included above).
  */
 export const CODEGEN_REGISTRY_DEPENDENCIES = REGISTRY_DEPENDENCIES;
 
 export const STARTER_DOCS = [
   'This starter ships a sample Zod schema and a z2f config wired to shadcn components.',
+  'Targets shadcn Base UI components (`npx shadcn@latest init` with the Base UI style).',
   '',
   'Next steps:',
   '1. Re-generate the config for YOUR components and schemas:',

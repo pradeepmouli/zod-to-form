@@ -417,6 +417,25 @@ function formatValidationError(error: z.ZodError, source: string): Error {
   return new Error(`${source} is invalid: ${issue.message}`);
 }
 
+// ─── Field Expression Allowlist ──────────────────────────────────────
+
+/**
+ * Known RHF field expression strings recognized in component props config.
+ * When a prop value matches one of these strings, codegen emits it as a JSX
+ * expression (`{field.value}`) rather than a literal string.
+ *
+ * @category Configuration
+ */
+export const RHF_FIELD_EXPRESSIONS: ReadonlySet<string> = new Set([
+  'field.value',
+  'field.onChange',
+  'field.onBlur',
+  'field.ref',
+  'field.name',
+  // boolean coercion: guards undefined→false for controlled checkbox/switch
+  '!!field.value'
+]);
+
 // ─── Preset Override Maps ─────────────────────────────────────────────
 
 /** shadcn preset — Radix-based components need controlled mode + field expression props */

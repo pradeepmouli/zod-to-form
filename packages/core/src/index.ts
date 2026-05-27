@@ -99,7 +99,8 @@ export {
   resolveFieldConfig,
   normalizeConfig,
   SHADCN_OVERRIDES,
-  DEFAULT_OVERRIDES
+  DEFAULT_OVERRIDES,
+  RHF_FIELD_EXPRESSIONS
 } from './config.js';
 
 export {

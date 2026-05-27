@@ -15,3 +15,27 @@ export type ControlledFieldProps<V = unknown> = {
   disabled?: boolean;
   id?: string;
 };
+
+/** Owned copy of the option shape (severs the @zod-to-form/core dependency). */
+export interface FormFieldOption {
+  value: string | number;
+  label: string;
+  disabled?: boolean;
+}
+
+/** Strips index signatures from an inferred Zod type (mirrors codegen's inline util). */
+export type StripIndexSignature<T> = T extends Date | File | FileList | Blob | RegExp
+  ? T
+  : T extends readonly (infer U)[]
+    ? StripIndexSignature<U>[]
+    : T extends object
+      ? {
+          [K in keyof T as string extends K
+            ? never
+            : number extends K
+              ? never
+              : symbol extends K
+                ? never
+                : K]: StripIndexSignature<T[K]>;
+        }
+      : T;

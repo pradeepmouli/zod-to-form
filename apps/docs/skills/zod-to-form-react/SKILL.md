@@ -1,6 +1,6 @@
 ---
-name: zod-to-form-react
 description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Use when: You need form rendering in storybook, playgrounds, or low-traffic admin UIs —...."
+name: zod-to-form-react
 ---
 
 # @zod-to-form/react
@@ -27,7 +27,7 @@ flexibility.
 - You just need a working form UI — use `<ZodForm>` instead; `useZodForm` returns `fields[]` and `form`, but rendering those fields requires wiring up each field component yourself (`useZodForm`)
 - You are using the default `zodResolver` path (no `validationLevel`) — validation is handled by RHF's resolver and adding this wrapper causes double-validation with no benefit (`wrapWithSchemaLite`)
 
-API surface: 5 functions, 6 types, 3 constants
+API surface: 5 functions, 7 types, 3 constants
 
 ## NEVER
 
@@ -51,6 +51,7 @@ a React `key`), `ZodFormSwitchProps` (Props for ZodFormSwitch), `defaultComponen
 changes; preserve in-progress edits while the reference is stable)
 **Optimization:** `wrapWithSchemaLite` (Wraps a form `onSubmit` handler with `schemaLite` client-side validation)
 **Types:** `FormField` (Intermediate representation of a single form field produced by `walkSchema`), `FormFieldOption` (An individual option in a Select, RadioGroup, or similar enum-driven component), `FormFieldConstraints` (Structural constraints extracted from Zod's `_zod), `FormMeta` (Per-schema annotation stored in a `z), `FieldTemplateProps` (Props passed to the field template component that wraps each rendered form field)
+**FieldRenderer:** `ZodFormComponents` (Public component-map type for `<ZodForm components={…}>`)
 **components:** `FIELD_COMPONENT_NAMES` (User-facing field component names derived from defaultCom...)
 
 ## References

@@ -80,6 +80,4 @@ Section components are also resolved from this module.
 
 #### fields
 
-
-
 **Type:** `Record<string, FieldConfig>`

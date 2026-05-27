@@ -3,7 +3,8 @@ import {
   getEmptyDefault,
   resolveBaseProps,
   resolveNativeAttrs,
-  resolveOptionsProps
+  resolveOptionsProps,
+  RHF_FIELD_EXPRESSIONS
 } from '@zod-to-form/core';
 import type { ComponentOverride, FieldConfig, ZodFormsConfig } from '@zod-to-form/core';
 import {
@@ -54,15 +55,6 @@ function renderResolverProps(record: Record<string, unknown>): string {
     })
     .join('');
 }
-
-/** Known RHF field expressions that should be resolved, not rendered as literal props */
-const RHF_FIELD_EXPRESSIONS = new Set([
-  'field.value',
-  'field.onChange',
-  'field.onBlur',
-  'field.ref',
-  'field.name'
-]);
 
 const BUILTIN_COMPONENT_NAMES = new Set([
   'Input',
@@ -165,23 +157,26 @@ function renderFieldContainer(
   const labelContent = field.deprecated
     ? `<s>${field.label}</s> <span title="Deprecated">⚠</span>`
     : field.label;
+  const fieldNameExpr = field.key.includes('${') ? `\`${field.key}\`` : `"${field.key}"`;
 
   if (preset === 'shadcn') {
     const lines = [
-      `${indent}<FormItem>`,
-      `${indent}  <FormLabel htmlFor="${field.key}">${labelContent}</FormLabel>`,
-      `${indent}  <FormControl>${content}</FormControl>`
+      `${indent}<Field>`,
+      `${indent}  <FieldLabel htmlFor="${field.key}">${labelContent}</FieldLabel>`,
+      `${indent}  ${content}`
     ];
     if (field.description) {
-      lines.push(`${indent}  <FormDescription>${field.description}</FormDescription>`);
+      lines.push(`${indent}  <FieldDescription>${field.description}</FieldDescription>`);
     }
     if (field.helpText) {
       lines.push(
         `${indent}  <p className="text-sm text-muted-foreground mt-1">${field.helpText}</p>`
       );
     }
-    lines.push(`${indent}  <FormMessage />`);
-    lines.push(`${indent}</FormItem>`);
+    lines.push(
+      `${indent}  <FieldError>{form.getFieldState(${fieldNameExpr}, form.formState).error?.message}</FieldError>`
+    );
+    lines.push(`${indent}</Field>`);
     return lines.join('\n');
   }
 
@@ -768,7 +763,7 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
   const importNames = new Set<string>(mappedComponents);
 
   // Generate body first so we can filter template imports to only those actually referenced.
-  // This avoids importing Form* primitives (e.g. FormDescription, FormField) that are
+  // This avoids importing Field* primitives (e.g. FieldDescription) that are
   // conditionally emitted and absent when no field has a description.
   const body = fields
     .map((field) =>
@@ -781,7 +776,7 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
   const templateImports = PRESET_TEMPLATE_IMPORTS[preset] ?? [];
   for (const name of templateImports) {
     // A name is referenced if it appears as a JSX opening/closing tag or as an identifier
-    // followed by a word boundary (covers both <FormX> tags and non-JSX references).
+    // followed by a word boundary (covers both <FieldX> tags and non-JSX references).
     const tagPattern = new RegExp(`</?${name}[\\s/>]`);
     const idPattern = new RegExp(`\\b${name}\\b`);
     if (tagPattern.test(body) || idPattern.test(body)) {
@@ -809,7 +804,8 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
     config.mode,
     componentImportLine,
     { hasControlled, formProvider: useFormProvider, preset },
-    optimizedOptions
+    optimizedOptions,
+    config.typesModule
   );
 
   // When optimized with schemaLite, the form imports from the .lite.ts file

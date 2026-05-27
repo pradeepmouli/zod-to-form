@@ -11,5 +11,7 @@ export const schema = z.object({
     .meta({ title: 'Email', examples: ['jane@example.com'] }),
   age: z.number().min(18, 'Must be at least 18').optional().meta({ title: 'Age' }),
   subscribe: z.boolean().default(false).meta({ title: 'Subscribe to updates' }),
+  role: z.enum(['admin', 'editor', 'viewer']).meta({ title: 'Role' }),
+  birthDate: z.string().date().optional().meta({ title: 'Birth date' }),
   joinedAt: z.date().optional().meta({ title: 'Joined' })
 });

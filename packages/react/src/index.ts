@@ -48,6 +48,7 @@ export type {
 
 // Runtime renderer
 export { ZodForm } from './ZodForm.js';
+export type { ZodFormComponents } from './ZodForm.js';
 export { useZodForm } from './useZodForm.js';
 export { useExternalSync } from './useExternalSync.js';
 export type { UseExternalSyncOptions } from './useExternalSync.js';

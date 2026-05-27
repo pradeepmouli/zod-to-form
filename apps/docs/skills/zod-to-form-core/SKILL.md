@@ -1,6 +1,6 @@
 ---
-name: zod-to-form-core
 description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Use when: You want per-field validation instead of whole-form validation."
+name: zod-to-form-core
 ---
 
 # @zod-to-form/core
@@ -42,7 +42,7 @@ Key concepts:
 - Don't use if your config comes from dot-path format (CLI global fields) (`registerDeep`)
 - Your config is already nested mirroring schema shape — use registerDeep() instead (`registerFlat`)
 
-API surface: 45 functions, 22 types, 4 constants
+API surface: 50 functions, 24 types, 6 constants
 
 ## NEVER
 
@@ -66,31 +66,19 @@ API surface: 45 functions, 22 types, 4 constants
 
 ## Quick Reference
 
-**Configuration:** `canonicalizeConfig` (Serialize a CodegenConfig to a canonical string suitable for
-hashing into a cache key), `defineConfig` (Identity helper that returns its argument typed as `ZodFormsConfig`), `validateConfig` (Validates an unknown value as a `ZodFormsConfig` at runtime), `resolveFieldConfig` (Merge global field config with per-schema field config overrides), `normalizeConfig` (Normalize a validated config by migrating deprecated top-level fields to their canonical locations), `ComponentPreset` (Preset name for built-in component library mappings), `ConfigDefaults` (Default generation settings applied to all schemas unless overridden per-schema)
-**Optimization:** `createOptimizers` (Create an optimizer registry by merging custom optimizers with builtins), `createSchemaLiteCollector` (Create a new SchemaLiteCollector instance), `FormOptimizer` (An optimizer function that mutates a `FormField` after the processor has run), `FormOptimizerContext` (Context shared across all optimizers during a `walkSchema` run), `SchemaLiteCollector` (Mutable accumulator that builds a lite Zod schema for submit-time validation), `builtinOptimizers` (The default optimizer registry — L1 (decompose) + L2 (native rules) chains merged per type)
-**utils:** `inferLabel` (Convert a camelCase or snake_case key to a human-readable Title Case label)
-**Utils:** `joinPath` (Join a parent path and a child key with a dot separator), `createBaseField` (Create a base FormField with sensible defaults), `getEmptyDefault` (Returns a type-safe empty default value for a FormField based on its zodType
-and structure), `normalizeFieldKey` (Normalise a concrete field key to the bracket notation used in config), `collectFieldSections` (Collect section groupings from fields and a config override lookup)
-**Normalization:** `normalizeFormValues` (Normalize raw HTML form values for Zod parsing)
-**Utilities:** `isZodSchema` (Structural Zod v4 check shared across loader/registration/codegen entrypoints)
-**Schema Walking:** `walkSchema` (Walk a Zod schema and produce a FormField[] tree), `WalkResult` (The result returned by `walkSchema()` when an optimization level is specified)
-**Registry:** `createProcessors` (Create a custom processor registry by merging with built-in processors), `builtinProcessors` (The default processor registry — maps every Zod v4 `def)
-**Registration:** `registerDeep` (Register a schema and all its nested fields in a registry using a
-path-structured FieldConfig tree), `registerFlat` (Register flat dot-path field configs against a schema's registry)
-**register:** `registerSchemaConfigs` (Register `defineConfig({ schemas: )
-**Processors:** `processArray` (Process `z), `processTuple` (Process `z), `processBoolean` (Process `z), `processMap` (Process `z), `processSet` (Process `z), `processCrossRef` (Process a cross-reference field — a schema annotated in the form registry with `refType`), `processDate` (Process `z), `processEnum` (Process `z), `processLiteral` (Process `z), `processFallback` (Fallback processor for Zod types without a dedicated handler), `processFile` (Process `z), `processNumber` (Process `z), `processObject` (Process `z), `processIntersection` (Process `z), `processRecord` (Process `z), `processString` (Process `z), `processTemplateLiteral` (Process `z), `processUnion` (Process `z), `processDiscriminatedUnion` (Process `z), `processDefault` (Process `z), `processLazy` (Process `z), `processNullable` (Process `z), `processOptional` (Process `z), `processPipe` (Process `z), `processReadonly` (Process `z)
-**Types:** `FormField` (Intermediate representation of a single form field produced by `walkSchema`), `FormFieldOption` (An individual option in a Select, RadioGroup, or similar enum-driven component), `FormFieldConstraints` (Structural constraints extracted from Zod's `_zod), `FormProcessor` (A processor function that mutates a `FormField` in-place based on the Zod schema it handles), `FormProcessorContext` (Runtime context passed to every processor during a walkSchema traversal), `FormMeta` (Per-schema annotation stored in a `z), `GhostRow` (A renderable row that lives inside an array section without participating
-in form state), `GhostRowContext` (Positional context passed to a `GhostRow`'s render function), `ProcessParams` (Optional parameters passed to each processor alongside the schema, context, and field), `NativeRules` (Native HTML and RHF validation rules extracted from Zod constraints), `ValidationStrategy` (Specifies how a field's validation is handled at submit and change time)
-**types:** `FieldExpression` (Known RHF field expression strings that can be used as values in `props`), `ZodFormRegistry` (Zod v4 registry parameterized with FormMeta)
-**config:** `ComponentOverride` (Per-component metadata override), `StripIndexSignature` (Strips index signatures from a type, keeping only explicitly declared keys), `SHADCN_OVERRIDES` (shadcn preset — Radix-based components need controlled mo...), `DEFAULT_OVERRIDES` (Default HTML preset — no controlled components by default)
-**optimizers:** `SchemaLiteInfo` (Metadata for codegen to reconstruct the lite schema in a...)
+**Key functions:** `canonicalizeConfig` (Serialize a CodegenConfig to a canonical string suitable for
+hashing into a cache key), `createOptimizers` (Create an optimizer registry by merging custom optimizers with builtins), `createSchemaLiteCollector` (Create a new SchemaLiteCollector instance), `defineConfig` (Identity helper that returns its argument typed as `ZodFormsConfig`), `validateConfig` (Validates an unknown value as a `ZodFormsConfig` at runtime), `resolveFieldConfig` (Merge global field config with per-schema field config overrides), `normalizeConfig` (Normalize a validated config by migrating deprecated top-level fields to their canonical locations), `joinPath` (Join a parent path and a child key with a dot separator), `createBaseField` (Create a base FormField with sensible defaults), `getEmptyDefault` (Returns a type-safe empty default value for a FormField based on its zodType
+and structure), `normalizeFieldKey` (Normalise a concrete field key to the bracket notation used in config), `collectFieldSections` (Collect section groupings from fields and a config override lookup), `normalizeFormValues` (Normalize raw HTML form values for Zod parsing), `getFieldRegisterHints` (Derive framework-agnostic register hints from a `FormField`), `resolveBaseProps` (Static, schema-derived base props every field's component receives, identical
+across all zodTypes), `resolveNativeAttrs` (Extract DOM-valid native attributes from a field's props), `resolveControlMode` (Derive the control mode from a field mapping's component override), `resolveOptionsProps` (Extract options props from a field for enum/union select-style components), `isZodSchema` (Structural Zod v4 check shared across loader/registration/codegen entrypoints), `walkSchema` (Walk a Zod schema and produce a FormField[] tree), `createProcessors` (Create a custom processor registry by merging with built-in processors), `registerDeep` (Register a schema and all its nested fields in a registry using a
+path-structured FieldConfig tree), `registerFlat` (Register flat dot-path field configs against a schema's registry), `processArray` (Process `z), `processTuple` (Process `z), `processBoolean` (Process `z), `processMap` (Process `z), `processSet` (Process `z), `processCrossRef` (Process a cross-reference field — a schema annotated in the form registry with `refType`), `processDate` (Process `z), `processEnum` (Process `z), `processLiteral` (Process `z), `processFallback` (Fallback processor for Zod types without a dedicated handler), `processFile` (Process `z), `processNumber` (Process `z), `processObject` (Process `z), `processIntersection` (Process `z), `processRecord` (Process `z), `processString` (Process `z), `processTemplateLiteral` (Process `z), `processUnion` (Process `z), `processDiscriminatedUnion` (Process `z), `processDefault` (Process `z), `processLazy` (Process `z), `processNullable` (Process `z), `processOptional` (Process `z), `processPipe` (Process `z), `processReadonly` (Process `z)
+
+*80 exports total — see references/ for full API.*
 
 ## References
 
 Load these on demand — do NOT read all at once:
 
-- When calling any function → read `references/functions.md` for full signatures, parameters, and return types
+- When calling any function → browse `references/functions/` for grouped indexes, full signatures, parameters, and return types
 - When defining typed variables or function parameters → read `references/types.md`
 - When using exported constants → read `references/variables.md`
 - When configuring options → read `references/config.md` for all settings and defaults

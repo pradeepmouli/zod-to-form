@@ -55,6 +55,21 @@ describe('buildConfigSource', () => {
     expect(result).toContain('Checkbox: { controlled: true }');
   });
 
+  it('serializes override props when provided', () => {
+    const result = buildConfigSource({
+      componentSource: './components',
+      overrides: {
+        Checkbox: {
+          controlled: true,
+          props: { checked: '!!field.value', onCheckedChange: 'field.onChange' }
+        }
+      }
+    });
+    expect(result).toContain(
+      "Checkbox: { controlled: true, props: { checked: '!!field.value', onCheckedChange: 'field.onChange' } }"
+    );
+  });
+
   it('renders fields block with per-field overrides', () => {
     const result = buildConfigSource({
       componentSource: './components',

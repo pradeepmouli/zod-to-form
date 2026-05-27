@@ -13,44 +13,30 @@ runtime with `validateConfig()`.
 
 #### components
 
-
-
 **Type:** `ComponentsConfig<TComponents>`
 
 **Required:** yes
 
 #### defaults
 
-
-
 **Type:** `ConfigDefaults`
 
 #### types
-
-
 
 **Type:** `string[]`
 
 #### include
 
-
-
 **Type:** `string[]`
 
 #### exclude
-
-
 
 **Type:** `string[]`
 
 #### fields
 
-
-
 **Type:** `Record<string, TypedFieldConfig<TComponents>>`
 
 #### schemas
-
-
 
 **Type:** `{ [K in keyof TSchemas & string]?: ZodTypeConfig<TSchemas[K] extends $ZodType ? SchemaFieldPath<TSchemas[K]> : string, TComponents> }`

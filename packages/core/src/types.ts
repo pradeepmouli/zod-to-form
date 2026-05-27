@@ -157,7 +157,9 @@ export type FieldExpression =
   | 'field.onChange'
   | 'field.onBlur'
   | 'field.ref'
-  | 'field.name';
+  | 'field.name'
+  /** boolean coercion: guards undefined→false for controlled checkbox/switch */
+  | '!!field.value';
 
 /**
  * Configuration for collection-style field add/remove buttons.

@@ -1,6 +1,6 @@
 ---
-name: zod-to-form-vite
 description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Use when: You want `import SignupForm from './signup.schema?z2f'` to Just Work in a...."
+name: zod-to-form-vite
 ---
 
 # @zod-to-form/vite
@@ -52,7 +52,7 @@ generated form), `CompilationEntry` (One cached compilation result), `GenerateSi
 Load these on demand — do NOT read all at once:
 
 - When calling any function → read `references/functions.md` for full signatures, parameters, and return types
-- When using a class → read `references/classes/` for properties, methods, and inheritance
+- When using a class → read `references/classes.md` for properties, methods, and inheritance
 - When defining typed variables or function parameters → read `references/types.md`
 - When configuring options → read `references/config.md` for all settings and defaults
 

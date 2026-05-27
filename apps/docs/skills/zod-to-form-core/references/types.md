@@ -133,6 +133,41 @@ Set by the L1/L2 optimizers; undefined means use the whole-schema zodResolver.
 - `'component-enforced'` — the component handles validation itself (no RHF rules emitted)
 - `rules: NativeRules` (optional) — Native RHF validation rules, populated by the L2 optimizer when `mode === 'native'`.
 
+### `FieldRegisterHints`
+Framework-agnostic descriptor of the register options a field requires.
+
+React translates this into actual RHF `register()` options (via `setValueAs`
+functions); codegen emits the equivalent static source code.  Neither the
+type nor the builder has any dependency on RHF or React.
+
+The `coerce` kind replaces the old `valueAsNumber`/`valueAsDate` flags.
+Both consumers **must** produce the canonical `setValueAs` semantics below —
+this eliminates the P1 (NaN on empty optional number) and P2 (bigint
+precision) bugs caused by `valueAsNumber: true`.
+
+Canonical `setValueAs` semantics (single source of truth):
+- **number**: `(v) => (v === '' || v == null ? undefined : Number(v))`
+- **bigint**: `(v) => { if (v === '' || v == null) return undefined; try { return BigInt(v); } catch { return v; } }`
+- **date**:   `(v) => (v === '' || v == null ? undefined : new Date(v))`
+- **file**:   `(v) => (v instanceof FileList ? (v.length > 0 ? v.item(0) : undefined) : v)`
+**Properties:**
+- `coerce: "number" | "bigint" | "date" | "file"` (optional) — Coercion kind — consumers produce a `setValueAs` function matching the
+canonical semantics documented above.  Empty strings and null/undefined
+always map to `undefined` so optional fields validate correctly.
+- `nativeRules: NativeRules` (optional) — Native HTML / RHF validation rules extracted from Zod constraints (L2).
+Keys mirror `NativeRules` exactly.
+- `validate: true` (optional) — `validate: true` — marker indicating per-field Zod schema validation (L1)
+should be wired in.  The actual validate function is constructed by the
+consumer because it closes over the live Zod schema object.
+
+### `ControlMode`
+The control strategy for a field's component:
+- `'register'` — use RHF's `register()` spread (uncontrolled by default)
+- `'controller'` — use `Controller` / `useController` (required for Radix/shadcn components)
+```ts
+"register" | "controller"
+```
+
 ## types
 
 ### `FieldExpression`
@@ -140,7 +175,7 @@ Known RHF field expression strings that can be used as values in `props`.
 When a prop value matches one of these strings, it is resolved from the
 RHF controller field at render time instead of being passed as a literal.
 ```ts
-"field.value" | "field.onChange" | "field.onBlur" | "field.ref" | "field.name"
+"field.value" | "field.onChange" | "field.onBlur" | "field.ref" | "field.name" | "!!field.value"
 ```
 
 ### `ZodFormRegistry`

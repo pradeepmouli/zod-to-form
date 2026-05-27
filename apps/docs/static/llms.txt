@@ -28,6 +28,12 @@ and structure.
 Replaces `.0.`, `.${index}.`, and any `.<digits>.` segments with `[].`.
 - `collectFieldSections`: Collect section groupings from fields and a config override lookup.
 - `normalizeFormValues`: Normalize raw HTML form values for Zod parsing.
+- `getFieldRegisterHints`: Derive framework-agnostic register hints from a `FormField`.
+- `resolveBaseProps`: Static, schema-derived base props every field's component receives, identical
+across all zodTypes.
+- `resolveNativeAttrs`: Extract DOM-valid native attributes from a field's props.
+- `resolveControlMode`: Derive the control mode from a field mapping's component override.
+- `resolveOptionsProps`: Extract options props from a field for enum/union select-style components.
 - `isZodSchema`: Structural Zod v4 check shared across loader/registration/codegen entrypoints.
 - `walkSchema`: Walk a Zod schema and produce a FormField[] tree.
 When optimization option is set, returns WalkResult with fields + schemaLite.
@@ -68,6 +74,8 @@ Template literals have a fixed structure; no constraints are extracted.
 - `builtinOptimizers`: The default optimizer registry — L1 (decompose) + L2 (native rules) chains merged per type.
 - `SHADCN_OVERRIDES`: shadcn preset — Radix-based components need controlled mode + field expression props
 - `DEFAULT_OVERRIDES`: Default HTML preset — no controlled components by default
+- `RHF_FIELD_EXPRESSIONS`: Known RHF field expression strings recognized in component props config.
+- `NATIVE_INPUT_ATTRS`: The set of DOM-valid native input attributes extracted from `field.
 - `builtinProcessors`: The default processor registry — maps every Zod v4 `def.
 
 ## Optional
@@ -97,6 +105,10 @@ in form state.
 - `WalkResult`: The result returned by `walkSchema()` when an optimization level is specified.
 - `SchemaLiteCollector`: Mutable accumulator that builds a lite Zod schema for submit-time validation.
 - `SchemaLiteInfo`: Metadata for codegen to reconstruct the lite schema in a generated file
+- `FieldRegisterHints`: Framework-agnostic descriptor of the register options a field requires.
+- `ControlMode`: The control strategy for a field's component:
+- `'register'` — use RHF's `register()` spread (uncontrolled by default)
+- `'controller'` — use `Cont...
 
 ## @zod-to-form/react
 
@@ -123,6 +135,7 @@ a React `key`.
 - `FormFieldOption`: An individual option in a Select, RadioGroup, or similar enum-driven component.
 - `FormFieldConstraints`: Structural constraints extracted from Zod's `_zod.
 - `FormMeta`: Per-schema annotation stored in a `z.
+- `ZodFormComponents`: Public component-map type for `<ZodForm components={…}>`.
 - `ZodFormSwitchProps`: Props for ZodFormSwitch.
 - `FieldTemplateProps`: Props passed to the field template component that wraps each rendered form field.
 
