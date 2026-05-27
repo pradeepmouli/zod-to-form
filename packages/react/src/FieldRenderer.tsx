@@ -694,14 +694,14 @@ function resolveProps(
   }
 
   // Remove default props whose controller property is being remapped to a different name
-  for (const [expr, defaultProp] of Object.entries(EXPRESSION_TO_FIELD_PROP)) {
+  for (const [, defaultProp] of Object.entries(EXPRESSION_TO_FIELD_PROP)) {
     if (remappedControllerProps.has(defaultProp)) {
       // Check if any expression remaps this controller prop to a DIFFERENT prop name
       const remappedToSameName = fieldExpressionEntries.some(
         ([propName, e]) =>
           (EXPRESSION_TO_FIELD_PROP[e] === defaultProp ||
             COERCED_EXPRESSIONS[e]?.controllerProp === defaultProp) &&
-          propName === expr
+          propName === defaultProp
       );
       if (!remappedToSameName) {
         delete result[defaultProp];

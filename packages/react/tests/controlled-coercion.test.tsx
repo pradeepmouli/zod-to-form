@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
+import React from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { FieldRenderer } from '../src/FieldRenderer.js';
 import type { FormField } from '@zod-to-form/core';
@@ -73,8 +74,6 @@ function renderControlledCheckbox(defaultValue: unknown) {
   }
   render(<TestHarness />);
 }
-
-import React from 'react';
 
 describe('runtime resolveProps — !!field.value coercion', () => {
   it('passes checked=false when field.value is undefined (!!undefined === false)', () => {
