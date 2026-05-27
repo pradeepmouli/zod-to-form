@@ -69,7 +69,7 @@ The `optimized` parameter controls whether the zodResolver and zod imports are i
 When optimization eliminates the need for zodResolver (all fields use native or per-field validation),
 both can be omitted to reduce bundle size. The `hasControlled` flag adds `Controller` to RHF imports.
 ```ts
-getFileHeader(schemaImportPath: string, exportName: string, hasArrays: boolean, mode: "submit" | "auto-save", componentImportLine?: string, options?: { hasControlled?: boolean; formProvider?: boolean; preset?: "shadcn" | "html" }, optimized?: { includeZodResolver: boolean; includeZod: boolean }): string
+getFileHeader(schemaImportPath: string, exportName: string, hasArrays: boolean, mode: "submit" | "auto-save", componentImportLine?: string, options?: { hasControlled?: boolean; formProvider?: boolean; preset?: "shadcn" | "html" }, optimized?: { includeZodResolver: boolean; includeZod: boolean }, typesModule?: string): string
 ```
 **Parameters:**
 - `schemaImportPath: string` — Module specifier for the schema file (e.g. `'./schema'`).
@@ -79,6 +79,7 @@ getFileHeader(schemaImportPath: string, exportName: string, hasArrays: boolean, 
 - `componentImportLine: string` (optional) — Optional custom import line for the component module.
 - `options: { hasControlled?: boolean; formProvider?: boolean; preset?: "shadcn" | "html" }` (optional) — Additional flags: `hasControlled`, `formProvider`, `preset`.
 - `optimized: { includeZodResolver: boolean; includeZod: boolean }` (optional) — Whether to conditionally include `zodResolver` and `zod` imports.
+- `typesModule: string` (optional)
 **Returns:** `string` — The complete import block as a multi-line string.
 ```ts
 const header = getFileHeader('./schema', 'UserSchema', false, 'submit', undefined, { preset: 'shadcn' });

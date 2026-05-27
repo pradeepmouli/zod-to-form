@@ -146,45 +146,31 @@ runtime with `validateConfig()`.
 
 #### components
 
-
-
 **Type:** `ComponentsConfig<TComponents>`
 
 **Required:** yes
 
 #### defaults
 
-
-
 **Type:** `ConfigDefaults`
 
 #### types
-
-
 
 **Type:** `string[]`
 
 #### include
 
-
-
 **Type:** `string[]`
 
 #### exclude
-
-
 
 **Type:** `string[]`
 
 #### fields
 
-
-
 **Type:** `Record<string, TypedFieldConfig<TComponents>>`
 
 #### schemas
-
-
 
 **Type:** `{ [K in keyof TSchemas & string]?: ZodTypeConfig<TSchemas[K] extends $ZodType ? SchemaFieldPath<TSchemas[K]> : string, TComponents> }`
 
@@ -256,8 +242,6 @@ becomes its default nested behavior everywhere it appears.
 
 #### level
 
-
-
 **Type:** `1 | 2 | 3`
 
 ## CodegenConfig
@@ -274,15 +258,11 @@ the browser playground and Vite plugin can pass it explicitly.
 
 #### exportName
 
-
-
 **Type:** `string`
 
 **Required:** yes
 
 #### componentName
-
-
 
 **Type:** `string`
 
@@ -290,29 +270,21 @@ the browser playground and Vite plugin can pass it explicitly.
 
 #### mode
 
-
-
 **Type:** `"submit" | "auto-save"`
 
 **Required:** yes
 
 #### componentConfig
 
-
-
 **Type:** `ZodFormsConfig<Record<string, unknown>>`
 
 #### ui
-
-
 
 **Type:** `"shadcn" | "html"`
 
 **Required:** yes
 
 #### serverAction
-
-
 
 **Type:** `boolean`
 
@@ -343,5 +315,14 @@ Codegen metadata for generating the .lite.ts file
 #### outputPath
 
 Output path of the form component — used to compute the .lite.ts import path
+
+**Type:** `string`
+
+#### typesModule
+
+When set, codegen emits `import type { StripIndexSignature } from '<typesModule>'`
+and omits the inline `StripIndexSignature` type block.
+When absent (default), the type is inlined for a self-contained single-file output.
+The shadcn registry sets this to `'@/components/z2f'`.
 
 **Type:** `string`

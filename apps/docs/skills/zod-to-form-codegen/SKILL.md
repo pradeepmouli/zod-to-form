@@ -1,6 +1,6 @@
 ---
-name: zod-to-form-codegen
 description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Use when: Building a custom codegen pipeline that assembles `FormField[]` and needs the...."
+name: zod-to-form-codegen
 ---
 
 # @zod-to-form/codegen

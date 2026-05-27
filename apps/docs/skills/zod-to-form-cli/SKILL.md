@@ -1,6 +1,6 @@
 ---
-name: zod-to-form-cli
 description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Use when: You need programmatic codegen from a Node.js script or build tool (not just...."
+name: zod-to-form-cli
 ---
 
 # @zod-to-form/cli

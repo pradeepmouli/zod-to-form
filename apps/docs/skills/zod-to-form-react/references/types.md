@@ -76,6 +76,19 @@ Override the default template by providing a `FieldTemplate` export in `componen
 - `disabled: boolean` (optional) — Whether the field is disabled (drives `disabled` on the wrapper).
 - `deprecated: boolean` (optional) — Whether the field is deprecated (drives strikethrough on the label).
 
+## FieldRenderer
+
+### `ZodFormComponents`
+Public component-map type for `<ZodForm components={…}>`.
+
+Preserves the per-key names from `defaultComponentMap` (consumers still get
+autocomplete on `Input`, `Checkbox`, etc.) but widens each value to
+`React.ComponentType<any>`, so plain function components, React.memo-wrapped
+components, and forwardRef components are all assignable.
+```ts
+Partial<Record<keyof ComponentMap, ComponentType<any>>>
+```
+
 ## Components
 
 ### `ZodFormSwitchProps`
@@ -89,5 +102,7 @@ warning + `null` render if no fallback is provided).
 - `fallback: ReactNode | ((source: TSource | null | undefined) => ReactNode)` (optional) — Component(s) to render when the discriminator value matches no
 schema. ReactNode for static fallback; function for dynamic.
 The function form receives the (possibly nullish) source.
-
-<!-- truncated -->
+- `components: Partial<Record<"Input" | "Textarea" | "Checkbox" | "Combobox" | "Switch" | "Select" | "DatePicker" | "FileInput" | "RadioGroup" | "Field" | "FieldLabel" | "FieldDescription" | "FieldMessage" | "ArrayAddButton" | "ArrayRemoveButton" | "ArrayReorderHandle", ComponentType<any>>>` (optional) — Forwarded to the rendered <ZodForm>.
+- `componentConfig: RuntimeComponentConfig` (optional) — Forwarded to the rendered <ZodForm>.
+- `onValueChange: (data: unknown, meta: { isValid: boolean }) => void` (optional) — Forwarded to the rendered <ZodForm>.
+- `className: string` (optional) — Forwarded to the rendered <ZodForm>.
