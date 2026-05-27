@@ -18,7 +18,9 @@ export const Select = React.forwardRef<HTMLButtonElement, Props>(
   ({ value, onChange, onBlur, name, disabled, id, placeholder, options = [] }, ref) => (
     <ShadcnSelect
       value={value == null ? undefined : String(value)}
-      onValueChange={(v) => onChange?.(v)}
+      onValueChange={(v) => {
+        if (v != null) onChange?.(v);
+      }}
       disabled={disabled}
     >
       <SelectTrigger ref={ref} id={id} name={name} onBlur={onBlur}>
