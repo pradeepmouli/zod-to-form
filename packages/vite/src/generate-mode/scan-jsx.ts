@@ -206,6 +206,7 @@ export function scanJsx(source: string): ScanResult | null {
 function offsetToLoc(source: string, offset: number): { line: number; column: number } {
   let line = 1;
   let lastNl = -1;
+  // Only \n and \r\n are handled; bare \r (legacy Mac) is vanishingly rare in modern source.
   for (let i = 0; i < offset; i++) {
     if (source[i] === '\n') {
       line++;

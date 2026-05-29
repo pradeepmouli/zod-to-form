@@ -98,7 +98,7 @@ export async function resolveSchemas(input: ResolveSchemaInput): Promise<Resolve
     for (const specifier of decl.specifiers) {
       if (specifier.type === 'ImportSpecifier') {
         const s = specifier as OxcImportSpecifier;
-        const importedName = s.imported.type === 'Identifier' ? s.imported.name : s.imported.name;
+        const importedName = s.imported.type === 'Identifier' ? s.imported.name : s.imported.value;
         bindings.set(s.local.name, {
           source: sourceLiteral,
           localName: s.local.name,
@@ -258,7 +258,7 @@ interface OxcIdentifierNode {
 
 interface OxcImportSpecifier {
   type: 'ImportSpecifier';
-  imported: OxcIdentifierNode | { type: 'StringLiteral'; name: string };
+  imported: OxcIdentifierNode | { type: 'StringLiteral'; value: string };
   local: OxcIdentifierNode;
 }
 

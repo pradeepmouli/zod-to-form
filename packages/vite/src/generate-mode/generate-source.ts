@@ -26,7 +26,7 @@ export interface GenerateSourceInput {
   /**
    * Optional diagnostic callback. Called with an error message (never
    * an Error object) when an internal invariant is violated — e.g., the
-   * insertion-point scanner's Babel re-parse fails even though scanJsx
+   * insertion-point scanner's OXC re-parse fails even though scanJsx
    * already parsed the same source successfully. Wired to the plugin's
    * logger at the call site so these land in the buildEnd summary
    * instead of being lost.
@@ -126,7 +126,7 @@ export function generateSource(input: GenerateSourceInput): GenerateSourceOutput
  * the result is byte 0 (the file starts with user code and the generated
  * imports go at the very top).
  *
- * Uses Babel's parser — the same dependency scan-jsx and resolve-schema
+ * Uses oxc-parser — the same dependency scan-jsx and resolve-schema
  * already rely on — so directive detection, multi-line imports,
  * TypeScript-specific forms (`import type`), side-effect-only imports,
  * BOM handling, and escape sequences inside string literals are all
@@ -136,8 +136,8 @@ export function generateSource(input: GenerateSourceInput): GenerateSourceOutput
  * On parse failure (e.g. the user is mid-save with broken syntax) we
  * warn via `onWarn` and return 0. This is defense-in-depth: `scanJsx`'s
  * upstream parse normally filters broken sources before this code runs,
- * but a future Babel plugin-flag drift between the two parsers could
- * make them disagree, and silent corruption is worse than a warn line.
+ * but a future OXC version drift between the two parsers could make them
+ * disagree, and silent corruption is worse than a warn line.
  *
  * `onWarn` MUST NOT throw — exceptions in the callback would kill the
  * transform and turn a recoverable warning into a hard build failure.
