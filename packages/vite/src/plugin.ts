@@ -285,7 +285,7 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
           sourcemap: false,
           ...(jsxOption !== undefined ? { jsx: jsxOption } : {})
         });
-        if (oxcResult.errors.length > 0) {
+        if (oxcResult.errors.some((e) => e.severity === 'Error')) {
           throw new Error(oxcResult.errors.map((e) => e.message).join('; '));
         }
         transformed = { code: oxcResult.code };
@@ -583,6 +583,7 @@ function buildOxcJsxOption(esbuild: EsbuildOptions | false | undefined):
       importSource?: string;
       pragma?: string;
       pragmaFrag?: string;
+      development?: boolean;
     }
   | undefined {
   if (!esbuild) return undefined;
@@ -594,10 +595,11 @@ function buildOxcJsxOption(esbuild: EsbuildOptions | false | undefined):
       pragmaFrag: esbuild.jsxFragment ?? 'React.Fragment'
     };
   }
-  // 'react-jsx', 'react-jsxdev', 'react-native', or default (undefined)
+  // 'automatic', or undefined (no jsx setting)
   return {
     runtime: 'automatic',
-    ...(esbuild.jsxImportSource ? { importSource: esbuild.jsxImportSource } : {})
+    ...(esbuild.jsxImportSource ? { importSource: esbuild.jsxImportSource } : {}),
+    ...(esbuild.jsxDev ? { development: true } : {})
   };
 }
 
