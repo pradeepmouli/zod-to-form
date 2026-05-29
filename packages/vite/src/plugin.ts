@@ -11,13 +11,8 @@
  */
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
-import {
-  createServer,
-  transformWithEsbuild,
-  type Plugin,
-  type ResolvedConfig,
-  type ViteDevServer
-} from 'vite';
+import { transformSync } from 'oxc-transform';
+import { createServer, type Plugin, type ResolvedConfig, type ViteDevServer } from 'vite';
 import { createCompilationCache } from './cache.js';
 import type { CompilationCache } from './cache.js';
 import { configHash } from './config/load.js';
@@ -272,26 +267,32 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
       });
 
       // generateFormComponent emits TSX, but the virtual module id keeps
-      // the schema's `.ts` extension — esbuild won't apply JSX parsing
-      // unless we tell it. Run the source through esbuild here so the
-      // returned `code` is valid JavaScript that the rest of Vite's
-      // pipeline can treat normally. Source maps from esbuild stack on
-      // top of the (currently null) plugin sourcemap.
+      // the schema's `.ts` extension — OXC won't apply JSX parsing
+      // unless we tell it. Run the source through oxc-transform here so
+      // the returned `code` is valid JavaScript that the rest of Vite's
+      // pipeline can treat normally. Source maps are discarded here
+      // (sourceMap: null in the cache entry) so we skip generating them.
       //
-      // Wrap the call in try/catch so an esbuild rejection (a real bug
-      // we'd want to surface) is reported as a typed CODEGEN_FAILURE
-      // with the schema file attached, rather than leaking a raw
-      // esbuild stack with no breadcrumb.
+      // Errors are returned in result.errors (not thrown). Wrap in
+      // try/catch anyway so any unexpected thrown value is reported as a
+      // typed CODEGEN_FAILURE with the schema file attached.
+      const esbuild = state.resolvedConfig?.esbuild;
+      const jsxOption = buildOxcJsxOption(esbuild);
       let transformed: { code: string };
       try {
-        transformed = await transformWithEsbuild(compiled.generatedSource, `${id}.tsx`, {
-          loader: 'tsx',
-          sourcemap: true
+        const oxcResult = transformSync(`${id}.tsx`, compiled.generatedSource, {
+          lang: 'tsx',
+          sourcemap: false,
+          ...(jsxOption !== undefined ? { jsx: jsxOption } : {})
         });
+        if (oxcResult.errors.length > 0) {
+          throw new Error(oxcResult.errors.map((e) => e.message).join('; '));
+        }
+        transformed = { code: oxcResult.code };
       } catch (err) {
         throw new Z2FViteError(
           'Z2F_VITE_CODEGEN_FAILURE',
-          `esbuild failed to transform generated TSX for '${parsed.schemaFile}': ${
+          `oxc failed to transform generated TSX for '${parsed.schemaFile}': ${
             err instanceof Error ? err.message : String(err)
           }`,
           { file: parsed.schemaFile }
@@ -564,6 +565,40 @@ function matchesAny(filePath: string, patterns: ReadonlyArray<RegExp>): boolean 
   // Normalize separators for cross-platform matching.
   const normalized = filePath.replace(/\\/g, '/');
   return patterns.some((p) => p.test(normalized));
+}
+
+type EsbuildOptions = NonNullable<ResolvedConfig['esbuild']>;
+
+/**
+ * Map Vite's resolved esbuild JSX config to the oxc-transform `jsx` option.
+ *
+ * Returns `undefined` when `esbuild` is falsy (no config) so the caller can
+ * omit the field entirely and let OXC use its own default (automatic runtime
+ * with `react` as the import source).
+ */
+function buildOxcJsxOption(esbuild: EsbuildOptions | false | undefined):
+  | 'preserve'
+  | {
+      runtime: 'classic' | 'automatic';
+      importSource?: string;
+      pragma?: string;
+      pragmaFrag?: string;
+    }
+  | undefined {
+  if (!esbuild) return undefined;
+  if (esbuild.jsx === 'preserve') return 'preserve';
+  if (esbuild.jsx === 'transform') {
+    return {
+      runtime: 'classic',
+      pragma: esbuild.jsxFactory ?? 'React.createElement',
+      pragmaFrag: esbuild.jsxFragment ?? 'React.Fragment'
+    };
+  }
+  // 'react-jsx', 'react-jsxdev', 'react-native', or default (undefined)
+  return {
+    runtime: 'automatic',
+    ...(esbuild.jsxImportSource ? { importSource: esbuild.jsxImportSource } : {})
+  };
 }
 
 function validateOptions(options: PluginOptions): void {

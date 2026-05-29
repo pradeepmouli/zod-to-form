@@ -59,6 +59,7 @@
     "@zod-to-form/codegen": "workspace:*",
     "@zod-to-form/core": "workspace:*",
     "magic-string": "^0.30.21",
+    "oxc-transform": "0.133.0",
     "pathe": "^2.0.3"
   },
   "devDependencies": {
