@@ -23,7 +23,7 @@ describe('scanJsx', () => {
     expect(result).not.toBeNull();
     expect(result?.candidates).toHaveLength(0);
     expect(result?.skipped).toHaveLength(1);
-    expect(result?.skipped[0]?.reason).toMatch(/babel parse failed/);
+    expect(result?.skipped[0]?.reason).toMatch(/oxc parse failed/);
   });
 
   it('finds a single <ZodForm> with an Identifier schema prop', () => {

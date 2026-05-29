@@ -15,9 +15,7 @@
  * pipeline twice on the same source produces byte-identical output
  * because the second pass has nothing to transform.
  */
-import type { ParseResult } from '@babel/parser';
-import { parse as parseBabel } from '@babel/parser';
-import type { ExpressionStatement, File } from '@babel/types';
+import { parseSync } from 'oxc-parser';
 import MagicString from 'magic-string';
 import type { CandidateAttribute } from './scan-jsx.js';
 import type { ResolvedSite } from './resolve-schema.js';
@@ -160,15 +158,10 @@ export function findImportInsertionPoint(
     }
   };
 
-  let ast: ParseResult<File>;
-  try {
-    ast = parseBabel(source, {
-      sourceType: 'module',
-      plugins: ['jsx', 'typescript'],
-      errorRecovery: false
-    });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+  const result = parseSync('file.tsx', source, { lang: 'tsx' });
+
+  if (result.errors.length > 0) {
+    const msg = result.errors[0]?.message ?? 'unknown error';
     safeWarn(
       `generate-mode: re-parse failed inside findImportInsertionPoint (${msg}); ` +
         'inserting at byte 0 as a safety fallback'
@@ -176,31 +169,31 @@ export function findImportInsertionPoint(
     return 0;
   }
 
+  const program = result.program;
+
   // Seed from the furthest end across every preamble-flavored node:
-  // - `program.interpreter` holds the shebang (`#!...`). Babel models it
+  // - `program.hashbang` holds the shebang (`#!...`). OXC models it
   //   outside `body`, so a shebang would otherwise slip past the walk.
-  // - `program.directives` holds every leading string-literal directive.
-  //   Babel lifts them out of `body` under `sourceType: 'module'`.
-  let lastPreambleEnd = Math.max(
-    0,
-    ast.program.interpreter?.end ?? 0,
-    ...ast.program.directives.map((d) => d.end ?? 0)
-  );
+  // - In OXC, directives live inside `program.body` as ExpressionStatement
+  //   nodes with a `directive` field (a non-empty string).
+  let lastPreambleEnd = Math.max(0, program.hashbang?.end ?? 0);
 
   // Walk top-level statements. Imports always extend the preamble. For
-  // defense-in-depth against Babel versions (< 7.21) that may leave a
-  // hashbang-following directive as a body `ExpressionStatement` instead
-  // of lifting it to `program.directives`, also treat a leading
-  // `ExpressionStatement` whose expression is a `StringLiteral` as
-  // preamble and keep walking.
-  for (const stmt of ast.program.body) {
-    if (stmt.type === 'ImportDeclaration' && stmt.end != null) {
+  // defense-in-depth, also treat a leading `ExpressionStatement` whose
+  // expression is a `Literal` (OXC's type for string literals) or that has
+  // a `directive` field (OXC's marker for string directives) as preamble.
+  for (const stmt of program.body) {
+    if (stmt.type === 'ImportDeclaration') {
       lastPreambleEnd = stmt.end;
       continue;
     }
     if (stmt.type === 'ExpressionStatement') {
-      const expr = (stmt as ExpressionStatement).expression;
-      if (expr.type === 'StringLiteral' && stmt.end != null) {
+      // OXC marks directive statements with a `directive` string field.
+      const isDirective =
+        'directive' in stmt ||
+        // Defence-in-depth: check for Literal expression (string value).
+        (stmt as { expression?: { type?: string } }).expression?.type === 'Literal';
+      if (isDirective) {
         lastPreambleEnd = Math.max(lastPreambleEnd, stmt.end);
         continue;
       }
@@ -209,7 +202,7 @@ export function findImportInsertionPoint(
     break;
   }
 
-  // Babel ranges don't include a trailing newline. Advance past any
+  // OXC ranges don't include a trailing newline. Advance past any
   // horizontal whitespace followed by a single line terminator (any of
   // `\n`, `\r\n`, or bare `\r`) so the inserted imports land on their
   // own line rather than appended to the last preamble statement.

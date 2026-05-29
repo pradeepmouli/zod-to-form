@@ -17,16 +17,7 @@
  * an absolute file path) is delegated to a `resolveImport` callback that
  * the plugin's `transform` hook supplies — it wraps Vite's `this.resolve`.
  */
-import { parse } from '@babel/parser';
-import type { NodePath } from '@babel/traverse';
-import type {
-  ImportDeclaration,
-  ImportDefaultSpecifier,
-  ImportNamespaceSpecifier,
-  ImportSpecifier,
-  Program
-} from '@babel/types';
-import { traverse } from './babel-traverse.js';
+import { parseSync } from 'oxc-parser';
 import type { CandidateSite } from './scan-jsx.js';
 
 const ZOD_FORM_PACKAGE = '@zod-to-form/react';
@@ -84,15 +75,9 @@ export async function resolveSchemas(input: ResolveSchemaInput): Promise<Resolve
   // We could pass the AST through from scanJsx, but keeping resolveSchemas
   // self-contained makes it easier to unit-test in isolation. The parse
   // cost is bounded by the file size, not by the number of candidates.
-  let ast: ReturnType<typeof parse>;
-  try {
-    ast = parse(source, {
-      sourceType: 'module',
-      plugins: ['jsx', 'typescript'],
-      errorRecovery: false
-    });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+  const result = parseSync('file.tsx', source, { lang: 'tsx' });
+  if (result.errors.length > 0) {
+    const message = result.errors[0]?.message ?? 'unknown error';
     return {
       resolved: [],
       skipped: candidates.map((c) => ({
@@ -106,42 +91,36 @@ export async function resolveSchemas(input: ResolveSchemaInput): Promise<Resolve
   // top-level import. We only care about top-level imports because
   // <ZodForm> can't validly use a function-scoped import.
   const bindings = new Map<string, ImportBinding>();
-  traverse(ast, {
-    Program(path: NodePath<Program>): void {
-      for (const node of path.node.body) {
-        if (node.type !== 'ImportDeclaration') continue;
-        const decl = node as ImportDeclaration;
-        const sourceLiteral = decl.source.value;
-        for (const specifier of decl.specifiers) {
-          if (specifier.type === 'ImportSpecifier') {
-            const s = specifier as ImportSpecifier;
-            const importedName =
-              s.imported.type === 'Identifier' ? s.imported.name : s.imported.value;
-            bindings.set(s.local.name, {
-              source: sourceLiteral,
-              localName: s.local.name,
-              importedName
-            });
-          } else if (specifier.type === 'ImportDefaultSpecifier') {
-            const s = specifier as ImportDefaultSpecifier;
-            bindings.set(s.local.name, {
-              source: sourceLiteral,
-              localName: s.local.name,
-              importedName: 'default'
-            });
-          } else if (specifier.type === 'ImportNamespaceSpecifier') {
-            const s = specifier as ImportNamespaceSpecifier;
-            bindings.set(s.local.name, {
-              source: sourceLiteral,
-              localName: s.local.name,
-              importedName: '*'
-            });
-          }
-        }
+  for (const node of result.program.body) {
+    if (node.type !== 'ImportDeclaration') continue;
+    const decl = node as OxcImportDeclaration;
+    const sourceLiteral = decl.source.value;
+    for (const specifier of decl.specifiers) {
+      if (specifier.type === 'ImportSpecifier') {
+        const s = specifier as OxcImportSpecifier;
+        const importedName = s.imported.type === 'Identifier' ? s.imported.name : s.imported.name;
+        bindings.set(s.local.name, {
+          source: sourceLiteral,
+          localName: s.local.name,
+          importedName
+        });
+      } else if (specifier.type === 'ImportDefaultSpecifier') {
+        const s = specifier as OxcImportDefaultSpecifier;
+        bindings.set(s.local.name, {
+          source: sourceLiteral,
+          localName: s.local.name,
+          importedName: 'default'
+        });
+      } else if (specifier.type === 'ImportNamespaceSpecifier') {
+        const s = specifier as OxcImportNamespaceSpecifier;
+        bindings.set(s.local.name, {
+          source: sourceLiteral,
+          localName: s.local.name,
+          importedName: '*'
+        });
       }
-      path.stop();
     }
-  });
+  }
 
   const resolved: ResolvedSite[] = [];
   const skipped: ResolveSchemaOutput['skipped'] = [];
@@ -263,4 +242,38 @@ function isTransformableSchemaPath(
     !isNodeModulesPath(sourceFile) &&
     !isNodeModulesPath(schemaPath)
   );
+}
+
+// Minimal OXC AST stubs for the import declaration shapes we access.
+
+interface OxcStringLiteral {
+  type: 'StringLiteral' | 'Literal';
+  value: string;
+}
+
+interface OxcIdentifierNode {
+  type: 'Identifier';
+  name: string;
+}
+
+interface OxcImportSpecifier {
+  type: 'ImportSpecifier';
+  imported: OxcIdentifierNode | { type: 'StringLiteral'; name: string };
+  local: OxcIdentifierNode;
+}
+
+interface OxcImportDefaultSpecifier {
+  type: 'ImportDefaultSpecifier';
+  local: OxcIdentifierNode;
+}
+
+interface OxcImportNamespaceSpecifier {
+  type: 'ImportNamespaceSpecifier';
+  local: OxcIdentifierNode;
+}
+
+interface OxcImportDeclaration {
+  type: 'ImportDeclaration';
+  source: OxcStringLiteral;
+  specifiers: Array<OxcImportSpecifier | OxcImportDefaultSpecifier | OxcImportNamespaceSpecifier>;
 }

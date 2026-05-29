@@ -7,21 +7,12 @@
  * don't contain `'ZodForm'` anywhere, so a single `indexOf` check keeps
  * generate-mode's per-file cost at zero for the common case (research R3).
  *
- * The Babel visitor only fires on `JSXElement` nodes. The traversal still
- * walks the full AST — that's how `@babel/traverse` works — but the per-
- * node cost outside the visitor is just a type check, so even a 5000-line
- * file with one `<ZodForm>` call site stays cheap to scan in practice.
+ * The oxc Visitor only fires on `JSXElement` nodes. The traversal still
+ * walks the full AST but the per-node cost outside the visitor is just a
+ * type check, so even a 5000-line file with one `<ZodForm>` call site
+ * stays cheap to scan in practice.
  */
-import { parse } from '@babel/parser';
-import type { NodePath } from '@babel/traverse';
-import type {
-  JSXAttribute,
-  JSXElement,
-  JSXExpressionContainer,
-  JSXIdentifier,
-  Node
-} from '@babel/types';
-import { traverse } from './babel-traverse.js';
+import { parseSync, Visitor } from 'oxc-parser';
 
 /**
  * One JSX attribute as it appears on a candidate `<ZodForm>` element.
@@ -89,7 +80,7 @@ export interface SkippedSite {
  * nothing") when the substring fast-path filtered the file out — the
  * caller can short-circuit before allocating anything else.
  *
- * On a Babel parse failure, returns a `ScanResult` with zero candidates
+ * On an oxc parse failure, returns a `ScanResult` with zero candidates
  * and a single skip diagnostic naming the parser error so it surfaces
  * in the buildEnd summary. We deliberately don't propagate the parse
  * error — Vite's main pipeline will report the user's syntax problem
@@ -99,31 +90,30 @@ export function scanJsx(source: string): ScanResult | null {
   // Substring fast-path. Most files won't contain ZodForm at all.
   if (source.indexOf('ZodForm') === -1) return null;
 
-  let ast: ReturnType<typeof parse>;
-  try {
-    ast = parse(source, {
-      sourceType: 'module',
-      plugins: ['jsx', 'typescript'],
-      errorRecovery: false
-    });
-  } catch (err) {
+  const result = parseSync('file.tsx', source, { lang: 'tsx' });
+
+  if (result.errors.length > 0) {
     // Surface the parse failure as a buffered skip so the user sees one
     // line in the buildEnd generate-mode summary instead of silently
     // missing the transform. The parse error itself still propagates
     // through Vite's normal pipeline and the user fixes it there.
-    const message = err instanceof Error ? err.message : String(err);
+    const message = result.errors[0]?.message ?? 'unknown error';
     return {
       candidates: [],
-      skipped: [{ loc: { line: 0, column: 0 }, reason: `babel parse failed: ${message}` }]
+      skipped: [{ loc: { line: 0, column: 0 }, reason: `oxc parse failed: ${message}` }]
     };
   }
 
   const candidates: CandidateSite[] = [];
   const skipped: SkippedSite[] = [];
 
-  traverse(ast, {
-    JSXElement(path: NodePath<JSXElement>): void {
-      const opening = path.node.openingElement;
+  new Visitor({
+    // The Visitor declares the callback as `(node: ESTree.JSXElement) => void`.
+    // We use our own narrower stubs below and cast via `unknown` so that
+    // TypeScript doesn't try to unify the two independent type hierarchies.
+    JSXElement(raw): void {
+      const node = raw as unknown as OxcJSXElement;
+      const opening = node.openingElement;
       const nameNode = opening.name;
 
       // Element name MUST be a bare `JSXIdentifier`, not `JSXMemberExpression`
@@ -134,28 +124,28 @@ export function scanJsx(source: string): ScanResult | null {
         // expression element in the file.
         if (containsZodForm(nameNode)) {
           skipped.push({
-            loc: locOf(path.node),
+            loc: offsetToLoc(source, node.start),
             reason:
               'JSX element uses member-expression name (e.g. <ns.ZodForm/>); only bare <ZodForm> is matched'
           });
         }
         return;
       }
-      if ((nameNode as JSXIdentifier).name !== 'ZodForm') return;
+      if (nameNode.name !== 'ZodForm') return;
 
-      const loc = locOf(path.node);
+      const loc = offsetToLoc(source, node.start);
 
       // Find the schema attribute and collect all the others.
       const attributes: CandidateAttribute[] = [];
-      let schemaAttr: JSXAttribute | null = null;
+      let schemaAttr: OxcJSXAttribute | null = null;
       for (const attr of opening.attributes) {
-        const range = rangeOf(attr);
+        const range = { start: attr.start, end: attr.end };
         const slice = source.slice(range.start, range.end);
         if (attr.type === 'JSXSpreadAttribute') {
           attributes.push({ kind: 'spread', range, source: slice });
           continue;
         }
-        const jsxAttr = attr as JSXAttribute;
+        const jsxAttr = attr as OxcJSXAttribute;
         const attrName = jsxAttr.name.type === 'JSXIdentifier' ? jsxAttr.name.name : null;
         if (attrName !== null) {
           attributes.push({ kind: 'named', name: attrName, range, source: slice });
@@ -177,7 +167,7 @@ export function scanJsx(source: string): ScanResult | null {
         });
         return;
       }
-      const expr = (value as JSXExpressionContainer).expression;
+      const expr = (value as OxcJSXExpressionContainer).expression;
       if (expr.type !== 'Identifier') {
         skipped.push({
           loc,
@@ -186,11 +176,11 @@ export function scanJsx(source: string): ScanResult | null {
         return;
       }
 
-      const openingRange = rangeOf(opening);
+      const openingRange = { start: opening.start, end: opening.end };
       const closingRange =
-        path.node.closingElement === null || path.node.closingElement === undefined
+        node.closingElement === null || node.closingElement === undefined
           ? null
-          : rangeOf(path.node.closingElement);
+          : { start: node.closingElement.start, end: node.closingElement.end };
       const childrenSource =
         closingRange === null ? '' : source.slice(openingRange.end, closingRange.start);
 
@@ -200,41 +190,108 @@ export function scanJsx(source: string): ScanResult | null {
         loc,
         selfClosing: opening.selfClosing,
         attributes,
-        schemaIdentifier: expr.name,
+        schemaIdentifier: (expr as OxcIdentifier).name,
         childrenSource
       });
     }
-  });
+  }).visit(result.program);
 
   return { candidates, skipped };
 }
 
-function rangeOf(node: Node): { start: number; end: number } {
-  if (
-    node.start === null ||
-    node.start === undefined ||
-    node.end === null ||
-    node.end === undefined
-  ) {
-    throw new Error('Babel AST node missing byte range — parser was misconfigured');
+/**
+ * Compute 1-indexed line and 0-indexed column from a byte offset.
+ * OXC nodes have `start`/`end` offsets directly but no `loc` field.
+ */
+function offsetToLoc(source: string, offset: number): { line: number; column: number } {
+  let line = 1;
+  let lastNl = -1;
+  for (let i = 0; i < offset; i++) {
+    if (source[i] === '\n') {
+      line++;
+      lastNl = i;
+    }
   }
-  return { start: node.start, end: node.end };
+  return { line, column: offset - lastNl - 1 };
 }
 
-function locOf(node: Node): { line: number; column: number } {
-  const loc = node.loc;
-  if (loc === null || loc === undefined) {
-    return { line: 0, column: 0 };
-  }
-  return { line: loc.start.line, column: loc.start.column };
-}
-
-function containsZodForm(node: Node): boolean {
+function containsZodForm(node: OxcJSXName): boolean {
   // Cheap check used to filter member-expression element names — we don't
   // want every `<x.foo />` in the file to log a skip.
   if (node.type === 'JSXIdentifier') return node.name === 'ZodForm';
   if (node.type === 'JSXMemberExpression') {
-    return containsZodForm(node.object) || containsZodForm(node.property);
+    return containsZodForm(node.object) || containsZodForm(node.property as OxcJSXIdentifier);
   }
   return false;
+}
+
+// Minimal OXC AST type stubs — just enough for the shapes we actually access.
+// oxc-parser ships a full .d.ts but the Visitor callback types are `unknown`
+// in the current build; we narrow them here rather than casting to `any`.
+
+interface OxcSpan {
+  start: number;
+  end: number;
+}
+
+interface OxcJSXIdentifier extends OxcSpan {
+  type: 'JSXIdentifier';
+  name: string;
+}
+
+interface OxcJSXMemberExpression extends OxcSpan {
+  type: 'JSXMemberExpression';
+  object: OxcJSXIdentifier | OxcJSXMemberExpression;
+  property: OxcJSXIdentifier;
+}
+
+// OxcJSXNamespacedName covers any other name form (e.g. <x:ZodForm>) that we
+// don't handle but must include in the union so the visitor node type is complete.
+interface OxcJSXNamespacedName extends OxcSpan {
+  type: 'JSXNamespacedName';
+}
+
+type OxcJSXName = OxcJSXIdentifier | OxcJSXMemberExpression | OxcJSXNamespacedName;
+
+interface OxcIdentifier extends OxcSpan {
+  type: 'Identifier';
+  name: string;
+}
+
+interface OxcJSXExpressionContainer extends OxcSpan {
+  type: 'JSXExpressionContainer';
+  expression: OxcSpan & { type: string } & Partial<OxcIdentifier>;
+}
+
+interface OxcJSXAttribute extends OxcSpan {
+  type: 'JSXAttribute';
+  name: OxcJSXIdentifier | OxcJSXNamespacedName;
+  value:
+    | (
+        | OxcJSXExpressionContainer
+        | (OxcSpan & { type: 'StringLiteral' | 'JSXElement' | 'JSXFragment' })
+      )
+    | null
+    | undefined;
+}
+
+interface OxcJSXSpreadAttribute extends OxcSpan {
+  type: 'JSXSpreadAttribute';
+}
+
+interface OxcJSXOpeningElement extends OxcSpan {
+  type: 'JSXOpeningElement';
+  name: OxcJSXName;
+  attributes: Array<OxcJSXAttribute | OxcJSXSpreadAttribute>;
+  selfClosing: boolean;
+}
+
+interface OxcJSXClosingElement extends OxcSpan {
+  type: 'JSXClosingElement';
+}
+
+interface OxcJSXElement extends OxcSpan {
+  type: 'JSXElement';
+  openingElement: OxcJSXOpeningElement;
+  closingElement: OxcJSXClosingElement | null;
 }
