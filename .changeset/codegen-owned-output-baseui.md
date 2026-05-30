@@ -2,6 +2,7 @@
 "@zod-to-form/core": minor
 "@zod-to-form/codegen": minor
 "@zod-to-form/react": minor
+"@zod-to-form/vite": patch
 ---
 
 Codegen output is now genuinely free of any `@zod-to-form/*` runtime dependency, and the shadcn registry targets shadcn's **Base UI** components.
@@ -10,3 +11,4 @@ Codegen output is now genuinely free of any `@zod-to-form/*` runtime dependency,
 - **codegen:** new opt-in `typesModule` config — when set, generated forms `import type { StripIndexSignature } from '<module>'` from an owned module instead of inlining it. The shadcn field-template emits the form-library-agnostic `Field*` family (`Field`/`FieldLabel`/`FieldDescription`/`FieldError`) instead of the deprecated `Form*` family.
 - **react:** `<ZodForm>`'s `components` prop type (`ZodFormComponents`) is widened to accept plain function components (e.g. shadcn/Base UI components), not only memoized ones; the runtime resolves the `!!field.value` coercion expression for controlled bindings.
 - **registry:** the starters target Base UI; controlled fields use thin owned adapter components (`Checkbox`/`Switch`/`Select`/`RadioGroup`/`DatePicker`) that map RHF's field shape to Base UI; `FormFieldOption`/`StripIndexSignature` are inlined into an owned `types.ts`; the ejected layout is reorganized (`z2f.config.ts` at the project root, `@/components/z2f/` integration layer, neutral `@/lib/example-schema.ts` + `@/components/example-form.tsx` samples).
+- **vite:** replaced `transformWithEsbuild` with `oxc-transform.transformSync` (synchronous, native Rust) and dropped all `@babel/*` dependencies in favour of `oxc-parser`; no API changes.
