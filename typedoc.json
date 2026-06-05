@@ -3,7 +3,7 @@
   "entryPoints": ["packages/*"],
   "tsconfig": "tsconfig.typedoc.json",
   "out": "docs/api",
-  "plugin": ["typedoc-plugin-markdown", "typedoc-plugin-to-skills"],
+  "plugin": ["typedoc-plugin-markdown", "typedoc-plugin-skillit"],
   "skipErrorChecking": true,
   "includeVersion": true,
   "readme": "none",

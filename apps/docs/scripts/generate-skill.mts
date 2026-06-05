@@ -3,9 +3,9 @@
  * top-level SKILL.md into the build output. Deployed alongside the static
  * site so consumers can fetch it from the Pages artifact.
  */
-import { extractDocusaurusDocs } from '@to-skills/docusaurus';
-import { renderSkill } from '@to-skills/core';
-import type { ExtractedSkill } from '@to-skills/core';
+import { extractDocusaurusDocs } from '@skillit/docusaurus';
+import { renderSkill } from '@skillit/core';
+import type { ExtractedSkill } from '@skillit/core';
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
