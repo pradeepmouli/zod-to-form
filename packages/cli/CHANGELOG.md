@@ -1,5 +1,16 @@
 # @zod-to-form/cli
 
+## 0.8.4
+
+### Patch Changes
+
+- [#145](https://github.com/pradeepmouli/zod-to-form/pull/145) [`216670a`](https://github.com/pradeepmouli/zod-to-form/commit/216670a0ae5bfc17ee34aa9e7272fbf1fba6efb6) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - chore: migrate @to-skills/_ deps to @skillit/_ scope
+  - chore: set changeset baseBranch to develop
+  - chore: allow AI tooling artifacts to be tracked on develop
+- Updated dependencies [[`216670a`](https://github.com/pradeepmouli/zod-to-form/commit/216670a0ae5bfc17ee34aa9e7272fbf1fba6efb6)]:
+  - @zod-to-form/codegen@0.10.1
+  - @zod-to-form/core@0.11.1
+
 ## 0.8.3
 
 ### Patch Changes

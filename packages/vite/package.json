@@ -1,6 +1,6 @@
 {
   "name": "@zod-to-form/vite",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "Vite plugin for zod-to-form — transforms ?z2f imports into generated form components and optionally replaces <ZodForm> JSX call sites with generated components at build time",
   "license": "MIT",
   "homepage": "https://github.com/pradeepmouli/zod-to-form#readme",
