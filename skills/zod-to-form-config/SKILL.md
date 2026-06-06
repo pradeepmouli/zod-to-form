@@ -14,13 +14,13 @@ import { defineConfig } from '@zod-to-form/core';
 export default defineConfig({
   components: {
     source: '@/components/ui',
-    preset: 'shadcn',
+    preset: 'shadcn'
   },
 
   defaults: {
     out: 'src/forms',
     mode: 'submit',
-    overwrite: true,
+    overwrite: true
   },
 
   include: ['*Schema'],
@@ -28,11 +28,11 @@ export default defineConfig({
 
   fields: {
     'address.street': {
-      helpText: 'Include apartment or suite number if applicable',
+      helpText: 'Include apartment or suite number if applicable'
     },
-    'phone': {
-      props: { type: 'tel' },
-    },
+    phone: {
+      props: { type: 'tel' }
+    }
   },
 
   schemas: {
