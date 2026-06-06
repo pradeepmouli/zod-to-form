@@ -5,36 +5,39 @@ export default defineConfig({
     source: '@/components/ui',
     preset: 'shadcn'
   },
+
   defaults: {
+    out: 'src/forms',
     mode: 'submit',
-    out: 'src/forms/generated',
-    overwrite: false,
-    formProvider: true
+    overwrite: true
   },
-  include: ['*Schema', '*Form'],
-  exclude: ['Internal*', 'Draft*'],
+
+  include: ['*Schema'],
+  exclude: ['InternalSchema'],
+
   fields: {
-    email: { component: 'Input', props: { type: 'email', autoComplete: 'email' } },
-    password: { component: 'Input', props: { type: 'password', autoComplete: 'current-password' } },
-    bio: { component: 'Textarea' }
+    'address.street': {
+      helpText: 'Include apartment or suite number if applicable'
+    },
+    phone: {
+      props: { type: 'tel' }
+    }
   },
+
   schemas: {
-    LoginSchema: {
-      name: 'LoginForm',
-      mode: 'submit',
-      out: 'src/forms/generated/login',
+    UserSchema: {
+      name: 'UserProfileForm',
+      out: 'src/forms/user',
       fields: {
-        email: { component: 'Input' },
-        password: { component: 'Input' }
+        bio: {
+          component: 'Textarea',
+          helpText: 'Tell us a little about yourself'
+        }
       }
     },
-    ProfileSchema: {
-      name: 'ProfileForm',
+    ContactSchema: {
       mode: 'auto-save',
-      fields: {
-        bio: { component: 'Textarea' },
-        website: { component: 'Input', props: { type: 'url' } }
-      }
+      serverAction: true
     }
   }
 });
