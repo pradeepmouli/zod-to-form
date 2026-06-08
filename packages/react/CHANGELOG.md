@@ -1,5 +1,11 @@
 # @zod-to-form/react
 
+## 0.10.2
+
+### Patch Changes
+
+- [#144](https://github.com/pradeepmouli/zod-to-form/pull/144) [`01a17c0`](https://github.com/pradeepmouli/zod-to-form/commit/01a17c0790ac63f16dcb325d68a70265f21ce60a) Thanks [@dependabot](https://github.com/apps/dependabot)! - Patch update for react-hook-form 7.77.0 — security hardening against prototype-path traversal, FieldArray error fix, and reset({}) consistency fix
+
 ## 0.10.1
 
 ### Patch Changes
