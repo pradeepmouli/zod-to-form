@@ -47,7 +47,7 @@
     "typedoc-plugin-markdown": "^4.11.0",
     "typedoc-plugin-skillit": "^1.4.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.7",
+    "vitest": "^4.1.8",
     "zod": "^4.4.3"
   },
   "browserslist": {
