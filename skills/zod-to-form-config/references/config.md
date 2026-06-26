@@ -130,7 +130,7 @@ Leave `types` unset when you need wildcard/glob-style filtering across many expo
 - **Global `fields` bleeds into every schema.** An entry in `fields` applies to all schemas that share the same field path. If one schema should behave differently, you must explicitly override that path in `schemas[key].fields` — there is no way to unset a global entry for a single schema.
 - **`component` must be a non-empty string.** Setting `component: ""` fails config validation with a descriptive error. Omit `component` entirely to leave the field's component unspecified.
 - **Array path forms are not equivalent.** `items.0.name` targets the element at index 0 specifically; `items[].name` is the normalized pattern form for all array items. Using one where the other is expected silently misses the target.
-- **Unknown extra keys in each entry are silently dropped.** The underlying Zod schema uses `.loose()`, so unrecognized properties are discarded during `validateConfig` without warning — typos in option names (e.g. `helptext` instead of `helpText`) are swallowed.
+- **Unknown extra keys in each entry are silently KEPT, not dropped or rejected.** The underlying Zod schema uses `.loose()` (passthrough), so unrecognized properties are *retained* on the parsed config during `validateConfig` without warning — and then ignored by codegen. A typo in an option name (e.g. `helptext` instead of `helpText`) is neither applied nor flagged: the misspelled key sits in the config doing nothing. (If you need strict key validation, inspect the returned config for unexpected fields yourself.)
 
 #### schemas
 
