@@ -1,5 +1,11 @@
 # @zod-to-form/core
 
+## 0.11.1
+
+### Patch Changes
+
+- [#147](https://github.com/pradeepmouli/zod-to-form/pull/147) [`1c2e6a4`](https://github.com/pradeepmouli/zod-to-form/commit/1c2e6a4870df555e4aa98b221d1a0c36ed47f24d) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - docs(core): add agent-routing JSDoc to `ZodFormsConfig` + a `zod-to-form-config` agent skill and a type-checked `config.example.ts`. Documentation only — no runtime change.
+
 ## 0.11.0
 
 ### Minor Changes
