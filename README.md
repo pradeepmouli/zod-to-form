@@ -300,8 +300,6 @@ pnpm run build      # Build all packages
 - [Vite Plugin](apps/docs/docs/guides/vite-plugin.md)
 - [AOT Optimization](apps/docs/docs/guides/optimization.md)
 - [Examples](apps/docs/docs/guides/examples.md)
-- [Feature Spec](specs/001-zodform/spec.md)
-- [Quickstart](specs/001-zodform/quickstart.md)
 
 ## Related Projects
 
