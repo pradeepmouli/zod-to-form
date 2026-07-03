@@ -6,12 +6,19 @@ import { FieldRenderer, safeSerializeForDedup } from '../src/FieldRenderer.js';
 import { defaultComponentMap } from '../src/components/index.js';
 import type { FormField } from '@zod-to-form/core';
 
-function renderArrayField(field: FormField, defaultValues?: Record<string, unknown>) {
+function renderArrayField(
+  field: FormField,
+  defaultValues?: Record<string, unknown>,
+  errorDisplay?: 'always' | 'afterTouched'
+) {
   function TestHarness() {
-    const form = useForm({ defaultValues: defaultValues ?? { [field.key]: [] } });
+    const form = useForm({
+      defaultValues: defaultValues ?? { [field.key]: [] },
+      mode: 'onChange'
+    });
     return (
       <FormProvider {...form}>
-        <FieldRenderer field={field} components={defaultComponentMap} />
+        <FieldRenderer field={field} components={defaultComponentMap} errorDisplay={errorDisplay} />
       </FormProvider>
     );
   }
@@ -139,6 +146,50 @@ describe('ArrayBlock', () => {
 
     // After removing, should have 1 remove button
     expect(screen.getAllByRole('button', { name: /remove/i })).toHaveLength(1);
+  });
+});
+
+describe('ArrayBlock errorDisplay: afterTouched (row-scoped touched state)', () => {
+  it("resolves touched/dirty at the ROW path — touching row 1 does not reveal row 0's error", async () => {
+    const field = makeArrayField({
+      constraints: { minLength: 2 },
+      arrayItem: {
+        key: 'items.0',
+        component: 'Input',
+        props: { type: 'text' },
+        label: 'Item',
+        required: true,
+        readOnly: false,
+        hidden: false,
+        disabled: false,
+        deprecated: false,
+        constraints: { minLength: 2 },
+        zodType: 'string',
+        validation: { mode: 'native', rules: { minLength: { value: 2, message: 'Too short' } } }
+      }
+    });
+
+    // Both rows start invalid (minLength: 2) but with distinct, non-empty
+    // values — duplicate primitive array defaults (e.g. two '' entries)
+    // hit an unrelated useFieldArray quirk where RHF fails to materialize
+    // more than one row, which would make this test a false negative.
+    renderArrayField(field, { items: ['a', 'b'] }, 'afterTouched');
+
+    const inputs = screen.getAllByLabelText('Item');
+    expect(inputs).toHaveLength(2);
+    expect(screen.queryByText('Too short')).not.toBeInTheDocument();
+
+    // Dirty ONLY row 1 — change to a different (still invalid) value.
+    fireEvent.change(inputs[1]!, { target: { value: 'c' } });
+
+    // Row 1's error should appear...
+    expect(await screen.findByText('Too short')).toBeInTheDocument();
+    // ...but there must be exactly ONE "Too short" message — row 0 (still
+    // untouched/pristine, and equally invalid) must NOT show its error just
+    // because a sibling row was touched.
+    expect(screen.getAllByText('Too short')).toHaveLength(1);
+    expect(inputs[0]).toHaveAttribute('aria-invalid', 'false');
+    expect(inputs[1]).toHaveAttribute('aria-invalid', 'true');
   });
 });
 
