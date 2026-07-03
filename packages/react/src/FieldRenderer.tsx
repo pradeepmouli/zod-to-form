@@ -891,16 +891,18 @@ export const FieldRenderer = memo(function FieldRenderer({
   // dirtyFields are keyed by the same dotted path as errors (array rows
   // included), so the same path-walk shape applies.
   //
-  // IMPORTANT: read all three formState trees unconditionally (never behind
-  // a short-circuited `||`/ternary). RHF's `formState` is a Proxy that only
-  // subscribes a component to a key once that key is READ during render —
-  // skipping the `errors` read on early renders (e.g. via `cond && x.errors`)
-  // means the component never re-renders when validation later populates it.
+  // IMPORTANT: read all three formState trees unconditionally, as separate
+  // statements — never behind a short-circuited `||`/ternary (that includes
+  // combining touched/dirty with `||` directly: `a || b` skips reading `b`
+  // once `a` is true). RHF's `formState` is a Proxy that only subscribes a
+  // component to a key once that key is READ during render — skipping any
+  // one of these reads on some render means the component never re-renders
+  // when that particular piece of formState next changes.
   const rawErrorMessage = getErrorAtPath(formState.errors, field.key);
-  const isTouchedOrDirty =
-    isTruthyAtPath(formState.touchedFields, field.key) ||
-    isTruthyAtPath(formState.dirtyFields, field.key);
-  const errorMessage = errorDisplay === 'always' || isTouchedOrDirty ? rawErrorMessage : undefined;
+  const isTouched = isTruthyAtPath(formState.touchedFields, field.key);
+  const isDirty = isTruthyAtPath(formState.dirtyFields, field.key);
+  const errorMessage =
+    errorDisplay === 'always' || isTouched || isDirty ? rawErrorMessage : undefined;
 
   // Resolve field template: componentModule['FieldTemplate'] → DefaultFieldTemplate fallback
   const customTemplate = componentConfig?.componentModule?.['FieldTemplate'];
