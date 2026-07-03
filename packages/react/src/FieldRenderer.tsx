@@ -176,6 +176,27 @@ function getErrorAtPath(errors: unknown, path: string): string | undefined {
   return undefined;
 }
 
+/**
+ * Walks a dotted field path (e.g. `"items.0.name"`) into RHF's
+ * `touchedFields` / `dirtyFields` trees, which nest by path segment exactly
+ * like `errors` but terminate in a boolean `true` rather than a
+ * `{ message }` object — array-row paths (`"items.0"`) resolve the same way
+ * `errors` does, since RHF keys all three trees identically.
+ */
+function isTruthyAtPath(tree: unknown, path: string): boolean {
+  const segments = path.split('.');
+  let current: unknown = tree;
+
+  for (const segment of segments) {
+    if (!current || typeof current !== 'object') {
+      return false;
+    }
+    current = (current as Record<string, unknown>)[segment];
+  }
+
+  return current === true;
+}
+
 function zodSchemaValidate(field: FormField): ((value: unknown) => true | string) | undefined {
   if (field.validation?.mode !== 'zodSchema' || !field.zodSchema) return undefined;
   const schema = field.zodSchema as unknown as {
@@ -320,6 +341,13 @@ type FieldRendererProps = {
   field: FormField;
   components?: ZodFormComponents;
   componentConfig?: RuntimeComponentConfig;
+  /**
+   * Controls when a field's validation error is surfaced. `'always'`
+   * (default) shows the error as soon as `formState.errors` has one.
+   * `'afterTouched'` suppresses it until the field is touched or dirtied.
+   * See `UseZodFormOptions.errorDisplay` for the full contract.
+   */
+  errorDisplay?: 'always' | 'afterTouched';
 };
 
 function buildBaseComponentProps(
@@ -337,7 +365,8 @@ function buildBaseComponentProps(
 const FieldsetBlock = memo(function FieldsetBlock({
   field,
   components,
-  componentConfig
+  componentConfig,
+  errorDisplay
 }: FieldRendererProps) {
   const componentMap = { ...defaultComponentMap, ...components };
   const FieldComponent = componentMap.Field;
@@ -356,6 +385,7 @@ const FieldsetBlock = memo(function FieldsetBlock({
                 field={child}
                 components={componentMap}
                 componentConfig={componentConfig}
+                errorDisplay={errorDisplay}
               />
             ))}
           </OverrideComponent>
@@ -382,6 +412,7 @@ const FieldsetBlock = memo(function FieldsetBlock({
             field={child}
             components={componentMap}
             componentConfig={componentConfig}
+            errorDisplay={errorDisplay}
           />
         ))}
       </fieldset>
@@ -422,7 +453,8 @@ function getDefaultAppendValue(arrayItem: FormField | undefined): unknown {
 const ArrayBlock = memo(function ArrayBlock({
   field,
   components,
-  componentConfig
+  componentConfig,
+  errorDisplay
 }: FieldRendererProps) {
   const componentMap = { ...defaultComponentMap, ...components };
   const { control } = useFormContext();
@@ -538,6 +570,7 @@ const ArrayBlock = memo(function ArrayBlock({
               field={itemField}
               components={componentMap}
               componentConfig={componentConfig}
+              errorDisplay={errorDisplay}
             />
             {isDuplicate && (
               <span style={{ color: 'var(--destructive, #ef4444)', fontSize: '0.75rem' }}>
@@ -583,7 +616,8 @@ const ArrayBlock = memo(function ArrayBlock({
 const DiscriminatedUnionBlock = memo(function DiscriminatedUnionBlock({
   field,
   components,
-  componentConfig
+  componentConfig,
+  errorDisplay
 }: FieldRendererProps) {
   const componentMap = { ...defaultComponentMap, ...components };
   const { register, watch } = useFormContext();
@@ -613,6 +647,7 @@ const DiscriminatedUnionBlock = memo(function DiscriminatedUnionBlock({
           field={child}
           components={componentMap}
           componentConfig={componentConfig}
+          errorDisplay={errorDisplay}
         />
       ))}
     </FieldComponent>
@@ -790,7 +825,8 @@ const ControlledFieldInner = memo(function ControlledFieldInner({
 export const FieldRenderer = memo(function FieldRenderer({
   field,
   components,
-  componentConfig
+  componentConfig,
+  errorDisplay = 'always'
 }: FieldRendererProps) {
   // Always call hooks first (React hooks rule — no conditional hook calls)
   const { register, formState } = useFormContext();
@@ -811,13 +847,25 @@ export const FieldRenderer = memo(function FieldRenderer({
   // T088: dispatch nested object fields to FieldsetBlock
   if (field.component === 'Fieldset') {
     return (
-      <FieldsetBlock field={field} components={componentMap} componentConfig={componentConfig} />
+      <FieldsetBlock
+        field={field}
+        components={componentMap}
+        componentConfig={componentConfig}
+        errorDisplay={errorDisplay}
+      />
     );
   }
 
   // T089: dispatch array fields to ArrayBlock
   if (field.component === 'ArrayField') {
-    return <ArrayBlock field={field} components={componentMap} componentConfig={componentConfig} />;
+    return (
+      <ArrayBlock
+        field={field}
+        components={componentMap}
+        componentConfig={componentConfig}
+        errorDisplay={errorDisplay}
+      />
+    );
   }
 
   // T090: dispatch discriminated union to DiscriminatedUnionBlock
@@ -827,6 +875,7 @@ export const FieldRenderer = memo(function FieldRenderer({
         field={field}
         components={componentMap}
         componentConfig={componentConfig}
+        errorDisplay={errorDisplay}
       />
     );
   }
@@ -835,7 +884,23 @@ export const FieldRenderer = memo(function FieldRenderer({
     componentMap[field.component as keyof ComponentMap] ??
     componentMap.Input) as ComponentType<Record<string, unknown>>;
   const FieldComponent = componentMap.Field;
-  const errorMessage = getErrorAtPath(formState.errors, field.key);
+  // Under 'afterTouched', suppress the error until the field has been
+  // touched (blurred) or dirtied (changed) — validation itself already ran
+  // (formState.errors is unconditionally populated by RHF); only whether we
+  // SHOW that error to this field's template is gated here. touchedFields/
+  // dirtyFields are keyed by the same dotted path as errors (array rows
+  // included), so the same path-walk shape applies.
+  //
+  // IMPORTANT: read all three formState trees unconditionally (never behind
+  // a short-circuited `||`/ternary). RHF's `formState` is a Proxy that only
+  // subscribes a component to a key once that key is READ during render —
+  // skipping the `errors` read on early renders (e.g. via `cond && x.errors`)
+  // means the component never re-renders when validation later populates it.
+  const rawErrorMessage = getErrorAtPath(formState.errors, field.key);
+  const isTouchedOrDirty =
+    isTruthyAtPath(formState.touchedFields, field.key) ||
+    isTruthyAtPath(formState.dirtyFields, field.key);
+  const errorMessage = errorDisplay === 'always' || isTouchedOrDirty ? rawErrorMessage : undefined;
 
   // Resolve field template: componentModule['FieldTemplate'] → DefaultFieldTemplate fallback
   const customTemplate = componentConfig?.componentModule?.['FieldTemplate'];

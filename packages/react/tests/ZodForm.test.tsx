@@ -259,6 +259,51 @@ describe('ZodForm', () => {
   });
 });
 
+// ─── errorDisplay prop forwarding ─────────────────────────────────────────
+
+describe('ZodForm — errorDisplay', () => {
+  it('defaults to "always": a submit-triggered error is shown immediately', async () => {
+    const schema = z.object({ email: z.string().email() });
+
+    render(
+      <ZodForm schema={schema} onSubmit={vi.fn()}>
+        <button type="submit">Submit</button>
+      </ZodForm>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/invalid/i)).toBeInTheDocument();
+    });
+  });
+
+  it('"afterTouched" suppresses a submit-triggered error until the field is touched, then reveals it', async () => {
+    const schema = z.object({ email: z.string().email() });
+
+    render(
+      <ZodForm schema={schema} onSubmit={vi.fn()} errorDisplay="afterTouched">
+        <button type="submit">Submit</button>
+      </ZodForm>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    // Validation ran (submit was blocked — no onSubmit assertion needed here),
+    // but the field was never touched, so no error text appears.
+    await waitFor(() => {
+      expect(screen.queryByText(/invalid/i)).not.toBeInTheDocument();
+    });
+
+    // Now dirty the field with a still-invalid value.
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'not-an-email' } });
+
+    await waitFor(() => {
+      expect(screen.getByText(/invalid/i)).toBeInTheDocument();
+    });
+  });
+});
+
 // ─── setValueAs coercion behaviour (P1 regression guard) ─────────────────────
 
 describe('ZodForm — number/date setValueAs coercion', () => {

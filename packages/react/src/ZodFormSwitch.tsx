@@ -46,6 +46,8 @@ export interface ZodFormSwitchProps<
   onValueChange?: (data: unknown, meta: { isValid: boolean }) => void;
   /** Forwarded to the rendered <ZodForm>. */
   className?: string;
+  /** Forwarded to the rendered <ZodForm>. */
+  errorDisplay?: 'always' | 'afterTouched';
 }
 
 function isFunctionFallback<TSource>(
@@ -84,7 +86,8 @@ export function ZodFormSwitch<
     components,
     componentConfig,
     onValueChange,
-    className
+    className,
+    errorDisplay
   } = props;
 
   const value = source?.[discriminator];
@@ -107,6 +110,7 @@ export function ZodFormSwitch<
             | undefined
         }
         className={className}
+        errorDisplay={errorDisplay}
       />
     );
   }

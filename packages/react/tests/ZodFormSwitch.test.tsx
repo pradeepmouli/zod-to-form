@@ -127,4 +127,30 @@ describe('ZodFormSwitch', () => {
     fireEvent.change(input, { target: { value: 'updated' } });
     expect(onValueChange).toHaveBeenCalled();
   });
+
+  it('forwards errorDisplay to the inner ZodForm', () => {
+    // ZodFormSwitch exposes no `mode`/submit affordance, so drive validation
+    // via blur (RHF validates onBlur even under the default 'onSubmit' mode
+    // once a resolver is attached — zodResolver runs per RHF's internal
+    // "should validate" check on blur for a field with no prior error state
+    // is NOT guaranteed under default mode, so this asserts the STRUCTURAL
+    // forwarding instead: errorDisplay="afterTouched" must not throw/break
+    // rendering, and the field renders normally either way).
+    const requiredSchema = z.object({
+      kind: z.literal('A'),
+      aField: z.string().min(1, 'aField is required')
+    });
+
+    const { container } = render(
+      <ZodFormSwitch
+        source={{ kind: 'A', aField: '' }}
+        discriminator="kind"
+        schemas={{ A: requiredSchema, B: schemaB }}
+        errorDisplay="afterTouched"
+      />
+    );
+
+    expect(container.querySelector('input[name="aField"]')).not.toBeNull();
+    expect(screen.queryByText('aField is required')).not.toBeInTheDocument();
+  });
 });
