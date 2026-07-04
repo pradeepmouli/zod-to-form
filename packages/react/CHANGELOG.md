@@ -1,5 +1,13 @@
 # @zod-to-form/react
 
+## 0.11.0
+
+### Minor Changes
+
+- [#161](https://github.com/pradeepmouli/zod-to-form/pull/161) [`4aa0e1d`](https://github.com/pradeepmouli/zod-to-form/commit/4aa0e1da34ec4af0e97a6e31040a41a772d206b9) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Add `errorDisplay?: 'always' | 'afterTouched'` to `UseZodFormOptions` / `ZodFormProps` / `ZodFormSwitchProps` (default `'always'`, fully backward-compatible). Under `'afterTouched'`, a field's validation error is suppressed from its field template until that field has been touched (blurred) or dirtied (changed) — validation itself is unaffected: `formState.errors`, `isValid`, and `onValueChange` metadata continue reporting the true state regardless of this option. Array-row fields resolve touched/dirty state at the row's own path, so touching one row does not reveal errors on sibling rows.
+
+  Enables consumers with live-apply forms (no submit boundary) to keep freshly created objects quiet until the user engages a field, instead of showing every validation error immediately on mount.
+
 ## 0.10.2
 
 ### Patch Changes
