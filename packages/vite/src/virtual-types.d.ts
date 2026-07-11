@@ -24,7 +24,17 @@ declare module '*?z2f' {
    * input data (matching React Hook Form's `useForm` semantics).
    */
   export interface Z2FFormProps<TData = unknown> extends FormHTMLAttributes<HTMLFormElement> {
-    onSubmit: (data: TData) => void | Promise<void>;
+    // Submit-mode forms call `onSubmit` from a real form submission and
+    // require it. Auto-save mode forms (config.mode === 'auto-save') have no
+    // submit button at all — they call `onValueChange` on every RHF
+    // `watch()` tick instead, matching the per-file interface the codegen
+    // actually emits (see packages/codegen/src/generate.ts's `propsLines`).
+    // This ambient fallback type is what TypeScript sees at the `?z2f`
+    // import site before the real transform runs, so both must be optional
+    // here — which one is actually required/called depends on the
+    // consumer's configured `mode`.
+    onSubmit?: (data: TData) => void | Promise<void>;
+    onValueChange?: (data: TData) => void;
     defaultValues?: Partial<TData>;
     values?: TData;
     fieldProps?: Record<string, Record<string, unknown>>;
@@ -49,7 +59,17 @@ declare module '*?z2f=*' {
   import type { ComponentType, FormHTMLAttributes, ReactNode } from 'react';
 
   export interface Z2FFormProps<TData = unknown> extends FormHTMLAttributes<HTMLFormElement> {
-    onSubmit: (data: TData) => void | Promise<void>;
+    // Submit-mode forms call `onSubmit` from a real form submission and
+    // require it. Auto-save mode forms (config.mode === 'auto-save') have no
+    // submit button at all — they call `onValueChange` on every RHF
+    // `watch()` tick instead, matching the per-file interface the codegen
+    // actually emits (see packages/codegen/src/generate.ts's `propsLines`).
+    // This ambient fallback type is what TypeScript sees at the `?z2f`
+    // import site before the real transform runs, so both must be optional
+    // here — which one is actually required/called depends on the
+    // consumer's configured `mode`.
+    onSubmit?: (data: TData) => void | Promise<void>;
+    onValueChange?: (data: TData) => void;
     defaultValues?: Partial<TData>;
     values?: TData;
     fieldProps?: Record<string, Record<string, unknown>>;
