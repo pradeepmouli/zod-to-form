@@ -2,8 +2,6 @@
 
 Vite plugin for [zod-to-form](https://github.com/pradeepmouli/zod-to-form). Transforms `?z2f` imports into generated form components and (opt-in) rewrites `<ZodForm>` JSX call sites into generated components at build time — all with no separate codegen CLI step.
 
-> **Status**: In active development. See [`specs/007-vite-codegen-plugin/`](../../specs/007-vite-codegen-plugin/) for the full specification, plan, and implementation tasks.
-
 ## Install
 
 The plugin emits standard React + react-hook-form code, so the consumer
@@ -19,8 +17,6 @@ pnpm add zod react react-dom react-hook-form @hookform/resolvers
 runtime peers that the generated form components import.
 
 ## Quickstart
-
-See the full walkthrough in [quickstart.md](../../specs/007-vite-codegen-plugin/quickstart.md).
 
 ```ts
 // vite.config.ts
