@@ -1,12 +1,22 @@
 # @zod-to-form/vite
 
+## 0.4.5
+
+### Patch Changes
+
+- [#163](https://github.com/pradeepmouli/zod-to-form/pull/163) [`4d8b42b`](https://github.com/pradeepmouli/zod-to-form/commit/4d8b42bb1e9831b88c1387fdfdcdadeceb306bf0) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Fix the ambient `*?z2f` module type to match auto-save mode's actual runtime contract. `Z2FFormProps` only declared a required `onSubmit`, so any consumer using `mode: 'auto-save'` (which calls `onValueChange` on every RHF `watch()` tick instead — there is no submit button in auto-save mode) had no type-safe way to pass `onValueChange` without a TypeScript error, and worse, no compile-time signal that `onSubmit` was never actually going to be called. Both `onSubmit` and `onValueChange` are now optional on `Z2FFormProps`, matching the per-file interface the codegen already emits for real generated components (`packages/codegen/src/generate.ts`).
+
 ## 0.4.4
 
 ### Patch Changes
 
-- Updated dependencies [[`1c2e6a4`](https://github.com/pradeepmouli/zod-to-form/commit/1c2e6a4870df555e4aa98b221d1a0c36ed47f24d)]:
-  - @zod-to-form/core@0.11.1
+- [#145](https://github.com/pradeepmouli/zod-to-form/pull/145) [`216670a`](https://github.com/pradeepmouli/zod-to-form/commit/216670a0ae5bfc17ee34aa9e7272fbf1fba6efb6) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - chore: migrate @to-skills/_ deps to @skillit/_ scope
+  - chore: set changeset baseBranch to develop
+  - chore: allow AI tooling artifacts to be tracked on develop
+- [#147](https://github.com/pradeepmouli/zod-to-form/pull/147) [`1c2e6a4`](https://github.com/pradeepmouli/zod-to-form/commit/1c2e6a4870df555e4aa98b221d1a0c36ed47f24d) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - docs(core): add agent-routing JSDoc to `ZodFormsConfig` + a `zod-to-form-config` agent skill and a type-checked `config.example.ts`. Documentation only — no runtime change.
+- Updated dependencies [[`216670a`](https://github.com/pradeepmouli/zod-to-form/commit/216670a0ae5bfc17ee34aa9e7272fbf1fba6efb6), [`1c2e6a4`](https://github.com/pradeepmouli/zod-to-form/commit/1c2e6a4870df555e4aa98b221d1a0c36ed47f24d)]:
   - @zod-to-form/codegen@0.10.1
+  - @zod-to-form/core@0.11.1
 
 ## 0.4.3
 

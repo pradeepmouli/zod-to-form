@@ -4,7 +4,11 @@
 
 ### Patch Changes
 
-- Updated dependencies [[`1c2e6a4`](https://github.com/pradeepmouli/zod-to-form/commit/1c2e6a4870df555e4aa98b221d1a0c36ed47f24d)]:
+- [#145](https://github.com/pradeepmouli/zod-to-form/pull/145) [`216670a`](https://github.com/pradeepmouli/zod-to-form/commit/216670a0ae5bfc17ee34aa9e7272fbf1fba6efb6) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - chore: migrate @to-skills/_ deps to @skillit/_ scope
+  - chore: set changeset baseBranch to develop
+  - chore: allow AI tooling artifacts to be tracked on develop
+- [#147](https://github.com/pradeepmouli/zod-to-form/pull/147) [`1c2e6a4`](https://github.com/pradeepmouli/zod-to-form/commit/1c2e6a4870df555e4aa98b221d1a0c36ed47f24d) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - docs(core): add agent-routing JSDoc to `ZodFormsConfig` + a `zod-to-form-config` agent skill and a type-checked `config.example.ts`. Documentation only — no runtime change.
+- Updated dependencies [[`216670a`](https://github.com/pradeepmouli/zod-to-form/commit/216670a0ae5bfc17ee34aa9e7272fbf1fba6efb6), [`1c2e6a4`](https://github.com/pradeepmouli/zod-to-form/commit/1c2e6a4870df555e4aa98b221d1a0c36ed47f24d)]:
   - @zod-to-form/core@0.11.1
 
 ## 0.10.0

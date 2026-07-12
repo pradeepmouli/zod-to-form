@@ -1,10 +1,28 @@
 # @zod-to-form/react
 
+## 0.11.0
+
+### Minor Changes
+
+- [#161](https://github.com/pradeepmouli/zod-to-form/pull/161) [`4aa0e1d`](https://github.com/pradeepmouli/zod-to-form/commit/4aa0e1da34ec4af0e97a6e31040a41a772d206b9) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Add `errorDisplay?: 'always' | 'afterTouched'` to `UseZodFormOptions` / `ZodFormProps` / `ZodFormSwitchProps` (default `'always'`, fully backward-compatible). Under `'afterTouched'`, a field's validation error is suppressed from its field template until that field has been touched (blurred) or dirtied (changed) — validation itself is unaffected: `formState.errors`, `isValid`, and `onValueChange` metadata continue reporting the true state regardless of this option. Array-row fields resolve touched/dirty state at the row's own path, so touching one row does not reveal errors on sibling rows.
+
+  Enables consumers with live-apply forms (no submit boundary) to keep freshly created objects quiet until the user engages a field, instead of showing every validation error immediately on mount.
+
+## 0.10.2
+
+### Patch Changes
+
+- [#144](https://github.com/pradeepmouli/zod-to-form/pull/144) [`01a17c0`](https://github.com/pradeepmouli/zod-to-form/commit/01a17c0790ac63f16dcb325d68a70265f21ce60a) Thanks [@dependabot](https://github.com/apps/dependabot)! - Patch update for react-hook-form 7.77.0 — security hardening against prototype-path traversal, FieldArray error fix, and reset({}) consistency fix
+
 ## 0.10.1
 
 ### Patch Changes
 
-- Updated dependencies [[`1c2e6a4`](https://github.com/pradeepmouli/zod-to-form/commit/1c2e6a4870df555e4aa98b221d1a0c36ed47f24d)]:
+- [#145](https://github.com/pradeepmouli/zod-to-form/pull/145) [`216670a`](https://github.com/pradeepmouli/zod-to-form/commit/216670a0ae5bfc17ee34aa9e7272fbf1fba6efb6) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - chore: migrate @to-skills/_ deps to @skillit/_ scope
+  - chore: set changeset baseBranch to develop
+  - chore: allow AI tooling artifacts to be tracked on develop
+- [#147](https://github.com/pradeepmouli/zod-to-form/pull/147) [`1c2e6a4`](https://github.com/pradeepmouli/zod-to-form/commit/1c2e6a4870df555e4aa98b221d1a0c36ed47f24d) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - docs(core): add agent-routing JSDoc to `ZodFormsConfig` + a `zod-to-form-config` agent skill and a type-checked `config.example.ts`. Documentation only — no runtime change.
+- Updated dependencies [[`216670a`](https://github.com/pradeepmouli/zod-to-form/commit/216670a0ae5bfc17ee34aa9e7272fbf1fba6efb6), [`1c2e6a4`](https://github.com/pradeepmouli/zod-to-form/commit/1c2e6a4870df555e4aa98b221d1a0c36ed47f24d)]:
   - @zod-to-form/core@0.11.1
 
 ## 0.10.0

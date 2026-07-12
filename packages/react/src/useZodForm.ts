@@ -19,6 +19,16 @@ type UseZodFormOptions<TSchema extends ZodObject> = {
   processors?: Record<string, FormProcessor>;
   mode?: 'onSubmit' | 'onChange' | 'onBlur';
   /**
+   * Controls when a field's validation error is surfaced to its field
+   * template. `'always'` (default) shows the error as soon as
+   * `formState.errors` has one, matching every prior release. `'afterTouched'`
+   * suppresses the error until the field has been touched (blurred) or
+   * dirtied (changed) — validation itself is unaffected: `formState.errors`,
+   * `isValid`, and `onValueChange` metadata keep reporting the true state
+   * regardless of this option, only the per-field displayed message is gated.
+   */
+  errorDisplay?: 'always' | 'afterTouched';
+  /**
    * Fires on every field mutation (and on programmatic `form.reset()`).
    *
    * The first arg is the form's current data — it's `output<TSchema>` when

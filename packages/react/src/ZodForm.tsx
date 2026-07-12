@@ -23,6 +23,8 @@ type ZodFormProps<TSchema extends ZodObject> = {
    */
   onValueChange?: (data: output<TSchema> | input<TSchema>, meta: { isValid: boolean }) => void;
   mode?: 'onSubmit' | 'onChange' | 'onBlur';
+  /** Forwarded to `useZodForm`/`FieldRenderer`. See `UseZodFormOptions.errorDisplay`. */
+  errorDisplay?: 'always' | 'afterTouched';
   defaultValues?: Partial<output<TSchema>>;
   components?: ZodFormComponents;
   componentConfig?: RuntimeComponentConfig;
@@ -91,7 +93,8 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
     formRegistry,
     processors,
     className,
-    children
+    children,
+    errorDisplay
   } = props;
   // US6: Warn if the old sectionComponents key is detected in componentConfig
   if (
@@ -117,7 +120,8 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
     fields: componentConfig?.fields,
     processors,
     mode,
-    onValueChange
+    onValueChange,
+    errorDisplay
   });
 
   const submitHandler = onSubmit ?? (() => undefined);
@@ -152,6 +156,7 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
               field={field}
               components={mergedComponents}
               componentConfig={componentConfig}
+              errorDisplay={errorDisplay}
             />
           ))}
         {sections.size > 0 && (

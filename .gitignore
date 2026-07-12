@@ -24,16 +24,3 @@ bench-results.json
 bench-browser-results.json
 packages/react/tests/performance/generated/
 
-# BEGIN ai-artifacts
-.claude/
-.codex/
-.agents/
-.specify/
-.cursor/
-.continue/
-.aider/
-.roo/
-.windsurf/
-AGENTS.md
-GEMINI.md
-# END ai-artifacts

@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { Component, type ReactNode } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
+import type { UseFormReturn } from 'react-hook-form';
 import { FieldRenderer } from '../src/FieldRenderer.js';
 import { defaultComponentMap } from '../src/components/index.js';
 import type { FormField } from '@zod-to-form/core';
@@ -273,5 +274,140 @@ describe('FieldRenderer', () => {
     render(<InvalidModuleHarness />);
 
     expect(screen.getByTestId('runtime-error')).toHaveTextContent('INVALID_RUNTIME_COMPONENT');
+  });
+});
+
+describe('errorDisplay', () => {
+  function makeRequiredField(overrides?: Partial<FormField>): FormField {
+    return {
+      key: 'name',
+      component: 'Input',
+      props: { type: 'text' },
+      label: 'Name',
+      required: true,
+      readOnly: false,
+      hidden: false,
+      disabled: false,
+      deprecated: false,
+      constraints: {},
+      zodType: 'string',
+      validation: { mode: 'native', rules: { required: 'Name is required' } },
+      ...overrides
+    };
+  }
+
+  function renderRequiredFieldWithFormRef(errorDisplay?: 'always' | 'afterTouched') {
+    // Exposes the RHF `form` instance so tests can force validation
+    // (form.trigger()) WITHOUT a user interaction — the only way to get
+    // formState.errors populated while touchedFields/dirtyFields stay empty.
+    const formRef: { current: UseFormReturn<{ name: string }> | null } = { current: null };
+    function TestHarness() {
+      const form = useForm({ defaultValues: { name: '' }, mode: 'onChange' });
+      formRef.current = form;
+      return (
+        <FormProvider {...form}>
+          <FieldRenderer
+            field={makeRequiredField()}
+            components={defaultComponentMap}
+            errorDisplay={errorDisplay}
+          />
+        </FormProvider>
+      );
+    }
+    const view = render(<TestHarness />);
+    return { view, formRef };
+  }
+
+  it('defaults to "always": shows the error as soon as validation runs, even with no touch/dirty', async () => {
+    const { formRef } = renderRequiredFieldWithFormRef();
+
+    // Programmatic validation — does NOT set touchedFields or dirtyFields.
+    await act(async () => {
+      await formRef.current!.trigger('name');
+    });
+
+    expect(await screen.findByText('Name is required')).toBeInTheDocument();
+  });
+
+  it('"afterTouched": keeps the error hidden while the field is untouched/pristine, even once formState.errors has it', async () => {
+    const { formRef } = renderRequiredFieldWithFormRef('afterTouched');
+
+    // Force validation to run and populate formState.errors WITHOUT any
+    // user interaction (no change, no blur) — trigger() alone.
+    await act(async () => {
+      await formRef.current!.trigger('name');
+    });
+
+    await waitFor(() => {
+      expect(formRef.current!.formState.errors['name']).toBeDefined();
+    });
+    expect(screen.queryByText('Name is required')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Name')).toHaveAttribute('aria-invalid', 'false');
+  });
+
+  it('"afterTouched": reveals the error once the field is dirtied', async () => {
+    // RHF's dirty check compares against defaultValues — typing then
+    // returning to the exact default ('') would report NOT dirty (correct
+    // RHF semantics), so this uses a minLength field left in an invalid-but
+    // non-default state ('a' fails min(2), and differs from the '' default).
+    const field: FormField = {
+      key: 'name',
+      component: 'Input',
+      props: { type: 'text' },
+      label: 'Name',
+      required: true,
+      readOnly: false,
+      hidden: false,
+      disabled: false,
+      deprecated: false,
+      constraints: { minLength: 2 },
+      zodType: 'string',
+      validation: { mode: 'native', rules: { minLength: { value: 2, message: 'Too short' } } }
+    };
+    function TestHarness() {
+      const form = useForm({ defaultValues: { name: '' }, mode: 'onChange' });
+      return (
+        <FormProvider {...form}>
+          <FieldRenderer
+            field={field}
+            components={defaultComponentMap}
+            errorDisplay="afterTouched"
+          />
+        </FormProvider>
+      );
+    }
+    render(<TestHarness />);
+
+    const input = screen.getByLabelText('Name');
+    expect(screen.queryByText('Too short')).not.toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: 'a' } });
+
+    expect(await screen.findByText('Too short')).toBeInTheDocument();
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('"afterTouched": reveals the error once the field is touched (blur) without being dirtied', async () => {
+    function TestHarness() {
+      const form = useForm({ defaultValues: { name: '' }, mode: 'onBlur' });
+      return (
+        <FormProvider {...form}>
+          <FieldRenderer
+            field={makeRequiredField()}
+            components={defaultComponentMap}
+            errorDisplay="afterTouched"
+          />
+        </FormProvider>
+      );
+    }
+    render(<TestHarness />);
+
+    const input = screen.getByLabelText('Name');
+    expect(screen.queryByText('Name is required')).not.toBeInTheDocument();
+
+    fireEvent.blur(input);
+
+    expect(await screen.findByText('Name is required')).toBeInTheDocument();
+    expect(input).toHaveAttribute('aria-invalid', 'true');
   });
 });

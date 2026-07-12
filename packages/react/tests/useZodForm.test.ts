@@ -30,6 +30,17 @@ describe('useZodForm', () => {
     expect(result.current.fields).toBe(firstFieldsRef);
   });
 
+  it('accepts errorDisplay option without affecting fields/schemaError/schemaLite', () => {
+    const schema = z.object({ name: z.string() });
+
+    const always = renderHook(() => useZodForm(schema, { errorDisplay: 'always' }));
+    const afterTouched = renderHook(() => useZodForm(schema, { errorDisplay: 'afterTouched' }));
+
+    expect(always.result.current.schemaError).toBeNull();
+    expect(afterTouched.result.current.schemaError).toBeNull();
+    expect(always.result.current.fields).toEqual(afterTouched.result.current.fields);
+  });
+
   it('emits onValueChange on every user edit — both invalid and valid states', async () => {
     // Previously this callback was gated on `schema.safeParse(...).success`,
     // which silently dropped every keystroke until the ENTIRE form parsed

@@ -39,3 +39,8 @@ minimumReleaseAgeExclude:
   - '@vitest/ui@4.1.7'
   - '@vitest/utils@4.1.7'
   - vitest@4.1.7
+  - '@skillit/cli@0.4.0'
+  - '@skillit/core@1.5.0'
+  - '@skillit/docusaurus@0.3.0'
+  - '@skillit/typedoc@1.1.0'
+  - typedoc-plugin-skillit@1.4.0
