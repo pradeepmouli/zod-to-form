@@ -1,5 +1,17 @@
 # @zod-to-form/cli
 
+## 0.8.5
+
+### Patch Changes
+
+- [#155](https://github.com/pradeepmouli/zod-to-form/pull/155) [`8bfefa9`](https://github.com/pradeepmouli/zod-to-form/commit/8bfefa9aac2240ad35bf9b39f5cbba219dd684af) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - docs: remove specs/ references from READMEs
+  - chore: also drop .github/agents, prompts, skills, copilot from master
+  - chore: also drop specs/, enhance planning docs from master
+  - chore: drop AI tooling files from master
+- Updated dependencies [[`8bfefa9`](https://github.com/pradeepmouli/zod-to-form/commit/8bfefa9aac2240ad35bf9b39f5cbba219dd684af)]:
+  - @zod-to-form/codegen@0.10.2
+  - @zod-to-form/core@0.11.2
+
 ## 0.8.4
 
 ### Patch Changes
