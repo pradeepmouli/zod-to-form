@@ -80,10 +80,10 @@
     "@types/react-dom": "^19.2.3",
     "@typescript/native-preview": "beta",
     "@vitejs/plugin-react": "^6.0.2",
-    "@vitest/browser": "^4.1.8",
-    "@vitest/browser-playwright": "^4.1.8",
-    "@vitest/coverage-v8": "^4.1.8",
-    "@vitest/ui": "^4.1.8",
+    "@vitest/browser": "^4.1.10",
+    "@vitest/browser-playwright": "^4.1.10",
+    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/ui": "^4.1.10",
     "lint-staged": "^17.0.5",
     "oxfmt": "^0.51.0",
     "oxlint": "^1.66.0",
@@ -96,7 +96,7 @@
     "typedoc-plugin-markdown": "^4.11.0",
     "typedoc-plugin-skillit": "^1.4.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.10"
   },
   "engines": {
     "node": ">=22.0.0",
