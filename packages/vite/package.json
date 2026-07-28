@@ -54,7 +54,7 @@
   },
   "dependencies": {
     "@babel/parser": "^7.29.3",
-    "@babel/traverse": "^7.29.0",
+    "@babel/traverse": "^8.0.4",
     "@babel/types": "^7.29.0",
     "@zod-to-form/codegen": "workspace:*",
     "@zod-to-form/core": "workspace:*",
