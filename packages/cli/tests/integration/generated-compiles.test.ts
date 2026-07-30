@@ -41,12 +41,12 @@ describe('generated component compilation', () => {
     expect(output).not.toContain(`from '@app/components'`);
   });
 
-  // 30s timeout: defensive. `tsgo --noEmit` runs in under 500ms locally
-  // and stays sub-3s on GitHub Actions, but the test used to flake at
-  // the 5s vitest default back when it was calling `tsc` (cold startup
-  // 8-12s on CI). Keeping the wider budget means a future toolchain
+  // 30s timeout: defensive. TS7's tsc (formerly tsgo) runs in under 500ms
+  // locally and stays sub-3s on GitHub Actions, but the test used to flake
+  // at the 5s vitest default back when it was calling TS6's tsc (cold
+  // startup 8-12s on CI). Keeping the wider budget means a future toolchain
   // change can't reintroduce the flake.
-  it('passes tsgo --noEmit in strict mode', async () => {
+  it('passes tsc --noEmit in strict mode', async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), 'zodform-generated-compile-'));
     const outputPath = path.join(tempDir, 'UserForm.tsx');
     const schemaPath = path.join(tempDir, 'schema.ts');
@@ -133,7 +133,7 @@ describe('generated component compilation', () => {
     );
 
     try {
-      execFileSync('pnpm', ['exec', 'tsgo', '--noEmit', '-p', tsconfigPath], {
+      execFileSync('pnpm', ['exec', 'tsc', '--noEmit', '-p', tsconfigPath], {
         cwd: workspaceRoot,
         stdio: 'pipe'
       });
