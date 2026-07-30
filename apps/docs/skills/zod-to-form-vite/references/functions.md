@@ -10,7 +10,7 @@ Registers Vite hooks for:
   evaluates the schema via `ssrLoadModule`, and returns a virtual module containing
   the generated React form component.
 - **Generate mode** (`transform`): when `options.generate` is set, scans JSX source
-  files for `<ZodForm schema={X}>` and rewrites resolvable call sites with generated
+  files for `&lt;ZodForm schema={X}&gt;` and rewrites resolvable call sites with generated
   components at build time.
 - **Resolver tree-shake** (`transform`): removes `zodResolver` calls from `useZodForm`
   at build time when `validationLevel` is set, allowing bundlers to drop the

@@ -52,7 +52,7 @@ getEmptyDefault(field: FormField): unknown
 
 ### `normalizeFieldKey`
 Normalise a concrete field key to the bracket notation used in config.
-Replaces `.0.`, `.${index}.`, and any `.<digits>.` segments with `[].`.
+Replaces `.0.`, `.${index}.`, and any `.&lt;digits&gt;.` segments with `[].`.
 ```ts
 normalizeFieldKey(key: string): string
 ```

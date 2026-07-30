@@ -1,11 +1,23 @@
 ---
-description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Use when: You need form rendering in storybook, playgrounds, or low-traffic admin UIs —...."
+description: "Runtime React renderer for Zod v4 form schemas — wraps react-hook-form with a schema walker that maps Zod types to form components.\n\nProvides the `<ZodForm>` component and `useZodForm()` hook for dynamically rendering\nforms from a `z.object()` schema at runtime — no codegen required. Use this package\nwhen you need schema-driven forms that adapt to runtime schema changes.\n\nKey exports:\n- `ZodForm` — the top-level form component; wraps RHF `FormProvider`\n- `useZodForm` — hook that calls `walkSchema` and wires up RHF for you\n- `normalizeFormValues` — call before `schema.safeParse()` to convert HTML empty strings\n- `defaultComponentMap` — the built-in HTML component set\n- `shadcnComponentMap` — the shadcn/ui component set\n- `wrapWithSchemaLite` — wrap a submit handler with the lite schema for optimized validation Use when: You need form rendering in storybook, playgrounds, or low-traffic admin UIs —...."
 name: zod-to-form-react
 ---
 
 # @zod-to-form/react
 
-Documentation site for zod-to-form (Docusaurus 3 + TypeDoc)
+Runtime React renderer for Zod v4 form schemas — wraps react-hook-form with a schema walker that maps Zod types to form components.
+
+Provides the `<ZodForm>` component and `useZodForm()` hook for dynamically rendering
+forms from a `z.object()` schema at runtime — no codegen required. Use this package
+when you need schema-driven forms that adapt to runtime schema changes.
+
+Key exports:
+- `ZodForm` — the top-level form component; wraps RHF `FormProvider`
+- `useZodForm` — hook that calls `walkSchema` and wires up RHF for you
+- `normalizeFormValues` — call before `schema.safeParse()` to convert HTML empty strings
+- `defaultComponentMap` — the built-in HTML component set
+- `shadcnComponentMap` — the shadcn/ui component set
+- `wrapWithSchemaLite` — wrap a submit handler with the lite schema for optimized validation
 
 Choose your abstraction level: `<ZodForm>` for zero-config, `useZodForm` for custom
 rendering, manual `walkSchema` for full control. Each step down trades convenience for

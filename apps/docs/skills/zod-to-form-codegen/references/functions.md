@@ -96,7 +96,7 @@ renderField(field: FormField, regExpr?: string): string
 **Parameters:**
 - `field: FormField` — The FormField to render.
 - `regExpr: string` (optional) — Optional pre-built `register(...)` expression string. If omitted, generated from `field.key`.
-**Returns:** `string` — A JSX string for the field's input element (e.g. `<input type="text" {...register('name')} />`).
+**Returns:** `string` — A JSX string for the field's input element (e.g. `&lt;input type="text" {...register('name')} /&gt;`).
 ```ts
 renderField({ component: 'Input', key: 'name', props: { type: 'text' }, ... }) → "<input ... />"
 ```
@@ -166,7 +166,7 @@ Produces a `defineConfig(...)` call with components, defaults, include/exclude,
 optional fields, and schemas blocks based on the provided options.
 
 The generated file uses TypeScript generics for full type inference:
-`defineConfig<typeof Components, typeof ZodSchemas>(...)`.
+`defineConfig&lt;typeof Components, typeof ZodSchemas&gt;(...)`.
 Preset-specific overrides (e.g. `SHADCN_OVERRIDES`) are spread into the overrides block.
 ```ts
 buildConfigSource(opts: ConfigTemplateOptions): string

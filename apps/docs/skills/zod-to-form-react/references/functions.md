@@ -14,7 +14,7 @@ ZodForm<TSchema>(props: ZodFormProps<TSchema>): ReactNode
 ```
 **Parameters:**
 - `props: ZodFormProps<TSchema>` — Schema, event handlers, and optional component/config overrides.
-**Returns:** `ReactNode` — A `<FormProvider>`-wrapped form element.
+**Returns:** `ReactNode` — A `&lt;FormProvider&gt;`-wrapped form element.
 ```tsx
 import { ZodForm } from '@zod-to-form/react';
 import { z } from 'zod';

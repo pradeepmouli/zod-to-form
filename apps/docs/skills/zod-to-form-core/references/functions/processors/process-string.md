@@ -13,7 +13,7 @@ Converts regex patterns to input masks via `regexToMask` when possible.
 Format-to-input-type mapping: `email` → `type="email"`, `url` → `type="url"`,
 `date` → `type="date"`, `time` → `type="time"`, `datetime` → `type="datetime-local"`.
 All string formats stay on `Input`; `DatePicker` is reserved for `z.date()` only.
-Pattern is extracted from `bag.patterns` (a `Set<RegExp>`); only the first pattern is used.
+Pattern is extracted from `bag.patterns` (a `Set&lt;RegExp&gt;`); only the first pattern is used.
 ```ts
 processString(schema: $ZodString, ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void
 ```
