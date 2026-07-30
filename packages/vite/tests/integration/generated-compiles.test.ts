@@ -15,7 +15,7 @@ import { compileTarget } from '../../src/query-mode/transform.js';
  * Calls `compileTarget` directly (the same pure helper the plugin's
  * `load` hook uses) to capture the raw TSX the codegen produces, writes
  * it to a temp dir alongside ambient declarations for react-hook-form
- * and friends, runs `tsgo --noEmit` against it, and asserts zero
+ * and friends, runs `tsc --noEmit` against it, and asserts zero
  * diagnostics. Mirrors `packages/cli/tests/integration/generated-compiles.test.ts`
  * to keep the CLI and plugin parity gates in lockstep.
  */
@@ -73,7 +73,7 @@ const TSCONFIG = JSON.stringify(
 );
 
 describe('plugin-generated component compilation', () => {
-  it('passes tsgo --noEmit on the source emitted for a query-mode target', async () => {
+  it('passes tsc --noEmit on the source emitted for a query-mode target', async () => {
     // Drive compileTarget directly with a synthetic Zod namespace — this is
     // exactly what the plugin's load hook does internally, minus the
     // post-codegen esbuild transform that strips JSX (we want the TSX form).
@@ -108,7 +108,7 @@ describe('plugin-generated component compilation', () => {
     await writeFile(tsconfigPath, TSCONFIG, 'utf8');
 
     try {
-      execFileSync('pnpm', ['exec', 'tsgo', '--noEmit', '-p', tsconfigPath], {
+      execFileSync('pnpm', ['exec', 'tsc', '--noEmit', '-p', tsconfigPath], {
         cwd: workspaceRoot,
         stdio: 'pipe'
       });
@@ -122,14 +122,14 @@ describe('plugin-generated component compilation', () => {
           ? String((error as { stdout?: Buffer }).stdout)
           : '';
       throw new Error(
-        `tsgo reported errors on plugin-generated source:\n${stdout}\n${stderr}\n\nSource:\n${generatedSource}`
+        `tsc reported errors on plugin-generated source:\n${stdout}\n${stderr}\n\nSource:\n${generatedSource}`
       );
     } finally {
       await fs.rm(tempDir, { recursive: true, force: true });
     }
   }, 30_000);
 
-  it('passes tsgo --noEmit when validation optimization is enabled', async () => {
+  it('passes tsc --noEmit when validation optimization is enabled', async () => {
     const namespace = {
       userSchema: z.object({
         name: z.string().min(2),
@@ -161,7 +161,7 @@ describe('plugin-generated component compilation', () => {
     await writeFile(tsconfigPath, TSCONFIG, 'utf8');
 
     try {
-      execFileSync('pnpm', ['exec', 'tsgo', '--noEmit', '-p', tsconfigPath], {
+      execFileSync('pnpm', ['exec', 'tsc', '--noEmit', '-p', tsconfigPath], {
         cwd: workspaceRoot,
         stdio: 'pipe'
       });
@@ -175,7 +175,7 @@ describe('plugin-generated component compilation', () => {
           ? String((error as { stdout?: Buffer }).stdout)
           : '';
       throw new Error(
-        `tsgo reported errors on optimized plugin-generated source:\n${stdout}\n${stderr}\n\nSource:\n${result.generatedSource}`
+        `tsc reported errors on optimized plugin-generated source:\n${stdout}\n${stderr}\n\nSource:\n${result.generatedSource}`
       );
     } finally {
       await fs.rm(tempDir, { recursive: true, force: true });
