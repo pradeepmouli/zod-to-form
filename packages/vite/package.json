@@ -1,7 +1,7 @@
 {
   "name": "@zod-to-form/vite",
   "version": "0.4.6",
-  "description": "Vite plugin for zod-to-form \u2014 transforms ?z2f imports into generated form components and optionally replaces <ZodForm> JSX call sites with generated components at build time",
+  "description": "Vite plugin for zod-to-form — transforms ?z2f imports into generated form components and optionally replaces <ZodForm> JSX call sites with generated components at build time",
   "license": "MIT",
   "homepage": "https://github.com/pradeepmouli/zod-to-form#readme",
   "repository": {
@@ -58,12 +58,12 @@
     "@babel/types": "^7.29.0",
     "@zod-to-form/codegen": "workspace:*",
     "@zod-to-form/core": "workspace:*",
-    "magic-string": "^0.30.21",
+    "magic-string": "^1.1.0",
     "pathe": "^2.0.3"
   },
   "devDependencies": {
     "@types/babel__traverse": "^7.28.0",
-    "vite": "^8.0.13",
+    "vite": "^8.1.5",
     "zod": "^4.4.3"
   },
   "publishConfig": {

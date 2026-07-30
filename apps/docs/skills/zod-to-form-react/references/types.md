@@ -54,7 +54,7 @@ and to drive the L2 native-rules optimizer output.
 - `step: number` (optional) — Step constraint for numeric inputs (1 for integer-constrained fields).
 
 ### `FormMeta`
-Per-schema annotation stored in a `z.registry<FormMeta>()`.
+Per-schema annotation stored in a `z.registry&lt;FormMeta&gt;()`.
 Extends `FieldConfig` with a runtime-only `render` function for custom field rendering.
 Used with `registerDeep()` / `registerFlat()` to attach form metadata to Zod schemas.
 ```ts
@@ -79,11 +79,11 @@ Override the default template by providing a `FieldTemplate` export in `componen
 ## FieldRenderer
 
 ### `ZodFormComponents`
-Public component-map type for `<ZodForm components={…}>`.
+Public component-map type for `&lt;ZodForm components={…}&gt;`.
 
 Preserves the per-key names from `defaultComponentMap` (consumers still get
 autocomplete on `Input`, `Checkbox`, etc.) but widens each value to
-`React.ComponentType<any>`, so plain function components, React.memo-wrapped
+`React.ComponentType&lt;any&gt;`, so plain function components, React.memo-wrapped
 components, and forwardRef components are all assignable.
 ```ts
 Partial<Record<keyof ComponentMap, ComponentType<any>>>
@@ -102,7 +102,8 @@ warning + `null` render if no fallback is provided).
 - `fallback: ReactNode | ((source: TSource | null | undefined) => ReactNode)` (optional) — Component(s) to render when the discriminator value matches no
 schema. ReactNode for static fallback; function for dynamic.
 The function form receives the (possibly nullish) source.
-- `components: Partial<Record<"Input" | "Textarea" | "Checkbox" | "Combobox" | "Switch" | "Select" | "DatePicker" | "FileInput" | "RadioGroup" | "Field" | "FieldLabel" | "FieldDescription" | "FieldMessage" | "ArrayAddButton" | "ArrayRemoveButton" | "ArrayReorderHandle", ComponentType<any>>>` (optional) — Forwarded to the rendered <ZodForm>.
-- `componentConfig: RuntimeComponentConfig` (optional) — Forwarded to the rendered <ZodForm>.
-- `onValueChange: (data: unknown, meta: { isValid: boolean }) => void` (optional) — Forwarded to the rendered <ZodForm>.
-- `className: string` (optional) — Forwarded to the rendered <ZodForm>.
+- `components: Partial<Record<"Input" | "Textarea" | "Checkbox" | "Combobox" | "Switch" | "Select" | "DatePicker" | "FileInput" | "RadioGroup" | "Field" | "FieldLabel" | "FieldDescription" | "FieldMessage" | "ArrayAddButton" | "ArrayRemoveButton" | "ArrayReorderHandle", ComponentType<any>>>` (optional) — Forwarded to the rendered &lt;ZodForm&gt;.
+- `componentConfig: RuntimeComponentConfig` (optional) — Forwarded to the rendered &lt;ZodForm&gt;.
+- `onValueChange: (data: unknown, meta: { isValid: boolean }) => void` (optional) — Forwarded to the rendered &lt;ZodForm&gt;.
+- `className: string` (optional) — Forwarded to the rendered &lt;ZodForm&gt;.
+- `errorDisplay: "always" | "afterTouched"` (optional) — Forwarded to the rendered &lt;ZodForm&gt;.

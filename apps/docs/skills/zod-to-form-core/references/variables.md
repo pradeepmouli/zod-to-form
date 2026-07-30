@@ -49,7 +49,7 @@ const NATIVE_INPUT_ATTRS: readonly ["type", "minLength", "maxLength", "pattern",
 ### `builtinProcessors`
 The default processor registry — maps every Zod v4 `def.type` string to its processor.
 The typed `typedProcessors` constant provides compile-time safety; this export widens
-to `Record<string, FormProcessor>` for runtime dispatch.
+to `Record&lt;string, FormProcessor&gt;` for runtime dispatch.
 ```ts
 const builtinProcessors: Record<string, FormProcessor>
 ```

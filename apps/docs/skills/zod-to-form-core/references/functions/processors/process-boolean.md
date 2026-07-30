@@ -6,7 +6,7 @@
 Process `z.boolean()` — renders as a `Checkbox` component (or a component override from the registry).
 Marks the field as required since boolean fields always have a value (true/false).
 
-Component can be overridden via `z.registry<FormMeta>()` with `{ component: 'Switch' }`.
+Component can be overridden via `z.registry&lt;FormMeta&gt;()` with `{ component: 'Switch' }`.
 The `required: true` default reflects that a boolean always resolves to true or false — never undefined.
 ```ts
 processBoolean(schema: $ZodBoolean, ctx: FormProcessorContext, field: FormField, _params: ProcessParams): void

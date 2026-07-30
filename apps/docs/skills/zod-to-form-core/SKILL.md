@@ -1,11 +1,19 @@
 ---
-description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Use when: You want per-field validation instead of whole-form validation."
+description: "Schema-driven form generation for Zod v4.\n\nTwo paths to forms:\n- **CLI codegen** (recommended): Write a `z2f.config.ts`, run `npx zod-to-form generate`,\n  get static `.tsx` components. Zero runtime overhead, hand-readable output.\n- **Runtime**: Import `walkSchema()` and render dynamically with `useZodForm()` in React.\n\nBoth paths share the same core: a recursive schema walker that produces `FormField[]`\nfrom Zod v4's native introspection API. Use when: You want per-field validation instead of whole-form validation."
 name: zod-to-form-core
 ---
 
 # @zod-to-form/core
 
-Documentation site for zod-to-form (Docusaurus 3 + TypeDoc)
+Schema-driven form generation for Zod v4.
+
+Two paths to forms:
+- **CLI codegen** (recommended): Write a `z2f.config.ts`, run `npx zod-to-form generate`,
+  get static `.tsx` components. Zero runtime overhead, hand-readable output.
+- **Runtime**: Import `walkSchema()` and render dynamically with `useZodForm()` in React.
+
+Both paths share the same core: a recursive schema walker that produces `FormField[]`
+from Zod v4's native introspection API.
 
 Requires Zod v4 — uses `_zod.def`, `_zod.bag`, and `z.registry()` APIs.
 Does NOT work with Zod v3 (which uses `_def` internals).
@@ -50,7 +58,7 @@ API surface: 50 functions, 24 types, 6 constants
 - NEVER assume custom optimizers append — they REPLACE the entire chain for that type
 - NEVER assume preset props merge with your props — the entire props dict is replaced. If you set component props, you must include ALL props including the ones from the preset
 - NEVER use as a type guard — it throws on invalid input, doesn't narrow; FIX: wrap in try/catch and branch on success, or check keys manually before calling
-- NEVER assume extra keys cause failures — the schema uses z.object().loose(), so unrecognized keys are silently dropped not rejected; FIX: if you need strict key validation, inspect the returned config for unexpected fields manually
+- NEVER assume extra keys cause failures — the schema uses z.object().loose() (passthrough), so unrecognized keys are silently KEPT (retained but ignored), not dropped and not rejected; FIX: if you need strict key validation, inspect the returned config for unexpected fields manually
 - NEVER rely on this for custom types (Date, File subclasses, etc.) — it only handles empty strings and FileList; FIX: normalize custom types before calling this function or in a custom resolver wrapper
 - NEVER pass a non-object schema at the root — throws immediately
 - NEVER bypass the processor registry for custom types — extend via options.processors

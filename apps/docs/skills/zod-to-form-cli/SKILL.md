@@ -1,11 +1,16 @@
 ---
-description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Use when: You need programmatic codegen from a Node.js script or build tool (not just...."
+description: "@zod-to-form/cli — Build-time CLI for generating React form components from Zod v4 schemas.\n\nDrives the full code generation pipeline: loads a schema file, walks the Zod internal\ntype tree via `@zod-to-form/core`, applies per-field overrides from `z2f.config.ts`,\nand emits static `.tsx` form components — optionally alongside a Next.js server action\nand a schema-lite file for optimized client-side validation. Use when: You need programmatic codegen from a Node.js script or build tool (not just...."
 name: zod-to-form-cli
 ---
 
 # @zod-to-form/cli
 
-Documentation site for zod-to-form (Docusaurus 3 + TypeDoc)
+@zod-to-form/cli — Build-time CLI for generating React form components from Zod v4 schemas.
+
+Drives the full code generation pipeline: loads a schema file, walks the Zod internal
+type tree via `@zod-to-form/core`, applies per-field overrides from `z2f.config.ts`,
+and emits static `.tsx` form components — optionally alongside a Next.js server action
+and a schema-lite file for optimized client-side validation.
 
 Before using the CLI, decide: are you scripting (use `runGenerate`) or interacting
 (use `npx zod-to-form`)? For config authoring, always use `defineConfig` for type inference.
@@ -38,7 +43,7 @@ API surface: 4 functions, 1 types
 - NEVER call `program.parse()` (synchronous) in ESM environments — Commander's synchronous parse returns before async action handlers complete in ESM because it cannot await top-level async actions; FIX: always use `.parseAsync(process.argv)`
 - NEVER assume preset props merge with your props — the entire props dict is replaced. If you set component props, you must include ALL props including the ones from the preset
 - NEVER use as a type guard — it throws on invalid input, doesn't narrow; FIX: wrap in try/catch and branch on success, or check keys manually before calling
-- NEVER assume extra keys cause failures — the schema uses z.object().loose(), so unrecognized keys are silently dropped not rejected; FIX: if you need strict key validation, inspect the returned config for unexpected fields manually
+- NEVER assume extra keys cause failures — the schema uses z.object().loose() (passthrough), so unrecognized keys are silently KEPT (retained but ignored), not dropped and not rejected; FIX: if you need strict key validation, inspect the returned config for unexpected fields manually
 
 ## Configuration
 

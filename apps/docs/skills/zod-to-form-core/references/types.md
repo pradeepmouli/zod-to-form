@@ -77,7 +77,7 @@ Provided by the walker for use in nesting processors (object, array, union).
 Undefined only in unit-test contexts where nesting is not being tested.
 
 ### `FormMeta`
-Per-schema annotation stored in a `z.registry<FormMeta>()`.
+Per-schema annotation stored in a `z.registry&lt;FormMeta&gt;()`.
 Extends `FieldConfig` with a runtime-only `render` function for custom field rendering.
 Used with `registerDeep()` / `registerFlat()` to attach form metadata to Zod schemas.
 ```ts
@@ -146,10 +146,10 @@ this eliminates the P1 (NaN on empty optional number) and P2 (bigint
 precision) bugs caused by `valueAsNumber: true`.
 
 Canonical `setValueAs` semantics (single source of truth):
-- **number**: `(v) => (v === '' || v == null ? undefined : Number(v))`
-- **bigint**: `(v) => { if (v === '' || v == null) return undefined; try { return BigInt(v); } catch { return v; } }`
-- **date**:   `(v) => (v === '' || v == null ? undefined : new Date(v))`
-- **file**:   `(v) => (v instanceof FileList ? (v.length > 0 ? v.item(0) : undefined) : v)`
+- **number**: `(v) =&gt; (v === '' || v == null ? undefined : Number(v))`
+- **bigint**: `(v) =&gt; { if (v === '' || v == null) return undefined; try { return BigInt(v); } catch { return v; } }`
+- **date**:   `(v) =&gt; (v === '' || v == null ? undefined : new Date(v))`
+- **file**:   `(v) =&gt; (v instanceof FileList ? (v.length &gt; 0 ? v.item(0) : undefined) : v)`
 **Properties:**
 - `coerce: "number" | "bigint" | "date" | "file"` (optional) — Coercion kind — consumers produce a `setValueAs` function matching the
 canonical semantics documented above.  Empty strings and null/undefined
@@ -179,7 +179,7 @@ RHF controller field at render time instead of being passed as a literal.
 ```
 
 ### `ZodFormRegistry`
-Zod v4 registry parameterized with FormMeta. Create via `z.registry<FormMeta>()`.
+Zod v4 registry parameterized with FormMeta. Create via `z.registry&lt;FormMeta&gt;()`.
 ```ts
 $ZodRegistry<FormMeta>
 ```
@@ -191,7 +191,7 @@ Per-component metadata override. Only components that differ from defaults need 
 
 ### `StripIndexSignature`
 Strips index signatures from a type, keeping only explicitly declared keys.
-Useful for Zod's `z.output<>` which adds `[x: string]: unknown` index signatures.
+Useful for Zod's `z.output&lt;&gt;` which adds `[x: string]: unknown` index signatures.
 ```ts
 T extends readonly (infer U)[] ? StripIndexSignature<U>[] : T extends object ? { [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: StripIndexSignature<T[K]> } : T
 ```

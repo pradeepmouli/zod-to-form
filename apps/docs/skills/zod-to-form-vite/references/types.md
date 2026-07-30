@@ -8,7 +8,7 @@ generated form. The cache key space.
 
 Discriminated on `sourceKind`: query-mode targets carry a user-named
 variant (or empty string for the default), while generate-mode targets
-use the reserved `__generate_<n>` prefix. Encoding the prefix in the
+use the reserved `__generate_&lt;n&gt;` prefix. Encoding the prefix in the
 type system prevents accidentally crossing the streams.
 ```ts
 GenerationTargetBase & { sourceKind: "query"; variant: string } | GenerationTargetBase & { sourceKind: "generate"; variant: `__generate_${string}` }
@@ -26,17 +26,17 @@ or `null` if the walk produced no top-level effects.
 - `emittedAt: number` — `Date.now()` at compile time. Used for debug logging and HMR ordering.
 
 ### `GenerateSite`
-A single `<ZodForm>` JSX element matched by generate mode.
+A single `&lt;ZodForm&gt;` JSX element matched by generate mode.
 Lives only during a single `transform` call — not persisted.
 **Properties:**
-- `sourceFile: string` — Absolute path to the source file containing the matched `<ZodForm>` site.
-- `range: { start: number; end: number }` — Byte range of the original `<ZodForm>` element in the source file.
+- `sourceFile: string` — Absolute path to the source file containing the matched `&lt;ZodForm&gt;` site.
+- `range: { start: number; end: number }` — Byte range of the original `&lt;ZodForm&gt;` element in the source file.
 - `schemaFile: string` — Absolute path to the schema file the `schema={X}` identifier resolves to.
 - `exportName: string` — Export name of the identifier in the schema module.
 - `generatedIdentifier: string` — Local identifier that replaces `ZodForm` at this call site.
 Unique within the source file.
-- `variant: string` — Synthesized variant name for cache keying. Always `__generate_<n>` where
-`<n>` is a per-source-file counter.
+- `variant: string` — Synthesized variant name for cache keying. Always `__generate_&lt;n&gt;` where
+`&lt;n&gt;` is a per-source-file counter.
 
 ### `HMRInvalidationMap`
 The graph edges that `handleHotUpdate` walks when a watched file changes.

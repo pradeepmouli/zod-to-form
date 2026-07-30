@@ -1,11 +1,24 @@
 ---
-description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Use when: You want `import SignupForm from './signup.schema?z2f'` to Just Work in a...."
+description: "Vite plugin for zod-to-form — transforms `?z2f` imports into generated form components and replaces `<ZodForm>` JSX call sites with static output at build time.\n\nTwo modes:\n- **Query mode** (`?z2f` imports): import a schema file with a `?z2f` query\n  parameter to receive a fully-generated React form component as a virtual\n  module. Zero build step — the plugin compiles on demand.\n- **Generate mode** (`options.generate`): scan JSX source files for\n  `<ZodForm>` call sites and replace statically-resolvable ones with\n  generated form components at build time. Opt-in via `generate: {}`.\n\nConfig resolution order:\n  1. `options.configPath` if explicitly provided\n  2. Auto-discovery of `z2f.config.{ts,mts,js,mjs}` in the Vite root\n  3. `DEFAULT_CONFIG` merged with `options.configOverride` Use when: You want `import SignupForm from './signup.schema?z2f'` to Just Work in a...."
 name: zod-to-form-vite
 ---
 
 # @zod-to-form/vite
 
-Documentation site for zod-to-form (Docusaurus 3 + TypeDoc)
+Vite plugin for zod-to-form — transforms `?z2f` imports into generated form components and replaces `<ZodForm>` JSX call sites with static output at build time.
+
+Two modes:
+- **Query mode** (`?z2f` imports): import a schema file with a `?z2f` query
+  parameter to receive a fully-generated React form component as a virtual
+  module. Zero build step — the plugin compiles on demand.
+- **Generate mode** (`options.generate`): scan JSX source files for
+  `<ZodForm>` call sites and replace statically-resolvable ones with
+  generated form components at build time. Opt-in via `generate: {}`.
+
+Config resolution order:
+  1. `options.configPath` if explicitly provided
+  2. Auto-discovery of `z2f.config.{ts,mts,js,mjs}` in the Vite root
+  3. `DEFAULT_CONFIG` merged with `options.configOverride`
 
 Two modes: `?z2f` query imports (transform per-import, HMR works) vs `generate` mode
 (static JSX rewriting, no HMR integration). Use `?z2f` for new forms, `generate` for

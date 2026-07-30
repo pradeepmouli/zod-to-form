@@ -1,11 +1,23 @@
 ---
-description: "Documentation site for zod-to-form (Docusaurus 3 + TypeDoc) Use when: Building a custom codegen pipeline that assembles `FormField[]` and needs the...."
+description: "Browser-safe code generation utilities for Zod v4 form components.\n\nProvides the building blocks for generating React form TSX files from a\n`FormField[]` tree and a `ZodFormsConfig`. No Node.js dependencies — safe\nto import in browser and server environments alike.\n\nKey exports:\n- `generateFormComponent` — produce a complete TSX form component string\n- `getFileHeader` — emit import declarations for generated files\n- `renderField` — render a single field to its JSX string\n- `buildConfigSource` — generate a `z2f.config.ts` starter file\n- `getFieldTemplateSource` — emit the preset FieldTemplate component source\n- `generateSchemaLiteFile` — emit the lite schema file for optimized validation Use when: Building a custom codegen pipeline that assembles `FormField[]` and needs the...."
 name: zod-to-form-codegen
 ---
 
 # @zod-to-form/codegen
 
-Documentation site for zod-to-form (Docusaurus 3 + TypeDoc)
+Browser-safe code generation utilities for Zod v4 form components.
+
+Provides the building blocks for generating React form TSX files from a
+`FormField[]` tree and a `ZodFormsConfig`. No Node.js dependencies — safe
+to import in browser and server environments alike.
+
+Key exports:
+- `generateFormComponent` — produce a complete TSX form component string
+- `getFileHeader` — emit import declarations for generated files
+- `renderField` — render a single field to its JSX string
+- `buildConfigSource` — generate a `z2f.config.ts` starter file
+- `getFieldTemplateSource` — emit the preset FieldTemplate component source
+- `generateSchemaLiteFile` — emit the lite schema file for optimized validation
 
 ## When to Use
 
