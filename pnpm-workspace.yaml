@@ -26,21 +26,11 @@ overrides:
   uuid: '>=11.1.1'
 
 minimumReleaseAgeExclude:
-  - '@cloudflare/workers-types@4.20260520.1'
-  - '@vitest/browser-playwright@4.1.7'
-  - '@vitest/browser@4.1.7'
-  - '@vitest/coverage-v8@4.1.7'
-  - '@vitest/expect@4.1.7'
-  - '@vitest/mocker@4.1.7'
-  - '@vitest/pretty-format@4.1.7'
-  - '@vitest/runner@4.1.7'
-  - '@vitest/snapshot@4.1.7'
-  - '@vitest/spy@4.1.7'
-  - '@vitest/ui@4.1.7'
-  - '@vitest/utils@4.1.7'
-  - vitest@4.1.7
-  - '@skillit/cli@0.4.0'
-  - '@skillit/core@1.5.0'
-  - '@skillit/docusaurus@0.3.0'
-  - '@skillit/typedoc@1.1.0'
-  - typedoc-plugin-skillit@1.4.0
+  - '@cloudflare/workers-types@5.20260730.1'
+  - '@napi-rs/wasm-runtime@1.2.1'
+  - '@skillit/cli@1.1.2'
+  - '@skillit/core@4.0.2'
+  - '@skillit/docusaurus@1.0.3'
+  - '@skillit/typedoc@2.0.3'
+  - jose@6.2.5
+  - typedoc-plugin-skillit@2.0.3
