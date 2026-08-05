@@ -35,7 +35,7 @@
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
-    "@vitejs/plugin-react": "^6.0.4",
+    "@vitejs/plugin-react": "^6.0.5",
     "@zod-to-form/codegen": "workspace:*",
     "@zod-to-form/core": "workspace:*",
     "ajv": "^8.20.0",
