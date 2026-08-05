@@ -1,5 +1,15 @@
 # @zod-to-form/vite
 
+## 0.4.7
+
+### Patch Changes
+
+- [#176](https://github.com/pradeepmouli/zod-to-form/pull/176) [`1609237`](https://github.com/pradeepmouli/zod-to-form/commit/160923731de809bdf46014c79fb5432ab9d8d470) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - chore: upgrade to TypeScript 7, pin docs app to TS6 for typedoc compat
+  - chore: pnpm update --latest across the workspace
+- Updated dependencies [[`1609237`](https://github.com/pradeepmouli/zod-to-form/commit/160923731de809bdf46014c79fb5432ab9d8d470)]:
+  - @zod-to-form/codegen@0.10.3
+  - @zod-to-form/core@0.11.3
+
 ## 0.4.6
 
 ### Patch Changes
