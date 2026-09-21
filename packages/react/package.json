@@ -54,15 +54,15 @@
   },
   "devDependencies": {
     "@hookform/resolvers": "^5.5.7",
-    "@testing-library/jest-dom": "^7.0.0",
-    "@testing-library/react": "^16.3.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@zod-to-form/codegen": "workspace:*",
     "jsdom": "^30.0.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-hook-form": "^7.83.0",
+    "react-hook-form": "^7.88.0",
     "zod": "^4.4.3"
   },
   "dependencies": {
