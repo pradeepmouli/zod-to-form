@@ -62,7 +62,7 @@
     "jsdom": "^30.0.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-hook-form": "^7.83.0",
+    "react-hook-form": "^7.88.0",
     "zod": "^4.4.3"
   },
   "dependencies": {
