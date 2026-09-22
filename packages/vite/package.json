@@ -53,16 +53,15 @@
     "zod": "^4.0.0"
   },
   "dependencies": {
-    "@babel/parser": "^7.29.3",
-    "@babel/traverse": "^7.29.0",
-    "@babel/types": "^7.29.0",
+    "@babel/parser": "^8.0.6",
+    "@babel/traverse": "^8.0.6",
+    "@babel/types": "^8.0.6",
     "@zod-to-form/codegen": "workspace:*",
     "@zod-to-form/core": "workspace:*",
     "magic-string": "^1.1.0",
     "pathe": "^2.0.3"
   },
   "devDependencies": {
-    "@types/babel__traverse": "^7.28.0",
     "vite": "^8.3.0",
     "zod": "^4.4.3"
   },
