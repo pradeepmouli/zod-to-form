@@ -1,4 +1,4 @@
-import { bench, describe } from 'vitest';
+import { Bench } from 'tinybench';
 import { walkSchema } from '../../src/walker.js';
 import { smallSchema, mediumSchema, largeSchema } from './schemas.js';
 
@@ -8,20 +8,24 @@ const schemas = [
   { name: 'large (50 fields)', schema: largeSchema }
 ] as const;
 
-describe('walkSchema', () => {
+async function main() {
   for (const { name, schema } of schemas) {
-    describe(name, () => {
-      bench('no optimization', () => {
+    const bench = new Bench({ name });
+    bench
+      .add('no optimization', () => {
         walkSchema(schema as never);
-      });
-
-      bench('L1', () => {
+      })
+      .add('L1', () => {
         walkSchema(schema as never, { optimization: { level: 1 } });
-      });
-
-      bench('L2', () => {
+      })
+      .add('L2', () => {
         walkSchema(schema as never, { optimization: { level: 2 } });
       });
-    });
+
+    await bench.run();
+    console.log(name);
+    console.table(bench.table());
   }
-});
+}
+
+main();
