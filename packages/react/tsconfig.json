@@ -14,7 +14,13 @@
     "node_modules",
     "dist",
     "tests/performance/generated",
-    "tests/performance/codegen-vs-runtime.browser.bench.tsx"
+    "tests/performance/codegen-vs-runtime.browser.bench.tsx",
+    "tests/performance/render.browser.bench.tsx",
+    "tests/performance/validation.browser.bench.tsx"
   ],
-  "references": [{ "path": "../core" }]
+  "references": [
+    {
+      "path": "../core"
+    }
+  ]
 }
