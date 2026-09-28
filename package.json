@@ -91,7 +91,7 @@
     "react-dom": "^19.2.8",
     "simple-git-hooks": "^2.13.1",
     "tinybench": "^6.1.4",
-    "tsx": "^4.23.13",
+    "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1"
   },
