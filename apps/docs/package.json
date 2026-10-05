@@ -28,7 +28,7 @@
     "@docusaurus/module-type-aliases": "3.10.2",
     "@docusaurus/tsconfig": "3.10.2",
     "@docusaurus/types": "3.10.2",
-    "@skillit/cli": "^1.1.2",
+    "@skillit/cli": "^1.1.3",
     "@skillit/core": "^4.0.2",
     "@skillit/docusaurus": "^1.0.3",
     "@testing-library/jest-dom": "^7.0.1",
