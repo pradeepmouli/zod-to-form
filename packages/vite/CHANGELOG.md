@@ -1,5 +1,15 @@
 # @zod-to-form/vite
 
+## 0.4.9
+
+### Patch Changes
+
+- [#210](https://github.com/pradeepmouli/zod-to-form/pull/210) [`afdb26b`](https://github.com/pradeepmouli/zod-to-form/commit/afdb26bac2bb2cfe230e2f8e0591af4c00aa2668) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Bump `@babel/parser`, `@babel/traverse`, and `@babel/types` from `^7.29.x` to `^8.0.6` (runtime dependencies — the vite plugin's JSX-scan/codegen path). Removed the now-redundant `@types/babel__traverse` devDependency since `@babel/traverse` 8 ships its own native types.
+  
+  `@babel/traverse` 8 dropped the `TraverseOptions<S>` generic in favor of `TraverseOptions & Visitor<S>`; updated the local ESM/CJS interop shim (`babel-traverse.ts`) accordingly. No other API changes affected this package. Full workspace build + 1150 tests pass, including the playground app's live build-time exercise of the plugin's babel transform path.
+
+- - chore(deps): update runtime dependencies
+
 ## 0.4.8
 
 ### Patch Changes
