@@ -173,13 +173,15 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
  * Each section component receives a `fields` prop with the field names it manages,
  * and reads/writes its fields via useFormContext (FormProvider).
  * Section components are resolved by name from `componentConfig.componentModule`.
+ * Use with `collectFieldSections` inside an existing FormProvider to compose
+ * custom layouts without creating a second form or duplicating section rendering.
  */
-function SectionRenderer({
+export function SectionRenderer({
   sections,
   componentConfig
 }: {
-  sections: Map<string, string[]>;
-  componentConfig: RuntimeComponentConfig | undefined;
+  sections: ReadonlyMap<string, string[]>;
+  componentConfig?: Pick<RuntimeComponentConfig, 'componentModule'>;
 }) {
   const elements: ReactNode[] = [];
   const mod = componentConfig?.componentModule;

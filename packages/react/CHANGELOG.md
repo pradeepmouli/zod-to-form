@@ -1,5 +1,13 @@
 # @zod-to-form/react
 
+## 0.11.3
+
+### Patch Changes
+
+- [#207](https://github.com/pradeepmouli/zod-to-form/pull/207) [`421d1cd`](https://github.com/pradeepmouli/zod-to-form/commit/421d1cdd41fbe12e6a8a705b23b7f3b30d7fb9df) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Bump vitest and vite to their latest majors (vitest 5, vite 8.3).
+- Updated dependencies [[`421d1cd`](https://github.com/pradeepmouli/zod-to-form/commit/421d1cdd41fbe12e6a8a705b23b7f3b30d7fb9df)]:
+  - @zod-to-form/core@0.11.4
+
 ## 0.11.2
 
 ### Patch Changes
