@@ -1,5 +1,11 @@
 # @zod-to-form/react
 
+## 0.12.0
+
+### Minor Changes
+
+- [#222](https://github.com/pradeepmouli/zod-to-form/pull/222) [`8148570`](https://github.com/pradeepmouli/zod-to-form/commit/814857050a7139c8d7c05069e1d72abb64188ce9) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Export SectionRenderer so custom layouts can reuse configured section components inside their existing FormProvider. ZodForm uses the same renderer.
+
 ## 0.11.3
 
 ### Patch Changes
