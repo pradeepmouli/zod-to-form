@@ -53,9 +53,17 @@ async function runBuild(entryRel: string, options: { ssr: boolean }): Promise<Ro
     plugins: [
       z2fVite({
         configOverride: {
-          componentName: 'GeneratedForm',
-          mode: 'submit',
-          ui: 'html'
+          components: { source: '@/components/ui', preset: 'html' },
+          defaults: { mode: 'submit', ui: 'html' },
+          schemas: {
+            ['signupSchema']: { name: 'GeneratedForm' },
+            ['userSchema']: { name: 'GeneratedForm' },
+            ['mySchema']: { name: 'GeneratedForm' },
+            ['activeSchema']: { name: 'GeneratedForm' },
+            ['TestSchema']: { name: 'GeneratedForm' },
+            ['testSchema']: { name: 'GeneratedForm' },
+            ['schema']: { name: 'GeneratedForm' }
+          }
         },
         logLevel: 'silent'
       })

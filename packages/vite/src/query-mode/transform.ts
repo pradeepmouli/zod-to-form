@@ -12,16 +12,21 @@ import path from 'node:path';
 import {
   registerFlat,
   registerSchemaConfigs,
-  resolveFieldConfig,
+  resolveFormConfig,
   walkSchema
 } from '@zod-to-form/core';
-import type { CodegenConfig, FormMeta, SchemaLiteInfo, WalkResult } from '@zod-to-form/core';
+import type {
+  CodegenConfig,
+  FormMeta,
+  SchemaLiteInfo,
+  WalkResult,
+  ZodFormsConfig
+} from '@zod-to-form/core';
 import { generateFormComponent, generateSchemaLiteFile } from '@zod-to-form/codegen';
 import type { $ZodType } from 'zod/v4/core';
 import { z } from 'zod';
 import { buildEffectiveConfig, selectExport } from '../config/load.js';
 import type { ModuleNamespace } from '../config/load.js';
-import type { Z2FViteConfig } from '../types.js';
 
 /**
  * Default `schemaImportPath` for query-mode targets when the user did not
@@ -44,7 +49,8 @@ export interface CompileTargetInput {
   /** Variant name (`''` for the default target). */
   variant: string;
   /** The full plugin-side config, before variant merging. */
-  config: Z2FViteConfig;
+  config: ZodFormsConfig;
+  expectedName?: string;
 }
 
 export interface CompileTargetResult {
@@ -70,14 +76,15 @@ export function compileTarget(input: CompileTargetInput): CompileTargetResult {
   const { namespace, schemaFile, variant, config } = input;
 
   const effectiveConfig = buildEffectiveConfig(config, variant);
-  const expectedName = effectiveConfig.exportName || undefined;
-
-  const { name, schema } = selectExport(namespace, schemaFile, expectedName);
-  const componentConfig = effectiveConfig.componentConfig;
-  const mergedFields = resolveFieldConfig(
-    componentConfig?.fields,
-    componentConfig?.schemas?.[name]?.fields
+  const { name, schema } = selectExport(
+    namespace,
+    schemaFile,
+    input.expectedName ??
+      (effectiveConfig.types?.length === 1 ? effectiveConfig.types[0] : undefined)
   );
+  const resolved = resolveFormConfig({ config: effectiveConfig, exportName: name });
+  const componentConfig = resolved.componentConfig;
+  const mergedFields = resolved.fields;
   const formRegistry = z.registry<FormMeta>();
   registerSchemaConfigs(formRegistry, namespace, componentConfig?.schemas);
   if (Object.keys(mergedFields).length > 0) {
@@ -86,8 +93,8 @@ export function compileTarget(input: CompileTargetInput): CompileTargetResult {
 
   // Walk the schema, optionally with the optimization level the user
   // configured. The result type depends on whether optimization is set.
-  const optimization = effectiveConfig.validationLevel
-    ? { optimization: { level: effectiveConfig.validationLevel } }
+  const optimization = resolved.optimization.level
+    ? { optimization: resolved.optimization }
     : undefined;
 
   let fields;
@@ -95,7 +102,10 @@ export function compileTarget(input: CompileTargetInput): CompileTargetResult {
   let schemaLiteInfo: SchemaLiteInfo = null;
 
   if (optimization) {
-    const result = walkSchema(schema, { ...optimization, formRegistry }) as WalkResult;
+    const result = walkSchema(schema, {
+      optimization: { ...resolved.optimization, level: resolved.optimization.level! },
+      formRegistry
+    }) as WalkResult;
     fields = result.fields;
     schemaLite = result.schemaLite;
     schemaLiteInfo = result.schemaLiteInfo;
@@ -117,7 +127,7 @@ export function compileTarget(input: CompileTargetInput): CompileTargetResult {
   // the AST visitor.
   const isGenerateVariant = /^__generate_\d+$/.test(variant);
   const codegenConfig: CodegenConfig = {
-    ...effectiveConfig,
+    ...resolved,
     componentConfig: componentConfig
       ? {
           ...componentConfig,
@@ -125,8 +135,8 @@ export function compileTarget(input: CompileTargetInput): CompileTargetResult {
         }
       : undefined,
     exportName: name,
-    componentName: isGenerateVariant ? 'Form' : (effectiveConfig.componentName ?? 'Form'),
-    schemaImportPath: effectiveConfig.schemaImportPath ?? defaultSchemaImportPath(schemaFile),
+    componentName: isGenerateVariant ? 'Form' : (effectiveConfig.schemas?.[name]?.name ?? 'Form'),
+    schemaImportPath: defaultSchemaImportPath(schemaFile),
     schemaLite: schemaLite ?? undefined,
     schemaLiteInfo: schemaLiteInfo ?? undefined
   };

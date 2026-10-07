@@ -54,9 +54,17 @@ async function startServer(): Promise<ViteDevServer> {
     plugins: [
       z2fVite({
         configOverride: {
-          componentName: 'TestForm',
-          mode: 'submit',
-          ui: 'html'
+          components: { source: '@/components/ui', preset: 'html' },
+          defaults: { mode: 'submit', ui: 'html' },
+          schemas: {
+            ['target']: { name: 'TestForm' },
+            ['userSchema']: { name: 'TestForm' },
+            ['mySchema']: { name: 'TestForm' },
+            ['activeSchema']: { name: 'TestForm' },
+            ['TestSchema']: { name: 'TestForm' },
+            ['testSchema']: { name: 'TestForm' },
+            ['schema']: { name: 'TestForm' }
+          }
         },
         logLevel: 'silent'
       })

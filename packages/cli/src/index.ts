@@ -43,7 +43,7 @@ import {
   defineConfig,
   isZodSchema,
   validateConfig,
-  resolveFieldConfig,
+  resolveFormConfig,
   registerFlat,
   registerSchemaConfigs,
   type ComponentOverride,
@@ -63,7 +63,8 @@ export { defineConfig, validateConfig };
 
 export type { ComponentOverride, FieldConfig, ZodFormsConfig };
 
-type GenerateOptions = {
+export type GenerateOptions = {
+  variant?: string;
   config: string;
   schema: string;
   export?: string;
@@ -197,30 +198,30 @@ export async function runGenerate(options: GenerateOptions): Promise<{
     throw new Error('runGenerate requires an explicit export name.');
   }
   const exportName = options.export;
-  const componentConfig =
+  const authoredConfig =
     options._loadedConfig ?? (await loadConfig(path.resolve(cwd, options.config)));
 
-  // Merge config defaults with CLI flags (CLI flag > schemas.X.[prop] > defaults.[prop])
-  const schemaConfig = componentConfig.schemas?.[exportName];
-  const componentName = resolveComponentName(exportName, options.name ?? schemaConfig?.name);
-  const effectiveMode =
-    options.mode ?? schemaConfig?.mode ?? componentConfig.defaults?.mode ?? 'submit';
-  const effectiveOut = options.out ?? schemaConfig?.out ?? componentConfig.defaults?.out;
-  const effectiveServerAction =
-    options.serverAction ??
-    schemaConfig?.serverAction ??
-    componentConfig.defaults?.serverAction ??
-    false;
-  const effectiveUi = options.ui ?? componentConfig.defaults?.ui ?? 'shadcn';
-  const effectiveOverwrite = componentConfig.defaults?.overwrite ?? false;
-  const effectiveOptimization = componentConfig.defaults?.optimization;
+  const resolved = resolveFormConfig({
+    config: authoredConfig,
+    exportName,
+    variant: options.variant,
+    invocation: options
+  });
+  const {
+    componentConfig,
+    componentName,
+    mode: effectiveMode,
+    out: effectiveOut,
+    serverAction: effectiveServerAction,
+    ui: effectiveUi,
+    overwrite: effectiveOverwrite,
+    optimization: effectiveOptimization,
+    fields: mergedFields
+  } = resolved;
 
   const outputPath = resolveOutputPath(cwd, effectiveOut, componentName);
   const schemaModule = await loadSchemaModule(schemaPath);
   const schema = resolveSchemaExportFromModule(schemaModule, schemaPath, exportName);
-
-  // Merge field configs: schemas.X.fields over global fields
-  const mergedFields = resolveFieldConfig(componentConfig.fields, schemaConfig?.fields);
 
   // Populate a fresh registry from the merged flat config so walkSchema
   // sees the same overrides that codegen templates used to apply manually.
@@ -263,9 +264,10 @@ export async function runGenerate(options: GenerateOptions): Promise<{
     },
     ui: effectiveUi,
     serverAction: effectiveServerAction,
-    ...(isOptimized
-      ? { validationLevel: effectiveOptimization!.level, schemaLite, schemaLiteInfo }
-      : {})
+    optimization: effectiveOptimization,
+    formProvider: resolved.formProvider,
+    schemaLite,
+    schemaLiteInfo
   };
 
   const code = await generateFormComponent(fields, config);

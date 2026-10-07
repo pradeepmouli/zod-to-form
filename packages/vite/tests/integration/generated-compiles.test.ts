@@ -88,10 +88,17 @@ describe('plugin-generated component compilation', () => {
       schemaFile: '/abs/src/schemas/signup.ts',
       variant: '',
       config: {
-        componentName: 'UserForm',
-        mode: 'submit',
-        ui: 'html',
-        schemaImportPath: './signup'
+        components: { source: '@/components/ui', preset: 'html' },
+        defaults: { mode: 'submit', ui: 'html' },
+        schemas: {
+          ['signupSchema']: { name: 'UserForm' },
+          ['userSchema']: { name: 'UserForm' },
+          ['mySchema']: { name: 'UserForm' },
+          ['activeSchema']: { name: 'UserForm' },
+          ['TestSchema']: { name: 'UserForm' },
+          ['testSchema']: { name: 'UserForm' },
+          ['schema']: { name: 'UserForm' }
+        }
       }
     });
     const generatedSource = result.generatedSource;
@@ -141,11 +148,17 @@ describe('plugin-generated component compilation', () => {
       schemaFile: '/abs/src/schemas/signup.ts',
       variant: '',
       config: {
-        componentName: 'UserForm',
-        mode: 'submit',
-        ui: 'html',
-        schemaImportPath: './signup',
-        validationLevel: 2
+        components: { source: '@/components/ui', preset: 'html' },
+        defaults: { mode: 'submit', ui: 'html', optimization: { level: 2 } },
+        schemas: {
+          ['signupSchema']: { name: 'UserForm' },
+          ['userSchema']: { name: 'UserForm' },
+          ['mySchema']: { name: 'UserForm' },
+          ['activeSchema']: { name: 'UserForm' },
+          ['TestSchema']: { name: 'UserForm' },
+          ['testSchema']: { name: 'UserForm' },
+          ['schema']: { name: 'UserForm' }
+        }
       }
     });
 

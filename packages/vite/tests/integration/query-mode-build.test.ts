@@ -58,9 +58,17 @@ async function runBuild(entryRel: string): Promise<Rollup.RollupOutput> {
     plugins: [
       z2fVite({
         configOverride: {
-          componentName: 'GeneratedForm',
-          mode: 'submit',
-          ui: 'html'
+          components: { source: '@/components/ui', preset: 'html' },
+          defaults: { mode: 'submit', ui: 'html' },
+          schemas: {
+            ['signupSchema']: { name: 'GeneratedForm' },
+            ['userSchema']: { name: 'GeneratedForm' },
+            ['mySchema']: { name: 'GeneratedForm' },
+            ['activeSchema']: { name: 'GeneratedForm' },
+            ['TestSchema']: { name: 'GeneratedForm' },
+            ['testSchema']: { name: 'GeneratedForm' },
+            ['schema']: { name: 'GeneratedForm' }
+          }
         },
         logLevel: 'silent'
       })
@@ -129,11 +137,10 @@ describe('query-mode build integration', () => {
       schemaFile: '/abs/src/schemas/signup.ts',
       variant: '',
       config: {
-        componentName: 'GeneratedForm',
-        mode: 'submit',
-        ui: 'html',
-        exportName: 'signupSchema',
-        schemaImportPath: './signup.ts'
+        types: ['signupSchema'],
+        components: { source: '@/components/ui', preset: 'html' },
+        defaults: { mode: 'submit', ui: 'html' },
+        schemas: { ['signupSchema']: { name: 'GeneratedForm' } }
       }
     });
     // Mirror the plugin's load hook: run esbuild over the TSX so JSX
@@ -230,9 +237,17 @@ describe('query-mode build integration', () => {
           plugins: [
             z2fVite({
               configOverride: {
-                componentName: 'GeneratedForm',
-                mode: 'submit',
-                ui: 'html'
+                components: { source: '@/components/ui', preset: 'html' },
+                defaults: { mode: 'submit', ui: 'html' },
+                schemas: {
+                  ['signupSchema']: { name: 'GeneratedForm' },
+                  ['userSchema']: { name: 'GeneratedForm' },
+                  ['mySchema']: { name: 'GeneratedForm' },
+                  ['activeSchema']: { name: 'GeneratedForm' },
+                  ['TestSchema']: { name: 'GeneratedForm' },
+                  ['testSchema']: { name: 'GeneratedForm' },
+                  ['schema']: { name: 'GeneratedForm' }
+                }
               },
               logLevel: 'silent'
             })

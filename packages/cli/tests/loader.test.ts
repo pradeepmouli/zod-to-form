@@ -72,7 +72,7 @@ describe('loadConfig', () => {
           components: {
             source: '@app/components'
           },
-          overwrite: true,
+          defaults: { overwrite: true },
           types: ['userSchema'],
           include: ['*Schema'],
           exclude: ['internal*'],
@@ -245,7 +245,7 @@ describe('loadConfig', () => {
     expect(config.schemas?.['UserSchema']?.fields?.['email']?.order).toBe(1);
   });
 
-  it('normalizes old-style overwrite to defaults.overwrite (T049)', async () => {
+  it('rejects removed top-level overwrite', async () => {
     const dir = await createTempDir();
     const configPath = path.join(dir, 'z2f.config.json');
 
@@ -264,7 +264,6 @@ describe('loadConfig', () => {
       'utf8'
     );
 
-    const config = await loadConfig(configPath);
-    expect(config.defaults?.overwrite).toBe(true);
+    await expect(loadConfig(configPath)).rejects.toThrow(/overwrite/);
   });
 });

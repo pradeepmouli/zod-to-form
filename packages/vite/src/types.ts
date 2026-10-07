@@ -9,62 +9,7 @@
  * `@zod-to-form/core` (moved there during this feature so the Vite plugin
  * can depend on it without pulling in the codegen package's runtime).
  */
-import type { CodegenConfig } from '@zod-to-form/core';
-
-// ─── 1. PluginOptions ────────────────────────────────────────────────
-
-/**
- * Variant overrides keyed by the `?z2f=<name>` query value.
- * Per-variant settings merge on top of the global `CodegenConfig`.
- *
- * @useWhen
- * - You need different generated form styles for the same schema (e.g. `?z2f=mobile` vs `?z2f=desktop`)
- * - You want variant-specific UI presets or component overrides without separate schema files
- *
- * @avoidWhen
- * - You only have a single form variant — omit this field entirely and use the global config
- *
- * @config
- * @category Plugin Types
- */
-export type VariantConfigs = Record<string, Partial<CodegenConfig>>;
-
-/**
- * The full config the Vite plugin operates on: a base `CodegenConfig`
- * plus optional per-variant overrides.
- *
- * `exportName` is relaxed to optional at the plugin boundary — the plugin
- * auto-detects a single Zod schema export when the user omits it, and
- * throws `Z2F_VITE_AMBIGUOUS_EXPORT` on ambiguity. The codegen package
- * still requires it, and the plugin promotes the resolved name before
- * invoking codegen.
- *
- * @remarks
- * Place this in `z2f.config.ts` as a default export. The plugin auto-discovers
- * that file from the Vite root (searches `z2f.config.{ts,mts,js,mjs}` in order).
- * Use `defineConfig` from `@zod-to-form/core` for type-safe config authoring.
- *
- * @useWhen
- * - Centralizing form generation options for all `?z2f` imports in a project
- * - Applying a consistent UI preset (shadcn/html) and field overrides across forms
- *
- * @avoidWhen
- * - You only need a single one-off form — pass `configOverride` to `z2fVite()` instead
- *
- * @never
- * - NEVER place `z2f.config.ts` outside the Vite root — the auto-discovery only searches
- *   `resolvedConfig.root` and will silently fall back to defaults if the file is not found
- * - NEVER export an async function as the config default — only plain objects are supported;
- *   async evaluation is not handled by `ssrLoadModule`
- *
- * @config
- * @category Plugin Types
- */
-export type Z2FViteConfig = Omit<CodegenConfig, 'exportName'> & {
-  exportName?: string;
-  /** Per-variant overrides. Keyed by `?z2f=<name>` query value. */
-  variants?: VariantConfigs;
-};
+import type { ConfigPatch } from '@zod-to-form/core';
 
 /**
  * Optional disk-write settings. When omitted, generated forms are served
@@ -118,7 +63,7 @@ export interface PluginOptions {
   configPath?: string;
 
   /** Shallow override merged on top of the loaded config. */
-  configOverride?: Partial<Z2FViteConfig>;
+  configOverride?: ConfigPatch;
 
   /**
    * Generate mode: scan JSX source for `<ZodForm>` elements and replace

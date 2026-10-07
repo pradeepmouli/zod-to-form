@@ -93,7 +93,10 @@ export function resolveFormConfig({
   const schema = authored.schemas?.[exportName];
   return {
     componentConfig,
-    componentName: invocation.name ?? schema?.name ?? `${exportName}Form`,
+    componentName:
+      invocation.name ??
+      schema?.name ??
+      `${exportName.replace(/Schema$/, '').replace(/(^|[^a-zA-Z0-9]+)([a-z])/g, (_, space: string, letter: string) => letter.toUpperCase())}Form`,
     mode: invocation.mode ?? schema?.mode ?? defaults?.mode ?? 'submit',
     ui: invocation.ui ?? defaults?.ui ?? 'shadcn',
     out: invocation.out ?? schema?.out ?? defaults?.out,

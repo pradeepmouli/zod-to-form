@@ -754,7 +754,7 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
   const hasArrays = arrayFields.length > 0;
   const useFormProvider = config.formProvider || config.mode === 'auto-save';
   const hasControlled = hasControlledFields(fields, config.componentConfig);
-  const optimized = config.validationLevel != null;
+  const optimized = config.optimization?.level != null;
 
   const preset =
     config.componentConfig?.components?.preset ?? (config.ui === 'shadcn' ? 'shadcn' : 'html');

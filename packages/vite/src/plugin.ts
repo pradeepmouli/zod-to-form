@@ -10,6 +10,7 @@
  * - `configureServer` → captures the dev server reference for `load`
  */
 import path from 'node:path';
+import { mergeConfigLayers, type ZodFormsConfig, type ConfigPatch } from '@zod-to-form/core';
 import { promises as fs } from 'node:fs';
 import {
   createServer,
@@ -31,7 +32,7 @@ import { resolveSchemas } from './generate-mode/resolve-schema.js';
 import { generateSource } from './generate-mode/generate-source.js';
 import { scanJsx } from './generate-mode/scan-jsx.js';
 import { isUseZodFormId, stripResolver } from './resolver-strip.js';
-import type { GenerationTarget, PluginOptions, Z2FViteConfig } from './types.js';
+import type { GenerationTarget, PluginOptions } from './types.js';
 
 const PLUGIN_NAME = '@zod-to-form/vite';
 
@@ -40,10 +41,9 @@ const PLUGIN_NAME = '@zod-to-form/vite';
  * `configOverride` was supplied. `exportName` is omitted so the plugin
  * auto-detects the single Zod schema export.
  */
-const DEFAULT_CONFIG: Z2FViteConfig = {
-  componentName: 'Form',
-  mode: 'submit',
-  ui: 'html'
+const DEFAULT_CONFIG: ZodFormsConfig = {
+  components: { source: '@/components/ui', preset: 'html' },
+  defaults: { mode: 'submit', ui: 'html' }
 };
 
 interface PluginState {
@@ -67,14 +67,14 @@ interface PluginState {
    * (where `devServer` does the same job).
    */
   buildModeServer: ViteDevServer | null;
-  /** The plugin's effective Z2FViteConfig — populated lazily on first load. */
-  z2fConfig: Z2FViteConfig | null;
+  /** The plugin's effective ZodFormsConfig — populated lazily on first load. */
+  z2fConfig: ZodFormsConfig | null;
   /**
    * The most recent successfully-loaded config. Survives across config
    * reloads so a syntax error in `z2f.config.ts` mid-session can fall
    * back to the previous valid version (FR-010 / SC-008).
    */
-  lastValidConfig: Z2FViteConfig | null;
+  lastValidConfig: ZodFormsConfig | null;
   /**
    * Monotonic generation counter bumped by `handleHotUpdate` when the
    * config file changes. `ensureConfig` captures this at entry and
@@ -234,10 +234,6 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
       const generatedExportName = /^__generate_\d+$/.test(parsed.variant)
         ? state.generatedExportNames.get(id)
         : undefined;
-      const compileConfig =
-        generatedExportName === undefined
-          ? z2fConfig
-          : { ...z2fConfig, exportName: generatedExportName };
       // Hash the full z2fConfig (including `variants`). The variant name is
       // carried separately by the cache key, so buildEffectiveConfig's
       // per-variant merge doesn't need to be reflected in the hash — any
@@ -249,10 +245,11 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
       // name lands on `finalTarget` below after compileTarget resolves it.
       const target: GenerationTarget = {
         schemaFile: parsed.schemaFile,
-        exportName: generatedExportName ?? z2fConfig.exportName ?? '',
+        exportName:
+          generatedExportName ?? (z2fConfig.types?.length === 1 ? z2fConfig.types[0]! : ''),
         variant: parsed.variant,
         configHash: hash,
-        componentName: compileConfig.componentName ?? 'Form',
+        componentName: 'Form',
         sourceKind: 'query'
       };
 
@@ -268,7 +265,8 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
         namespace,
         schemaFile: parsed.schemaFile,
         variant: parsed.variant,
-        config: compileConfig
+        config: z2fConfig,
+        expectedName: generatedExportName
       });
 
       // generateFormComponent emits TSX, but the virtual module id keeps
@@ -332,7 +330,7 @@ export function z2fVite(options: PluginOptions = {}): Plugin {
       // the runtime resolver path for fast iteration.
       if (state.resolvedConfig?.command === 'build' && isUseZodFormId(id)) {
         const z2fConfig = await ensureConfig(state);
-        if (z2fConfig.validationLevel !== undefined) {
+        if (z2fConfig.defaults?.optimization?.level !== undefined) {
           const stripped = stripResolver({ source: code });
           if (stripped.rewritten > 0) {
             state.logger.debug(
@@ -638,7 +636,7 @@ async function discoverConfigPath(root: string): Promise<string | null> {
  * the config has a syntax error" contract — the user can fix the file
  * and the next save will retry.
  */
-async function ensureConfig(state: PluginState): Promise<Z2FViteConfig> {
+async function ensureConfig(state: PluginState): Promise<ZodFormsConfig> {
   if (state.z2fConfig !== null) return state.z2fConfig;
 
   // Capture the generation at the start of the load. If a config-file
@@ -662,7 +660,7 @@ async function ensureConfig(state: PluginState): Promise<Z2FViteConfig> {
     }
   }
 
-  let loaded: Partial<Z2FViteConfig> = {};
+  let loaded: ConfigPatch = {};
 
   if (state.configFilePath !== null) {
     // Distinguish "file vanished" (ENOENT — user renamed/deleted the
@@ -704,8 +702,8 @@ async function ensureConfig(state: PluginState): Promise<Z2FViteConfig> {
         loader.moduleGraph.invalidateModule(moduleNode);
       }
       const mod = await loader.ssrLoadModule(state.configFilePath);
-      loaded =
-        (mod as { default?: Partial<Z2FViteConfig> }).default ?? (mod as Partial<Z2FViteConfig>);
+      loaded = (mod as { default?: ConfigPatch }).default ?? (mod as ConfigPatch);
+      mergeConfigLayers(DEFAULT_CONFIG, loaded, state.options.configOverride ?? {});
     } catch (err) {
       // If we have a previously-valid config (this is an HMR-triggered
       // reload after the user introduced a syntax error), log and keep
@@ -734,11 +732,7 @@ async function ensureConfig(state: PluginState): Promise<Z2FViteConfig> {
     );
   }
 
-  const computed: Z2FViteConfig = {
-    ...DEFAULT_CONFIG,
-    ...loaded,
-    ...state.options.configOverride
-  };
+  const computed = mergeConfigLayers(DEFAULT_CONFIG, loaded, state.options.configOverride ?? {});
 
   // Generation race: if the config file changed underneath us during the
   // ssrLoadModule await, refuse to commit our stale result. The next

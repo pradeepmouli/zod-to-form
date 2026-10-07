@@ -34,7 +34,10 @@ describe('z2fVite() factory', () => {
     expect(() =>
       z2fVite({
         configPath: '/abs/z2f.config.ts',
-        configOverride: { ui: 'shadcn' },
+        configOverride: {
+          components: { source: '@/components/ui', preset: 'html' },
+          defaults: { ui: 'shadcn' }
+        },
         generate: { include: ['src/**/*.tsx'], exclude: ['**/dist/**'] },
         write: { outDir: '/abs/out', filenamePattern: '{schemaBasename}.gen.tsx' },
         logLevel: 'debug'

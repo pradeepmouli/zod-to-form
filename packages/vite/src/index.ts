@@ -50,8 +50,6 @@ export { z2fVite, default } from './plugin.js';
 
 export type {
   PluginOptions,
-  Z2FViteConfig,
-  VariantConfigs,
   WriteOptions,
   GenerationTarget,
   CompilationEntry,

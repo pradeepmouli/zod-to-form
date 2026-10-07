@@ -32,7 +32,7 @@ async function createFixture() {
       '  components: {',
       "    source: '@app/components',",
       '  },',
-      '  overwrite: false,',
+      '  defaults: { overwrite: false },',
       '};'
     ].join('\n'),
     'utf8'
@@ -101,7 +101,7 @@ describe('CLI generate command', () => {
         '  components: {',
         "    source: '@app/components',",
         '  },',
-        '  overwrite: true,',
+        '  defaults: { overwrite: true },',
         '};'
       ].join('\n'),
       'utf8'
@@ -165,7 +165,7 @@ describe('CLI generate command', () => {
         "    source: '@app/components',",
         '  },',
         "  types: ['userSchema'],",
-        '  overwrite: true,',
+        '  defaults: { overwrite: true },',
         '};'
       ].join('\n'),
       'utf8'
@@ -385,7 +385,7 @@ describe('CLI generate performance benchmark', () => {
         '  components: {',
         "    source: '@app/components',",
         '  },',
-        '  overwrite: true,',
+        '  defaults: { overwrite: true },',
         '};'
       ].join('\n'),
       'utf8'
