@@ -6,7 +6,7 @@
 
 # Interface: WalkOptions
 
-Defined in: packages/core/dist/types.d.ts:291
+Defined in: packages/core/dist/types.d.ts:348
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/core/dist/types.d.ts:291
 
 > `optional` **formRegistry?**: [`ZodFormRegistry`](../../core/type-aliases/ZodFormRegistry.md)
 
-Defined in: packages/core/dist/types.d.ts:293
+Defined in: packages/core/dist/types.d.ts:350
 
 Custom form registry for metadata annotations
 
@@ -24,7 +24,7 @@ Custom form registry for metadata annotations
 
 > `optional` **maxDepth?**: `number`
 
-Defined in: packages/core/dist/types.d.ts:297
+Defined in: packages/core/dist/types.d.ts:354
 
 Maximum recursion depth for lazy/recursive schemas (default: 5)
 
@@ -32,9 +32,9 @@ Maximum recursion depth for lazy/recursive schemas (default: 5)
 
 ### optimization?
 
-> `optional` **optimization?**: `object`
+> `optional` **optimization?**: [`OptimizationConfig`](../../core/type-aliases/OptimizationConfig.md) & `object`
 
-Defined in: packages/core/dist/types.d.ts:306
+Defined in: packages/core/dist/types.d.ts:363
 
 Validation optimization settings.
 
@@ -43,11 +43,9 @@ the optimization config here. The CLI reads `config.defaults.optimization`
 and forwards it; useZodForm accepts it via its own options. Both converge
 here as the single source of truth for the walker.
 
-#### level
+#### Type Declaration
 
-> **level**: `1` \| `2` \| `3`
-
-#### optimizers?
+##### optimizers?
 
 > `optional` **optimizers?**: `Record`\<`string`, [`FormOptimizer`](../../core/type-aliases/FormOptimizer.md)[]\>
 
@@ -57,6 +55,6 @@ here as the single source of truth for the walker.
 
 > `optional` **processors?**: `Record`\<`string`, [`FormProcessor`](../../core/type-aliases/FormProcessor.md)\<`$ZodType`\<`unknown`, `unknown`, `$ZodTypeInternals`\<`unknown`, `unknown`\>\>\>\>
 
-Defined in: packages/core/dist/types.d.ts:295
+Defined in: packages/core/dist/types.d.ts:352
 
 Custom processors to add or override built-in ones

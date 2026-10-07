@@ -131,7 +131,7 @@ export interface FormField {
   children?: FormField[];
   /** Template for array items */
   arrayItem?: FormField;
-  /** Validation constraints extracted from Zod v4 constraint bag (_zod.bag) */
+  /** Validation constraints extracted from Zod schema and check definitions */
   constraints: FormFieldConstraints;
   /** Original Zod def.type for reference */
   zodType: string;
@@ -388,8 +388,7 @@ export interface WalkOptions {
    * and forwards it; useZodForm accepts it via its own options. Both converge
    * here as the single source of truth for the walker.
    */
-  optimization?: {
-    level: 1 | 2 | 3;
+  optimization?: import('./config.js').OptimizationConfig & {
     optimizers?: Record<string, FormOptimizer[]>;
   };
 }

@@ -8,7 +8,7 @@
 
 > **useZodForm**\<`TSchema`\>(`schema`, `options?`): `object`
 
-Defined in: [packages/react/src/useZodForm.ts:85](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/react/src/useZodForm.ts#L85)
+Defined in: packages/react/src/useZodForm.ts:110
 
 React Hook Form integration hook for Zod v4 schemas.
 

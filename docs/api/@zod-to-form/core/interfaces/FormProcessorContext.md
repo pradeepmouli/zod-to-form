@@ -6,7 +6,7 @@
 
 # Interface: FormProcessorContext
 
-Defined in: [types.ts:276](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/types.ts#L276)
+Defined in: types.ts:335
 
 Runtime context passed to every processor during a walkSchema traversal.
 Provides the processor registry, form registry, path tracking, cycle detection,
@@ -18,7 +18,7 @@ and a child-processing callback for recursive types (object, array, union).
 
 > **currentDepth**: `number`
 
-Defined in: [types.ts:288](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/types.ts#L288)
+Defined in: types.ts:347
 
 Current recursion depth
 
@@ -28,7 +28,7 @@ Current recursion depth
 
 > `optional` **formRegistry?**: [`ZodFormRegistry`](../type-aliases/ZodFormRegistry.md)
 
-Defined in: [types.ts:280](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/types.ts#L280)
+Defined in: types.ts:339
 
 Form-specific metadata registry
 
@@ -38,7 +38,7 @@ Form-specific metadata registry
 
 > **maxDepth**: `number`
 
-Defined in: [types.ts:286](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/types.ts#L286)
+Defined in: types.ts:345
 
 Maximum recursion depth (default: 5)
 
@@ -48,7 +48,7 @@ Maximum recursion depth (default: 5)
 
 > **path**: `string`[]
 
-Defined in: [types.ts:282](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/types.ts#L282)
+Defined in: types.ts:341
 
 Current field path stack
 
@@ -58,7 +58,7 @@ Current field path stack
 
 > `optional` **processChild?**: (`schema`, `key`) => [`FormField`](FormField.md)
 
-Defined in: [types.ts:294](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/types.ts#L294)
+Defined in: types.ts:353
 
 Process a child schema into a FormField.
 Provided by the walker for use in nesting processors (object, array, union).
@@ -84,7 +84,7 @@ Undefined only in unit-test contexts where nesting is not being tested.
 
 > **processors**: `Record`\<`string`, [`FormProcessor`](../type-aliases/FormProcessor.md)\>
 
-Defined in: [types.ts:278](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/types.ts#L278)
+Defined in: types.ts:337
 
 Registry mapping def.type → processor function
 
@@ -94,6 +94,6 @@ Registry mapping def.type → processor function
 
 > **seen**: `WeakSet`\<`$ZodType`\<`unknown`, `unknown`, `$ZodTypeInternals`\<`unknown`, `unknown`\>\>\>
 
-Defined in: [types.ts:284](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/types.ts#L284)
+Defined in: types.ts:343
 
 Tracks visited schema objects — prevents infinite loops from recursive schemas and avoids re-processing the same reference

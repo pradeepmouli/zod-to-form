@@ -1,4 +1,5 @@
-import { bench, describe } from 'vitest';
+import { describe } from 'vitest';
+import { bench } from '../../../core/tests/performance/register-benchmark.js';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { flushSync } from 'react-dom';

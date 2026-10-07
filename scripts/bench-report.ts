@@ -9,35 +9,13 @@
 
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { createRequire } from 'node:module';
+import { cpus } from 'node:os';
 
-interface BenchResult {
-  name: string;
-  rank: number;
-  rme: number;
-  sampleCount: number;
-  /** Median in ms */
-  median: number;
-  mean: number;
-  p75: number;
-  p99: number;
-  min: number;
-  max: number;
-  hz: number;
-}
-
-interface BenchGroup {
-  fullName: string;
-  benchmarks: BenchResult[];
-}
-
-interface BenchFileEntry {
-  filepath: string;
-  groups: BenchGroup[];
-}
-
-interface BenchFile {
-  files: BenchFileEntry[];
-}
+import {
+  normalizeBenchResults,
+  type BenchFile
+} from '../packages/core/tests/performance/bench-results.js';
 
 function formatMs(ms: number): string {
   if (ms < 0.001) return `${(ms * 1_000_000).toFixed(0)}ns`;
@@ -374,31 +352,73 @@ function buildSessionTable(browserData: BenchFile): string {
 
 // ─── Main ───────────────────────────────────────────────────────────
 
+/** Pair explicit off/on dimensions; mean derives from throughput to avoid browser clock quantization. */
+function compilationTable(data: BenchFile): string {
+  const lines = [
+    '### Compilation off/on',
+    '',
+    '| Fixture / strategy | Work | Off mean (µs) | On mean (µs) | Off / on |',
+    '|---|---|---:|---:|---:|'
+  ];
+  for (const file of data.files)
+    for (const name of new Set(file.groups.map((group) => group.fullName))) {
+      const group = {
+        fullName: name,
+        benchmarks: file.groups
+          .filter((group) => group.fullName === name)
+          .flatMap((group) => group.benchmarks)
+      };
+      for (const off of group.benchmarks.filter((b) => b.name.includes('compile=false'))) {
+        const on = group.benchmarks.find(
+          (b) => b.name === off.name.replace('compile=false', 'compile=true')
+        );
+        if (!on) continue;
+        const label = group.fullName.split(' > ').slice(1).join(' / ');
+        lines.push(
+          `| ${label} | ${off.name.replace('compile=false ', '')} | ${(1e6 / off.hz).toFixed(3)} | ${(1e6 / on.hz).toFixed(3)} | ${(on.hz / off.hz).toFixed(2)}× |`
+        );
+      }
+    }
+  return lines.join('\n') + '\n';
+}
+
 const args = process.argv.slice(2);
 const nodeFile = resolve(args[0] ?? 'bench-results.json');
 const browserFile = resolve(args[1] ?? 'bench-browser-results.json');
 
 let output = '## Performance Benchmarks\n\n';
 output += `> Generated on ${new Date().toISOString().split('T')[0]}`;
-output += ` with Node ${process.version}\n\n`;
+const coreRequire = createRequire(resolve('packages/core/package.json'));
+const zodVersion = coreRequire('zod/package.json').version;
+output += ` with Node ${process.version}, Zod ${zodVersion}, ${process.platform}/${process.arch}, ${cpus()[0]?.model}\n\n`;
+output += `Chromium: ${process.env.BENCH_BROWSER_VERSION ?? 'not recorded'}; React: ${createRequire(import.meta.url)('react/package.json').version}.\n\n`;
+output +=
+  'Validation fixtures: small (5 fields); medium (18 root fields, nesting/coercion/collections); large (nested addresses, collections, unions and cross-field refinements). L1/L2 are normalized form-submit validation, not arbitrary-JSON validation. Fresh setup clones the entire schema graph before preparation. Boolean-only validate is reported separately and does not produce messages or parsed output. Ratios above 1 favor compilation; setup includes construction, walking and preparation.\n\n';
 
 if (existsSync(nodeFile)) {
-  const data: BenchFile = JSON.parse(readFileSync(nodeFile, 'utf-8'));
+  const data = normalizeBenchResults(JSON.parse(readFileSync(nodeFile, 'utf-8')));
   const rows = collectRows(data);
   output += '### Node Benchmarks\n\n';
+  output += compilationTable(data);
   output += buildTable(rows);
 } else {
   output += `*Node benchmark file not found: ${nodeFile}*\n\n`;
 }
 
 if (existsSync(browserFile)) {
-  const data: BenchFile = JSON.parse(readFileSync(browserFile, 'utf-8'));
+  const data = normalizeBenchResults(JSON.parse(readFileSync(browserFile, 'utf-8')));
   const rows = collectRows(data);
   output += '\n### Browser Benchmarks (Chromium via Playwright)\n\n';
+  output += compilationTable(data);
   output += buildTable(rows);
   const cvrTable = buildCodegenVsRuntimeTable(data);
   if (cvrTable) output += '\n' + cvrTable;
-  output += '\n' + buildSessionTable(data);
+  // Historical modeled sessions require the old keystroke groups.
+  if (
+    data.files.some((file) => file.groups.some((group) => group.fullName.includes('keystroke')))
+  ) {
+    output += '\n' + buildSessionTable(data);
+  }
 } else {
   output += `\n*Browser benchmark file not found: ${browserFile}*\n`;
 }

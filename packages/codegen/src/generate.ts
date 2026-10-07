@@ -331,24 +331,12 @@ function getDefaultArrayItemExpression(field: FormField | undefined): string {
   return serializeDefaultValue(value);
 }
 
-const charMap: Record<string, string> = {
-  '<': '\\u003C',
-  '>': '\\u003E',
-  '/': '\\u002F',
-  '\\': '\\\\',
-  '\b': '\\b',
-  '\f': '\\f',
-  '\n': '\\n',
-  '\r': '\\r',
-  '\t': '\\t',
-  '\0': '\\0',
-  '\u2028': '\\u2028',
-  '\u2029': '\\u2029'
-};
-
 function escapeUnsafeChars(str: string): string {
-  // oxlint-disable-next-line no-control-regex -- intentionally matches null byte (U+0000) for JSON serialization safety
-  return str.replace(/[<>/\\\b\f\n\r\t\u0000\u2028\u2029]/g, (x) => charMap[x] ?? x);
+  // JSON serialization already escapes quotes, backslashes and control characters.
+  return str.replace(
+    /[<>/\u2028\u2029]/g,
+    (character) => `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`
+  );
 }
 
 function serializeDefaultValue(value: unknown): string {
@@ -681,7 +669,11 @@ function hasAnyZodSchemaOrSchemaLite(
   return collectZodSchemaFields(fields).length > 0;
 }
 
-function generateHoistedValidators(fields: FormField[], exportName: string): string[] {
+function generateHoistedValidators(
+  fields: FormField[],
+  exportName: string,
+  compileZod = false
+): string[] {
   // Emit a hoisted validator for each leaf field that needs zodSchema-mode validation.
   //
   // For top-level fields: ExportName.shape['field'].safeParse(value)
@@ -697,9 +689,11 @@ function generateHoistedValidators(fields: FormField[], exportName: string): str
     // Build the nested shape accessor by stepping through each segment.
     let accessor = exportName;
     for (const seg of segments) {
-      accessor += `.shape[${JSON.stringify(seg)}]`;
+      accessor += `.shape[${escapeUnsafeChars(JSON.stringify(seg))}]`;
     }
-    return `const _validate_${safeKey} = (value: unknown) => { const r = ${accessor}.safeParse(value); return r.success ? true : r.error.issues[0]?.message ?? 'Invalid'; };`;
+    const target = compileZod ? `_schema_${safeKey}` : accessor;
+    const setup = compileZod ? `const ${target} = compile(${accessor});\n` : '';
+    return `${setup}const _validate_${safeKey} = (value: unknown) => { const r = ${target}.safeParse(value === '' ? undefined : value); return r.success ? true : r.error.issues[0]?.message ?? 'Invalid'; };`;
   });
 }
 
@@ -754,7 +748,9 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
   const hasArrays = arrayFields.length > 0;
   const useFormProvider = config.formProvider || config.mode === 'auto-save';
   const hasControlled = hasControlledFields(fields, config.componentConfig);
-  const optimized = config.validationLevel != null;
+  const optimized = config.optimization?.level != null;
+  const compileZod = config.optimization?.compileZod === true;
+  const validationTarget = compileZod ? '_validationSchema' : config.exportName;
 
   const preset =
     config.componentConfig?.components?.preset ?? (config.ui === 'shadcn' ? 'shadcn' : 'html');
@@ -815,7 +811,9 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
     : undefined;
 
   // Generate hoisted validators for optimized mode
-  const hoistedValidators = optimized ? generateHoistedValidators(fields, config.exportName) : [];
+  const hoistedValidators = optimized
+    ? generateHoistedValidators(fields, config.exportName, compileZod)
+    : [];
 
   const arrayHooks = arrayFields
     .map((f) => {
@@ -895,7 +893,7 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
   } else if (preset === 'shadcn') {
     // Shadcn preset skips the normalizeFormValues wrapper (shadcn components
     // already return plain values). Hoist the resolver directly.
-    hoistedResolverLines = [`const _resolver = zodResolver(${config.exportName});`];
+    hoistedResolverLines = [`const _resolver = zodResolver(${validationTarget});`];
     useFormLines = [`  const form = useForm<FormData>({`, `    resolver: _resolver,`];
   } else {
     // HTML preset wraps the resolver with normalizeFormValues to coerce
@@ -903,7 +901,7 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
     // Using `typeof _baseResolver` for the wrapper type so TS infers the
     // correct RHF Resolver signature without needing to import the type.
     hoistedResolverLines = [
-      `const _baseResolver = zodResolver(${config.exportName});`,
+      `const _baseResolver = zodResolver(${validationTarget});`,
       `const _resolver: typeof _baseResolver = (values, ctx, opts) => _baseResolver(normalizeFormValues(values) as FormData, ctx, opts);`
     ];
     useFormLines = [`  const form = useForm<FormData>({`, `    resolver: _resolver,`];
@@ -916,7 +914,7 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
     ? [
         ``,
         `  const onSubmitValidated = (data: FormData) => {`,
-        `    const result = schemaLite.safeParse(data);`,
+        `    const result = ${compileZod ? '_validationSchemaLite' : 'schemaLite'}.safeParse(data);`,
         `    if (!result.success && result.error) {`,
         `      for (const issue of result.error.issues) {`,
         `        const field = issue.path?.[0];`,
@@ -935,7 +933,12 @@ export function generateFormComponent(fields: FormField[], config: CodegenConfig
 
   return [
     header,
+    ...(compileZod ? ["import { compile } from 'zod';"] : []),
     ...(schemaLiteImport ? [schemaLiteImport] : []),
+    ...(compileZod && !optimized
+      ? [`const _validationSchema = compile(${config.exportName});`]
+      : []),
+    ...(compileZod && hasSchemaLite ? [`const _validationSchemaLite = compile(schemaLite);`] : []),
     ...(hoistedValidators.length > 0 ? ['', ...hoistedValidators] : []),
     ...(hoistedResolverLines.length > 0 ? ['', ...hoistedResolverLines] : []),
     '',

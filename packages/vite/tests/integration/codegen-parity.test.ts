@@ -149,7 +149,8 @@ function pluginConfigFor(c: ParityCase): import('@zod-to-form/core').CodegenConf
     mode: 'submit',
     ui: 'html',
     exportName: c.exportName,
-    schemaImportPath: `./${c.name.replace(/\s+/g, '_')}`
+    schemaImportPath: `./${c.name.replace(/\s+/g, '_')}.ts`,
+    componentConfig: { components: { source: '@/components/ui', preset: 'html' as const } }
   };
 }
 
@@ -170,13 +171,10 @@ describe('codegen parity (plugin compileTarget ↔ CLI generateFormComponent)', 
         schemaFile: `/abs/${c.name.replace(/\s+/g, '_')}.ts`,
         variant: '',
         config: {
-          componentName: c.componentName,
-          mode: 'submit',
-          ui: 'html',
-          exportName: c.exportName,
-          // Match the CLI's schemaImportPath derivation to keep the
-          // comparison apples-to-apples.
-          schemaImportPath: config.schemaImportPath
+          types: [c.exportName],
+          components: { source: '@/components/ui', preset: 'html' as const },
+          defaults: { mode: 'submit', ui: 'html' },
+          schemas: { [c.exportName]: { name: c.componentName } }
         }
       });
 
@@ -196,7 +194,8 @@ describe('codegen parity (plugin compileTarget ↔ CLI generateFormComponent)', 
       mode: 'submit' as const,
       ui: 'html' as const,
       exportName: 'mySchema',
-      schemaImportPath: './my'
+      schemaImportPath: './my.ts',
+      componentConfig: { components: { source: '@/components/ui', preset: 'html' as const } }
     };
 
     const cliSource = generateFormComponent(walkSchema(schema), config);
@@ -207,10 +206,17 @@ describe('codegen parity (plugin compileTarget ↔ CLI generateFormComponent)', 
       variant: '',
       // Note: no exportName in the plugin's input config — auto-detect.
       config: {
-        componentName: 'MyForm',
-        mode: 'submit',
-        ui: 'html',
-        schemaImportPath: './my'
+        components: { source: '@/components/ui', preset: 'html' as const },
+        defaults: { mode: 'submit', ui: 'html' },
+        schemas: {
+          ['signupSchema']: { name: 'MyForm' },
+          ['userSchema']: { name: 'MyForm' },
+          ['mySchema']: { name: 'MyForm' },
+          ['activeSchema']: { name: 'MyForm' },
+          ['TestSchema']: { name: 'MyForm' },
+          ['testSchema']: { name: 'MyForm' },
+          ['schema']: { name: 'MyForm' }
+        }
       }
     });
 
@@ -230,10 +236,10 @@ describe('codegen parity (plugin compileTarget ↔ CLI generateFormComponent)', 
       schemaFile: '/abs/x.ts',
       variant: '__generate_1',
       config: {
-        componentName: 'UserChoice',
-        mode: 'submit',
-        ui: 'html',
-        exportName: 'mySchema'
+        types: ['mySchema'],
+        components: { source: '@/components/ui', preset: 'html' as const },
+        defaults: { mode: 'submit', ui: 'html' },
+        schemas: { ['mySchema']: { name: 'UserChoice' } }
       }
     });
     expect(result.generatedSource).toMatch(/(function|const)\s+Form\b/);

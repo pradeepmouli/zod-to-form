@@ -40,7 +40,7 @@ the optimization config here. The CLI reads `config.defaults.optimization`
 and forwards it; useZodForm accepts it via its own options. Both converge
 here as the single source of truth for the walker.
 
-**Type:** `{ level: 1 | 2 | 3; optimizers?: Record<string, FormOptimizer[]> }`
+**Type:** `OptimizationConfig & { optimizers?: Record<string, FormOptimizer[]> }`
 
 ## UseExternalSyncOptions
 
@@ -66,7 +66,7 @@ Component source and optional per-component overrides.
 `source` is used by CLI codegen to emit a static import statement (not used at runtime).
 `overrides` maps component names to `ComponentOverride` metadata (controlled, props, etc.).
 
-**Type:** `{ source: string; overrides?: Record<string, ComponentOverride> }`
+**Type:** `ComponentsConfig`
 
 **Required:** yes
 

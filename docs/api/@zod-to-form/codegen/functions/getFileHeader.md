@@ -6,9 +6,9 @@
 
 # Function: getFileHeader()
 
-> **getFileHeader**(`schemaImportPath`, `exportName`, `hasArrays?`, `mode?`, `componentImportLine?`, `options?`, `optimized?`): `string`
+> **getFileHeader**(`schemaImportPath`, `exportName`, `hasArrays?`, `mode?`, `componentImportLine?`, `options?`, `optimized?`, `typesModule?`): `string`
 
-Defined in: [codegen/src/templates.ts:100](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/codegen/src/templates.ts#L100)
+Defined in: codegen/src/templates.ts:101
 
 Generate the import block for a form component file.
 Emits react-hook-form, zodResolver, zod, and component import lines
@@ -74,6 +74,10 @@ Whether to conditionally include `zodResolver` and `zod` imports.
 #### includeZodResolver
 
 `boolean`
+
+### typesModule?
+
+`string`
 
 ## Returns
 

@@ -1,4 +1,5 @@
 import type { $ZodType as ZodType } from 'zod/v4/core';
+import { prepareValidationSchema } from './prepare-validation-schema.js';
 import { resolveMetadata } from './metadata.js';
 import { processFallback } from './processors/fallback.js';
 import { createProcessors } from './registry.js';
@@ -335,7 +336,7 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
     optimizerCtx = {
       optimizers,
       schemaLite: collector,
-      level: options!.optimization!.level,
+      level: options!.optimization!.level!,
       collectorBasePath: ''
     };
 
@@ -364,6 +365,20 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
     return left.order - right.order;
   });
 
+  // Metadata and optimizer decisions use original identities. Compile only final validation targets.
+  if (options?.optimization?.compileZod) {
+    const prepareFields = (items: FormField[]) => {
+      for (const field of items) {
+        if (field.validation?.mode === 'zodSchema' && field.zodSchema) {
+          field.zodSchema = prepareValidationSchema(field.zodSchema, options.optimization);
+        }
+        if (field.children) prepareFields(field.children);
+        if (field.arrayItem) prepareFields([field.arrayItem]);
+      }
+    };
+    prepareFields(sorted);
+  }
+
   if (isOptimized && collector) {
     const fallthroughFields = [...collector.fields.keys()];
     if (schemaLiteInfo) {
@@ -374,7 +389,10 @@ export function walkSchema(schema: ZodType, options?: WalkOptions): FormField[] 
 
     return {
       fields: sorted,
-      schemaLite: collector.build(),
+      schemaLite: (() => {
+        const lite = collector.build();
+        return lite ? prepareValidationSchema(lite, options?.optimization) : lite;
+      })(),
       schemaLiteInfo
     };
   }

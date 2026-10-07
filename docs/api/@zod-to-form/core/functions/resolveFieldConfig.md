@@ -8,7 +8,7 @@
 
 > **resolveFieldConfig**(`globalFields`, `schemaFields`): `Record`\<`string`, [`FieldConfig`](../type-aliases/FieldConfig.md)\>
 
-Defined in: [config.ts:509](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L509)
+Defined in: config.ts:532
 
 Merge global field config with per-schema field config overrides.
 Per-schema entries shallow-merge on top of global entries for the same key.
@@ -18,7 +18,7 @@ Returns an empty record when both inputs are undefined.
 
 ### globalFields
 
-`Record`\<`string`, [`FieldConfig`](../type-aliases/FieldConfig.md)\> \| `undefined`
+`Partial`\<`Record`\<`string`, [`FieldConfig`](../type-aliases/FieldConfig.md)\>\> \| `undefined`
 
 Global field overrides from `ZodFormsConfig.fields`.
 

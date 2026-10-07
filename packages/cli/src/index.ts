@@ -43,7 +43,7 @@ import {
   defineConfig,
   isZodSchema,
   validateConfig,
-  resolveFieldConfig,
+  resolveFormConfig,
   registerFlat,
   registerSchemaConfigs,
   type ComponentOverride,
@@ -63,7 +63,8 @@ export { defineConfig, validateConfig };
 
 export type { ComponentOverride, FieldConfig, ZodFormsConfig };
 
-type GenerateOptions = {
+export type GenerateOptions = {
+  variant?: string;
   config: string;
   schema: string;
   export?: string;
@@ -197,30 +198,30 @@ export async function runGenerate(options: GenerateOptions): Promise<{
     throw new Error('runGenerate requires an explicit export name.');
   }
   const exportName = options.export;
-  const componentConfig =
+  const authoredConfig =
     options._loadedConfig ?? (await loadConfig(path.resolve(cwd, options.config)));
 
-  // Merge config defaults with CLI flags (CLI flag > schemas.X.[prop] > defaults.[prop])
-  const schemaConfig = componentConfig.schemas?.[exportName];
-  const componentName = resolveComponentName(exportName, options.name ?? schemaConfig?.name);
-  const effectiveMode =
-    options.mode ?? schemaConfig?.mode ?? componentConfig.defaults?.mode ?? 'submit';
-  const effectiveOut = options.out ?? schemaConfig?.out ?? componentConfig.defaults?.out;
-  const effectiveServerAction =
-    options.serverAction ??
-    schemaConfig?.serverAction ??
-    componentConfig.defaults?.serverAction ??
-    false;
-  const effectiveUi = options.ui ?? componentConfig.defaults?.ui ?? 'shadcn';
-  const effectiveOverwrite = componentConfig.defaults?.overwrite ?? false;
-  const effectiveOptimization = componentConfig.defaults?.optimization;
+  const resolved = resolveFormConfig({
+    config: authoredConfig,
+    exportName,
+    variant: options.variant,
+    invocation: options
+  });
+  const {
+    componentConfig,
+    componentName,
+    mode: effectiveMode,
+    out: effectiveOut,
+    serverAction: effectiveServerAction,
+    ui: effectiveUi,
+    overwrite: effectiveOverwrite,
+    optimization: effectiveOptimization,
+    fields: mergedFields
+  } = resolved;
 
   const outputPath = resolveOutputPath(cwd, effectiveOut, componentName);
   const schemaModule = await loadSchemaModule(schemaPath);
   const schema = resolveSchemaExportFromModule(schemaModule, schemaPath, exportName);
-
-  // Merge field configs: schemas.X.fields over global fields
-  const mergedFields = resolveFieldConfig(componentConfig.fields, schemaConfig?.fields);
 
   // Populate a fresh registry from the merged flat config so walkSchema
   // sees the same overrides that codegen templates used to apply manually.
@@ -263,9 +264,10 @@ export async function runGenerate(options: GenerateOptions): Promise<{
     },
     ui: effectiveUi,
     serverAction: effectiveServerAction,
-    ...(isOptimized
-      ? { validationLevel: effectiveOptimization!.level, schemaLite, schemaLiteInfo }
-      : {})
+    optimization: effectiveOptimization,
+    formProvider: resolved.formProvider,
+    schemaLite,
+    schemaLiteInfo
   };
 
   const code = await generateFormComponent(fields, config);
@@ -367,6 +369,7 @@ export function createProgram(): Command {
     .option('--out <path>', 'Output directory or file path')
     .option('--name <componentName>', 'Generated component name')
     .option('--ui <preset>', 'UI preset (shadcn|html)')
+    .option('--variant <name>', 'Named configuration variant')
     .option('--dry-run', 'Print generated code without writing files', false)
     .option('--server-action', 'Generate a Next.js server action alongside the form', false)
     .option('--watch', 'Watch schema file for changes and regenerate on change', false)
@@ -375,15 +378,20 @@ export function createProgram(): Command {
       const configPath = path.resolve(cwd, commandOptions.config);
       const config = await loadConfig(configPath);
       const schemaPath = path.resolve(cwd, commandOptions.schema);
+      const selectedConfig = resolveFormConfig({
+        config,
+        exportName: '',
+        variant: commandOptions.variant
+      }).componentConfig;
 
       const exportNames = commandOptions.export
         ? [commandOptions.export]
-        : config.types && config.types.length > 0
-          ? config.types
+        : selectedConfig.types && selectedConfig.types.length > 0
+          ? selectedConfig.types
           : applyExportFilters(
               await resolveSchemaExportNames(schemaPath),
-              config.include,
-              config.exclude
+              selectedConfig.include,
+              selectedConfig.exclude
             );
 
       if (exportNames.length === 0) {
@@ -399,11 +407,12 @@ export function createProgram(): Command {
           export: exportName,
           _loadedConfig: config
         });
-        const schemaConfig = config.schemas?.[exportName];
-        const componentName = resolveComponentName(
+        const { componentName } = resolveFormConfig({
+          config,
           exportName,
-          commandOptions.name ?? schemaConfig?.name
-        );
+          variant: commandOptions.variant,
+          invocation: commandOptions
+        });
         results.push({ componentName, outputPath: result.outputPath });
       }
 

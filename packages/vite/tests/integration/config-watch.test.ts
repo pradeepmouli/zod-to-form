@@ -102,9 +102,9 @@ describe('config-watch integration', () => {
     await fs.writeFile(
       CONFIG_PATH,
       `export default {
-  componentName: 'RenamedForm',
-  mode: 'submit',
-  ui: 'html'
+  components: { source: '@/components/ui', preset: 'html' },
+  defaults: { mode: 'submit', ui: 'html' },
+  schemas: { userSchema: { name: 'RenamedForm' } }
 };
 `
     );
@@ -144,9 +144,9 @@ describe('config-watch integration', () => {
     await fs.writeFile(
       CONFIG_PATH,
       `export default {
-  componentName: 'RestoredForm',
-  mode: 'submit',
-  ui: 'html'
+  components: { source: '@/components/ui', preset: 'html' },
+  defaults: { mode: 'submit', ui: 'html' },
+  schemas: { userSchema: { name: 'RestoredForm' } }
 };
 `
     );

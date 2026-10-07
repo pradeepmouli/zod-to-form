@@ -67,42 +67,32 @@ createSchemaLiteCollector(options?: { useAnyBase?: boolean }): SchemaLiteCollect
 
 ### defineConfig
 
-Identity helper that returns its argument typed as `ZodFormsConfig`.
-
-Merges preset component overrides (e.g. shadcn) into `config.components.overrides`
-so that user-supplied overrides layer on top of the preset defaults. Use this in
-your `z2f.config.ts` to get full TypeScript inference and IDE autocompletion.
+Typed identity helper for canonical authored configuration.
+Presets are expanded by resolveFormConfig after variants and adapter overrides
+have merged, so changing presets does not retain injected settings.
 
 ```ts
 defineConfig<TComponents, TSchemas>(config: ZodFormsConfig<TComponents, TSchemas>): ZodFormsConfig<TComponents, TSchemas>
 ```
 
 **Parameters:**
-- `config: ZodFormsConfig<TComponents, TSchemas>` — The raw configuration object.
+- `config: ZodFormsConfig<TComponents, TSchemas>` — Authored configuration.
 
 **Returns:** `ZodFormsConfig<TComponents, TSchemas>`
 
-```ts
-export default defineConfig({
-  components: { source: '@/components/ui', preset: 'shadcn' },
-});
-```
-
 ### validateConfig
 
-Validates an unknown value as a `ZodFormsConfig` at runtime.
-
-Parses `value` using the internal Zod config schema and throws a descriptive
-error if validation fails. Use this when loading config from untrusted sources
-such as JSON files or dynamic `import()` calls.
+Validate canonical authored configuration without expanding presets.
+Unknown root keys are rejected; known nested properties retain validation,
+and field metadata supports application extensions.
 
 ```ts
 validateConfig(value: unknown, source: string): ZodFormsConfig<Record<string, unknown>>
 ```
 
 **Parameters:**
-- `value: unknown` — The value to validate.
-- `source: string` — Human-readable label for error messages (defaults to `'config'`).
+- `value: unknown` — 
+- `source: string` — 
 
 **Returns:** `ZodFormsConfig<Record<string, unknown>>`
 
@@ -113,29 +103,14 @@ Per-schema entries shallow-merge on top of global entries for the same key.
 Returns an empty record when both inputs are undefined.
 
 ```ts
-resolveFieldConfig(globalFields: Record<string, FieldConfig> | undefined, schemaFields: Partial<Record<string, FieldConfig>> | undefined): Record<string, FieldConfig>
+resolveFieldConfig(globalFields: Partial<Record<string, FieldConfig>> | undefined, schemaFields: Partial<Record<string, FieldConfig>> | undefined): Record<string, FieldConfig>
 ```
 
 **Parameters:**
-- `globalFields: Record<string, FieldConfig> | undefined` — Global field overrides from `ZodFormsConfig.fields`.
+- `globalFields: Partial<Record<string, FieldConfig>> | undefined` — Global field overrides from `ZodFormsConfig.fields`.
 - `schemaFields: Partial<Record<string, FieldConfig>> | undefined` — Per-schema field overrides from `ZodFormsConfig.schemas[key].fields`.
 
 **Returns:** `Record<string, FieldConfig>`
-
-### normalizeConfig
-
-Normalize a validated config by migrating deprecated top-level fields to their canonical locations.
-Currently handles the legacy top-level `overwrite` key — moves it into `defaults.overwrite`
-so the rest of the pipeline can assume the normalized shape.
-
-```ts
-normalizeConfig(config: ZodFormsConfig<Record<string, unknown>>): ZodFormsConfig<Record<string, unknown>>
-```
-
-**Parameters:**
-- `config: ZodFormsConfig<Record<string, unknown>>` — A fully validated `ZodFormsConfig` (output of `validateConfig`).
-
-**Returns:** `ZodFormsConfig<Record<string, unknown>>`
 
 ### inferLabel
 
@@ -899,6 +874,46 @@ processReadonly(schema: $ZodReadonly, ctx: FormProcessorContext, field: FormFiel
 - `field: FormField` — The base FormField to mutate in-place.
 - `params: ProcessParams` — Parent path metadata passed through to the inner processor.
 
+### mergeConfigLayers
+
+Merge authored layers without expanding presets. Arrays and props replace.
+
+```ts
+mergeConfigLayers(layers: ConfigPatch[]): ZodFormsConfig
+```
+
+**Parameters:**
+- `layers: ConfigPatch[]` — 
+
+**Returns:** `ZodFormsConfig`
+
+### resolveFormConfig
+
+Resolve one root export from the canonical config and optional variant.
+
+```ts
+resolveFormConfig(__namedParameters: { config: ZodFormsConfig; exportName: string; variant?: string; invocation?: ConfigInvocation }): ResolvedFormConfig
+```
+
+**Parameters:**
+- `__namedParameters: { config: ZodFormsConfig; exportName: string; variant?: string; invocation?: ConfigInvocation }` — 
+
+**Returns:** `ResolvedFormConfig`
+
+### prepareValidationSchema
+
+Compile final validation targets once; preserve authored schemas for metadata lookup.
+
+```ts
+prepareValidationSchema<T>(schema: T, optimization?: OptimizationConfig): T
+```
+
+**Parameters:**
+- `schema: T` — 
+- `optimization: OptimizationConfig` (optional) — 
+
+**Returns:** `T`
+
 ### FormField
 
 Intermediate representation of a single form field produced by `walkSchema`.
@@ -1006,6 +1021,14 @@ type ComponentPreset = "shadcn" | "html"
 Default generation settings applied to all schemas unless overridden per-schema.
 These map directly to CLI flag defaults and to the `defaults` block in `z2f.config.ts`.
 
+### ConfigPatch
+
+Partial canonical configuration used by variants and adapter overrides.
+
+```ts
+type ConfigPatch = Omit<Partial<ZodFormsConfig<TComponents, TSchemas>>, "components" | "variants"> & { components?: Partial<ComponentsConfig<TComponents>> }
+```
+
 ### StripIndexSignature
 
 Strips index signatures from a type, keeping only explicitly declared keys.
@@ -1082,6 +1105,8 @@ The control strategy for a field's component:
 type ControlMode = "register" | "controller"
 ```
 
+### ConfigInvocation
+
 ### builtinOptimizers
 
 The default optimizer registry — L1 (decompose) + L2 (native rules) chains merged per type.
@@ -1090,6 +1115,28 @@ NEVER mutate this directly — use `createOptimizers(custom)` to extend.
 
 ```ts
 const builtinOptimizers: Record<string, FormOptimizer[]>
+```
+
+### configPropertySchemas
+
+Shared property validators for configuration editors and adapters.
+
+```ts
+const configPropertySchemas: { components: ZodObject<{ source: ZodString; preset: ZodOptional<ZodEnum<{ shadcn: "shadcn"; html: "html" }>>; fieldTemplate: ZodOptional<ZodString>; overrides: ZodOptional<ZodRecord<ZodString, ZodObject<{ controlled: ZodOptional<ZodBoolean>; props: ZodOptional<ZodRecord<ZodString, ZodUnknown>> }, $loose>>> }, $loose>; include: ZodOptional<ZodArray<ZodString>>; exclude: ZodOptional<ZodArray<ZodString>>; types: ZodOptional<ZodArray<ZodString>>; fields: ZodOptional<ZodRecord<ZodString, ZodObject<{ component: ZodOptional<ZodString>; order: ZodOptional<ZodNumber>; hidden: ZodOptional<ZodBoolean>; disabled: ZodOptional<ZodBoolean>; props: ZodOptional<ZodRecord<ZodString, ZodUnknown>>; section: ZodOptional<ZodString>; helpText: ZodOptional<ZodString> }, $loose>>>; defaults: ZodOptional<ZodObject<{ mode: ZodOptional<ZodEnum<{ submit: "submit"; auto-save: "auto-save" }>>; ui: ZodOptional<ZodEnum<{ shadcn: "shadcn"; html: "html" }>>; out: ZodOptional<ZodString>; overwrite: ZodOptional<ZodBoolean>; serverAction: ZodOptional<ZodBoolean>; formProvider: ZodOptional<ZodBoolean>; optimization: ZodOptional<ZodObject<{ level: ZodOptional<ZodUnion<readonly [ZodLiteral<(...)>, ZodLiteral<(...)>, ZodLiteral<(...)>]>>; compileZod: ZodOptional<ZodBoolean> }, $loose>> }, $loose>>; schemas: ZodOptional<ZodRecord<ZodString, ZodObject<{ name: ZodOptional<ZodString>; component: ZodOptional<ZodString>; mode: ZodOptional<ZodEnum<{ submit: "submit"; auto-save: "auto-save" }>>; out: ZodOptional<ZodString>; serverAction: ZodOptional<ZodBoolean>; fields: ZodOptional<ZodRecord<ZodString, ZodObject<{ component: ZodOptional<ZodString>; order: ZodOptional<ZodNumber>; hidden: ZodOptional<ZodBoolean>; disabled: ZodOptional<ZodBoolean>; props: ZodOptional<ZodRecord<(...), (...)>>; section: ZodOptional<ZodString>; helpText: ZodOptional<ZodString> }, $loose>>> }, $loose>>> }
+```
+
+### configDraftSchema
+
+Validated partial draft for configuration editors and persistence.
+
+```ts
+const configDraftSchema: ZodPipe<ZodObject<{ variants: ZodOptional<ZodOptional<ZodRecord<ZodString, ZodObject<{ components: ZodOptional<ZodObject<{ source: ...; preset: ...; fieldTemplate: ...; overrides: ... }, $loose>>; include: ZodOptional<ZodArray<ZodString>>; exclude: ZodOptional<ZodArray<ZodString>>; types: ZodOptional<ZodArray<ZodString>>; fields: ZodOptional<ZodRecord<ZodString, ZodObject<(...), (...)>>>; defaults: ZodOptional<ZodObject<{ mode: ...; ui: ...; out: ...; overwrite: ...; serverAction: ...; formProvider: ...; optimization: ... }, $loose>>; schemas: ZodOptional<ZodRecord<ZodString, ZodObject<(...), (...)>>> }, $strict>>>>; include: ZodOptional<ZodOptional<ZodArray<ZodString>>>; exclude: ZodOptional<ZodOptional<ZodArray<ZodString>>>; types: ZodOptional<ZodOptional<ZodArray<ZodString>>>; fields: ZodOptional<ZodOptional<ZodRecord<ZodString, ZodObject<{ component: ZodOptional<ZodString>; order: ZodOptional<ZodNumber>; hidden: ZodOptional<ZodBoolean>; disabled: ZodOptional<ZodBoolean>; props: ZodOptional<ZodRecord<ZodString, ZodUnknown>>; section: ZodOptional<ZodString>; helpText: ZodOptional<ZodString> }, $loose>>>>; defaults: ZodOptional<ZodOptional<ZodObject<{ mode: ZodOptional<ZodEnum<{ submit: "submit"; auto-save: "auto-save" }>>; ui: ZodOptional<ZodEnum<{ shadcn: "shadcn"; html: "html" }>>; out: ZodOptional<ZodString>; overwrite: ZodOptional<ZodBoolean>; serverAction: ZodOptional<ZodBoolean>; formProvider: ZodOptional<ZodBoolean>; optimization: ZodOptional<ZodObject<{ level: ZodOptional<(...)>; compileZod: ZodOptional<(...)> }, $loose>> }, $loose>>>; schemas: ZodOptional<ZodOptional<ZodRecord<ZodString, ZodObject<{ name: ZodOptional<ZodString>; component: ZodOptional<ZodString>; mode: ZodOptional<ZodEnum<{ submit: ...; auto-save: ... }>>; out: ZodOptional<ZodString>; serverAction: ZodOptional<ZodBoolean>; fields: ZodOptional<ZodRecord<ZodString, ZodObject<(...), (...)>>> }, $loose>>>>; components: ZodOptional<ZodObject<{ source: ZodOptional<ZodString>; preset: ZodOptional<ZodOptional<ZodEnum<{ shadcn: "shadcn"; html: "html" }>>>; fieldTemplate: ZodOptional<ZodOptional<ZodString>>; overrides: ZodOptional<ZodOptional<ZodRecord<ZodString, ZodObject<{ controlled: ...; props: ... }, $loose>>>> }, $loose>> }, $strict>, ZodTransform<Omit<Partial<ZodFormsConfig<Record<string, unknown>, Record<string, unknown>>>, "components" | "variants"> & { components?: Partial<ComponentsConfig<Record<string, unknown>>> } & Pick<ZodFormsConfig<Record<string, unknown>, Record<string, unknown>>, "variants">, { variants?: Record<string, { components?: { source?: string; preset?: "shadcn" | "html"; fieldTemplate?: string; overrides?: Record<string, { controlled?: ...; props?: ...; [key: ...]: ... }>; [key: string]: unknown }; include?: string[]; exclude?: string[]; types?: string[]; fields?: Record<string, { component?: string; order?: number; hidden?: boolean; disabled?: boolean; props?: Record<(...), (...)>; section?: string; helpText?: string; [key: string]: unknown }>; defaults?: { mode?: "submit" | "auto-save"; ui?: "shadcn" | "html"; out?: string; overwrite?: boolean; serverAction?: boolean; formProvider?: boolean; optimization?: { level?: (...) | (...) | (...) | (...); compileZod?: (...) | (...) | (...); [key: string]: unknown }; [key: string]: unknown }; schemas?: Record<string, { name?: string; component?: string; mode?: "submit" | "auto-save"; out?: string; serverAction?: boolean; fields?: Record<(...), (...)>; [key: string]: unknown }> }>; include?: string[]; exclude?: string[]; types?: string[]; fields?: Record<string, { component?: string; order?: number; hidden?: boolean; disabled?: boolean; props?: Record<string, unknown>; section?: string; helpText?: string; [key: string]: unknown }>; defaults?: { mode?: "submit" | "auto-save"; ui?: "shadcn" | "html"; out?: string; overwrite?: boolean; serverAction?: boolean; formProvider?: boolean; optimization?: { level?: 1 | 2 | 3; compileZod?: boolean; [key: string]: unknown }; [key: string]: unknown }; schemas?: Record<string, { name?: string; component?: string; mode?: "submit" | "auto-save"; out?: string; serverAction?: boolean; fields?: Record<string, { component?: string; order?: number; hidden?: boolean; disabled?: boolean; props?: Record<(...), (...)>; section?: string; helpText?: string; [key: string]: unknown }>; [key: string]: unknown }>; components?: { source?: string; preset?: "shadcn" | "html"; fieldTemplate?: string; overrides?: Record<string, { controlled?: boolean; props?: Record<string, unknown>; [key: string]: unknown }>; [key: string]: unknown } }>>
+```
+
+### fieldConfigSchema
+
+```ts
+const fieldConfigSchema: ZodObject<{ component: ZodOptional<ZodString>; order: ZodOptional<ZodNumber>; hidden: ZodOptional<ZodBoolean>; disabled: ZodOptional<ZodBoolean>; props: ZodOptional<ZodRecord<ZodString, ZodUnknown>>; section: ZodOptional<ZodString>; helpText: ZodOptional<ZodString> }, $loose>
 ```
 
 ### SHADCN_OVERRIDES
@@ -1185,6 +1232,24 @@ const loginSchema = z.object({
 
 <ZodForm schema={loginSchema} onSubmit={(data) => console.log(data)} />
 ```
+
+### SectionRenderer
+
+Renders section components that group multiple form fields.
+Each section component receives a `fields` prop with the field names it manages,
+and reads/writes its fields via useFormContext (FormProvider).
+Section components are resolved by name from `componentConfig.componentModule`.
+Use with `collectFieldSections` inside an existing FormProvider to compose
+custom layouts without creating a second form or duplicating section rendering.
+
+```ts
+SectionRenderer(__namedParameters: { sections: ReadonlyMap<string, string[]>; componentConfig?: Pick<RuntimeComponentConfig, "componentModule"> }): Element
+```
+
+**Parameters:**
+- `__namedParameters: { sections: ReadonlyMap<string, string[]>; componentConfig?: Pick<RuntimeComponentConfig, "componentModule"> }` — 
+
+**Returns:** `Element`
 
 ### useZodForm
 
@@ -1439,42 +1504,32 @@ await program.parseAsync(['node', 'z2f', 'generate',
 
 ### defineConfig
 
-Identity helper that returns its argument typed as `ZodFormsConfig`.
-
-Merges preset component overrides (e.g. shadcn) into `config.components.overrides`
-so that user-supplied overrides layer on top of the preset defaults. Use this in
-your `z2f.config.ts` to get full TypeScript inference and IDE autocompletion.
+Typed identity helper for canonical authored configuration.
+Presets are expanded by resolveFormConfig after variants and adapter overrides
+have merged, so changing presets does not retain injected settings.
 
 ```ts
 defineConfig<TComponents, TSchemas>(config: ZodFormsConfig<TComponents, TSchemas>): ZodFormsConfig<TComponents, TSchemas>
 ```
 
 **Parameters:**
-- `config: ZodFormsConfig<TComponents, TSchemas>` — The raw configuration object.
+- `config: ZodFormsConfig<TComponents, TSchemas>` — Authored configuration.
 
 **Returns:** `ZodFormsConfig<TComponents, TSchemas>`
 
-```ts
-export default defineConfig({
-  components: { source: '@/components/ui', preset: 'shadcn' },
-});
-```
-
 ### validateConfig
 
-Validates an unknown value as a `ZodFormsConfig` at runtime.
-
-Parses `value` using the internal Zod config schema and throws a descriptive
-error if validation fails. Use this when loading config from untrusted sources
-such as JSON files or dynamic `import()` calls.
+Validate canonical authored configuration without expanding presets.
+Unknown root keys are rejected; known nested properties retain validation,
+and field metadata supports application extensions.
 
 ```ts
 validateConfig(value: unknown, source?: string): ZodFormsConfig<Record<string, unknown>>
 ```
 
 **Parameters:**
-- `value: unknown` — The value to validate.
-- `source: string` (optional) — Human-readable label for error messages (defaults to `'config'`).
+- `value: unknown` — 
+- `source: string` (optional) — 
 
 **Returns:** `ZodFormsConfig<Record<string, unknown>>`
 

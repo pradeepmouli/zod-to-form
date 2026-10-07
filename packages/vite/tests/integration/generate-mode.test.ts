@@ -45,9 +45,17 @@ async function runBuild(options: {
       z2fVite({
         ...(options.generate ? { generate: {} } : {}),
         configOverride: {
-          componentName: 'SignupForm',
-          mode: 'submit',
-          ui: 'html'
+          components: { source: '@/components/ui', preset: 'html' },
+          defaults: { mode: 'submit', ui: 'html' },
+          schemas: {
+            ['signupSchema']: { name: 'SignupForm' },
+            ['userSchema']: { name: 'SignupForm' },
+            ['mySchema']: { name: 'SignupForm' },
+            ['activeSchema']: { name: 'SignupForm' },
+            ['TestSchema']: { name: 'SignupForm' },
+            ['testSchema']: { name: 'SignupForm' },
+            ['schema']: { name: 'SignupForm' }
+          }
         },
         logLevel: options.logLevel ?? 'silent'
       })

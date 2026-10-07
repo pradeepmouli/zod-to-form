@@ -8,12 +8,22 @@
 
 > **OptimizationConfig** = `object`
 
-Defined in: [config.ts:80](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L80)
+Defined in: config.ts:80
 
 ## Properties
+
+### compileZod?
+
+> `optional` **compileZod?**: `boolean`
+
+Defined in: config.ts:83
+
+Compile validation targets with Zod, independently of the optimization level.
+
+***
 
 ### level?
 
 > `optional` **level?**: `1` \| `2` \| `3`
 
-Defined in: [config.ts:81](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L81)
+Defined in: config.ts:81

@@ -21,8 +21,8 @@ The plugin coexists with the CLI: a project may commit some generated forms via 
 
 ## Prerequisites
 
-- Node.js >= 20
-- Zod v4 (`zod@^4.0.0`) — Zod v3 is **not** supported
+- Node.js >= 22
+- Zod v4 (`zod@^4.6.0`) — Zod v3 is **not** supported
 - A Vite project (`vite@^5 || ^6 || ^7 || ^8`)
 - React 18+ with `react-hook-form` and `@hookform/resolvers`
 
@@ -135,15 +135,16 @@ Declare a `z2f.config.ts` in your project root:
 
 ```ts
 // z2f.config.ts
-export default {
-  componentName: 'UserForm',
-  mode: 'submit',
-  ui: 'html',
+import { defineConfig } from '@zod-to-form/core';
+export default defineConfig({
+  components: { source: './ui', preset: 'html' },
+  defaults: { mode: 'submit', ui: 'html', optimization: { compileZod: false } },
+  schemas: { userSchema: { name: 'UserForm' } },
   variants: {
-    edit: { componentName: 'UserEditForm' },
-    create: { componentName: 'UserCreateForm', ui: 'shadcn' }
+    edit: { schemas: { userSchema: { name: 'UserEditForm' } } },
+    create: { components: { preset: 'shadcn' }, defaults: { ui: 'shadcn' } }
   }
-};
+});
 ```
 
 Then import each variant via `?z2f=<variant>`:
@@ -165,7 +166,7 @@ The plugin's `load` hook fires during the production build the same way it fires
 
 ## Validation optimization (resolver tree-shake)
 
-When `validationLevel` is set in the plugin config, the build pass strips every `zodResolver(...)` call from `useZodForm` and removes the unused `@hookform/resolvers/zod` import. The optimized bundle is materially smaller:
+When `defaults.optimization.level` is set in the plugin config, the build pass strips every `zodResolver(...)` call from `useZodForm` and removes the unused `@hookform/resolvers/zod` import. The optimized bundle is materially smaller:
 
 ```ts
 // vite.config.ts
@@ -175,7 +176,7 @@ export default {
   plugins: [
     z2fVite({
       configOverride: {
-        validationLevel: 2
+        defaults: { optimization: { level: 2, compileZod: false } }
       }
     })
   ]
@@ -213,12 +214,23 @@ A typical summary at info level:
 
 See [the generate-mode contract](https://github.com/pradeepmouli/zod-to-form/blob/master/specs/007-vite-codegen-plugin/contracts/generate-mode.md) for the full match-criteria table.
 
+## One config for CLI and Vite
+
+`configOverride` takes a partial canonical config, with the same nested shape as `z2f.config.ts`. It inherits loaded defaults, optimization properties and field paths using the [shared merge rules](./core-config.md#shared-layers-and-variants). You can import the authoritative config and pass it directly:
+
+```ts
+import forms from './z2f.config';
+z2fVite({ configOverride: forms });
+```
+
+Compilation alone (`defaults.optimization: { compileZod: true }`) retains the whole-schema resolver. It does not enable level-based resolver stripping.
+
 ## Plugin options
 
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `configPath` | `string` | (auto-discover) | Explicit path to a `z2f.config.{ts,mts,js,mjs}` file |
-| `configOverride` | `Partial<Z2FViteConfig>` | `{}` | Shallow override merged on top of the loaded config |
+| `configOverride` | `ConfigPatch` | `{}` | Canonical patch merged over the loaded config |
 | `generate` | `{ include?, exclude? }` | `undefined` | Presence enables generate mode; include/exclude are glob patterns |
 | `write` | `{ outDir?, filenamePattern? }` | `undefined` | Persist generated files to disk in addition to the virtual modules |
 | `logLevel` | `'silent' \| 'warn' \| 'info' \| 'debug'` | `'info'` | Plugin-specific log level |
@@ -229,7 +241,7 @@ A project may use both the CLI (committed `*.generated.tsx` files) and the Vite 
 
 ## Troubleshooting
 
-- **`Z2F_VITE_AMBIGUOUS_EXPORT`** — the schema file has multiple Zod schema exports. Set `exportName` in your `z2f.config.ts` (or in a variant) to pick one.
+- **`Z2F_VITE_AMBIGUOUS_EXPORT`** — the schema file has multiple Zod schema exports. Set `types: ['UserSchema']` in your `z2f.config.ts` (or a variant) to pick one.
 - **`Z2F_VITE_SCHEMA_OUTSIDE_ROOT`** — the resolved schema path is outside your Vite root. Move it into the project, or use the CLI for cross-project schemas.
 - **`Z2F_VITE_UNKNOWN_VARIANT`** — you imported `?z2f=foo` but `foo` isn't declared in `config.variants`. Add it, or drop the variant suffix.
 - **A specific JSX site isn't being rewritten** — run dev with `logLevel: 'debug'` or build with `logLevel: 'info'` and check the generate-mode summary for the per-site reason.

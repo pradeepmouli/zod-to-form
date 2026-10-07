@@ -1,4 +1,5 @@
-import { bench, describe } from 'vitest';
+import { describe } from 'vitest';
+import { bench } from '../../../core/tests/performance/register-benchmark.js';
 import { walkSchema } from '@zod-to-form/core';
 import type { WalkResult } from '@zod-to-form/core';
 import { generateFormComponent } from '../../src/index.js';
@@ -31,7 +32,7 @@ describe('codegen pipeline (walk + generate)', () => {
         }) as WalkResult;
         generateFormComponent(result.fields, {
           ...baseConfig,
-          validationLevel: 1,
+          optimization: { level: 1 },
           schemaLite: result.schemaLite,
           schemaLiteInfo: result.schemaLiteInfo
         });
@@ -43,7 +44,7 @@ describe('codegen pipeline (walk + generate)', () => {
         }) as WalkResult;
         generateFormComponent(result.fields, {
           ...baseConfig,
-          validationLevel: 2,
+          optimization: { level: 2 },
           schemaLite: result.schemaLite,
           schemaLiteInfo: result.schemaLiteInfo
         });

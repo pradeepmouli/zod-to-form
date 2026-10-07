@@ -282,6 +282,7 @@ Before using the CLI, decide: are you scripting (use `runGenerate`) or interacti
 ## Other
 
 - [ComponentOverride](type-aliases/ComponentOverride.md)
+- [GenerateOptions](type-aliases/GenerateOptions.md)
 
 ## Types
 

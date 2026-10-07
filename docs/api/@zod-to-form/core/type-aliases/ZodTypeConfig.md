@@ -8,7 +8,16 @@
 
 > **ZodTypeConfig**\<`TFieldKeys`, `TComponents`\> = `object`
 
-Defined in: [config.ts:102](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L102)
+Defined in: config.ts:116
+
+Configuration for a single named schema export in `defineConfig({ schemas: ... })`.
+
+This type mixes two scopes:
+- **root-export generation settings** like `name`, `mode`, `out`, and `serverAction`
+- **schema-identity defaults** like `component` and nested `fields`, which follow
+  the same exported schema object anywhere it is reused as a subschema
+
+Usage-site path overrides still win over these schema defaults.
 
 ## Type Parameters
 
@@ -22,11 +31,33 @@ Defined in: [config.ts:102](https://github.com/pradeepmouli/zod-to-form/blob/460
 
 ## Properties
 
+### component?
+
+> `optional` **component?**: `string`
+
+Defined in: config.ts:135
+
+Default renderer for this schema wherever the same exported schema object
+is encountered.
+
+When set on a reusable subschema export (for example `ExpressionSchema`),
+any parent schema that references that exact schema instance will render it
+with this component unless a usage-site path override wins.
+
+***
+
 ### fields?
 
 > `optional` **fields?**: `Partial`\<`Record`\<`TFieldKeys`, [`TypedFieldConfig`](TypedFieldConfig.md)\<`TComponents`\>\>\>
 
-Defined in: [config.ts:110](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L110)
+Defined in: config.ts:150
+
+Schema-local field configuration applied relative to this schema's own
+shape.
+
+For a root schema, these entries merge over global `fields`. For a reused
+exported subschema, the same config follows that schema by identity and
+becomes its default nested behavior everywhere it appears.
 
 ***
 
@@ -34,7 +65,9 @@ Defined in: [config.ts:110](https://github.com/pradeepmouli/zod-to-form/blob/460
 
 > `optional` **mode?**: `"submit"` \| `"auto-save"`
 
-Defined in: [config.ts:107](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L107)
+Defined in: config.ts:137
+
+Root-only generation mode override for this schema export.
 
 ***
 
@@ -42,7 +75,12 @@ Defined in: [config.ts:107](https://github.com/pradeepmouli/zod-to-form/blob/460
 
 > `optional` **name?**: `string`
 
-Defined in: [config.ts:106](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L106)
+Defined in: config.ts:126
+
+Override the generated top-level form component name when this schema is
+selected as the root export in CLI or Vite codegen.
+
+Root-only: nested appearances of the same subschema do not use this name.
 
 ***
 
@@ -50,7 +88,9 @@ Defined in: [config.ts:106](https://github.com/pradeepmouli/zod-to-form/blob/460
 
 > `optional` **out?**: `string`
 
-Defined in: [config.ts:108](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L108)
+Defined in: config.ts:139
+
+Root-only output path override for this schema export.
 
 ***
 
@@ -58,4 +98,6 @@ Defined in: [config.ts:108](https://github.com/pradeepmouli/zod-to-form/blob/460
 
 > `optional` **serverAction?**: `boolean`
 
-Defined in: [config.ts:109](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L109)
+Defined in: config.ts:141
+
+Root-only server action override for this schema export.

@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import type { FormField } from '@zod-to-form/core';
+import {
+  configPropertySchemas,
+  fieldConfigSchema as canonicalFieldSchema,
+  mergeConfigLayers,
+  validateConfig
+} from '@zod-to-form/core';
+import type { FormField, FieldConfig, ConfigDefaults } from '@zod-to-form/core';
 import { buildConfigSource } from '@zod-to-form/codegen';
 import { FIELD_COMPONENT_NAMES } from '@zod-to-form/react';
 import type { PlaygroundConfig, ComponentMapType } from '../types/playground.ts';
@@ -15,32 +21,17 @@ const COMPONENT_OPTIONS = FIELD_COMPONENT_NAMES as readonly [string, ...string[]
  * Per-field config schema — each field in the user's schema gets
  * one of these in the config Form.
  */
-const fieldConfigSchema = z.object({
+const fieldConfigSchema = canonicalFieldSchema.extend({
   component: z.enum(COMPONENT_OPTIONS).optional(),
   label: z.string().optional(),
   placeholder: z.string().optional(),
-  order: z.coerce.number().optional(),
-  hidden: z.boolean().optional(),
-  disabled: z.boolean().optional(),
-  helpText: z.string().optional()
+  order: z.coerce.number().optional()
 });
-
 type FieldConfigEntry = z.infer<typeof fieldConfigSchema>;
-
-/** Simplified components section for playground config editing (subset of core ComponentsConfig) */
-const componentsSchema = z.object({
-  source: z.string().optional(),
-  preset: z.enum(['shadcn', 'html']).optional()
-});
-
-/** Simplified defaults section for playground config editing (subset of core ConfigDefaults) */
-const defaultsSchema = z.object({
-  mode: z.enum(['submit', 'auto-save']).optional(),
-  ui: z.enum(['shadcn', 'html']).optional(),
-  overwrite: z.boolean().optional(),
-  serverAction: z.boolean().optional(),
-  formProvider: z.boolean().optional()
-});
+const componentsSchema = configPropertySchemas.components
+  .pick({ source: true, preset: true })
+  .partial();
+const defaultsSchema = configPropertySchemas.defaults;
 
 /**
  * Generate a dynamic Zod schema for z2f.config editing, mirroring the
@@ -86,7 +77,7 @@ export function filterOrphanedOverrides(
   if (!config?.fields || !fields) return config;
 
   const validKeys = new Set(fields.map((f) => f.key));
-  const filtered: Record<string, unknown> = {};
+  const filtered: Record<string, FieldConfig> = {};
 
   for (const [key, value] of Object.entries(config.fields)) {
     if (validKeys.has(key)) {
@@ -142,6 +133,7 @@ export function configToFormValues(
   const init = getInitDefaults(componentMap);
 
   return {
+    ...config,
     components: { ...init.components, ...config?.components },
     defaults: { ...init.defaults, ...config?.defaults },
     fields: fieldValues
@@ -163,27 +155,69 @@ function filterDefinedEntries(obj: Record<string, unknown>): Record<string, unkn
  * Convert form values back to a PlaygroundConfig.
  * Empty/undefined entries are omitted.
  */
+function removeClearedProperties(
+  existing: Record<string, unknown>,
+  edits: Record<string, unknown>
+): Record<string, unknown> {
+  const retained = { ...existing };
+  for (const [key, value] of Object.entries(edits)) {
+    if (value === undefined) {
+      delete retained[key];
+    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const previous = retained[key];
+      const child = removeClearedProperties(
+        previous && typeof previous === 'object' && !Array.isArray(previous)
+          ? (previous as Record<string, unknown>)
+          : {},
+        value as Record<string, unknown>
+      );
+      if (Object.keys(child).length) retained[key] = child;
+      else delete retained[key];
+    }
+  }
+  return retained;
+}
+
 export function formValuesToConfig(
   values: Record<string, unknown>,
   existingConfig: PlaygroundConfig | null
 ): PlaygroundConfig {
+  // Own undefined keys are cleared controls; absent keys are unexposed metadata.
+  const retained = removeClearedProperties(existingConfig ?? {}, values) as PlaygroundConfig;
   const rawComponents = (values.components ?? {}) as Record<string, unknown>;
   const rawDefaults = (values.defaults ?? {}) as Record<string, unknown>;
   const rawFields = (values.fields ?? {}) as Record<string, FieldConfigEntry | undefined>;
 
   // Filter out empty field entries (where all sub-values are undefined)
-  const nonEmptyFields: Record<string, unknown> = {};
+  const nonEmptyFields: Record<string, FieldConfig> = {};
   for (const [key, entry] of Object.entries(rawFields)) {
     if (entry && Object.values(entry).some((v) => v !== undefined)) {
-      nonEmptyFields[key] = entry;
+      nonEmptyFields[key] = filterDefinedEntries(entry) ?? {};
     }
   }
 
+  const merged = mergeConfigLayers(
+    { components: getInitDefaults('default').components },
+    retained,
+    {
+      defaults: filterDefinedEntries(rawDefaults) as ConfigDefaults | undefined,
+      fields: nonEmptyFields
+    }
+  );
   return {
-    ...existingConfig,
-    components: filterDefinedEntries(rawComponents),
-    defaults: filterDefinedEntries(rawDefaults),
-    fields: Object.keys(nonEmptyFields).length > 0 ? nonEmptyFields : undefined
+    ...retained,
+    components: filterDefinedEntries({
+      ...retained.components,
+      ...filterDefinedEntries(rawComponents)
+    }),
+    defaults: filterDefinedEntries({
+      ...merged.defaults,
+      optimization:
+        retained.defaults?.optimization || rawDefaults.optimization
+          ? merged.defaults?.optimization
+          : undefined
+    }),
+    fields: Object.keys(merged.fields ?? {}).length > 0 ? merged.fields : undefined
   };
 }
 
@@ -196,15 +230,8 @@ export function serializeConfigToTs(
   componentMap: ComponentMapType = 'default'
 ): string {
   const init = getInitDefaults(componentMap);
-  const components = { ...init.components, ...config?.components };
-  const defaults = { ...init.defaults, ...config?.defaults };
-
-  return buildConfigSource({
-    componentSource: components.source ?? init.components.source,
-    preset: components.preset ?? init.components.preset,
-    defaults,
-    fields: config?.fields as Record<string, Record<string, unknown>> | undefined
-  });
+  const canonical = mergeConfigLayers(init, config ?? {});
+  return buildConfigSource({ componentSource: canonical.components.source, config: canonical });
 }
 
 /**
@@ -242,25 +269,20 @@ export function parseConfigFromTs(source: string): ConfigParseResult {
       // Remove trailing commas before } or ]
       .replace(/,\s*([\]}])/g, '$1');
 
-    const parsed = JSON.parse(normalized);
+    const parsed = (() => {
+      try {
+        return JSON.parse(jsonStr);
+      } catch {
+        return JSON.parse(normalized);
+      }
+    })();
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
       return { ok: false, error: 'Config must be an object' };
     }
 
-    const config: PlaygroundConfig = {};
-    if (
-      parsed.components &&
-      typeof parsed.components === 'object' &&
-      !Array.isArray(parsed.components)
-    ) {
-      config.components = parsed.components as Record<string, unknown>;
-    }
-    if (parsed.fields && typeof parsed.fields === 'object' && !Array.isArray(parsed.fields)) {
-      config.fields = parsed.fields as Record<string, unknown>;
-    }
-    if (parsed.defaults && typeof parsed.defaults === 'object' && !Array.isArray(parsed.defaults)) {
-      config.defaults = parsed.defaults as Record<string, unknown>;
-    }
+    // Validate completed data against core while retaining the authored, partial draft.
+    validateConfig(mergeConfigLayers(getInitDefaults('default'), parsed));
+    const config = parsed as PlaygroundConfig;
 
     return { ok: true, config };
   } catch (e) {

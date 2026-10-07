@@ -8,7 +8,7 @@
 
 > **processTemplateLiteral**(`schema`, `_ctx`, `field`, `_params`): `void`
 
-Defined in: [processors/string.ts:102](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/processors/string.ts#L102)
+Defined in: processors/string.ts:106
 
 Process `z.templateLiteral()` — renders as a plain text `Input`.
 Template literals have a fixed structure; no constraints are extracted.

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { compileTarget } from '../../src/query-mode/transform.js';
-import type { Z2FViteConfig } from '../../src/types.js';
+import type { ZodFormsConfig } from '@zod-to-form/core';
 
 /**
  * Contract: compileTarget is the pure side of the `load` hook. Given a
@@ -12,11 +12,11 @@ import type { Z2FViteConfig } from '../../src/types.js';
  * plugin.ts and is exercised by integration tests (slice 3c).
  */
 describe('compileTarget', () => {
-  const baseConfig: Z2FViteConfig = {
-    exportName: 'signupSchema',
-    componentName: 'SignupForm',
-    mode: 'submit',
-    ui: 'html'
+  const baseConfig: ZodFormsConfig = {
+    types: ['signupSchema'],
+    components: { source: '@/components/ui', preset: 'html' },
+    defaults: { mode: 'submit', ui: 'html' },
+    schemas: { ['signupSchema']: { name: 'SignupForm' } }
   };
 
   const namespace = {
@@ -67,9 +67,9 @@ describe('compileTarget', () => {
       namespace,
       schemaFile: '/abs/src/schemas/signup.ts',
       variant: '',
-      config: { ...baseConfig, schemaImportPath: './signup' }
+      config: { ...baseConfig }
     });
-    expect(result.generatedSource).toContain("from './signup'");
+    expect(result.generatedSource).toContain("from './signup.ts'");
   });
 
   it('returns null schemaLite when the schema has no top-level effects', () => {
@@ -94,7 +94,7 @@ describe('compileTarget', () => {
       namespace: ns,
       schemaFile: '/abs/src/schemas/pw.ts',
       variant: '',
-      config: { ...baseConfig, exportName: 'pwSchema', validationLevel: 1 }
+      config: { ...baseConfig, types: ['pwSchema'], defaults: { optimization: { level: 1 } } }
     });
     expect(result.schemaLiteSource).not.toBeNull();
     expect(typeof result.schemaLiteSource).toBe('string');
@@ -106,7 +106,7 @@ describe('compileTarget', () => {
         namespace,
         schemaFile: '/abs/src/schemas/signup.ts',
         variant: '',
-        config: { ...baseConfig, exportName: 'nonexistent' }
+        config: { ...baseConfig, types: ['nonexistent'] }
       })
     ).toThrow(/Z2F_VITE_SCHEMA_NOT_FOUND/);
   });
@@ -131,7 +131,17 @@ describe('compileTarget', () => {
       config: {
         ...baseConfig,
         variants: {
-          edit: { componentName: 'SignupEditForm' }
+          edit: {
+            schemas: {
+              ['signupSchema']: { name: 'SignupEditForm' },
+              ['userSchema']: { name: 'SignupEditForm' },
+              ['mySchema']: { name: 'SignupEditForm' },
+              ['activeSchema']: { name: 'SignupEditForm' },
+              ['TestSchema']: { name: 'SignupEditForm' },
+              ['testSchema']: { name: 'SignupEditForm' },
+              ['schema']: { name: 'SignupEditForm' }
+            }
+          }
         }
       }
     });
@@ -154,19 +164,15 @@ describe('compileTarget', () => {
       schemaFile: '/abs/src/schemas/page.ts',
       variant: '',
       config: {
-        exportName: 'pageSchema',
-        componentName: 'PageForm',
-        mode: 'submit',
-        ui: 'html',
-        componentConfig: {
-          components: {
-            source: './components'
-          },
-          schemas: {
-            expressionSchema: {
-              component: 'ExpressionEditor'
-            }
-          }
+        types: ['pageSchema'],
+        components: { source: './components' },
+        schemas: {
+          pageSchema: { name: 'PageForm' },
+          expressionSchema: { component: 'ExpressionEditor' }
+        },
+        defaults: {
+          mode: 'submit',
+          ui: 'html'
         }
       }
     });

@@ -83,6 +83,18 @@ Produces `src/components/SignupForm.tsx` — a hand-readable `.tsx` file that im
 
 ---
 
+## Shared config and Zod compilation
+
+Requires Zod 4.6+. CLI, Vite files and Vite `configOverride` share one nested configuration. Generation settings belong in `defaults`; component libraries in `components`; root names in `schemas[Export].name`; variants are partial patches of that same shape.
+
+```ts
+defaults: { optimization: { compileZod: true } }           // compile full validation
+// Or combine independently with the native strategy:
+defaults: { optimization: { level: 2, compileZod: true } }
+```
+
+Runtime `<ZodForm>`/`useZodForm` take `optimization` directly. Compilation stays off unless enabled, caches prepared targets and preserves message/output-producing validation. [Migration and merge rules](./apps/docs/docs/guides/core-config.md) and [measured off/on results](./benchmarks/RESULTS.md) cover the breaking config change and setup tradeoffs.
+
 ## Key Features
 
 ### 1. Build-time codegen with zero-dependency eject

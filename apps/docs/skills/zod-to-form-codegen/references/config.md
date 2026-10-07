@@ -50,11 +50,11 @@ Force FormProvider wrapper in submit mode. Auto-save mode always uses FormProvid
 
 **Type:** `boolean`
 
-#### validationLevel
+#### optimization
 
 Validation optimization level. When set, generated code uses per-field validation instead of zodResolver.
 
-**Type:** `1 | 2 | 3`
+**Type:** `OptimizationConfig`
 
 #### schemaLite
 
@@ -90,6 +90,12 @@ Produces the defineConfig({...}) source string used by both the CLI
 init command and the playground.
 
 ### Properties
+
+#### config
+
+Fully authored canonical config; serialize every public setting.
+
+**Type:** `ZodFormsConfig`
 
 #### componentSource
 
@@ -133,7 +139,7 @@ Component overrides (name → { controlled?: boolean; props?: ... })
 
 Defaults block
 
-**Type:** `{ mode?: "submit" | "auto-save"; ui?: "shadcn" | "html"; overwrite?: boolean; serverAction?: boolean; formProvider?: boolean; optimization?: { level?: 1 | 2 | 3 } }`
+**Type:** `ConfigDefaults`
 
 #### fields
 

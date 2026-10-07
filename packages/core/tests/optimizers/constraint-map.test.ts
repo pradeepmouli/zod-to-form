@@ -1,3 +1,4 @@
+import { readSchemaConstraints } from '../../src/schema-constraints.js';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { extractNativeRules } from '../../src/optimizers/constraint-map.js';
@@ -126,10 +127,10 @@ describe('extractNativeRules', () => {
     });
   });
 
-  describe('bag["patterns"] verification (Zod v4 substrate)', () => {
+  describe('check definition pattern extraction (Zod 4.6)', () => {
     it('z.string().email() stores regex in bag["patterns"] as a Set', () => {
       const schema = z.string().email();
-      const bag = (schema as unknown as $ZodType)._zod.bag as Record<string, unknown>;
+      const bag = readSchemaConstraints(schema as unknown as $ZodType) as Record<string, unknown>;
       const patterns = bag['patterns'];
 
       expect(patterns).toBeInstanceOf(Set);
@@ -143,7 +144,7 @@ describe('extractNativeRules', () => {
 
     it('z.string().uuid() stores regex in bag["patterns"]', () => {
       const schema = z.string().uuid();
-      const bag = (schema as unknown as $ZodType)._zod.bag as Record<string, unknown>;
+      const bag = readSchemaConstraints(schema as unknown as $ZodType) as Record<string, unknown>;
       const patterns = bag['patterns'];
 
       expect(patterns).toBeInstanceOf(Set);
@@ -152,7 +153,7 @@ describe('extractNativeRules', () => {
 
     it('z.string().regex() stores regex in bag["patterns"]', () => {
       const schema = z.string().regex(/^[A-Z]+$/);
-      const bag = (schema as unknown as $ZodType)._zod.bag as Record<string, unknown>;
+      const bag = readSchemaConstraints(schema as unknown as $ZodType) as Record<string, unknown>;
       const patterns = bag['patterns'];
 
       expect(patterns).toBeInstanceOf(Set);
@@ -164,7 +165,7 @@ describe('extractNativeRules', () => {
 
     it('multiple patterns accumulate in the Set', () => {
       const schema = z.string().email().regex(/^test/);
-      const bag = (schema as unknown as $ZodType)._zod.bag as Record<string, unknown>;
+      const bag = readSchemaConstraints(schema as unknown as $ZodType) as Record<string, unknown>;
       const patterns = bag['patterns'];
 
       expect(patterns).toBeInstanceOf(Set);

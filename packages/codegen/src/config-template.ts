@@ -1,3 +1,4 @@
+import type { ConfigDefaults, ZodFormsConfig } from '@zod-to-form/core';
 /**
  * Browser-safe config template generator.
  * Produces the defineConfig({...}) source string used by both the CLI
@@ -5,6 +6,8 @@
  */
 
 export type ConfigTemplateOptions = {
+  /** Fully authored canonical config; serialize every public setting. */
+  config?: ZodFormsConfig;
   /** Component module import path (e.g. './components/ui') */
   componentSource: string;
   /** Component type import specifier for generics (e.g. './components/ui') */
@@ -24,14 +27,7 @@ export type ConfigTemplateOptions = {
     }
   >;
   /** Defaults block */
-  defaults?: {
-    mode?: 'submit' | 'auto-save';
-    ui?: 'shadcn' | 'html';
-    overwrite?: boolean;
-    serverAction?: boolean;
-    formProvider?: boolean;
-    optimization?: { level?: 1 | 2 | 3 };
-  };
+  defaults?: ConfigDefaults;
   /** Per-field overrides */
   fields?: Record<string, Record<string, unknown>>;
 };
@@ -70,6 +66,9 @@ function renderLiteral(value: string | number | boolean | null): string {
  * @category Config Templates
  */
 export function buildConfigSource(opts: ConfigTemplateOptions): string {
+  if (opts.config) {
+    return `import { defineConfig } from '@zod-to-form/core';\n\nimport type * as Components from '${opts.componentSource}';\n\nexport default defineConfig<typeof Components>(${JSON.stringify(opts.config, null, 2)});\n`;
+  }
   const preset = opts.preset;
   const presetImportName = preset ? PRESET_IMPORT_NAME[preset] : undefined;
 

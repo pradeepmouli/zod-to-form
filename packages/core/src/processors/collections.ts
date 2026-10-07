@@ -1,3 +1,4 @@
+import { readSchemaConstraints } from '../schema-constraints.js';
 import type { $ZodMap, $ZodSet } from 'zod/v4/core';
 import { createBaseField } from '../utils.js';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
@@ -23,7 +24,7 @@ export function processSet(
   // Mark as set so runtime can enforce uniqueness
   field.props['_isSet'] = true;
 
-  const bag = schema._zod.bag;
+  const bag = readSchemaConstraints(schema);
   const minimum = typeof bag['minimum'] === 'number' ? bag['minimum'] : undefined;
   const maximum = typeof bag['maximum'] === 'number' ? bag['maximum'] : undefined;
 
