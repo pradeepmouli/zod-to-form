@@ -79,6 +79,8 @@ export type TypedFieldConfig<
 
 export type OptimizationConfig = {
   level?: 1 | 2 | 3;
+  /** Compile validation targets with Zod, independently of the optimization level. */
+  compileZod?: boolean;
 };
 
 /**
@@ -183,6 +185,8 @@ export type ZodFormsConfig<
    * - Avoid setting `preset: 'html'` when your custom components require controlled mode — the `html` preset provides no overrides, so every component defaults to uncontrolled (`register()` spread); you must declare `controlled: true` individually in `overrides` for any component that needs it.
    */
   components: ComponentsConfig<TComponents>;
+  /** Named partial configuration layers. Variants cannot contain other variants. */
+  variants?: Record<string, ConfigPatch<TComponents, TSchemas>>;
   /**
    * @pitfalls - Every sub-field of `defaults` is the lowest-priority override: CLI flags win, then `schemas.[key]` overrides, then `defaults`. Setting a value here does not guarantee it reaches codegen if any higher-priority source supplies the same field.
    * - `overwrite` silently defaults to `false` when the entire `defaults` block is omitted or when `overwrite` is not set inside it. In that state, existing output files are left unchanged and `runGenerate` returns `wroteFile: false` without throwing — generated output is silently discarded.
@@ -327,6 +331,14 @@ type FieldPath<TValues extends Record<string, unknown>> =
 type SchemaFieldPath<T extends $ZodType> =
   z.infer<T> extends infer O ? (O extends Record<string, unknown> ? FieldPath<O> : string) : string;
 
+/** Partial canonical configuration used by variants and adapter overrides. */
+export type ConfigPatch<
+  TComponents extends Record<string, unknown> = Record<string, unknown>,
+  TSchemas extends Record<string, unknown> = Record<string, unknown>
+> = Omit<Partial<ZodFormsConfig<TComponents, TSchemas>>, 'components' | 'variants'> & {
+  components?: Partial<ComponentsConfig<TComponents>>;
+};
+
 // ─── Validation Schemas ───────────────────────────────────────────────
 
 const nonEmptyStringSchema = z.string().trim().min(1);
@@ -368,15 +380,16 @@ const fieldOverrideSchema = z
 
 const optimizationConfigSchema = z
   .object({
-    level: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional()
+    level: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional(),
+    compileZod: z.boolean().optional()
   })
   .loose()
   .optional();
 
 const defaultsSchema = z
   .object({
-    mode: z.string().optional(),
-    ui: z.string().optional(),
+    mode: z.enum(['submit', 'auto-save']).optional(),
+    ui: z.enum(['shadcn', 'html']).optional(),
     out: z.string().optional(),
     overwrite: z.boolean().optional(),
     serverAction: z.boolean().optional(),
@@ -390,25 +403,31 @@ const zodTypeConfigSchema = z
   .object({
     name: z.string().optional(),
     component: z.string().optional(),
-    mode: z.string().optional(),
+    mode: z.enum(['submit', 'auto-save']).optional(),
     out: z.string().optional(),
     serverAction: z.boolean().optional(),
     fields: z.record(z.string(), fieldConfigSchema).optional()
   })
   .loose();
 
-const configSchema = z
-  .object({
-    components: componentsConfigSchema,
-    overwrite: z.boolean().optional(),
-    include: z.array(z.string()).optional(),
-    exclude: z.array(z.string()).optional(),
-    types: z.array(z.string()).optional(),
-    fields: z.record(z.string(), fieldOverrideSchema.or(fieldConfigSchema)).optional(),
-    defaults: defaultsSchema,
-    schemas: z.record(z.string(), zodTypeConfigSchema).optional()
-  })
-  .loose();
+/** Shared property validators for configuration editors and adapters. */
+export const configPropertySchemas = {
+  components: componentsConfigSchema,
+  include: z.array(z.string()).optional(),
+  exclude: z.array(z.string()).optional(),
+  types: z.array(z.string()).optional(),
+  fields: z.record(z.string(), fieldOverrideSchema.or(fieldConfigSchema)).optional(),
+  defaults: defaultsSchema,
+  schemas: z.record(z.string(), zodTypeConfigSchema).optional()
+};
+const configPatchSchema = z.strictObject({
+  ...configPropertySchemas,
+  components: componentsConfigSchema.partial().optional()
+});
+const configSchema = z.strictObject({
+  ...configPropertySchemas,
+  variants: z.record(z.string(), configPatchSchema).optional()
+});
 
 // ─── Error Formatting ─────────────────────────────────────────────────
 
@@ -419,6 +438,12 @@ function formatValidationError(error: z.ZodError, source: string): Error {
   }
   const path = issue.path.map((part) => String(part));
   const [root, entry, property] = path;
+
+  if (issue.code === 'unrecognized_keys') {
+    return new Error(
+      `${source}${path.length ? '.' + path.join('.') : ''} has unsupported keys: ${issue.keys.join(', ')}.`
+    );
+  }
 
   if (!root) {
     return new Error(`${source} must be an object.`);
@@ -556,7 +581,7 @@ export const DEFAULT_OVERRIDES: Record<string, ComponentOverride> = {};
 
 // ─── Public Functions ─────────────────────────────────────────────────
 
-const PRESET_MAP: Record<ComponentPreset, Record<string, ComponentOverride>> = {
+export const PRESET_MAP: Record<ComponentPreset, Record<string, ComponentOverride>> = {
   shadcn: SHADCN_OVERRIDES,
   html: DEFAULT_OVERRIDES
 };
@@ -599,19 +624,7 @@ export function defineConfig<
   TComponents extends Record<string, unknown> = Record<string, unknown>,
   TSchemas extends Record<string, unknown> = Record<string, unknown>
 >(config: ZodFormsConfig<TComponents, TSchemas>): ZodFormsConfig<TComponents, TSchemas> {
-  const preset = config.components.preset;
-  if (!preset) {
-    return config;
-  }
-
-  const base = PRESET_MAP[preset];
-  return {
-    ...config,
-    components: {
-      ...config.components,
-      overrides: { ...base, ...config.components.overrides } as typeof config.components.overrides
-    }
-  };
+  return config;
 }
 
 /**
@@ -662,7 +675,7 @@ export function validateConfig(
  * @category Configuration
  */
 export function resolveFieldConfig(
-  globalFields: Record<string, FieldConfig> | undefined,
+  globalFields: Partial<Record<string, FieldConfig>> | undefined,
   schemaFields: Partial<Record<string, FieldConfig>> | undefined
 ): Record<string, FieldConfig> {
   if (!globalFields && !schemaFields) {
@@ -674,10 +687,14 @@ export function resolveFieldConfig(
   }
 
   if (!schemaFields) {
-    return { ...globalFields };
+    return Object.fromEntries(
+      Object.entries(globalFields).filter(
+        (entry): entry is [string, FieldConfig] => entry[1] !== undefined
+      )
+    );
   }
 
-  const merged: Record<string, FieldConfig> = { ...globalFields };
+  const merged: Record<string, FieldConfig> = resolveFieldConfig(globalFields, undefined);
   for (const [key, schemaField] of Object.entries(schemaFields)) {
     if (!schemaField) {
       continue;
@@ -706,20 +723,5 @@ export function resolveFieldConfig(
 export function normalizeConfig(
   config: ZodFormsConfig<Record<string, unknown>>
 ): ZodFormsConfig<Record<string, unknown>> {
-  const hasTopLevelOverwrite = 'overwrite' in config && config.overwrite !== undefined;
-
-  if (!hasTopLevelOverwrite) {
-    return config;
-  }
-
-  const { overwrite, ...rest } = config as ZodFormsConfig<Record<string, unknown>> & {
-    overwrite?: boolean;
-  };
-  return {
-    ...rest,
-    defaults: {
-      ...rest.defaults,
-      overwrite: rest.defaults?.overwrite ?? overwrite
-    }
-  };
+  return config;
 }

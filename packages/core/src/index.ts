@@ -69,6 +69,7 @@ export type {
   ZodFormsConfig,
   ZodTypeConfig,
   ConfigDefaults,
+  ConfigPatch,
   OptimizationConfig,
   StripIndexSignature
 } from './config.js';
@@ -95,6 +96,7 @@ export {
 
 export {
   defineConfig,
+  configPropertySchemas,
   validateConfig,
   resolveFieldConfig,
   normalizeConfig,
@@ -125,3 +127,6 @@ export { walkSchema } from './walker.js';
 export { builtinProcessors, createProcessors } from './registry.js';
 export { registerDeep, registerFlat, registerSchemaConfigs } from './register.js';
 export * as processors from './processors/index.js';
+
+export { mergeConfigLayers, resolveFormConfig } from './resolve-config.js';
+export type { ConfigInvocation, ResolvedFormConfig } from './resolve-config.js';
