@@ -101,7 +101,7 @@ describe('canonicalizeConfig', () => {
       mode: 'submit',
       ui: 'html',
       schemaImportPath: undefined,
-      validationLevel: undefined
+      optimization: undefined
     };
     const b: CodegenConfig = {
       exportName: 'X',

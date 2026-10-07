@@ -99,7 +99,6 @@ export {
   configPropertySchemas,
   validateConfig,
   resolveFieldConfig,
-  normalizeConfig,
   SHADCN_OVERRIDES,
   DEFAULT_OVERRIDES,
   RHF_FIELD_EXPRESSIONS

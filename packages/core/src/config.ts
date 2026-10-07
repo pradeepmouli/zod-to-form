@@ -709,19 +709,3 @@ export function resolveFieldConfig(
 
   return merged;
 }
-
-/**
- * Normalize a validated config by migrating deprecated top-level fields to their canonical locations.
- * Currently handles the legacy top-level `overwrite` key — moves it into `defaults.overwrite`
- * so the rest of the pipeline can assume the normalized shape.
- *
- * @param config - A fully validated `ZodFormsConfig` (output of `validateConfig`).
- * @returns The same config with any deprecated top-level fields migrated into `defaults`.
- *
- * @category Configuration
- */
-export function normalizeConfig(
-  config: ZodFormsConfig<Record<string, unknown>>
-): ZodFormsConfig<Record<string, unknown>> {
-  return config;
-}

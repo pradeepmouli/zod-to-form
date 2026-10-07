@@ -55,7 +55,7 @@ describe('codegen optimization', () => {
           validation: { mode: 'component-enforced' }
         })
       ];
-      const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 2 });
+      const code = generateFormComponent(fields, { ...baseConfig, optimization: { level: 2 } });
       expect(code).not.toContain('zodResolver');
     });
 
@@ -67,7 +67,7 @@ describe('codegen optimization', () => {
           zodSchema: {} as any
         })
       ];
-      const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 1 });
+      const code = generateFormComponent(fields, { ...baseConfig, optimization: { level: 1 } });
       expect(code).toContain("from 'zod'");
     });
 
@@ -84,7 +84,7 @@ describe('codegen optimization', () => {
           }
         })
       ];
-      const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 2 });
+      const code = generateFormComponent(fields, { ...baseConfig, optimization: { level: 2 } });
       expect(code).toContain('required');
       expect(code).toContain('minLength');
     });
@@ -97,7 +97,7 @@ describe('codegen optimization', () => {
           zodSchema: {} as any
         })
       ];
-      const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 1 });
+      const code = generateFormComponent(fields, { ...baseConfig, optimization: { level: 1 } });
       expect(code).toContain('validate');
       // Should emit hoisted validator const
       expect(code).toContain('const _validate_email');
@@ -113,7 +113,7 @@ describe('codegen optimization', () => {
           validation: { mode: 'component-enforced' }
         })
       ];
-      const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 2 });
+      const code = generateFormComponent(fields, { ...baseConfig, optimization: { level: 2 } });
       // Should still have a register() call but without validation options
       expect(code).toContain("register('status')");
     });
@@ -123,7 +123,7 @@ describe('codegen optimization', () => {
       // Pass a mock schemaLite
       const code = generateFormComponent(fields, {
         ...baseConfig,
-        validationLevel: 2,
+        optimization: { level: 2 },
         schemaLite: {} as any
       });
       expect(code).toContain('onSubmitValidated');
@@ -135,7 +135,7 @@ describe('codegen optimization', () => {
       const fields = [makeField({ key: 'name', validation: { mode: 'native', rules: {} } })];
       const code = generateFormComponent(fields, {
         ...baseConfig,
-        validationLevel: 2,
+        optimization: { level: 2 },
         schemaLite: null
       });
       expect(code).not.toContain('onSubmitValidated');
@@ -158,7 +158,7 @@ describe('codegen optimization', () => {
           }
         })
       ];
-      const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 2 });
+      const code = generateFormComponent(fields, { ...baseConfig, optimization: { level: 2 } });
       expect(code).toContain('required: "Username is required"');
       expect(code).toContain('minLength: { value: 3');
       expect(code).toContain('maxLength: { value: 50');
@@ -179,7 +179,7 @@ describe('codegen optimization', () => {
           }
         })
       ];
-      const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 2 });
+      const code = generateFormComponent(fields, { ...baseConfig, optimization: { level: 2 } });
       expect(code).toContain('min: { value: 0');
       expect(code).toContain('max: { value: 120');
     });
@@ -191,7 +191,7 @@ describe('codegen optimization', () => {
           validation: { mode: 'native', rules: { required: 'Required' } }
         })
       ];
-      const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 2 });
+      const code = generateFormComponent(fields, { ...baseConfig, optimization: { level: 2 } });
       expect(code).not.toContain('const _validate_name');
     });
 
@@ -210,7 +210,7 @@ describe('codegen optimization', () => {
       ];
       const code = generateFormComponent(fields, {
         ...baseConfig,
-        validationLevel: 2,
+        optimization: { level: 2 },
         schemaLite: null
       });
       expect(code).not.toContain("import { z } from 'zod'");
@@ -229,7 +229,7 @@ describe('codegen optimization', () => {
           zodSchema: {} as any
         })
       ];
-      const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 2 });
+      const code = generateFormComponent(fields, { ...baseConfig, optimization: { level: 2 } });
       expect(code).toContain("from 'zod'");
     });
   });

@@ -1,5 +1,10 @@
 import { useEffect, useMemo } from 'react';
-import { walkSchema, registerFlat, normalizeFormValues } from '@zod-to-form/core';
+import {
+  walkSchema,
+  registerFlat,
+  normalizeFormValues,
+  prepareValidationSchema
+} from '@zod-to-form/core';
 import type { FormField, WalkResult, OptimizationConfig } from '@zod-to-form/core';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -109,9 +114,15 @@ export function useZodForm<TSchema extends ZodObject>(
   const validationLevel = options?.optimization?.level;
   const isOptimized = validationLevel !== undefined;
 
+  const compileZod = options?.optimization?.compileZod;
+  const validationSchema = useMemo(
+    () => prepareValidationSchema(schema, { compileZod }),
+    [schema, compileZod]
+  );
+
   const baseResolver = useMemo(
-    () => (isOptimized ? undefined : zodResolver(rhfCast(schema))),
-    [schema, isOptimized]
+    () => (isOptimized ? undefined : zodResolver(rhfCast(validationSchema))),
+    [validationSchema, isOptimized]
   );
 
   // Build a registry from flat field config when no explicit registry is provided
@@ -138,14 +149,15 @@ export function useZodForm<TSchema extends ZodObject>(
         const result: WalkResult = walkSchema(schema, {
           formRegistry: effectiveRegistry,
           processors: options?.processors,
-          optimization: { level: validationLevel! }
+          optimization: { level: validationLevel!, compileZod }
         });
         return { fields: result.fields, schemaLite: result.schemaLite, error: null };
       }
       return {
         fields: walkSchema(schema, {
           formRegistry: effectiveRegistry,
-          processors: options?.processors
+          processors: options?.processors,
+          optimization: { compileZod }
         }),
         schemaLite: null,
         error: null
@@ -158,7 +170,7 @@ export function useZodForm<TSchema extends ZodObject>(
         error: err instanceof Error ? err.message : 'Schema processing failed'
       };
     }
-  }, [schema, effectiveRegistry, options?.processors, validationLevel, isOptimized]);
+  }, [schema, effectiveRegistry, options?.processors, validationLevel, isOptimized, compileZod]);
 
   const form = useForm<output<TSchema>>({
     // When optimized, skip zodResolver — per-field validation is handled by register({ validate })
@@ -207,7 +219,7 @@ export function useZodForm<TSchema extends ZodObject>(
       // typed" either way. The callback's second arg signals which shape you
       // got so consumers can gate on validity without calling safeParse again.
       const normalized = normalizeFormValues(values);
-      const parsed = schema.safeParse(normalized);
+      const parsed = validationSchema.safeParse(normalized);
       if (parsed.success) {
         options.onValueChange?.(parsed.data as output<TSchema>, { isValid: true });
       } else {
@@ -218,7 +230,7 @@ export function useZodForm<TSchema extends ZodObject>(
     return () => {
       subscription.unsubscribe();
     };
-  }, [options?.onValueChange, schema, form, mountedRef]);
+  }, [options?.onValueChange, validationSchema, form, mountedRef]);
 
   return {
     form,

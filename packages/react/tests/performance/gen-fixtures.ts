@@ -74,7 +74,7 @@ function writeVariant(
     mode: 'submit',
     ui: 'html',
     schemaImportPath: './schema.js',
-    validationLevel: level === 0 ? undefined : (level as 1 | 2),
+    optimization: { level: level === 0 ? undefined : (level as 1 | 2) },
     schemaLite: schemaLite ?? undefined,
     schemaLiteInfo: schemaLiteInfo ?? undefined
   });

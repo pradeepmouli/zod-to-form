@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  defineConfig,
-  validateConfig,
-  resolveFieldConfig,
-  normalizeConfig
-} from '../src/config.js';
+import { defineConfig, validateConfig, resolveFieldConfig } from '../src/config.js';
 import type { ZodFormsConfig } from '../src/config.js';
 
 // ─── Existing tests (backward compat) ────────────────────────────────
@@ -267,38 +262,6 @@ describe('resolveFieldConfig', () => {
 });
 
 // ─── normalizeConfig tests (T014) ────────────────────────────────────
-
-describe('normalizeConfig', () => {
-  it('rejects removed top-level overwrite', () => {
-    expect(() => validateConfig({ components: { source: '@/ui' }, overwrite: true })).toThrow();
-  });
-
-  it('does not override existing defaults.overwrite', () => {
-    const config = {
-      components: {
-        source: '@/ui',
-        overrides: {}
-      },
-      overwrite: true,
-      defaults: { overwrite: false }
-    } as ZodFormsConfig & { overwrite?: boolean };
-
-    const normalized = normalizeConfig(config);
-    expect(normalized.defaults?.overwrite).toBe(false);
-  });
-
-  it('returns config unchanged when no top-level overwrite', () => {
-    const config = validateConfig({
-      components: {
-        source: '@/ui',
-        overrides: {}
-      }
-    });
-
-    const normalized = normalizeConfig(config);
-    expect(normalized).toBe(config);
-  });
-});
 
 // ─── defineConfig preset behavior ─────────────────────────────────────
 
