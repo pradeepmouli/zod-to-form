@@ -13,10 +13,9 @@ hashing into a cache key.
 - `createOptimizers`: Create an optimizer registry by merging custom optimizers with builtins.
 Custom optimizers for a type replace the entire chain for that type.
 - `createSchemaLiteCollector`: Create a new SchemaLiteCollector instance.
-- `defineConfig`: Identity helper that returns its argument typed as `ZodFormsConfig`.
-- `validateConfig`: Validates an unknown value as a `ZodFormsConfig` at runtime.
+- `defineConfig`: Typed identity helper for canonical authored configuration.
+- `validateConfig`: Validate canonical authored configuration without expanding presets.
 - `resolveFieldConfig`: Merge global field config with per-schema field config overrides.
-- `normalizeConfig`: Normalize a validated config by migrating deprecated top-level fields to their canonical locations.
 - `inferLabel`: Convert a camelCase or snake_case key to a human-readable Title Case label.
 - `joinPath`: Join a parent path and a child key with a dot separator.
 Returns `key` directly when `parent` is undefined or empty.
@@ -71,7 +70,13 @@ Template literals have a fixed structure; no constraints are extracted.
 - `processOptional`: Process `z.
 - `processPipe`: Process `z.
 - `processReadonly`: Process `z.
+- `mergeConfigLayers`: Merge authored layers without expanding presets. Arrays and props replace.
+- `resolveFormConfig`: Resolve one root export from the canonical config and optional variant.
+- `prepareValidationSchema`: Compile final validation targets once; preserve authored schemas for metadata lookup.
 - `builtinOptimizers`: The default optimizer registry — L1 (decompose) + L2 (native rules) chains merged per type.
+- `configPropertySchemas`: Shared property validators for configuration editors and adapters.
+- `configDraftSchema`: Validated partial draft for configuration editors and persistence.
+- `fieldConfigSchema`
 - `SHADCN_OVERRIDES`: shadcn preset — Radix-based components need controlled mode + field expression props
 - `DEFAULT_OVERRIDES`: Default HTML preset — no controlled components by default
 - `RHF_FIELD_EXPRESSIONS`: Known RHF field expression strings recognized in component props config.
@@ -99,6 +104,7 @@ in form state.
 - `ComponentOverride`: Per-component metadata override. Only components that differ from defaults need an entry.
 - `ComponentPreset`: Preset name for built-in component library mappings.
 - `ConfigDefaults`: Default generation settings applied to all schemas unless overridden per-schema.
+- `ConfigPatch`: Partial canonical configuration used by variants and adapter overrides.
 - `StripIndexSignature`: Strips index signatures from a type, keeping only explicitly declared keys.
 - `FormOptimizer`: An optimizer function that mutates a `FormField` after the processor has run.
 - `FormOptimizerContext`: Context shared across all optimizers during a `walkSchema` run.
@@ -109,6 +115,7 @@ in form state.
 - `ControlMode`: The control strategy for a field's component:
 - `'register'` — use RHF's `register()` spread (uncontrolled by default)
 - `'controller'` — use `Cont...
+- `ConfigInvocation`
 
 ## @zod-to-form/react
 
@@ -147,8 +154,8 @@ a React `key`.
 
 - `runGenerate`: Executes the code generation pipeline for a single Zod schema export.
 - `createProgram`: Creates the Commander.
-- `defineConfig`: Identity helper that returns its argument typed as `ZodFormsConfig`.
-- `validateConfig`: Validates an unknown value as a `ZodFormsConfig` at runtime.
+- `defineConfig`: Typed identity helper for canonical authored configuration.
+- `validateConfig`: Validate canonical authored configuration without expanding presets.
 
 ## Optional
 

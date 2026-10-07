@@ -5,7 +5,7 @@ import {
   mergeConfigLayers,
   validateConfig
 } from '@zod-to-form/core';
-import type { FormField, FieldConfig } from '@zod-to-form/core';
+import type { FormField, FieldConfig, ConfigDefaults } from '@zod-to-form/core';
 import { buildConfigSource } from '@zod-to-form/codegen';
 import { FIELD_COMPONENT_NAMES } from '@zod-to-form/react';
 import type { PlaygroundConfig, ComponentMapType } from '../types/playground.ts';
@@ -167,10 +167,18 @@ export function formValuesToConfig(
   const nonEmptyFields: Record<string, FieldConfig> = {};
   for (const [key, entry] of Object.entries(rawFields)) {
     if (entry && Object.values(entry).some((v) => v !== undefined)) {
-      nonEmptyFields[key] = { ...existingConfig?.fields?.[key], ...entry };
+      nonEmptyFields[key] = filterDefinedEntries(entry) ?? {};
     }
   }
 
+  const merged = mergeConfigLayers(
+    { components: getInitDefaults('default').components },
+    existingConfig ?? {},
+    {
+      defaults: filterDefinedEntries(rawDefaults) as ConfigDefaults | undefined,
+      fields: nonEmptyFields
+    }
+  );
   return {
     ...existingConfig,
     components: filterDefinedEntries({
@@ -178,10 +186,13 @@ export function formValuesToConfig(
       ...filterDefinedEntries(rawComponents)
     }),
     defaults: filterDefinedEntries({
-      ...existingConfig?.defaults,
-      ...filterDefinedEntries(rawDefaults)
+      ...merged.defaults,
+      optimization:
+        existingConfig?.defaults?.optimization || rawDefaults.optimization
+          ? merged.defaults?.optimization
+          : undefined
     }),
-    fields: Object.keys(nonEmptyFields).length > 0 ? nonEmptyFields : undefined
+    fields: Object.keys(merged.fields ?? {}).length > 0 ? merged.fields : undefined
   };
 }
 

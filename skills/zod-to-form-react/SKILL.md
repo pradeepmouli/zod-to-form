@@ -1,12 +1,24 @@
 ---
-name: zod-to-form-react
-description: "Runtime <ZodForm> renderer for Zod v4 schemas Use when: You need form rendering in storybook, playgrounds, or low-traffic admin UIs —.... Also: zod, zod-v4, react, forms, form-generation, react-hook-form, schema-driven, dynamic-forms, form-renderer, hookform-resolver, zod-form-renderer."
+description: Runtime React renderer for Zod v4 form schemas — wraps react-hook-form with a schema walker that maps Zod types to form components.
 license: MIT
+name: zod-to-form-react
 ---
 
 # @zod-to-form/react
 
-Runtime <ZodForm> renderer for Zod v4 schemas
+Runtime React renderer for Zod v4 form schemas — wraps react-hook-form with a schema walker that maps Zod types to form components.
+
+Provides the `<ZodForm>` component and `useZodForm()` hook for dynamically rendering
+forms from a `z.object()` schema at runtime — no codegen required. Use this package
+when you need schema-driven forms that adapt to runtime schema changes.
+
+Key exports:
+- `ZodForm` — the top-level form component; wraps RHF `FormProvider`
+- `useZodForm` — hook that calls `walkSchema` and wires up RHF for you
+- `normalizeFormValues` — call before `schema.safeParse()` to convert HTML empty strings
+- `defaultComponentMap` — the built-in HTML component set
+- `shadcnComponentMap` — the shadcn/ui component set
+- `wrapWithSchemaLite` — wrap a submit handler with the lite schema for optimized validation
 
 Choose your abstraction level: `<ZodForm>` for zero-config, `useZodForm` for custom
 rendering, manual `walkSchema` for full control. Each step down trades convenience for
@@ -57,7 +69,7 @@ export function UserForm() {
 - CLI codegen mode — generated components call normalization internally; calling it again is safe (idempotent) but redundant (`normalizeFormValues`)
 - You are using the default `zodResolver` path (no `validationLevel`) — validation is handled by RHF's resolver and adding this wrapper causes double-validation with no benefit (`wrapWithSchemaLite`)
 
-API surface: 4 functions, 5 types, 3 constants
+API surface: 6 functions, 7 types, 3 constants
 
 ## NEVER
 
@@ -72,15 +84,18 @@ API surface: 4 functions, 5 types, 3 constants
 
 ## Configuration
 
-3 configuration interfaces — see references/config.md for details.
+4 configuration interfaces — see references/config.md for details.
 
 ## Quick Reference
 
-**Components:** `ZodForm` (Runtime React component that renders a type-safe form from a Zod v4 schema), `defaultComponentMap` (The default HTML-based component map used by `<ZodForm>` and `<FieldRenderer>`), `shadcnComponentMap` (Component map pre-wired with shadcn/ui-styled implementations)
-**Hooks:** `useZodForm` (React Hook Form integration hook for Zod v4 schemas)
+**Components:** `ZodForm` (Runtime React component that renders a type-safe form from a Zod v4 schema), `ZodFormSwitch` (Render the form matching `source[discriminator]`, unmounting on changes via
+a React `key`), `ZodFormSwitchProps` (Props for ZodFormSwitch), `defaultComponentMap` (The default HTML-based component map used by `<ZodForm>` and `<FieldRenderer>`), `shadcnComponentMap` (Component map pre-wired with shadcn/ui-styled implementations)
+**Hooks:** `useZodForm` (React Hook Form integration hook for Zod v4 schemas), `useExternalSync` (Reset a form's values when an externally-supplied source object's reference
+changes; preserve in-progress edits while the reference is stable)
 **Normalization:** `normalizeFormValues` (Normalize raw HTML form values for Zod parsing)
 **Optimization:** `wrapWithSchemaLite` (Wraps a form `onSubmit` handler with `schemaLite` client-side validation)
 **Types:** `FormField` (Intermediate representation of a single form field produced by `walkSchema`), `FormFieldOption` (An individual option in a Select, RadioGroup, or similar enum-driven component), `FormFieldConstraints` (Structural constraints extracted from Zod's `_zod), `FormMeta` (Per-schema annotation stored in a `z), `FieldTemplateProps` (Props passed to the field template component that wraps each rendered form field)
+**FieldRenderer:** `ZodFormComponents` (Public component-map type for `<ZodForm components={…}>`)
 **components:** `FIELD_COMPONENT_NAMES` (User-facing field component names derived from defaultCom...)
 
 ## References

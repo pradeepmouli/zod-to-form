@@ -25,7 +25,7 @@ runtime `FieldRenderer` to produce a live React component tree.
 - `options: FormFieldOption[]` (optional) — Options for enum/union select fields
 - `children: FormField[]` (optional) — Children for nested objects
 - `arrayItem: FormField` (optional) — Template for array items
-- `constraints: FormFieldConstraints` — Validation constraints extracted from Zod v4 constraint bag (_zod.bag)
+- `constraints: FormFieldConstraints` — Validation constraints extracted from Zod schema and check definitions
 - `zodType: string` — Original Zod def.type for reference
 - `hasCustomRender: boolean` (optional) — Whether a custom render function is registered for this field (runtime only)
 - `render: (field: FormField, props: Record<string, unknown>) => unknown` (optional) — Custom render function from FormMeta (runtime only, not serialisable)

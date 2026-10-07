@@ -25,7 +25,7 @@ runtime `FieldRenderer` to produce a live React component tree.
 - `options: FormFieldOption[]` (optional) — Options for enum/union select fields
 - `children: FormField[]` (optional) — Children for nested objects
 - `arrayItem: FormField` (optional) — Template for array items
-- `constraints: FormFieldConstraints` — Validation constraints extracted from Zod v4 constraint bag (_zod.bag)
+- `constraints: FormFieldConstraints` — Validation constraints extracted from Zod schema and check definitions
 - `zodType: string` — Original Zod def.type for reference
 - `hasCustomRender: boolean` (optional) — Whether a custom render function is registered for this field (runtime only)
 - `render: (field: FormField, props: Record<string, unknown>) => unknown` (optional) — Custom render function from FormMeta (runtime only, not serialisable)
@@ -54,7 +54,7 @@ and to drive the L2 native-rules optimizer output.
 - `step: number` (optional) — Step constraint for numeric inputs (1 for integer-constrained fields).
 
 ### `FormMeta`
-Per-schema annotation stored in a `z.registry<FormMeta>()`.
+Per-schema annotation stored in a `z.registry&lt;FormMeta&gt;()`.
 Extends `FieldConfig` with a runtime-only `render` function for custom field rendering.
 Used with `registerDeep()` / `registerFlat()` to attach form metadata to Zod schemas.
 ```ts
@@ -75,3 +75,35 @@ Override the default template by providing a `FieldTemplate` export in `componen
 - `required: boolean` (optional) — Whether the field is required (drives asterisk or `aria-required`).
 - `disabled: boolean` (optional) — Whether the field is disabled (drives `disabled` on the wrapper).
 - `deprecated: boolean` (optional) — Whether the field is deprecated (drives strikethrough on the label).
+
+## FieldRenderer
+
+### `ZodFormComponents`
+Public component-map type for `&lt;ZodForm components={…}&gt;`.
+
+Preserves the per-key names from `defaultComponentMap` (consumers still get
+autocomplete on `Input`, `Checkbox`, etc.) but widens each value to
+`React.ComponentType&lt;any&gt;`, so plain function components, React.memo-wrapped
+components, and forwardRef components are all assignable.
+```ts
+Partial<Record<keyof ComponentMap, ComponentType<any>>>
+```
+
+## Components
+
+### `ZodFormSwitchProps`
+Props for ZodFormSwitch.
+**Properties:**
+- `source: TSource | null | undefined` — Source object whose `[discriminator]` value selects the schema.
+`null` / `undefined` are valid and route to `fallback` (or to a one-time
+warning + `null` render if no fallback is provided).
+- `discriminator: TKey` — Property name on `source` to use as the discriminator.
+- `schemas: TSchemas` — Map from discriminator values to Zod schemas.
+- `fallback: ReactNode | ((source: TSource | null | undefined) => ReactNode)` (optional) — Component(s) to render when the discriminator value matches no
+schema. ReactNode for static fallback; function for dynamic.
+The function form receives the (possibly nullish) source.
+- `components: Partial<Record<"Field" | "FieldLabel" | "FieldDescription" | "FieldMessage" | "ArrayAddButton" | "ArrayRemoveButton" | "ArrayReorderHandle" | "Input" | "Textarea" | "Checkbox" | "Combobox" | "Switch" | "Select" | "DatePicker" | "FileInput" | "RadioGroup", ComponentType<any>>>` (optional) — Forwarded to the rendered &lt;ZodForm&gt;.
+- `componentConfig: RuntimeComponentConfig` (optional) — Forwarded to the rendered &lt;ZodForm&gt;.
+- `onValueChange: (data: unknown, meta: { isValid: boolean }) => void` (optional) — Forwarded to the rendered &lt;ZodForm&gt;.
+- `className: string` (optional) — Forwarded to the rendered &lt;ZodForm&gt;.
+- `errorDisplay: "always" | "afterTouched"` (optional) — Forwarded to the rendered &lt;ZodForm&gt;.

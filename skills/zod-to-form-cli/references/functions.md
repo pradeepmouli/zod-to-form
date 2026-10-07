@@ -51,39 +51,25 @@ await program.parseAsync(['node', 'z2f', 'generate',
 ## Configuration
 
 ### `defineConfig`
-Identity helper that returns its argument typed as `ZodFormsConfig`.
-
-Merges preset component overrides (e.g. shadcn) into `config.components.overrides`
-so that user-supplied overrides layer on top of the preset defaults. Use this in
-your `z2f.config.ts` to get full TypeScript inference and IDE autocompletion.
-
-Identity helper that returns its argument typed as ZodFormsConfig.
-Applies preset component overrides (e.g., shadcn) — preset defaults
-merge with user overrides, user wins on conflicts. However, the props
-dict is replaced entirely, not merged.
+Typed identity helper for canonical authored configuration.
+Presets are expanded by resolveFormConfig after variants and adapter overrides
+have merged, so changing presets does not retain injected settings.
 ```ts
 defineConfig<TComponents, TSchemas>(config: ZodFormsConfig<TComponents, TSchemas>): ZodFormsConfig<TComponents, TSchemas>
 ```
 **Parameters:**
-- `config: ZodFormsConfig<TComponents, TSchemas>` — The raw configuration object.
-**Returns:** `ZodFormsConfig<TComponents, TSchemas>` — The same configuration with preset overrides applied.
-```ts
-export default defineConfig({
-  components: { source: '@/components/ui', preset: 'shadcn' },
-});
-```
+- `config: ZodFormsConfig<TComponents, TSchemas>` — Authored configuration.
+**Returns:** `ZodFormsConfig<TComponents, TSchemas>` — The same object with generic inference retained.
 
 ### `validateConfig`
-Validates an unknown value as a `ZodFormsConfig` at runtime.
-
-Parses `value` using the internal Zod config schema and throws a descriptive
-error if validation fails. Use this when loading config from untrusted sources
-such as JSON files or dynamic `import()` calls.
+Validate canonical authored configuration without expanding presets.
+Unknown root keys are rejected; known nested properties retain validation,
+and field metadata supports application extensions.
 ```ts
 validateConfig(value: unknown, source?: string): ZodFormsConfig<Record<string, unknown>>
 ```
 **Parameters:**
-- `value: unknown` — The value to validate.
-- `source: string` (optional) — Human-readable label for error messages (defaults to `'config'`).
-**Returns:** `ZodFormsConfig<Record<string, unknown>>` — The validated configuration cast to `ZodFormsConfig`.
-**Throws:** If `value` does not conform to the config schema.
+- `value: unknown`
+- `source: string` (optional)
+**Returns:** `ZodFormsConfig<Record<string, unknown>>`
+**Throws:** Descriptive configuration error for invalid input.

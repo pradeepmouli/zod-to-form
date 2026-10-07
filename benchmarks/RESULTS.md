@@ -2,6 +2,8 @@
 
 > Generated on 2026-10-07 with Node v26.10.0, Zod 4.6.5, darwin/arm64, Apple M4 Pro
 
+Chromium: 151.0.7922.34; React: 19.2.8.
+
 Validation fixtures: small (5 fields); medium (18 root fields, nesting/coercion/collections); large (nested addresses, collections, unions and cross-field refinements). L1/L2 are normalized form-submit validation, not arbitrary-JSON validation. Fresh setup clones the entire schema graph before preparation. Boolean-only validate is reported separately and does not produce messages or parsed output. Ratios above 1 favor compilation; setup includes construction, walking and preparation.
 
 ### Node Benchmarks

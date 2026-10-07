@@ -23,7 +23,7 @@ pnpm add @zod-to-form/core zod
 ## Requirements
 
 - Node.js >= 20
-- Zod v4
+- Zod 4.6+
 
 ## Quick Start
 
@@ -78,11 +78,19 @@ Namespace export of individual processor implementations.
 
 ### `defineConfig(config)`
 
-Type-safe config builder for `ZodFormsConfig`. Merges preset overrides into the returned config object.
+Type-safe config builder for `ZodFormsConfig`. Preserves authored values; `resolveFormConfig` expands presets after merging config layers.
 
 ### `validateConfig(value, source?)`
 
 Validates a raw config object against the config schema. Throws with a descriptive message on failure.
+
+### `mergeConfigLayers(...patches)` / `resolveFormConfig({ config, exportName, variant, invocation })`
+
+Merge canonical layers and resolve generation settings. Optimization flags merge independently, field paths merge per property, props and component override entries replace whole entries, and arrays replace. Presets expand once from the final authored preset.
+
+### `prepareValidationSchema(schema, optimization)`
+
+Prepare an identity-cached validation target with explicit Zod compilation when `compileZod` is true. Walking and registration retain the original schema identity. Native L2 fields have no target to compile.
 
 ### `resolveFieldConfig(globalFields, schemaFields)`
 
@@ -116,7 +124,6 @@ Core public types:
 - `ComponentOverride`
 - `ComponentPreset`
 - `ComponentsConfig`
-- `FormPrimitivesConfig`
 - `TypedFieldConfig`
 - `ZodFormsConfig`
 - `ZodTypeConfig`
@@ -142,7 +149,7 @@ const schema = z.object({
 formRegistry.add(schema.shape.bio, {
   component: 'Textarea',
   order: 1,
-  gridColumn: 'span 2'
+  helpText: 'Tell us about yourself'
 });
 
 const fields = walkSchema(schema, { formRegistry });

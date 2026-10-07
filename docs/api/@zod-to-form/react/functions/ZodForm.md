@@ -8,7 +8,7 @@
 
 > **ZodForm**\<`TSchema`\>(`props`): `ReactNode`
 
-Defined in: [packages/react/src/ZodForm.tsx:73](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/react/src/ZodForm.tsx#L73)
+Defined in: packages/react/src/ZodForm.tsx:85
 
 Runtime React component that renders a type-safe form from a Zod v4 schema.
 

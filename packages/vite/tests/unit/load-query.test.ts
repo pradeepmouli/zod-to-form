@@ -163,18 +163,18 @@ describe('compileTarget', () => {
       namespace: ns,
       schemaFile: '/abs/src/schemas/page.ts',
       variant: '',
-      config: ({
-	types: ['pageSchema'],
-	components: { source: './components' },
-	schemas: {
-		pageSchema: { name: 'PageForm' },
-		expressionSchema: { component: 'ExpressionEditor' }
-	},
-	defaults: {
-		mode: 'submit',
-		ui: 'html'
-	}
-})
+      config: {
+        types: ['pageSchema'],
+        components: { source: './components' },
+        schemas: {
+          pageSchema: { name: 'PageForm' },
+          expressionSchema: { component: 'ExpressionEditor' }
+        },
+        defaults: {
+          mode: 'submit',
+          ui: 'html'
+        }
+      }
     });
 
     expect(result.generatedSource).toContain("import { ExpressionEditor } from './components';");

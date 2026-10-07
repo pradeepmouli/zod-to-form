@@ -54,6 +54,16 @@ Defined in: core/dist/config-types.d.ts:21
 
 ***
 
+### optimization?
+
+> `optional` **optimization?**: [`OptimizationConfig`](../../core/type-aliases/OptimizationConfig.md)
+
+Defined in: core/dist/config-types.d.ts:29
+
+Validation optimization level. When set, generated code uses per-field validation instead of zodResolver.
+
+***
+
 ### outputPath?
 
 > `optional` **outputPath?**: `string`
@@ -108,18 +118,21 @@ Currently unused. Reserved for future server action codegen support.
 
 ***
 
+### typesModule?
+
+> `optional` **typesModule?**: `string`
+
+Defined in: core/dist/config-types.d.ts:42
+
+When set, codegen emits `import type { StripIndexSignature } from '<typesModule>'`
+and omits the inline `StripIndexSignature` type block.
+When absent (default), the type is inlined for a self-contained single-file output.
+The shadcn registry sets this to `'@/components/z2f'`.
+
+***
+
 ### ui
 
 > **ui**: `"shadcn"` \| `"html"`
 
 Defined in: core/dist/config-types.d.ts:23
-
-***
-
-### validationLevel?
-
-> `optional` **validationLevel?**: `1` \| `2` \| `3`
-
-Defined in: core/dist/config-types.d.ts:29
-
-Validation optimization level. When set, generated code uses per-field validation instead of zodResolver.

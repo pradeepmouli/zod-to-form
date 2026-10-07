@@ -62,7 +62,7 @@ export interface PluginOptions {
    */
   configPath?: string;
 
-  /** Shallow override merged on top of the loaded config. */
+  /** Canonical patch merged over the loaded config using shared domain-specific rules. */
   configOverride?: ConfigPatch;
 
   /**

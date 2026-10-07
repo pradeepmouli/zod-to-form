@@ -8,7 +8,7 @@
 
 > **resolveFieldMapping**\<`TComponents`\>(`fieldKey`, `componentName`, `componentConfig`): `object`
 
-Defined in: [codegen/src/generate.ts:194](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/codegen/src/generate.ts#L194)
+Defined in: codegen/src/generate.ts:240
 
 Resolve the component name and override config for a single `FormField` key.
 

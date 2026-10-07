@@ -25,7 +25,7 @@ runtime `FieldRenderer` to produce a live React component tree.
 - `options: FormFieldOption[]` (optional) — Options for enum/union select fields
 - `children: FormField[]` (optional) — Children for nested objects
 - `arrayItem: FormField` (optional) — Template for array items
-- `constraints: FormFieldConstraints` — Validation constraints extracted from Zod v4 constraint bag (_zod.bag)
+- `constraints: FormFieldConstraints` — Validation constraints extracted from Zod schema and check definitions
 - `zodType: string` — Original Zod def.type for reference
 - `hasCustomRender: boolean` (optional) — Whether a custom render function is registered for this field (runtime only)
 - `render: (field: FormField, props: Record<string, unknown>) => unknown` (optional) — Custom render function from FormMeta (runtime only, not serialisable)
@@ -77,12 +77,31 @@ Provided by the walker for use in nesting processors (object, array, union).
 Undefined only in unit-test contexts where nesting is not being tested.
 
 ### `FormMeta`
-Per-schema annotation stored in a `z.registry<FormMeta>()`.
+Per-schema annotation stored in a `z.registry&lt;FormMeta&gt;()`.
 Extends `FieldConfig` with a runtime-only `render` function for custom field rendering.
 Used with `registerDeep()` / `registerFlat()` to attach form metadata to Zod schemas.
 ```ts
 FieldConfig<T> & { render?: (field: FormField, props: unknown) => unknown }
 ```
+
+### `GhostRow`
+A renderable row that lives inside an array section without participating
+in form state. Used for inherited rows, computed defaults, or read-only
+informational entries.
+**Properties:**
+- `id: string` — Stable identifier within a `before` or `after` group. The renderer
+combines this with the group name to form the React key
+(`ghost-before-${id}` / `ghost-after-${id}`), so the same `id` may
+safely appear in both groups without collision. Duplicates *within*
+a single group emit a one-time development warning. Required so
+that reorders of real rows don't remount ghost rows.
+- `render: (ctx: GhostRowContext) => unknown` — Render function. Receives positional context relative to other ghost rows.
+
+### `GhostRowContext`
+Positional context passed to a `GhostRow`'s render function.
+**Properties:**
+- `isFirst: boolean` — True if this row is the first ghost row in its `before` or `after` group.
+- `isLast: boolean` — True if this row is the last ghost row in its `before` or `after` group.
 
 ### `ProcessParams`
 Optional parameters passed to each processor alongside the schema, context, and field.
@@ -114,6 +133,41 @@ Set by the L1/L2 optimizers; undefined means use the whole-schema zodResolver.
 - `'component-enforced'` — the component handles validation itself (no RHF rules emitted)
 - `rules: NativeRules` (optional) — Native RHF validation rules, populated by the L2 optimizer when `mode === 'native'`.
 
+### `FieldRegisterHints`
+Framework-agnostic descriptor of the register options a field requires.
+
+React translates this into actual RHF `register()` options (via `setValueAs`
+functions); codegen emits the equivalent static source code.  Neither the
+type nor the builder has any dependency on RHF or React.
+
+The `coerce` kind replaces the old `valueAsNumber`/`valueAsDate` flags.
+Both consumers **must** produce the canonical `setValueAs` semantics below —
+this eliminates the P1 (NaN on empty optional number) and P2 (bigint
+precision) bugs caused by `valueAsNumber: true`.
+
+Canonical `setValueAs` semantics (single source of truth):
+- **number**: `(v) =&gt; (v === '' || v == null ? undefined : Number(v))`
+- **bigint**: `(v) =&gt; { if (v === '' || v == null) return undefined; try { return BigInt(v); } catch { return v; } }`
+- **date**:   `(v) =&gt; (v === '' || v == null ? undefined : new Date(v))`
+- **file**:   `(v) =&gt; (v instanceof FileList ? (v.length &gt; 0 ? v.item(0) : undefined) : v)`
+**Properties:**
+- `coerce: "number" | "bigint" | "date" | "file"` (optional) — Coercion kind — consumers produce a `setValueAs` function matching the
+canonical semantics documented above.  Empty strings and null/undefined
+always map to `undefined` so optional fields validate correctly.
+- `nativeRules: NativeRules` (optional) — Native HTML / RHF validation rules extracted from Zod constraints (L2).
+Keys mirror `NativeRules` exactly.
+- `validate: true` (optional) — `validate: true` — marker indicating per-field Zod schema validation (L1)
+should be wired in.  The actual validate function is constructed by the
+consumer because it closes over the live Zod schema object.
+
+### `ControlMode`
+The control strategy for a field's component:
+- `'register'` — use RHF's `register()` spread (uncontrolled by default)
+- `'controller'` — use `Controller` / `useController` (required for Radix/shadcn components)
+```ts
+"register" | "controller"
+```
+
 ## types
 
 ### `FieldExpression`
@@ -121,11 +175,11 @@ Known RHF field expression strings that can be used as values in `props`.
 When a prop value matches one of these strings, it is resolved from the
 RHF controller field at render time instead of being passed as a literal.
 ```ts
-"field.value" | "field.onChange" | "field.onBlur" | "field.ref" | "field.name"
+"field.value" | "field.onChange" | "field.onBlur" | "field.ref" | "field.name" | "!!field.value"
 ```
 
 ### `ZodFormRegistry`
-Zod v4 registry parameterized with FormMeta. Create via `z.registry<FormMeta>()`.
+Zod v4 registry parameterized with FormMeta. Create via `z.registry&lt;FormMeta&gt;()`.
 ```ts
 $ZodRegistry<FormMeta>
 ```
@@ -135,9 +189,15 @@ $ZodRegistry<FormMeta>
 ### `ComponentOverride`
 Per-component metadata override. Only components that differ from defaults need an entry.
 
+### `ConfigPatch`
+Partial canonical configuration used by variants and adapter overrides.
+```ts
+Omit<Partial<ZodFormsConfig<TComponents, TSchemas>>, "components" | "variants"> & { components?: Partial<ComponentsConfig<TComponents>> }
+```
+
 ### `StripIndexSignature`
 Strips index signatures from a type, keeping only explicitly declared keys.
-Useful for Zod's `z.output<>` which adds `[x: string]: unknown` index signatures.
+Useful for Zod's `z.output&lt;&gt;` which adds `[x: string]: unknown` index signatures.
 ```ts
 T extends readonly (infer U)[] ? StripIndexSignature<U>[] : T extends object ? { [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: StripIndexSignature<T[K]> } : T
 ```
@@ -204,3 +264,7 @@ Metadata for codegen to reconstruct the lite schema in a generated file
 ```ts
 SchemaLiteInfoBase & { type: "checks"; checkCount: number } | SchemaLiteInfoBase & { type: "transform"; hasInnerChecks: boolean; hasOuterChecks: boolean } | SchemaLiteInfoBase & { type: "original" } | null
 ```
+
+## resolve-config
+
+### `ConfigInvocation`

@@ -415,6 +415,7 @@ output += `> Generated on ${new Date().toISOString().split('T')[0]}`;
 const coreRequire = createRequire(resolve('packages/core/package.json'));
 const zodVersion = coreRequire('zod/package.json').version;
 output += ` with Node ${process.version}, Zod ${zodVersion}, ${process.platform}/${process.arch}, ${cpus()[0]?.model}\n\n`;
+output += `Chromium: ${process.env.BENCH_BROWSER_VERSION ?? 'not recorded'}; React: ${createRequire(import.meta.url)('react/package.json').version}.\n\n`;
 output +=
   'Validation fixtures: small (5 fields); medium (18 root fields, nesting/coercion/collections); large (nested addresses, collections, unions and cross-field refinements). L1/L2 are normalized form-submit validation, not arbitrary-JSON validation. Fresh setup clones the entire schema graph before preparation. Boolean-only validate is reported separately and does not produce messages or parsed output. Ratios above 1 favor compilation; setup includes construction, walking and preparation.\n\n';
 

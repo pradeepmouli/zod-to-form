@@ -8,14 +8,19 @@
 
 > **ZodFormsConfig**\<`TComponents`, `TSchemas`\> = `object`
 
-Defined in: [config.ts:125](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L125)
+Defined in: config.ts:168
 
-Root configuration type for `zod-to-form` code generation.
+Canonical authored configuration shared by CLI, Vite, and configuration editors.
+Required components.source names the import module. Generation defaults and
+independent compilation live in defaults.optimization. Schemas are keyed by
+exported identifier: name/mode/out/serverAction apply only to the root, while
+component/fields follow schema identity when registered by the loader.
 
-Describes the component library to use, generation defaults, per-schema
-overrides, and global field configuration. Pass this to `defineConfig()` in
-your `z2f.config.ts` for full type inference, or load and validate it at
-runtime with `validateConfig()`.
+Variants are ConfigPatch layers and cannot contain nested variants.
+defineConfig preserves authored values; resolveFormConfig expands the final
+preset after layer merging. Component override entries and field props replace
+whole entries; fields otherwise merge per property. Unknown root keys fail
+validation, while field metadata supports application-specific extensions.
 
 ## Type Parameters
 
@@ -23,13 +28,9 @@ runtime with `validateConfig()`.
 
 `TComponents` *extends* `Record`\<`string`, `unknown`\> = `Record`\<`string`, `unknown`\>
 
-Shape of the component module (used to type `fields.component`).
-
 ### TSchemas
 
 `TSchemas` *extends* `Record`\<`string`, `unknown`\> = `Record`\<`string`, `unknown`\>
-
-Map of schema export names to their Zod schema types (used to type `schemas.[key].fields`).
 
 ## Properties
 
@@ -37,7 +38,7 @@ Map of schema export names to their Zod schema types (used to type `schemas.[key
 
 > **components**: [`ComponentsConfig`](ComponentsConfig.md)\<`TComponents`\>
 
-Defined in: [config.ts:129](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L129)
+Defined in: config.ts:172
 
 ***
 
@@ -45,7 +46,7 @@ Defined in: [config.ts:129](https://github.com/pradeepmouli/zod-to-form/blob/460
 
 > `optional` **defaults?**: [`ConfigDefaults`](ConfigDefaults.md)
 
-Defined in: [config.ts:130](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L130)
+Defined in: config.ts:174
 
 ***
 
@@ -53,7 +54,7 @@ Defined in: [config.ts:130](https://github.com/pradeepmouli/zod-to-form/blob/460
 
 > `optional` **exclude?**: `string`[]
 
-Defined in: [config.ts:133](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L133)
+Defined in: config.ts:177
 
 ***
 
@@ -61,7 +62,7 @@ Defined in: [config.ts:133](https://github.com/pradeepmouli/zod-to-form/blob/460
 
 > `optional` **fields?**: `Record`\<`string`, [`TypedFieldConfig`](TypedFieldConfig.md)\<`TComponents`\>\>
 
-Defined in: [config.ts:134](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L134)
+Defined in: config.ts:178
 
 ***
 
@@ -69,7 +70,7 @@ Defined in: [config.ts:134](https://github.com/pradeepmouli/zod-to-form/blob/460
 
 > `optional` **include?**: `string`[]
 
-Defined in: [config.ts:132](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L132)
+Defined in: config.ts:176
 
 ***
 
@@ -77,7 +78,7 @@ Defined in: [config.ts:132](https://github.com/pradeepmouli/zod-to-form/blob/460
 
 > `optional` **schemas?**: `{ [K in keyof TSchemas & string]?: ZodTypeConfig<TSchemas[K] extends $ZodType ? SchemaFieldPath<TSchemas[K]> : string, TComponents> }`
 
-Defined in: [config.ts:135](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L135)
+Defined in: config.ts:179
 
 ***
 
@@ -85,4 +86,12 @@ Defined in: [config.ts:135](https://github.com/pradeepmouli/zod-to-form/blob/460
 
 > `optional` **types?**: `string`[]
 
-Defined in: [config.ts:131](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/config.ts#L131)
+Defined in: config.ts:175
+
+***
+
+### variants?
+
+> `optional` **variants?**: `Record`\<`string`, [`ConfigPatch`](ConfigPatch.md)\<`TComponents`, `TSchemas`\>\>
+
+Defined in: config.ts:173

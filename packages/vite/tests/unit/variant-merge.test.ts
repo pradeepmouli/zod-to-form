@@ -121,29 +121,31 @@ describe('buildEffectiveConfig', () => {
     // Per the spec: variants typically swap whole sub-objects rather than
     // patch them. A nested merge would surprise users who expect their
     // variant override to fully replace the global subtree.
-    const withNested: ZodFormsConfig = ({
-	components: {
-		preset: 'shadcn',
-		source: '@/global'
-	},
-	variants: { custom: { ...{ components: {
-		preset: 'html',
-		source: '@/custom'
-	} } } },
-	defaults: {
-		mode: 'submit',
-		ui: 'html'
-	},
-	schemas: {
-		['signupSchema']: { name: 'F' },
-		['userSchema']: { name: 'F' },
-		['mySchema']: { name: 'F' },
-		['activeSchema']: { name: 'F' },
-		['TestSchema']: { name: 'F' },
-		['testSchema']: { name: 'F' },
-		['schema']: { name: 'F' }
-	}
-});
+    const withNested: ZodFormsConfig = {
+      components: {
+        preset: 'shadcn',
+        source: '@/global'
+      },
+      variants: {
+        custom: ({ components: {
+	preset: 'html',
+	source: '@/custom'
+} })
+      },
+      defaults: {
+        mode: 'submit',
+        ui: 'html'
+      },
+      schemas: {
+        ['signupSchema']: { name: 'F' },
+        ['userSchema']: { name: 'F' },
+        ['mySchema']: { name: 'F' },
+        ['activeSchema']: { name: 'F' },
+        ['TestSchema']: { name: 'F' },
+        ['testSchema']: { name: 'F' },
+        ['schema']: { name: 'F' }
+      }
+    };
     const result = buildEffectiveConfig(withNested, 'custom');
     // The variant's componentConfig fully replaced the global one.
     expect(result.components.source).toBe('@/custom');

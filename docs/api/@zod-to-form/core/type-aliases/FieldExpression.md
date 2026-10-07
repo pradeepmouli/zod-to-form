@@ -6,9 +6,9 @@
 
 # Type Alias: FieldExpression
 
-> **FieldExpression** = `"field.value"` \| `"field.onChange"` \| `"field.onBlur"` \| `"field.ref"` \| `"field.name"`
+> **FieldExpression** = `"field.value"` \| `"field.onChange"` \| `"field.onBlur"` \| `"field.ref"` \| `"field.name"` \| `"!!field.value"`
 
-Defined in: [types.ts:155](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/types.ts#L155)
+Defined in: types.ts:155
 
 Known RHF field expression strings that can be used as values in `props`.
 When a prop value matches one of these strings, it is resolved from the

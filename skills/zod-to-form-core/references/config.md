@@ -20,6 +20,38 @@ Label for the "remove item" button (default: "− Remove")
 
 **Type:** `string`
 
+#### reorder
+
+Enable per-row reorder affordance. When true, the renderer mounts a
+registered `ArrayReorderHandle` component per row and wires it to
+`useFieldArray.move()`. Off by default — existing arrays are unchanged.
+
+**Type:** `boolean`
+
+#### onReorder
+
+Optional callback fired after a reorder completes. Adopters who hold a
+parallel copy of the array (e.g. a graph store) mirror the change here.
+`from` and `to` are zero-based indices into the form-driven array
+(excluding ghost rows).
+
+**Type:** `(from: number, to: number) => void`
+
+#### before
+
+Non-form rows rendered before the first form-driven row. Each entry is
+a self-contained renderable; the library never inspects its contents.
+Ghost rows do not participate in form state, validation, or submission.
+
+**Type:** `GhostRow[]`
+
+#### after
+
+Non-form rows rendered after the last form-driven row. Same semantics as
+`before`.
+
+**Type:** `GhostRow[]`
+
 ## FieldConfig
 
 Per-field configuration that customises how a Zod schema field is rendered.
@@ -60,7 +92,7 @@ the optimization config here. The CLI reads `config.defaults.optimization`
 and forwards it; useZodForm accepts it via its own options. Both converge
 here as the single source of truth for the walker.
 
-**Type:** `{ level: 1 | 2 | 3; optimizers?: Record<string, FormOptimizer[]> }`
+**Type:** `OptimizationConfig & { optimizers?: Record<string, FormOptimizer[]> }`
 
 ## ComponentsConfig
 
@@ -103,90 +135,113 @@ an open `Record<string, unknown>`.
 
 ## ZodFormsConfig
 
-Root configuration type for `zod-to-form` code generation.
+Canonical authored configuration shared by CLI, Vite, and configuration editors.
+Required components.source names the import module. Generation defaults and
+independent compilation live in defaults.optimization. Schemas are keyed by
+exported identifier: name/mode/out/serverAction apply only to the root, while
+component/fields follow schema identity when registered by the loader.
 
-Describes the component library to use, generation defaults, per-schema
-overrides, and global field configuration. Pass this to `defineConfig()` in
-your `z2f.config.ts` for full type inference, or load and validate it at
-runtime with `validateConfig()`.
+Variants are ConfigPatch layers and cannot contain nested variants.
+defineConfig preserves authored values; resolveFormConfig expands the final
+preset after layer merging. Component override entries and field props replace
+whole entries; fields otherwise merge per property. Unknown root keys fail
+validation, while field metadata supports application-specific extensions.
 
 ### Properties
 
 #### components
 
-
-
 **Type:** `ComponentsConfig<TComponents>`
 
 **Required:** yes
 
+#### variants
+
+**Type:** `Record<string, ConfigPatch<TComponents, TSchemas>>`
+
 #### defaults
-
-
 
 **Type:** `ConfigDefaults`
 
 #### types
 
-
-
 **Type:** `string[]`
 
 #### include
-
-
 
 **Type:** `string[]`
 
 #### exclude
 
-
-
 **Type:** `string[]`
 
 #### fields
-
-
 
 **Type:** `Record<string, TypedFieldConfig<TComponents>>`
 
 #### schemas
 
-
-
 **Type:** `{ [K in keyof TSchemas & string]?: ZodTypeConfig<TSchemas[K] extends $ZodType ? SchemaFieldPath<TSchemas[K]> : string, TComponents> }`
 
 ## ZodTypeConfig
+
+Configuration for a single named schema export in `defineConfig({ schemas: ... })`.
+
+This type mixes two scopes:
+- **root-export generation settings** like `name`, `mode`, `out`, and `serverAction`
+- **schema-identity defaults** like `component` and nested `fields`, which follow
+  the same exported schema object anywhere it is reused as a subschema
+
+Usage-site path overrides still win over these schema defaults.
 
 ### Properties
 
 #### name
 
+Override the generated top-level form component name when this schema is
+selected as the root export in CLI or Vite codegen.
 
+Root-only: nested appearances of the same subschema do not use this name.
+
+**Type:** `string`
+
+#### component
+
+Default renderer for this schema wherever the same exported schema object
+is encountered.
+
+When set on a reusable subschema export (for example `ExpressionSchema`),
+any parent schema that references that exact schema instance will render it
+with this component unless a usage-site path override wins.
 
 **Type:** `string`
 
 #### mode
 
-
+Root-only generation mode override for this schema export.
 
 **Type:** `"submit" | "auto-save"`
 
 #### out
 
-
+Root-only output path override for this schema export.
 
 **Type:** `string`
 
 #### serverAction
 
-
+Root-only server action override for this schema export.
 
 **Type:** `boolean`
 
 #### fields
 
+Schema-local field configuration applied relative to this schema's own
+shape.
 
+For a root schema, these entries merge over global `fields`. For a reused
+exported subschema, the same config follows that schema by identity and
+becomes its default nested behavior everywhere it appears.
 
 **Type:** `Partial<Record<TFieldKeys, TypedFieldConfig<TComponents>>>`
 
@@ -196,9 +251,13 @@ runtime with `validateConfig()`.
 
 #### level
 
-
-
 **Type:** `1 | 2 | 3`
+
+#### compileZod
+
+Compile validation targets with Zod, independently of the optimization level.
+
+**Type:** `boolean`
 
 ## CodegenConfig
 
@@ -214,15 +273,11 @@ the browser playground and Vite plugin can pass it explicitly.
 
 #### exportName
 
-
-
 **Type:** `string`
 
 **Required:** yes
 
 #### componentName
-
-
 
 **Type:** `string`
 
@@ -230,29 +285,21 @@ the browser playground and Vite plugin can pass it explicitly.
 
 #### mode
 
-
-
 **Type:** `"submit" | "auto-save"`
 
 **Required:** yes
 
 #### componentConfig
 
-
-
 **Type:** `ZodFormsConfig<Record<string, unknown>>`
 
 #### ui
-
-
 
 **Type:** `"shadcn" | "html"`
 
 **Required:** yes
 
 #### serverAction
-
-
 
 **Type:** `boolean`
 
@@ -262,11 +309,11 @@ Force FormProvider wrapper in submit mode. Auto-save mode always uses FormProvid
 
 **Type:** `boolean`
 
-#### validationLevel
+#### optimization
 
 Validation optimization level. When set, generated code uses per-field validation instead of zodResolver.
 
-**Type:** `1 | 2 | 3`
+**Type:** `OptimizationConfig`
 
 #### schemaLite
 
@@ -285,3 +332,74 @@ Codegen metadata for generating the .lite.ts file
 Output path of the form component — used to compute the .lite.ts import path
 
 **Type:** `string`
+
+#### typesModule
+
+When set, codegen emits `import type { StripIndexSignature } from '<typesModule>'`
+and omits the inline `StripIndexSignature` type block.
+When absent (default), the type is inlined for a self-contained single-file output.
+The shadcn registry sets this to `'@/components/z2f'`.
+
+**Type:** `string`
+
+## ResolvedFormConfig
+
+### Properties
+
+#### componentConfig
+
+**Type:** `ZodFormsConfig`
+
+**Required:** yes
+
+#### componentName
+
+**Type:** `string`
+
+**Required:** yes
+
+#### mode
+
+**Type:** `"submit" | "auto-save"`
+
+**Required:** yes
+
+#### ui
+
+**Type:** `"shadcn" | "html"`
+
+**Required:** yes
+
+#### out
+
+**Type:** `string`
+
+#### overwrite
+
+**Type:** `boolean`
+
+**Required:** yes
+
+#### serverAction
+
+**Type:** `boolean`
+
+**Required:** yes
+
+#### formProvider
+
+**Type:** `boolean`
+
+**Required:** yes
+
+#### optimization
+
+**Type:** `OptimizationConfig`
+
+**Required:** yes
+
+#### fields
+
+**Type:** `NonNullable<ZodFormsConfig["fields"]>`
+
+**Required:** yes

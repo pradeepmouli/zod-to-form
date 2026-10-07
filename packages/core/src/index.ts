@@ -10,7 +10,7 @@
  * from Zod v4's native introspection API.
  *
  * @remarks
- * Requires Zod v4 — uses `_zod.def`, `_zod.bag`, and `z.registry()` APIs.
+ * Requires Zod v4 — uses `_zod.def`, check definitions, and `z.registry()` APIs.
  * Does NOT work with Zod v3 (which uses `_def` internals).
  *
  * Key concepts:

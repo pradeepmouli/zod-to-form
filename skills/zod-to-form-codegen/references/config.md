@@ -14,15 +14,11 @@ the browser playground and Vite plugin can pass it explicitly.
 
 #### exportName
 
-
-
 **Type:** `string`
 
 **Required:** yes
 
 #### componentName
-
-
 
 **Type:** `string`
 
@@ -30,29 +26,21 @@ the browser playground and Vite plugin can pass it explicitly.
 
 #### mode
 
-
-
 **Type:** `"submit" | "auto-save"`
 
 **Required:** yes
 
 #### componentConfig
 
-
-
 **Type:** `ZodFormsConfig<Record<string, unknown>>`
 
 #### ui
-
-
 
 **Type:** `"shadcn" | "html"`
 
 **Required:** yes
 
 #### serverAction
-
-
 
 **Type:** `boolean`
 
@@ -62,11 +50,11 @@ Force FormProvider wrapper in submit mode. Auto-save mode always uses FormProvid
 
 **Type:** `boolean`
 
-#### validationLevel
+#### optimization
 
 Validation optimization level. When set, generated code uses per-field validation instead of zodResolver.
 
-**Type:** `1 | 2 | 3`
+**Type:** `OptimizationConfig`
 
 #### schemaLite
 
@@ -86,6 +74,15 @@ Output path of the form component — used to compute the .lite.ts import path
 
 **Type:** `string`
 
+#### typesModule
+
+When set, codegen emits `import type { StripIndexSignature } from '<typesModule>'`
+and omits the inline `StripIndexSignature` type block.
+When absent (default), the type is inlined for a self-contained single-file output.
+The shadcn registry sets this to `'@/components/z2f'`.
+
+**Type:** `string`
+
 ## ConfigTemplateOptions
 
 Browser-safe config template generator.
@@ -93,6 +90,12 @@ Produces the defineConfig({...}) source string used by both the CLI
 init command and the playground.
 
 ### Properties
+
+#### config
+
+Fully authored canonical config; serialize every public setting.
+
+**Type:** `ZodFormsConfig`
 
 #### componentSource
 
@@ -128,15 +131,15 @@ Preset name: 'shadcn' | 'html'
 
 #### overrides
 
-Component overrides (name → { controlled?: boolean })
+Component overrides (name → { controlled?: boolean; props?: ... })
 
-**Type:** `Record<string, { controlled?: boolean }>`
+**Type:** `Record<string, { controlled?: boolean; props?: Record<string, string | number | boolean | null> }>`
 
 #### defaults
 
 Defaults block
 
-**Type:** `{ mode?: "submit" | "auto-save"; ui?: "shadcn" | "html"; overwrite?: boolean; serverAction?: boolean; formProvider?: boolean; optimization?: { level?: 1 | 2 | 3 } }`
+**Type:** `ConfigDefaults`
 
 #### fields
 

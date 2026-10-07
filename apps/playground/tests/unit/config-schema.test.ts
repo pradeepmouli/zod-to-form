@@ -1,4 +1,29 @@
 import { describe, it, expect } from 'vitest';
+
+it('preserves unexposed paths and compiler settings during a partial form edit', () => {
+  const original = {
+    components: { source: './ui' },
+    defaults: { optimization: { level: 2 as const, compileZod: true } },
+    fields: {
+      name: { helpText: 'Keep me', props: { rows: 3 } },
+      'items[].secret': { hidden: true }
+    }
+  };
+  const next = formValuesToConfig(
+    {
+      defaults: { optimization: { level: 1 } },
+      fields: { name: { label: 'Display name', helpText: undefined } }
+    },
+    original
+  );
+  expect(next.defaults?.optimization).toEqual({ level: 1, compileZod: true });
+  expect(next.fields?.['items[].secret']).toEqual({ hidden: true });
+  expect(next.fields?.name).toMatchObject({
+    label: 'Display name',
+    helpText: 'Keep me',
+    props: { rows: 3 }
+  });
+});
 import type { FormField } from '@zod-to-form/core';
 import {
   generateConfigSchema,

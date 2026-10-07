@@ -283,3 +283,7 @@ await program.parseAsync(['node', 'z2f', 'generate', '--config', 'z2f.config.ts'
 ## Relationship to Runtime
 
 The CLI and runtime `<ZodForm>` share `@zod-to-form/core`, but the CLI consumes `defineConfig()` while runtime-only component binding happens through `componentConfig`. See [Core Configuration](./core-config.md) and [Runtime Component Config](./component-config.md).
+
+## Shared variants
+
+CLI generation resolves the same nested config as Vite, including independent `defaults.optimization.compileZod`. Select a canonical variant with `--variant mobile`; omit it for the base. Root invocation settings override the selected variant's resolved defaults/schema settings. See [Core Config](./core-config.md).

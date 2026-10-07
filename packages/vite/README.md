@@ -55,6 +55,21 @@ export default function App() {
 - **Query-string mode** (default): imports carrying `?z2f` become generated form components.
 - **Generate mode** (opt-in via `generate: {}`): scans source for `<ZodForm schema={X}>` usages and replaces statically resolvable ones with generated components at build time. Unresolvable sites are left alone and fall through to the runtime path. Presence of the `generate` object — even empty — enables the mode; pass `generate: { include: [...], exclude: [...] }` to constrain which files are scanned. The name mirrors the CLI's `zod-to-form generate` command: same codegen, driven by static analysis instead of an explicit CLI step.
 
+## Shared configuration
+
+Vite uses the same nested `ZodFormsConfig` as the CLI. Import your `z2f.config.ts` and pass it as `configOverride`, or let Vite discover it. Partial overrides merge by domain; arrays, field props, and component override entries replace.
+
+```ts
+z2fVite({
+  configOverride: {
+    components: { source: './ui', preset: 'shadcn' },
+    defaults: { mode: 'auto-save', ui: 'shadcn', optimization: { compileZod: true } }
+  }
+});
+```
+
+Zod 4.6+ is required. `compileZod` is independent of `level`; compilation alone keeps the full resolver. Removed flat plugin config keys require migration to `components`, `defaults`, `schemas`, and `types`. See the [config guide](../../apps/docs/docs/guides/core-config.md).
+
 ## License
 
 MIT

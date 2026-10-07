@@ -1,12 +1,24 @@
 ---
-name: zod-to-form-codegen
-description: "Browser-safe code generation for Zod v4 form components Use when: Building a custom codegen pipeline that assembles `FormField[]` and needs the.... Also: zod, zod-v4, codegen, forms, form-generation, react-hook-form, schema-driven, template-generation, browser-safe, component-codegen, schema-to-tsx."
+description: "Browser-safe code generation utilities for Zod v4 form components.\n\nProvides the building blocks for generating React form TSX files from a\n`FormField[]` tree and a `ZodFormsConfig`. No Node.js dependencies — safe\nto import in browser and server environments alike.\n\nKey exports:\n- `generateFormComponent` — produce a complete TSX form component string\n- `getFileHeader` — emit import declarations for generated files\n- `renderField` — render a single field to its JSX string\n- `buildConfigSource` — generate a `z2f.config.ts` starter file\n- `getFieldTemplateSource` — emit the preset FieldTemplate component source\n- `generateSchemaLiteFile` — emit the lite schema file for optimized validation Use when: Building a custom codegen pipeline that assembles `FormField[]` and needs the.... Also: zod, zod-v4, codegen, forms, form-generation, react-hook-form, schema-driven, template-generation, browser-safe, component-codegen, schema-to-tsx."
 license: MIT
+name: zod-to-form-codegen
 ---
 
 # @zod-to-form/codegen
 
-Browser-safe code generation for Zod v4 form components
+Browser-safe code generation utilities for Zod v4 form components.
+
+Provides the building blocks for generating React form TSX files from a
+`FormField[]` tree and a `ZodFormsConfig`. No Node.js dependencies — safe
+to import in browser and server environments alike.
+
+Key exports:
+- `generateFormComponent` — produce a complete TSX form component string
+- `getFileHeader` — emit import declarations for generated files
+- `renderField` — render a single field to its JSX string
+- `buildConfigSource` — generate a `z2f.config.ts` starter file
+- `getFieldTemplateSource` — emit the preset FieldTemplate component source
+- `generateSchemaLiteFile` — emit the lite schema file for optimized validation
 
 ## Features
 
@@ -110,7 +122,42 @@ export default defineConfig({
 });
 ```
 
-### 8. Section grouping without schema restructuring
+### 8. Exported subschema defaults
+
+`defineConfig({ schemas: ... })` does two jobs at once:
+
+1. **Root-only generation settings** like `name`, `mode`, `out`, and `serverAction`
+2. **Schema-identity defaults** like `component` and nested `fields`
+
+That second part means config can follow a reused exported subschema anywhere it appears.
+
+```typescript
+import { defineConfig } from '@zod-to-form/core';
+import * as schemaModule from './schemas';
+
+export default defineConfig<typeof import('@/components/ui'), typeof schemaModule>({
+  components: {
+    source: '@/components/ui',
+    preset: 'shadcn',
+  },
+  schemas: {
+    ExpressionSchema: {
+      component: 'ExpressionEditor',
+      fields: {
+        language: { hidden: true },
+      },
+    },
+    RuleSchema: {
+      name: 'RuleEditor',
+      out: 'src/forms',
+    },
+  },
+});
+```
+
+If `RuleSchema` or `WorkflowSchema` both reuse the same exported `ExpressionSchema` object, they both inherit `ExpressionEditor` and the nested `language` override automatically. Usage-site path overrides still win, while `name`/`mode`/`out`/`serverAction` stay root-only.
+
+### 9. Section grouping without schema restructuring
 
 Group fields from a flat schema into visual sections without changing the schema. Fields sharing the same `section` key are rendered as a group.
 
