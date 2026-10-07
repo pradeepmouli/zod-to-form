@@ -369,6 +369,7 @@ export function createProgram(): Command {
     .option('--out <path>', 'Output directory or file path')
     .option('--name <componentName>', 'Generated component name')
     .option('--ui <preset>', 'UI preset (shadcn|html)')
+    .option('--variant <name>', 'Named configuration variant')
     .option('--dry-run', 'Print generated code without writing files', false)
     .option('--server-action', 'Generate a Next.js server action alongside the form', false)
     .option('--watch', 'Watch schema file for changes and regenerate on change', false)
@@ -377,15 +378,20 @@ export function createProgram(): Command {
       const configPath = path.resolve(cwd, commandOptions.config);
       const config = await loadConfig(configPath);
       const schemaPath = path.resolve(cwd, commandOptions.schema);
+      const selectedConfig = resolveFormConfig({
+        config,
+        exportName: '',
+        variant: commandOptions.variant
+      }).componentConfig;
 
       const exportNames = commandOptions.export
         ? [commandOptions.export]
-        : config.types && config.types.length > 0
-          ? config.types
+        : selectedConfig.types && selectedConfig.types.length > 0
+          ? selectedConfig.types
           : applyExportFilters(
               await resolveSchemaExportNames(schemaPath),
-              config.include,
-              config.exclude
+              selectedConfig.include,
+              selectedConfig.exclude
             );
 
       if (exportNames.length === 0) {
@@ -401,11 +407,12 @@ export function createProgram(): Command {
           export: exportName,
           _loadedConfig: config
         });
-        const schemaConfig = config.schemas?.[exportName];
-        const componentName = resolveComponentName(
+        const { componentName } = resolveFormConfig({
+          config,
           exportName,
-          commandOptions.name ?? schemaConfig?.name
-        );
+          variant: commandOptions.variant,
+          invocation: commandOptions
+        });
         results.push({ componentName, outputPath: result.outputPath });
       }
 

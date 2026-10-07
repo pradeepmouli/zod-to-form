@@ -1,4 +1,6 @@
-import { mergeConfigLayers, resolveFormConfig, walkSchema } from '@zod-to-form/core';
+import { mergeConfigLayers, resolveFormConfig, walkSchema, registerFlat } from '@zod-to-form/core';
+import { z } from 'zod';
+import type { FormMeta } from '@zod-to-form/core';
 import { useSchemaFromSource } from '../../hooks/useSchemaFromSource.ts';
 import { useMemo, useState, useCallback } from 'react';
 import type { FormField } from '@zod-to-form/core';
@@ -35,7 +37,7 @@ export function CodeOutput({
   onCodeOutputModeChange,
   editorContent = ''
 }: CodeOutputProps) {
-  const { schema } = useSchemaFromSource(editorContent, fields);
+  const { schema, formRegistry, stale } = useSchemaFromSource(editorContent, fields);
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
 
@@ -78,9 +80,21 @@ export function CodeOutput({
       let code: string;
       if (codeOutputMode === 'cli') {
         const resolved = resolveFormConfig({ config: componentConfig, exportName: 'schema' });
+        if (resolved.optimization.level !== undefined && (!schema || stale)) {
+          throw new Error('Optimized output requires a valid evaluated schema.');
+        }
+        const registry = z.registry<FormMeta>();
+        if (schema) registerFlat(registry, schema, resolved.fields);
+        const getConfiguredMetadata = registry.get.bind(registry);
+        registry.get = (target) => {
+          const authored = formRegistry?.get(target);
+          const configured = getConfiguredMetadata(target);
+          return authored || configured ? { ...authored, ...configured } : undefined;
+        };
         const walked =
           schema && resolved.optimization.level !== undefined
             ? walkSchema(schema, {
+                formRegistry: registry,
                 optimization: { ...resolved.optimization, level: resolved.optimization.level }
               })
             : null;
@@ -110,7 +124,9 @@ export function CodeOutput({
     customComponentNames,
     config,
     componentConfig,
-    schema
+    schema,
+    formRegistry,
+    stale
   ]);
 
   const handleCopy = useCallback(() => {

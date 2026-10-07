@@ -42,6 +42,40 @@ async function createFixture() {
 }
 
 describe('CLI generate command', () => {
+  it('selects variant exports and reports the resolved component name through Commander', async () => {
+    const { schemaPath, configPath, outDir } = await createFixture();
+    await writeFile(
+      configPath,
+      `export default {
+      components: { source: '@app/components' }, types: ['missingSchema'],
+      defaults: { out: ${JSON.stringify(outDir)} },
+      variants: { selected: { types: ['userSchema'], schemas: { userSchema: { name: 'VariantUserForm' } } } }
+    };`
+    );
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    try {
+      await createProgram()
+        .exitOverride()
+        .parseAsync([
+          'node',
+          'z2f',
+          'generate',
+          '--config',
+          configPath,
+          '--schema',
+          schemaPath,
+          '--variant',
+          'selected'
+        ]);
+      expect(await readFile(path.join(outDir, 'VariantUserForm.tsx'), 'utf8')).toContain(
+        'VariantUserForm'
+      );
+      expect(log.mock.calls.flat().join('\n')).toContain('VariantUserForm');
+    } finally {
+      log.mockRestore();
+    }
+  });
+
   it('writes file, supports dry-run, and config overwrite behavior', async () => {
     const { schemaPath, outDir, dir } = await createFixture();
 

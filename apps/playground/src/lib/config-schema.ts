@@ -155,10 +155,35 @@ function filterDefinedEntries(obj: Record<string, unknown>): Record<string, unkn
  * Convert form values back to a PlaygroundConfig.
  * Empty/undefined entries are omitted.
  */
+function removeClearedProperties(
+  existing: Record<string, unknown>,
+  edits: Record<string, unknown>
+): Record<string, unknown> {
+  const retained = { ...existing };
+  for (const [key, value] of Object.entries(edits)) {
+    if (value === undefined) {
+      delete retained[key];
+    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const previous = retained[key];
+      const child = removeClearedProperties(
+        previous && typeof previous === 'object' && !Array.isArray(previous)
+          ? (previous as Record<string, unknown>)
+          : {},
+        value as Record<string, unknown>
+      );
+      if (Object.keys(child).length) retained[key] = child;
+      else delete retained[key];
+    }
+  }
+  return retained;
+}
+
 export function formValuesToConfig(
   values: Record<string, unknown>,
   existingConfig: PlaygroundConfig | null
 ): PlaygroundConfig {
+  // Own undefined keys are cleared controls; absent keys are unexposed metadata.
+  const retained = removeClearedProperties(existingConfig ?? {}, values) as PlaygroundConfig;
   const rawComponents = (values.components ?? {}) as Record<string, unknown>;
   const rawDefaults = (values.defaults ?? {}) as Record<string, unknown>;
   const rawFields = (values.fields ?? {}) as Record<string, FieldConfigEntry | undefined>;
@@ -173,22 +198,22 @@ export function formValuesToConfig(
 
   const merged = mergeConfigLayers(
     { components: getInitDefaults('default').components },
-    existingConfig ?? {},
+    retained,
     {
       defaults: filterDefinedEntries(rawDefaults) as ConfigDefaults | undefined,
       fields: nonEmptyFields
     }
   );
   return {
-    ...existingConfig,
+    ...retained,
     components: filterDefinedEntries({
-      ...existingConfig?.components,
+      ...retained.components,
       ...filterDefinedEntries(rawComponents)
     }),
     defaults: filterDefinedEntries({
       ...merged.defaults,
       optimization:
-        existingConfig?.defaults?.optimization || rawDefaults.optimization
+        retained.defaults?.optimization || rawDefaults.optimization
           ? merged.defaults?.optimization
           : undefined
     }),

@@ -12,7 +12,7 @@ it('preserves unexposed paths and compiler settings during a partial form edit',
   const next = formValuesToConfig(
     {
       defaults: { optimization: { level: 1 } },
-      fields: { name: { label: 'Display name', helpText: undefined } }
+      fields: { name: { label: 'Display name' } }
     },
     original
   );
