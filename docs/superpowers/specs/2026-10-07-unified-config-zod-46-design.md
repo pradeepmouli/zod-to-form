@@ -14,6 +14,12 @@ Vite exposes `Z2FViteConfig` derived from the flat `CodegenConfig`. It loads fil
 
 Rune Studio's current `apps/studio/vite.config.ts` documents a real consequence: using the nested shape in the flat plugin override silently selected the wrong mode and UI defaults. The playground maintains another `PlaygroundConfig` interface and local configuration schemas.
 
+### Vite API verification
+
+Nesting is not a Vite limitation. The official [Plugin API](https://vite.dev/guide/api-plugin#simple-examples) describes plugin factories accepting options. Its [config hook](https://vite.dev/guide/api-plugin#config) deeply merges returned partial Vite config, and the [JavaScript API](https://vite.dev/guide/api-javascript#mergeconfig) exposes `mergeConfig` for Vite configs.
+
+z2f's own configuration is passed to its factory or loaded through `ssrLoadModule`; Vite does not automatically interpret or merge this custom contract. Current `ensureConfig` uses `{ ...DEFAULT_CONFIG, ...loaded, ...configOverride }`, and `buildEffectiveConfig` uses `{ ...base, ...variant }`. Those explicit shallow spreads and the flat properties expected downstream explain the current mismatch. The canonical nested config is supported; its domain-specific merge policy belongs in the shared core resolver rather than relying on Vite's config merger.
+
 ## Canonical public contract
 
 Keep `ZodFormsConfig` in core as the authoritative public type, extended with named variants. `defineConfig()`, loaded config files, and Vite `configOverride` all describe this contract. Remove the flat public Vite shape and its `validationLevel` property. Internal resolved generation data remains separate and is not accepted as a config-file format.
