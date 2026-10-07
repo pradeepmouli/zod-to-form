@@ -14,7 +14,7 @@ ZodForm<TSchema>(props: ZodFormProps<TSchema>): ReactNode
 ```
 **Parameters:**
 - `props: ZodFormProps<TSchema>` — Schema, event handlers, and optional component/config overrides.
-**Returns:** `ReactNode` — A `<FormProvider>`-wrapped form element.
+**Returns:** `ReactNode` — A `&lt;FormProvider&gt;`-wrapped form element.
 ```tsx
 import { ZodForm } from '@zod-to-form/react';
 import { z } from 'zod';
@@ -26,6 +26,41 @@ const loginSchema = z.object({
 
 <ZodForm schema={loginSchema} onSubmit={(data) => console.log(data)} />
 ```
+
+### `ZodFormSwitch`
+Render the form matching `source[discriminator]`, unmounting on changes via
+a React `key`. Falls back to `fallback` (or `null` plus a one-time warning)
+for unmapped discriminator values.
+```ts
+ZodFormSwitch<TSource, TKey, TSchemas>(props: ZodFormSwitchProps<TSource, TKey, TSchemas>): ReactNode
+```
+**Parameters:**
+- `props: ZodFormSwitchProps<TSource, TKey, TSchemas>`
+**Returns:** `ReactNode`
+```tsx
+<ZodFormSwitch
+  source={node}
+  discriminator="$type"
+  schemas={{ Data: dataSchema, Choice: choiceSchema }}
+  fallback={<UnsupportedTypeNotice />}
+/>
+```
+
+## ZodForm
+
+### `SectionRenderer`
+Renders section components that group multiple form fields.
+Each section component receives a `fields` prop with the field names it manages,
+and reads/writes its fields via useFormContext (FormProvider).
+Section components are resolved by name from `componentConfig.componentModule`.
+Use with `collectFieldSections` inside an existing FormProvider to compose
+custom layouts without creating a second form or duplicating section rendering.
+```ts
+SectionRenderer(__namedParameters: { sections: ReadonlyMap<string, string[]>; componentConfig?: Pick<RuntimeComponentConfig, "componentModule"> }): Element
+```
+**Parameters:**
+- `__namedParameters: { sections: ReadonlyMap<string, string[]>; componentConfig?: Pick<RuntimeComponentConfig, "componentModule"> }`
+**Returns:** `Element`
 
 ## Hooks
 
@@ -50,6 +85,24 @@ return (
     {fields.map((f) => <input key={f.key} {...form.register(f.key)} />)}
   </form>
 );
+```
+
+### `useExternalSync`
+Reset a form's values when an externally-supplied source object's reference
+changes; preserve in-progress edits while the reference is stable.
+
+Adopters with mismatched source-vs-form shapes pass a `toValues` projection.
+```ts
+useExternalSync<TSource, TValues>(form: UseFormReturn<TValues>, source: TSource, toValues: (source: TSource) => TValues, options?: UseExternalSyncOptions): void
+```
+**Parameters:**
+- `form: UseFormReturn<TValues>`
+- `source: TSource`
+- `toValues: (source: TSource) => TValues`
+- `options: UseExternalSyncOptions` (optional)
+```tsx
+const { form } = useZodForm(schema, { defaultValues: toValues(node) });
+useExternalSync(form, node, toValues);
 ```
 
 ## Normalization

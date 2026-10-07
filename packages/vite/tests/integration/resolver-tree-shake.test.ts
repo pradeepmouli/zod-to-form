@@ -53,12 +53,7 @@ async function runBuild(options: {
     plugins: [
       z2fVite({
         configOverride: {
-          componentName: 'F',
-          mode: 'submit',
-          ui: 'html',
-          ...(options.validationLevel !== undefined
-            ? { validationLevel: options.validationLevel }
-            : {})
+          defaults: { mode: 'submit', ui: 'html', optimization: { level: options.validationLevel } }
         },
         logLevel: 'silent'
       })

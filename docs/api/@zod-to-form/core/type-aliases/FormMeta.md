@@ -8,7 +8,7 @@
 
 > **FormMeta**\<`T`\> = [`FieldConfig`](FieldConfig.md)\<`T`\> & `object`
 
-Defined in: [types.ts:247](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/types.ts#L247)
+Defined in: types.ts:306
 
 Per-schema annotation stored in a `z.registry<FormMeta>()`.
 Extends `FieldConfig` with a runtime-only `render` function for custom field rendering.

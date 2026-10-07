@@ -10,7 +10,7 @@
  * from Zod v4's native introspection API.
  *
  * @remarks
- * Requires Zod v4 — uses `_zod.def`, `_zod.bag`, and `z.registry()` APIs.
+ * Requires Zod v4 — uses `_zod.def`, check definitions, and `z.registry()` APIs.
  * Does NOT work with Zod v3 (which uses `_def` internals).
  *
  * Key concepts:
@@ -69,6 +69,7 @@ export type {
   ZodFormsConfig,
   ZodTypeConfig,
   ConfigDefaults,
+  ConfigPatch,
   OptimizationConfig,
   StripIndexSignature
 } from './config.js';
@@ -95,9 +96,11 @@ export {
 
 export {
   defineConfig,
+  configPropertySchemas,
+  configDraftSchema,
+  fieldConfigSchema,
   validateConfig,
   resolveFieldConfig,
-  normalizeConfig,
   SHADCN_OVERRIDES,
   DEFAULT_OVERRIDES,
   RHF_FIELD_EXPRESSIONS
@@ -125,3 +128,8 @@ export { walkSchema } from './walker.js';
 export { builtinProcessors, createProcessors } from './registry.js';
 export { registerDeep, registerFlat, registerSchemaConfigs } from './register.js';
 export * as processors from './processors/index.js';
+
+export { mergeConfigLayers, resolveFormConfig } from './resolve-config.js';
+export type { ConfigInvocation, ResolvedFormConfig } from './resolve-config.js';
+
+export { prepareValidationSchema } from './prepare-validation-schema.js';

@@ -1,15 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ComponentType } from 'react';
 import type { FormField } from '@zod-to-form/core';
-import { SHADCN_OVERRIDES } from '@zod-to-form/core';
+import { mergeConfigLayers, resolveFormConfig } from '@zod-to-form/core';
 import { ZodForm, defaultComponentMap, shadcnComponentMap } from '@zod-to-form/react';
-import type { RuntimeComponentConfig } from '@zod-to-form/react';
-import type { ComponentMapType, EvaluationError, SubmitResult } from '../../types/playground.ts';
+import type {
+  ComponentMapType,
+  EvaluationError,
+  SubmitResult,
+  PlaygroundConfig
+} from '../../types/playground.ts';
 import { ErrorDisplay } from './ErrorDisplay.tsx';
 import { ResultsPanel } from './ResultsPanel.tsx';
 import { useSchemaFromSource } from '../../hooks/useSchemaFromSource.ts';
 
 interface FormPreviewProps {
+  config?: PlaygroundConfig | null;
   fields: FormField[] | null;
   error: EvaluationError | null;
   isEvaluating: boolean;
@@ -31,7 +36,8 @@ export function FormPreview({
   onSubmitResult,
   editorContent,
   compiledComponents,
-  mode = 'submit'
+  mode = 'submit',
+  config
 }: FormPreviewProps) {
   const isAutoSave = mode === 'auto-save';
   const components = useMemo(() => {
@@ -45,26 +51,23 @@ export function FormPreview({
     return { ...base, ...compiledComponents } as typeof defaultComponentMap;
   }, [componentMap, compiledComponents]);
 
-  const componentConfig = useMemo((): RuntimeComponentConfig | undefined => {
-    if (!compiledComponents || Object.keys(compiledComponents).length === 0) {
-      return undefined;
-    }
-    if (componentMap !== 'shadcn') {
-      return undefined;
-    }
-    const overrides: Record<string, { controlled?: boolean; props?: Record<string, unknown> }> = {};
-    for (const name of Object.keys(compiledComponents)) {
-      if (SHADCN_OVERRIDES[name]) {
-        overrides[name] = SHADCN_OVERRIDES[name];
-      }
-    }
-    if (Object.keys(overrides).length === 0) {
-      return undefined;
-    }
-    return {
-      components: { source: 'playground-compiled', overrides }
-    };
-  }, [compiledComponents, componentMap]);
+  const resolved = useMemo(
+    () =>
+      resolveFormConfig({
+        config: mergeConfigLayers(
+          {
+            components: {
+              source: './components',
+              preset: componentMap === 'shadcn' ? 'shadcn' : 'html'
+            }
+          },
+          config ?? {}
+        ),
+        exportName: 'schema'
+      }),
+    [config, componentMap]
+  );
+  const componentConfig = { ...resolved.componentConfig, fields: resolved.fields };
 
   const handleSubmit = useCallback(
     (data: Record<string, unknown>) => {
@@ -153,6 +156,7 @@ export function FormPreview({
             schema={schema}
             components={components}
             componentConfig={componentConfig}
+            optimization={resolved.optimization}
             onSubmit={handleSubmit}
             onInvalid={handleInvalid}
             onValueChange={isAutoSave ? handleValueChange : undefined}

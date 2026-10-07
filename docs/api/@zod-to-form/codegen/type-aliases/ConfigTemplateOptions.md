@@ -8,7 +8,7 @@
 
 > **ConfigTemplateOptions** = `object`
 
-Defined in: [codegen/src/config-template.ts:7](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/codegen/src/config-template.ts#L7)
+Defined in: codegen/src/config-template.ts:8
 
 Browser-safe config template generator.
 Produces the defineConfig({...}) source string used by both the CLI
@@ -20,7 +20,7 @@ init command and the playground.
 
 > **componentSource**: `string`
 
-Defined in: [codegen/src/config-template.ts:9](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/codegen/src/config-template.ts#L9)
+Defined in: codegen/src/config-template.ts:12
 
 Component module import path (e.g. './components/ui')
 
@@ -30,47 +30,29 @@ Component module import path (e.g. './components/ui')
 
 > `optional` **componentTypeImport?**: `string`
 
-Defined in: [codegen/src/config-template.ts:11](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/codegen/src/config-template.ts#L11)
+Defined in: codegen/src/config-template.ts:14
 
 Component type import specifier for generics (e.g. './components/ui')
 
 ***
 
+### config?
+
+> `optional` **config?**: [`ZodFormsConfig`](../../cli/type-aliases/ZodFormsConfig.md)
+
+Defined in: codegen/src/config-template.ts:10
+
+Fully authored canonical config; serialize every public setting.
+
+***
+
 ### defaults?
 
-> `optional` **defaults?**: `object`
+> `optional` **defaults?**: [`ConfigDefaults`](../../core/type-aliases/ConfigDefaults.md)
 
-Defined in: [codegen/src/config-template.ts:21](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/codegen/src/config-template.ts#L21)
+Defined in: codegen/src/config-template.ts:30
 
 Defaults block
-
-#### formProvider?
-
-> `optional` **formProvider?**: `boolean`
-
-#### mode?
-
-> `optional` **mode?**: `"submit"` \| `"auto-save"`
-
-#### optimization?
-
-> `optional` **optimization?**: `object`
-
-##### optimization.level?
-
-> `optional` **level?**: `1` \| `2` \| `3`
-
-#### overwrite?
-
-> `optional` **overwrite?**: `boolean`
-
-#### serverAction?
-
-> `optional` **serverAction?**: `boolean`
-
-#### ui?
-
-> `optional` **ui?**: `"shadcn"` \| `"html"`
 
 ***
 
@@ -78,7 +60,7 @@ Defaults block
 
 > `optional` **fields?**: `Record`\<`string`, `Record`\<`string`, `unknown`\>\>
 
-Defined in: [codegen/src/config-template.ts:30](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/codegen/src/config-template.ts#L30)
+Defined in: codegen/src/config-template.ts:32
 
 Per-field overrides
 
@@ -86,11 +68,11 @@ Per-field overrides
 
 ### overrides?
 
-> `optional` **overrides?**: `Record`\<`string`, \{ `controlled?`: `boolean`; \}\>
+> `optional` **overrides?**: `Record`\<`string`, \{ `controlled?`: `boolean`; `props?`: `Record`\<`string`, `string` \| `number` \| `boolean` \| `null`\>; \}\>
 
-Defined in: [codegen/src/config-template.ts:19](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/codegen/src/config-template.ts#L19)
+Defined in: codegen/src/config-template.ts:22
 
-Component overrides (name → { controlled?: boolean })
+Component overrides (name → { controlled?: boolean; props?: ... })
 
 ***
 
@@ -98,7 +80,7 @@ Component overrides (name → { controlled?: boolean })
 
 > `optional` **preset?**: `"shadcn"` \| `"html"`
 
-Defined in: [codegen/src/config-template.ts:17](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/codegen/src/config-template.ts#L17)
+Defined in: codegen/src/config-template.ts:20
 
 Preset name: 'shadcn' | 'html'
 
@@ -108,7 +90,7 @@ Preset name: 'shadcn' | 'html'
 
 > `optional` **schemaExports?**: `string`[]
 
-Defined in: [codegen/src/config-template.ts:15](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/codegen/src/config-template.ts#L15)
+Defined in: codegen/src/config-template.ts:18
 
 Schema export names for the schemas block
 
@@ -118,6 +100,6 @@ Schema export names for the schemas block
 
 > `optional` **schemaTypeImport?**: `string`
 
-Defined in: [codegen/src/config-template.ts:13](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/codegen/src/config-template.ts#L13)
+Defined in: codegen/src/config-template.ts:16
 
 Schema type import specifier (e.g. './schema')

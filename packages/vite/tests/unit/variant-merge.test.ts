@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildEffectiveConfig } from '../../src/config/load.js';
-import type { Z2FViteConfig } from '../../src/types.js';
+import type { ZodFormsConfig } from '@zod-to-form/core';
 
 /**
  * Contract: buildEffectiveConfig merges per-variant overrides on top of
@@ -9,20 +9,49 @@ import type { Z2FViteConfig } from '../../src/types.js';
  * synthesize per-site cache entries; there's no per-site override).
  */
 describe('buildEffectiveConfig', () => {
-  const base: Z2FViteConfig = {
-    componentName: 'UserForm',
-    mode: 'submit',
-    ui: 'html',
+  const base: ZodFormsConfig = {
     variants: {
-      edit: { componentName: 'UserEditForm' },
-      create: { componentName: 'UserCreateForm', ui: 'shadcn' }
+      edit: {
+        schemas: {
+          ['signupSchema']: { name: 'UserEditForm' },
+          ['userSchema']: { name: 'UserEditForm' },
+          ['mySchema']: { name: 'UserEditForm' },
+          ['activeSchema']: { name: 'UserEditForm' },
+          ['TestSchema']: { name: 'UserEditForm' },
+          ['testSchema']: { name: 'UserEditForm' },
+          ['schema']: { name: 'UserEditForm' }
+        }
+      },
+      create: {
+        defaults: { ui: 'shadcn' },
+        schemas: {
+          ['signupSchema']: { name: 'UserCreateForm' },
+          ['userSchema']: { name: 'UserCreateForm' },
+          ['mySchema']: { name: 'UserCreateForm' },
+          ['activeSchema']: { name: 'UserCreateForm' },
+          ['TestSchema']: { name: 'UserCreateForm' },
+          ['testSchema']: { name: 'UserCreateForm' },
+          ['schema']: { name: 'UserCreateForm' }
+        }
+      }
+    },
+    components: { source: '@/components/ui', preset: 'html' },
+    defaults: { mode: 'submit', ui: 'html' },
+    schemas: {
+      ['signupSchema']: { name: 'UserForm' },
+      ['userSchema']: { name: 'UserForm' },
+      ['mySchema']: { name: 'UserForm' },
+      ['activeSchema']: { name: 'UserForm' },
+      ['TestSchema']: { name: 'UserForm' },
+      ['testSchema']: { name: 'UserForm' },
+      ['schema']: { name: 'UserForm' }
     }
   };
 
   it('returns the base config (minus the variants field) for the default variant', () => {
     const result = buildEffectiveConfig(base, '');
-    expect(result.componentName).toBe('UserForm');
-    expect(result.ui).toBe('html');
+    expect(result.schemas?.['signupSchema']?.name).toBe('UserForm');
+    expect(result.defaults?.ui).toBe('html');
     // The variants field is stripped — generateFormComponent doesn't
     // know about it and would copy it through otherwise.
     expect((result as { variants?: unknown }).variants).toBeUndefined();
@@ -30,15 +59,15 @@ describe('buildEffectiveConfig', () => {
 
   it('merges a named variant on top of the base config', () => {
     const result = buildEffectiveConfig(base, 'edit');
-    expect(result.componentName).toBe('UserEditForm');
+    expect(result.schemas?.['signupSchema']?.name).toBe('UserEditForm');
     // ui is not overridden by the edit variant, so the base value survives.
-    expect(result.ui).toBe('html');
+    expect(result.defaults?.ui).toBe('html');
   });
 
   it('overrides multiple base fields when the variant supplies them', () => {
     const result = buildEffectiveConfig(base, 'create');
-    expect(result.componentName).toBe('UserCreateForm');
-    expect(result.ui).toBe('shadcn');
+    expect(result.schemas?.['signupSchema']?.name).toBe('UserCreateForm');
+    expect(result.defaults?.ui).toBe('shadcn');
   });
 
   it('throws Z2F_VITE_UNKNOWN_VARIANT for an undeclared variant name', () => {
@@ -57,10 +86,18 @@ describe('buildEffectiveConfig', () => {
   });
 
   it('throws (not silently) when no variants table is declared and a variant is requested', () => {
-    const noVariants: Z2FViteConfig = {
-      componentName: 'F',
-      mode: 'submit',
-      ui: 'html'
+    const noVariants: ZodFormsConfig = {
+      components: { source: '@/components/ui', preset: 'html' },
+      defaults: { mode: 'submit', ui: 'html' },
+      schemas: {
+        ['signupSchema']: { name: 'F' },
+        ['userSchema']: { name: 'F' },
+        ['mySchema']: { name: 'F' },
+        ['activeSchema']: { name: 'F' },
+        ['TestSchema']: { name: 'F' },
+        ['testSchema']: { name: 'F' },
+        ['schema']: { name: 'F' }
+      }
     };
     expect(() => buildEffectiveConfig(noVariants, 'edit')).toThrow(/Z2F_VITE_UNKNOWN_VARIANT/);
   });
@@ -70,33 +107,47 @@ describe('buildEffectiveConfig', () => {
     // they must NOT trigger UNKNOWN_VARIANT regardless of whether the
     // user declared any variants table.
     const result = buildEffectiveConfig(base, '__generate_1');
-    expect(result.componentName).toBe('UserForm');
-    expect(result.ui).toBe('html');
+    expect(result.schemas?.['signupSchema']?.name).toBe('UserForm');
+    expect(result.defaults?.ui).toBe('html');
     const result2 = buildEffectiveConfig(base, '__generate_42');
-    expect(result2.componentName).toBe('UserForm');
+    expect(result2.schemas?.['signupSchema']?.name).toBe('UserForm');
   });
 
   it('still rejects __generate_<non-digits> as an unknown variant', () => {
     expect(() => buildEffectiveConfig(base, '__generate_abc')).toThrow(/Z2F_VITE_UNKNOWN_VARIANT/);
   });
 
-  it('does not deep-merge nested objects (variant fully replaces componentConfig)', () => {
+  it('merges canonical component properties', () => {
     // Per the spec: variants typically swap whole sub-objects rather than
     // patch them. A nested merge would surprise users who expect their
     // variant override to fully replace the global subtree.
-    const withNested: Z2FViteConfig = {
-      componentName: 'F',
-      mode: 'submit',
-      ui: 'html',
-      componentConfig: { components: { preset: 'shadcn', source: '@/global' } } as never,
+    const withNested: ZodFormsConfig = {
+      components: {
+        preset: 'shadcn',
+        source: '@/global'
+      },
       variants: {
-        custom: { componentConfig: { components: { preset: 'html', source: '@/custom' } } as never }
+        custom: ({ components: {
+	preset: 'html',
+	source: '@/custom'
+} })
+      },
+      defaults: {
+        mode: 'submit',
+        ui: 'html'
+      },
+      schemas: {
+        ['signupSchema']: { name: 'F' },
+        ['userSchema']: { name: 'F' },
+        ['mySchema']: { name: 'F' },
+        ['activeSchema']: { name: 'F' },
+        ['TestSchema']: { name: 'F' },
+        ['testSchema']: { name: 'F' },
+        ['schema']: { name: 'F' }
       }
     };
     const result = buildEffectiveConfig(withNested, 'custom');
     // The variant's componentConfig fully replaced the global one.
-    expect((result.componentConfig as { components: { source: string } }).components.source).toBe(
-      '@/custom'
-    );
+    expect(result.components.source).toBe('@/custom');
   });
 });

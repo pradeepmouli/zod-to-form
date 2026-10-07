@@ -134,7 +134,7 @@ FormPreview receives:
   - compiledComponents: Record<string, ReactComponent>
 
   → Merges base component map with compiled components
-  → Builds componentConfig with SHADCN_OVERRIDES for controlled components
+  → Resolves canonical authored config through core resolveFormConfig (including final preset)
   → useSchemaFromSource reconstructs the Zod schema object
   → Renders <ZodForm schema={schema} components={merged} />
 ```
@@ -264,9 +264,9 @@ Components like Select, Checkbox, and Switch need special wiring for React Hook 
 
 ```
 SHADCN_OVERRIDES = {
-  Select:   { controlled: true, propMap: { onValueChange: 'field.onChange', value: 'field.value' } }
-  Checkbox: { controlled: true, propMap: { checked: 'field.value', onCheckedChange: 'field.onChange' } }
-  Switch:   { controlled: true, propMap: { checked: 'field.value', onCheckedChange: 'field.onChange' } }
+  Select:   { controlled: true, props: { onValueChange: 'field.onChange', value: 'field.value' } }
+  Checkbox: { controlled: true, props: { checked: 'field.value', onCheckedChange: 'field.onChange' } }
+  Switch:   { controlled: true, props: { checked: 'field.value', onCheckedChange: 'field.onChange' } }
 }
 ```
 
@@ -314,3 +314,9 @@ All state lives in `usePlaygroundState` (React useState + useCallback):
 | `customComponents` | Record<string, string> | no |
 
 URL hash sharing encodes `editorContent + componentMap + activeTab` in base64.
+
+## Canonical configuration and optimization
+
+`PlaygroundConfig` derives from core's canonical partial config, including schema entries and variants. Config controls derive shared validators from `configPropertySchemas`; storage uses the derived draft schema and completed imports/exports validate with core. Partial form edits use `mergeConfigLayers` so hidden/unexposed field paths, metadata and inherited compilation flags survive.
+
+Both runtime FormPreview and CodeOutput resolve the same authored config. CodeOutput walks the reconstructed schema with the selected optimization level; FormPreview forwards independent optimization into ZodForm. Compilation is local to each schema instance and does not cross the worker serialization boundary. Config exports preserve authored presets (expanded only on resolution), variants, schemas and optimization flags.

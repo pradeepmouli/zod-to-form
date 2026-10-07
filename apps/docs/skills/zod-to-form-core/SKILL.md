@@ -15,7 +15,7 @@ Two paths to forms:
 Both paths share the same core: a recursive schema walker that produces `FormField[]`
 from Zod v4's native introspection API.
 
-Requires Zod v4 — uses `_zod.def`, `_zod.bag`, and `z.registry()` APIs.
+Requires Zod v4 — uses `_zod.def`, check definitions, and `z.registry()` APIs.
 Does NOT work with Zod v3 (which uses `_def` internals).
 
 Key concepts:
@@ -29,8 +29,6 @@ Key concepts:
 **Use this skill when:**
 - You want per-field validation instead of whole-form validation → use `createOptimizers`
 - You need native HTML validation attributes (required, minLength, pattern) → use `createOptimizers`
-- You want TypeScript inference and IDE autocompletion for config → use `defineConfig` — `defineConfig` is the typed entry point; bare object literals lose generic inference on `components.overrides`
-- Loading config from JSON files or dynamic import() where the type is `unknown` → use `validateConfig` — validates and narrows to `ZodFormsConfig`
 - ALWAYS call on form values before schema.safeParse() in runtime mode → use `normalizeFormValues` — HTML inputs produce `""` for unset optional fields, which Zod rejects; this is the single mandatory normalization step
 - You need direct schema-to-fields conversion in runtime contexts → use `walkSchema`
 - You're building a custom codegen pipeline on top of FormField[] → use `walkSchema`
@@ -41,8 +39,6 @@ Key concepts:
 
 **Do NOT use when:**
 - You only need whole-schema validation — omit the optimization option entirely (`createOptimizers`)
-- Runtime-only usage where you pass config inline to walkSchema — `defineConfig` is a no-op at runtime without a preset; skip it when config comes from JSON or dynamic import (`defineConfig`)
-- Using TypeScript with defineConfig() — type errors catch most issues at dev time; validateConfig is only needed when the config source is not type-checkable (`validateConfig`)
 - CLI codegen mode — generated components call normalization internally; calling it again is safe (idempotent) but redundant (`normalizeFormValues`)
 - You just want generated components — use the CLI instead (`walkSchema`)
 - Your schema is not z.object() at the root level (`walkSchema`)
@@ -50,15 +46,12 @@ Key concepts:
 - Don't use if your config comes from dot-path format (CLI global fields) (`registerDeep`)
 - Your config is already nested mirroring schema shape — use registerDeep() instead (`registerFlat`)
 
-API surface: 50 functions, 24 types, 6 constants
+API surface: 52 functions, 26 types, 9 constants
 
 ## NEVER
 
 - NEVER mutate builtinOptimizers — it's a module singleton. Always use createOptimizers(custom)
 - NEVER assume custom optimizers append — they REPLACE the entire chain for that type
-- NEVER assume preset props merge with your props — the entire props dict is replaced. If you set component props, you must include ALL props including the ones from the preset
-- NEVER use as a type guard — it throws on invalid input, doesn't narrow; FIX: wrap in try/catch and branch on success, or check keys manually before calling
-- NEVER assume extra keys cause failures — the schema uses z.object().loose() (passthrough), so unrecognized keys are silently KEPT (retained but ignored), not dropped and not rejected; FIX: if you need strict key validation, inspect the returned config for unexpected fields manually
 - NEVER rely on this for custom types (Date, File subclasses, etc.) — it only handles empty strings and FileList; FIX: normalize custom types before calling this function or in a custom resolver wrapper
 - NEVER pass a non-object schema at the root — throws immediately
 - NEVER bypass the processor registry for custom types — extend via options.processors
@@ -70,17 +63,17 @@ API surface: 50 functions, 24 types, 6 constants
 
 ## Configuration
 
-9 configuration interfaces — see references/config.md for details.
+10 configuration interfaces — see references/config.md for details.
 
 ## Quick Reference
 
 **Key functions:** `canonicalizeConfig` (Serialize a CodegenConfig to a canonical string suitable for
-hashing into a cache key), `createOptimizers` (Create an optimizer registry by merging custom optimizers with builtins), `createSchemaLiteCollector` (Create a new SchemaLiteCollector instance), `defineConfig` (Identity helper that returns its argument typed as `ZodFormsConfig`), `validateConfig` (Validates an unknown value as a `ZodFormsConfig` at runtime), `resolveFieldConfig` (Merge global field config with per-schema field config overrides), `normalizeConfig` (Normalize a validated config by migrating deprecated top-level fields to their canonical locations), `joinPath` (Join a parent path and a child key with a dot separator), `createBaseField` (Create a base FormField with sensible defaults), `getEmptyDefault` (Returns a type-safe empty default value for a FormField based on its zodType
+hashing into a cache key), `createOptimizers` (Create an optimizer registry by merging custom optimizers with builtins), `createSchemaLiteCollector` (Create a new SchemaLiteCollector instance), `defineConfig` (Typed identity helper for canonical authored configuration), `validateConfig` (Validate canonical authored configuration without expanding presets), `resolveFieldConfig` (Merge global field config with per-schema field config overrides), `joinPath` (Join a parent path and a child key with a dot separator), `createBaseField` (Create a base FormField with sensible defaults), `getEmptyDefault` (Returns a type-safe empty default value for a FormField based on its zodType
 and structure), `normalizeFieldKey` (Normalise a concrete field key to the bracket notation used in config), `collectFieldSections` (Collect section groupings from fields and a config override lookup), `normalizeFormValues` (Normalize raw HTML form values for Zod parsing), `getFieldRegisterHints` (Derive framework-agnostic register hints from a `FormField`), `resolveBaseProps` (Static, schema-derived base props every field's component receives, identical
 across all zodTypes), `resolveNativeAttrs` (Extract DOM-valid native attributes from a field's props), `resolveControlMode` (Derive the control mode from a field mapping's component override), `resolveOptionsProps` (Extract options props from a field for enum/union select-style components), `isZodSchema` (Structural Zod v4 check shared across loader/registration/codegen entrypoints), `walkSchema` (Walk a Zod schema and produce a FormField[] tree), `createProcessors` (Create a custom processor registry by merging with built-in processors), `registerDeep` (Register a schema and all its nested fields in a registry using a
 path-structured FieldConfig tree), `registerFlat` (Register flat dot-path field configs against a schema's registry), `processArray` (Process `z), `processTuple` (Process `z), `processBoolean` (Process `z), `processMap` (Process `z), `processSet` (Process `z), `processCrossRef` (Process a cross-reference field — a schema annotated in the form registry with `refType`), `processDate` (Process `z), `processEnum` (Process `z), `processLiteral` (Process `z), `processFallback` (Fallback processor for Zod types without a dedicated handler), `processFile` (Process `z), `processNumber` (Process `z), `processObject` (Process `z), `processIntersection` (Process `z), `processRecord` (Process `z), `processString` (Process `z), `processTemplateLiteral` (Process `z), `processUnion` (Process `z), `processDiscriminatedUnion` (Process `z), `processDefault` (Process `z), `processLazy` (Process `z), `processNullable` (Process `z), `processOptional` (Process `z), `processPipe` (Process `z), `processReadonly` (Process `z)
 
-*80 exports total — see references/ for full API.*
+*87 exports total — see references/ for full API.*
 
 ## References
 

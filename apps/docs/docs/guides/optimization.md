@@ -84,6 +84,7 @@ Setting `mode: 'component-enforced'` and clearing `zodSchema` tells every subseq
 import { defineConfig } from '@zod-to-form/core';
 
 export default defineConfig({
+  components: { source: './ui' },
   schemas: {
     userSchema: {
       fields: {
@@ -117,3 +118,19 @@ For codegen the wins compound: when L2 removes every Zod call for a form and `sc
 - [Runtime Rendering](./runtime.md) — how `walkSchema` feeds `<ZodForm>`
 - [CLI Codegen](./cli.md) — how codegen consumes the optimized IR
 - [Examples](./examples.md) — feature-by-feature recipes
+
+## Independent Zod compilation
+
+Requires Zod 4.6+. Set the compiler flag separately from the optimization level:
+
+```ts
+defaults: { optimization: { compileZod: true } }           // whole-schema validation
+defaults: { optimization: { level: 2 } }                  // native rules, compilation off
+defaults: { optimization: { level: 2, compileZod: true } } // compile remaining Zod targets
+```
+
+Runtime `<ZodForm>` and `useZodForm` accept the same `optimization` object directly. With no level, compile-only keeps the full resolver. With a level, compilation prepares final per-field escape hatches and SchemaLite after collection. Native rules need no compilation. Runtime targets are cached by original schema identity; generated targets are hoisted outside renders and validation callbacks. Registration and walking continue to use original schemas.
+
+Compilation is opt-in and has setup cost. Zod may leave unsupported targets uncompiled, and asynchronous execution retains its runtime path. Compilation uses dynamic code generation; environments with restrictive CSP must allow that mechanism or leave the flag off. z2f uses explicit target compilation rather than the global `zod/compile` side-effect import. See [Zod's compilation guide](https://zod.dev/compile) and the [measured benchmark report](./benchmarks.md).
+
+Escape hatches retain `safeParse`: their error messages and parsed output are part of the form contract. `z.validate` answers only a boolean and is measured separately; it does not replace those callbacks. The form-value normalization step still runs before parsing.

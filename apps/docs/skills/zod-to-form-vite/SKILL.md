@@ -50,7 +50,7 @@ API surface: 2 functions, 1 classes, 6 types
 
 ## Configuration
 
-4 configuration interfaces — see references/config.md for details.
+2 configuration interfaces — see references/config.md for details.
 
 ## Quick Reference
 

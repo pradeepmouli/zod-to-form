@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  defineConfig,
-  validateConfig,
-  resolveFieldConfig,
-  normalizeConfig
-} from '../src/config.js';
+import { defineConfig, validateConfig, resolveFieldConfig } from '../src/config.js';
 import type { ZodFormsConfig } from '../src/config.js';
 
 // ─── Existing tests (backward compat) ────────────────────────────────
@@ -31,7 +26,7 @@ describe('component config contracts (backward compat)', () => {
         source: '@app/components',
         overrides: {}
       },
-      overwrite: true,
+      defaults: { overwrite: true },
       types: ['userSchema'],
       include: ['*Schema'],
       exclude: ['Internal*']
@@ -123,7 +118,7 @@ describe('validateConfig', () => {
       defaults: {
         mode: 'submit',
         ui: 'shadcn',
-        overwrite: true,
+        defaults: { overwrite: true },
         serverAction: false
       },
       schemas: {
@@ -146,13 +141,13 @@ describe('validateConfig', () => {
     expect(result.schemas?.['UserSchema']?.component).toBe('UserEditor');
   });
 
-  it('accepts old shape without defaults/schemas (backward compat) (T010)', () => {
+  it('accepts canonical shape without schemas', () => {
     const result = validateConfig({
       components: {
         source: '@app/components',
         overrides: {}
       },
-      overwrite: true,
+      defaults: { overwrite: true },
       types: ['userSchema'],
       include: ['*Schema'],
       exclude: ['Internal*'],
@@ -267,48 +262,6 @@ describe('resolveFieldConfig', () => {
 });
 
 // ─── normalizeConfig tests (T014) ────────────────────────────────────
-
-describe('normalizeConfig', () => {
-  it('migrates top-level overwrite to defaults.overwrite', () => {
-    const config = validateConfig({
-      components: {
-        source: '@/ui',
-        overrides: {}
-      },
-      overwrite: true
-    });
-
-    const normalized = normalizeConfig(config);
-    expect(normalized.defaults?.overwrite).toBe(true);
-    expect((normalized as Record<string, unknown>)['overwrite']).toBeUndefined();
-  });
-
-  it('does not override existing defaults.overwrite', () => {
-    const config = {
-      components: {
-        source: '@/ui',
-        overrides: {}
-      },
-      overwrite: true,
-      defaults: { overwrite: false }
-    } as ZodFormsConfig & { overwrite?: boolean };
-
-    const normalized = normalizeConfig(config);
-    expect(normalized.defaults?.overwrite).toBe(false);
-  });
-
-  it('returns config unchanged when no top-level overwrite', () => {
-    const config = validateConfig({
-      components: {
-        source: '@/ui',
-        overrides: {}
-      }
-    });
-
-    const normalized = normalizeConfig(config);
-    expect(normalized).toBe(config);
-  });
-});
 
 // ─── defineConfig preset behavior ─────────────────────────────────────
 

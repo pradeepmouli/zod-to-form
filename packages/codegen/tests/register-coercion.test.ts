@@ -177,7 +177,7 @@ describe('generateFormComponent optimized — coercion + validation combined', (
         }
       })
     ];
-    const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 2 });
+    const code = generateFormComponent(fields, { ...baseConfig, optimization: { level: 2 } });
     // setValueAs coercion option (not valueAsNumber)
     expect(code).toContain('setValueAs:');
     expect(code).toContain('Number(v)');
@@ -202,7 +202,7 @@ describe('generateFormComponent optimized — coercion + validation combined', (
         }
       })
     ];
-    const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 2 });
+    const code = generateFormComponent(fields, { ...baseConfig, optimization: { level: 2 } });
     expect(code).toContain('setValueAs:');
     expect(code).toContain('new Date(');
     expect(code).toContain('required: "Required"');
@@ -219,7 +219,7 @@ describe('generateFormComponent optimized — coercion + validation combined', (
         zodSchema: {} as never
       })
     ];
-    const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 1 });
+    const code = generateFormComponent(fields, { ...baseConfig, optimization: { level: 1 } });
     expect(code).toContain('setValueAs:');
     expect(code).toContain('validate');
     // Must NOT emit the old valueAsNumber flag
@@ -235,7 +235,7 @@ describe('generateFormComponent optimized — coercion + validation combined', (
         validation: { mode: 'component-enforced' }
       })
     ];
-    const code = generateFormComponent(fields, { ...baseConfig, validationLevel: 2 });
+    const code = generateFormComponent(fields, { ...baseConfig, optimization: { level: 2 } });
     expect(code).toContain("register('role')");
     expect(code).not.toContain("register('role', {");
   });

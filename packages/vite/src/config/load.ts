@@ -13,11 +13,10 @@
  * - `canonicalizeForCache` — produce the SHA-256 cache key for a target
  */
 import { createHash } from 'node:crypto';
-import { canonicalizeConfig } from '@zod-to-form/core';
-import type { CodegenConfig } from '@zod-to-form/core';
+import { canonicalizeConfig, mergeConfigLayers, validateConfig } from '@zod-to-form/core';
+import type { CodegenConfig, ZodFormsConfig } from '@zod-to-form/core';
 import type { $ZodType } from 'zod/v4/core';
 import { Z2FViteError } from '../errors.js';
-import type { Z2FViteConfig } from '../types.js';
 
 // ─── Effective config per variant ────────────────────────────────────
 
@@ -34,36 +33,16 @@ import type { Z2FViteConfig } from '../types.js';
  * `exportName` may still be empty (auto-detect). `compileTarget` promotes
  * it to a real name via `selectExport` before handing off to codegen.
  */
-export type EffectiveZ2FConfig = Omit<CodegenConfig, 'exportName'> & {
-  exportName?: string;
-};
-
-export function buildEffectiveConfig(config: Z2FViteConfig, variant: string): EffectiveZ2FConfig {
-  // Strip the plugin-only `variants` field — generateFormComponent doesn't
-  // know about it and would copy it through.
-  const { variants, ...base } = config;
-
-  // Default variant + plugin-internal `__generate_<n>` variants always
-  // resolve to the base config. Generate-mode synthesizes one variant per
-  // `<ZodForm>` site to give each generated component its own cache
-  // entry, but they share the user's global config — there's no per-site
-  // override mechanism in v1.
-  if (variant === '' || /^__generate_\d+$/.test(variant)) {
-    return base;
-  }
-
-  if (variants === undefined || variants[variant] === undefined) {
-    const known = variants ? Object.keys(variants).join(', ') : '(none declared)';
+export function buildEffectiveConfig(config: ZodFormsConfig, variant: string): ZodFormsConfig {
+  const { variants, ...base } = validateConfig(config);
+  if (variant === '' || /^__generate_\d+$/.test(variant)) return mergeConfigLayers(base);
+  if (!Object.hasOwn(variants ?? {}, variant)) {
     throw new Z2FViteError(
       'Z2F_VITE_UNKNOWN_VARIANT',
-      `Variant '${variant}' is not declared in z2f.config.ts. Known variants: ${known}.`
+      `Variant '${variant}' is not declared. Known variants: ${Object.keys(variants ?? {}).join(', ') || '(none declared)'}.`
     );
   }
-
-  // Per-variant overrides win over global fields. Only top-level keys are
-  // merged — there's no deep merge of nested objects like componentConfig,
-  // because variants typically swap whole sub-objects rather than patch them.
-  return { ...base, ...variants[variant] };
+  return mergeConfigLayers(base, variants![variant]!);
 }
 
 // ─── Schema export selection ─────────────────────────────────────────

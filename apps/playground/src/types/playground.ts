@@ -59,22 +59,9 @@ export interface ExampleSchema {
   tags: string[];
 }
 
-export interface PlaygroundConfig {
-  components?: {
-    source?: string;
-    preset?: 'shadcn' | 'html';
-    [key: string]: unknown;
-  };
-  defaults?: {
-    mode?: 'submit' | 'auto-save';
-    ui?: 'shadcn' | 'html';
-    overwrite?: boolean;
-    serverAction?: boolean;
-    formProvider?: boolean;
-    [key: string]: unknown;
-  };
-  fields?: Record<string, unknown>;
-}
+/** Partial editor draft projected from the canonical public configuration. */
+export type PlaygroundConfig = import('@zod-to-form/core').ConfigPatch &
+  Pick<import('@zod-to-form/core').ZodFormsConfig, 'variants'>;
 
 export interface ShareState {
   code: string;

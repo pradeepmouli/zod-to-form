@@ -212,3 +212,44 @@ describe('useZodForm', () => {
     });
   });
 });
+
+it('changes prepared validation targets when compilation toggles, preserving metadata', () => {
+  const leaf = z.string().refine((value) => value.length > 1, 'too short');
+  const schema = z.object({ name: leaf });
+  const { result, rerender } = renderHook(
+    ({ compileZod }) =>
+      useZodForm(schema, {
+        optimization: { level: 1, compileZod }
+      }),
+    { initialProps: { compileZod: false } }
+  );
+  const original = result.current.fields[0]?.zodSchema;
+  rerender({ compileZod: true });
+  expect(result.current.fields[0]?.zodSchema).not.toBe(original);
+  expect(result.current.fields[0]?.label).toBe('Name');
+  rerender({ compileZod: false });
+  expect(result.current.fields[0]?.zodSchema).toBe(original);
+});
+
+it.each([false, true])(
+  'compile-only auto-save preserves parsed outputs (compile=%s)',
+  async (compileZod) => {
+    const schema = z.object({ age: z.coerce.number().min(18) });
+    const onValueChange = vi.fn();
+    const { result } = renderHook(() =>
+      useZodForm(schema, { optimization: { compileZod }, onValueChange })
+    );
+    await act(async () => {
+      result.current.form.setValue('age', '21' as never);
+    });
+    await waitFor(() =>
+      expect(onValueChange).toHaveBeenLastCalledWith({ age: 21 }, { isValid: true })
+    );
+    await act(async () => {
+      result.current.form.setValue('age', 'bad' as never);
+    });
+    await waitFor(() =>
+      expect(onValueChange).toHaveBeenLastCalledWith({ age: 'bad' }, { isValid: false })
+    );
+  }
+);

@@ -1,3 +1,7 @@
+import { mergeConfigLayers, resolveFormConfig, walkSchema, registerFlat } from '@zod-to-form/core';
+import { z } from 'zod';
+import type { FormMeta } from '@zod-to-form/core';
+import { useSchemaFromSource } from '../../hooks/useSchemaFromSource.ts';
 import { useMemo, useState, useCallback } from 'react';
 import type { FormField } from '@zod-to-form/core';
 import { generateFormComponent } from '@zod-to-form/codegen';
@@ -14,6 +18,7 @@ function copyButtonLabel(failed: boolean, copied: boolean): string {
 }
 
 interface CodeOutputProps {
+  editorContent?: string;
   fields: FormField[] | null;
   componentMap: ComponentMapType;
   customComponentNames: string[];
@@ -29,8 +34,10 @@ export function CodeOutput({
   customComponentNames,
   config,
   codeOutputMode,
-  onCodeOutputModeChange
+  onCodeOutputModeChange,
+  editorContent = ''
 }: CodeOutputProps) {
+  const { schema, formRegistry, stale } = useSchemaFromSource(editorContent, fields);
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
 
@@ -52,13 +59,19 @@ export function CodeOutput({
       // the component source the user already compiled/imported.
       importOverrides[name] = baseOverrides[name] ?? {};
     }
-    return {
-      components: {
-        preset,
-        source: config?.components?.source ?? './components',
-        overrides: { ...baseOverrides, ...importOverrides }
-      }
-    } as unknown as ZodFormsConfig<Record<string, unknown>>;
+    return resolveFormConfig({
+      config: mergeConfigLayers(
+        {
+          components: {
+            preset,
+            source: config?.components?.source ?? './components',
+            overrides: { ...baseOverrides, ...importOverrides }
+          }
+        },
+        config ?? {}
+      ),
+      exportName: 'schema'
+    }).componentConfig;
   }, [componentMap, customComponentNames, config]);
 
   const { code: generatedCode, error: codegenError } = useMemo(() => {
@@ -66,14 +79,32 @@ export function CodeOutput({
     try {
       let code: string;
       if (codeOutputMode === 'cli') {
-        code = generateFormComponent(fields, {
+        const resolved = resolveFormConfig({ config: componentConfig, exportName: 'schema' });
+        if (resolved.optimization.level !== undefined && (!schema || stale)) {
+          throw new Error('Optimized output requires a valid evaluated schema.');
+        }
+        const registry = z.registry<FormMeta>();
+        if (schema) registerFlat(registry, schema, resolved.fields);
+        const getConfiguredMetadata = registry.get.bind(registry);
+        registry.get = (target) => {
+          const authored = formRegistry?.get(target);
+          const configured = getConfiguredMetadata(target);
+          return authored || configured ? { ...authored, ...configured } : undefined;
+        };
+        const walked =
+          schema && resolved.optimization.level !== undefined
+            ? walkSchema(schema, {
+                formRegistry: registry,
+                optimization: { ...resolved.optimization, level: resolved.optimization.level }
+              })
+            : null;
+        code = generateFormComponent(walked?.fields ?? fields, {
+          ...resolved,
           schemaImportPath: './schema',
           exportName: 'schema',
-          componentName: 'GeneratedForm',
-          mode: config?.defaults?.mode ?? 'submit',
-          ui: componentMap === 'shadcn' ? 'shadcn' : 'html',
-          formProvider: config?.defaults?.formProvider ?? false,
-          componentConfig
+          componentName: componentConfig.schemas?.['schema']?.name ?? 'GeneratedForm',
+          schemaLite: walked?.schemaLite,
+          schemaLiteInfo: walked?.schemaLiteInfo
         });
       } else if (useZodForm) {
         code = generateZodFormCode(componentMap, customComponentNames);
@@ -92,7 +123,10 @@ export function CodeOutput({
     componentMap,
     customComponentNames,
     config,
-    componentConfig
+    componentConfig,
+    schema,
+    formRegistry,
+    stale
   ]);
 
   const handleCopy = useCallback(() => {

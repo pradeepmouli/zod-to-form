@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { compileTarget } from '../../src/query-mode/transform.js';
-import type { Z2FViteConfig } from '../../src/types.js';
+import type { ZodFormsConfig } from '@zod-to-form/core';
 
 /**
  * Contract: every error path through the load pipeline produces a
@@ -15,11 +15,11 @@ import type { Z2FViteConfig } from '../../src/types.js';
  * - Variant override that itself produces a non-Zod export name
  */
 describe('load pipeline error paths', () => {
-  const baseConfig: Z2FViteConfig = {
-    exportName: 'signupSchema',
-    componentName: 'SignupForm',
-    mode: 'submit',
-    ui: 'html'
+  const baseConfig: ZodFormsConfig = {
+    types: ['signupSchema'],
+    components: { source: '@/components/ui', preset: 'html' },
+    defaults: { mode: 'submit', ui: 'html' },
+    schemas: { ['signupSchema']: { name: 'SignupForm' } }
   };
 
   it('throws SCHEMA_NOT_FOUND for a completely empty module namespace', () => {
@@ -44,7 +44,7 @@ describe('load pipeline error paths', () => {
         schemaFile: '/abs/x.ts',
         variant: '',
         // exportName cleared to trigger auto-detect
-        config: { ...baseConfig, exportName: '' }
+        config: { ...baseConfig, types: [] }
       })
     ).toThrow(/Z2F_VITE_AMBIGUOUS_EXPORT/);
   });
@@ -54,11 +54,11 @@ describe('load pipeline error paths', () => {
       userSchema: z.object({ name: z.string() }),
       adminSchema: z.object({ id: z.string(), role: z.literal('admin') })
     };
-    const config: Z2FViteConfig = {
+    const config: ZodFormsConfig = {
       ...baseConfig,
-      exportName: 'userSchema',
+      types: ['userSchema'],
       variants: {
-        admin: { exportName: 'adminSchema', componentName: 'AdminForm' }
+        admin: { types: ['adminSchema'], schemas: { ['adminSchema']: { name: 'AdminForm' } } }
       }
     };
     const result = compileTarget({
@@ -73,12 +73,10 @@ describe('load pipeline error paths', () => {
 
   it('variant exportName pointing at a non-existent export throws SCHEMA_NOT_FOUND', () => {
     const ns = { userSchema: z.object({ name: z.string() }) };
-    const config: Z2FViteConfig = {
+    const config: ZodFormsConfig = {
       ...baseConfig,
-      exportName: 'userSchema',
-      variants: {
-        broken: { exportName: 'nonexistent' }
-      }
+      types: ['userSchema'],
+      variants: { broken: { types: ['nonexistent'] } }
     };
     expect(() =>
       compileTarget({

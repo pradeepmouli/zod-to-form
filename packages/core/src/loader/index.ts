@@ -22,7 +22,7 @@ import path from 'node:path';
 import { access } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import type { ZodFormsConfig } from '../config.js';
-import { validateConfig, normalizeConfig } from '../config.js';
+import { validateConfig } from '../config.js';
 import { isZodSchema } from '../is-zod-schema.js';
 
 const requireFromHere = createRequire(import.meta.url);
@@ -196,7 +196,7 @@ export async function loadConfig(
 
   const configValue = getDefaultExport(moduleExports);
   const validated = validateConfig(configValue, `component-config (${absolutePath})`);
-  return normalizeConfig(validated);
+  return validated;
 }
 
 async function fileExists(filePath: string): Promise<boolean> {

@@ -101,7 +101,7 @@ describe('canonicalizeConfig', () => {
       mode: 'submit',
       ui: 'html',
       schemaImportPath: undefined,
-      validationLevel: undefined
+      optimization: undefined
     };
     const b: CodegenConfig = {
       exportName: 'X',
@@ -135,14 +135,14 @@ describe('canonicalizeConfig', () => {
       componentName: 'XForm',
       mode: 'submit',
       ui: 'html',
-      validationLevel: 2
+      optimization: { level: 2 }
     } as CodegenConfig;
     const b = {
       exportName: 'X',
       componentName: 'XForm',
       mode: 'submit',
       ui: 'html',
-      validationLevel: 2
+      optimization: { level: 2 }
     } as CodegenConfig;
     expect(canonicalizeConfig(a)).toBe(canonicalizeConfig(b));
   });

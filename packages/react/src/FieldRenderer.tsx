@@ -23,10 +23,7 @@ export type RuntimeComponentConfig = {
    * `source` is used by CLI codegen to emit a static import statement (not used at runtime).
    * `overrides` maps component names to `ComponentOverride` metadata (controlled, props, etc.).
    */
-  components: {
-    source: string;
-    overrides?: Record<string, ComponentOverride>;
-  };
+  components: import('@zod-to-form/core').ComponentsConfig;
   /**
    * The pre-imported components module object, e.g. `import * as myComponents from './components'`.
    * Used to resolve component functions by name at runtime.

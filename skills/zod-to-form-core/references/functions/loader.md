@@ -24,7 +24,7 @@ loadSchemaModule(schemaPath: string): Promise<Record<string, unknown>>
 ```
 **Parameters:**
 - `schemaPath: string` — Absolute or relative path to the schema file to load.
-**Returns:** `Promise<Record<string, unknown>>` — All named exports from the module as a `Record<string, unknown>`.
+**Returns:** `Promise<Record<string, unknown>>` — All named exports from the module as a `Record&lt;string, unknown&gt;`.
 **Throws:** When the file cannot be read or evaluated.
 
 ### `resolveSchemaExportNames`

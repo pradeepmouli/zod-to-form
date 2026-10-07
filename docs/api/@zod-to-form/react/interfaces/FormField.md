@@ -51,7 +51,7 @@ Component name from ComponentMap, e.g. "Input", "Select", "Textarea"
 
 Defined in: packages/core/dist/types.d.ts:137
 
-Validation constraints extracted from Zod v4 constraint bag (_zod.bag)
+Validation constraints extracted from Zod schema and check definitions
 
 ***
 

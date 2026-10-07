@@ -1,3 +1,4 @@
+import { readSchemaConstraints } from '../schema-constraints.js';
 import type { $ZodNumber, $ZodBigInt } from 'zod/v4/core';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
 
@@ -19,7 +20,7 @@ export function processNumber(
   field: FormField,
   _params: ProcessParams
 ): void {
-  const bag = schema._zod.bag;
+  const bag = readSchemaConstraints(schema);
   const minimum = typeof bag['minimum'] === 'number' ? bag['minimum'] : undefined;
   const maximum = typeof bag['maximum'] === 'number' ? bag['maximum'] : undefined;
 

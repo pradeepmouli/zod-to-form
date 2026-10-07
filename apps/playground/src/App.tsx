@@ -211,6 +211,7 @@ export function App() {
             editorContent={state.editorContent}
             compiledComponents={compiledComponents}
             mode={state.config?.defaults?.mode}
+            config={state.config}
           />
         }
         codeOutput={
@@ -220,6 +221,7 @@ export function App() {
             customComponentNames={customComponentNames}
             config={state.config}
             codeOutputMode={state.codeOutputMode}
+            editorContent={state.editorContent}
             onCodeOutputModeChange={setCodeOutputMode}
           />
         }

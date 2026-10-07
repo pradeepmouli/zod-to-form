@@ -8,7 +8,7 @@
 
 > **normalizeFormValues**(`value`): `unknown`
 
-Defined in: [normalize.ts:36](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/core/src/normalize.ts#L36)
+Defined in: normalize.ts:36
 
 Normalize raw HTML form values for Zod parsing.
 

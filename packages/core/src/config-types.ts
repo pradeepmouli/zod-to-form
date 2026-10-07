@@ -7,7 +7,7 @@
  * re-exports this type from its own `index.ts` so existing imports of
  * `@zod-to-form/codegen`'s `CodegenConfig` continue to work unchanged.
  */
-import type { ZodFormsConfig } from './config.js';
+import type { ZodFormsConfig, OptimizationConfig } from './config.js';
 import type { SchemaLiteInfo } from './optimizers/types.js';
 
 export type CodegenConfig = {
@@ -27,7 +27,7 @@ export type CodegenConfig = {
   /** Force FormProvider wrapper in submit mode. Auto-save mode always uses FormProvider regardless. */
   formProvider?: boolean;
   /** Validation optimization level. When set, generated code uses per-field validation instead of zodResolver. */
-  validationLevel?: 1 | 2 | 3;
+  optimization?: OptimizationConfig;
   /** SchemaLite for submit-time validation of top-level effects (null when no effects exist) */
   schemaLite?: import('zod/v4/core').$ZodType | null;
   /** Codegen metadata for generating the .lite.ts file */

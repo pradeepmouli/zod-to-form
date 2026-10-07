@@ -80,12 +80,12 @@ export function ConfigPane({
 
   const handleFormChange = useCallback(
     (values: Record<string, unknown>) => {
-      const newConfig = formValuesToConfig(values, filteredConfig);
+      const newConfig = formValuesToConfig(values, config);
       // Do NOT set isInternalUpdate here — form changes should sync to .ts source.
       // The guard only prevents .ts editor → config → .ts re-serialization loops.
       onConfigChange(newConfig);
     },
-    [filteredConfig, onConfigChange]
+    [config, onConfigChange]
   );
 
   const handleTsChange = useCallback(

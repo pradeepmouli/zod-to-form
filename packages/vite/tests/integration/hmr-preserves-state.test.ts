@@ -50,10 +50,17 @@ describe('Fast Refresh structural compatibility (proxy for HMR state preservatio
       schemaFile: '/abs/src/schemas/signup.ts',
       variant: '',
       config: {
-        componentName: FORM_NAME,
-        mode: 'submit',
-        ui: 'html',
-        schemaImportPath: './signup'
+        components: { source: '@/components/ui', preset: 'html' },
+        defaults: { mode: 'submit', ui: 'html' },
+        schemas: {
+          ['signupSchema']: { name: FORM_NAME },
+          ['userSchema']: { name: FORM_NAME },
+          ['mySchema']: { name: FORM_NAME },
+          ['activeSchema']: { name: FORM_NAME },
+          ['TestSchema']: { name: FORM_NAME },
+          ['testSchema']: { name: FORM_NAME },
+          ['schema']: { name: FORM_NAME }
+        }
       }
     });
     return result.generatedSource;
@@ -102,10 +109,17 @@ describe('Fast Refresh structural compatibility (proxy for HMR state preservatio
       schemaFile: '/abs/src/schemas/signup.ts',
       variant: '',
       config: {
-        componentName: FORM_NAME,
-        mode: 'submit',
-        ui: 'html',
-        schemaImportPath: './signup'
+        components: { source: '@/components/ui', preset: 'html' },
+        defaults: { mode: 'submit', ui: 'html' },
+        schemas: {
+          ['signupSchema']: { name: FORM_NAME },
+          ['userSchema']: { name: FORM_NAME },
+          ['mySchema']: { name: FORM_NAME },
+          ['activeSchema']: { name: FORM_NAME },
+          ['TestSchema']: { name: FORM_NAME },
+          ['testSchema']: { name: FORM_NAME },
+          ['schema']: { name: FORM_NAME }
+        }
       }
     }).generatedSource;
 
@@ -120,10 +134,17 @@ describe('Fast Refresh structural compatibility (proxy for HMR state preservatio
       schemaFile: '/abs/src/schemas/signup.ts',
       variant: '',
       config: {
-        componentName: FORM_NAME,
-        mode: 'submit',
-        ui: 'html',
-        schemaImportPath: './signup'
+        components: { source: '@/components/ui', preset: 'html' },
+        defaults: { mode: 'submit', ui: 'html' },
+        schemas: {
+          ['signupSchema']: { name: FORM_NAME },
+          ['userSchema']: { name: FORM_NAME },
+          ['mySchema']: { name: FORM_NAME },
+          ['activeSchema']: { name: FORM_NAME },
+          ['TestSchema']: { name: FORM_NAME },
+          ['testSchema']: { name: FORM_NAME },
+          ['schema']: { name: FORM_NAME }
+        }
       }
     }).generatedSource;
 

@@ -8,7 +8,7 @@
 
 > **z2fVite**(`options?`): `Plugin`
 
-Defined in: [packages/vite/src/plugin.ts:147](https://github.com/pradeepmouli/zod-to-form/blob/460f904fe7438770b4219b2c4241f8f43d5de92c/packages/vite/src/plugin.ts#L147)
+Defined in: packages/vite/src/plugin.ts:149
 
 Vite plugin factory for `@zod-to-form/vite`.
 

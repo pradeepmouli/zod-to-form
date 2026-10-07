@@ -1,12 +1,9 @@
-// Auto-discovered z2f.config.ts for config-watch integration test.
-// Declares a base config + two variants (edit + create) so the test can
-// verify per-variant compilation + cache invalidation on config edits.
 export default {
-  componentName: 'UserForm',
-  mode: 'submit',
-  ui: 'html',
+  components: { source: '@/components/ui', preset: 'html' },
+  defaults: { mode: 'submit', ui: 'html' },
+  schemas: { userSchema: { name: 'UserForm' } },
   variants: {
-    edit: { componentName: 'UserEditForm' },
-    create: { componentName: 'UserCreateForm' }
+    edit: { schemas: { userSchema: { name: 'UserEditForm' } } },
+    create: { schemas: { userSchema: { name: 'UserCreateForm' } } }
   }
 };

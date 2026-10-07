@@ -31,6 +31,8 @@ export function configCompletionSource(
       case 'top-level':
         return complete(word.from, [
           { label: 'components', type: 'property', detail: '{ source, preset, overrides }' },
+          { label: 'variants', type: 'property', detail: 'Named canonical configuration patches' },
+          { label: 'schemas', type: 'property', detail: 'Per-export settings' },
           { label: 'defaults', type: 'property', detail: '{ mode, ui, ... }' },
           { label: 'fields', type: 'property', detail: 'Per-field overrides' },
           { label: 'include', type: 'property', detail: 'string[]' },
@@ -57,6 +59,7 @@ export function configCompletionSource(
           { label: 'ui', type: 'property', detail: "'shadcn' | 'html'" },
           { label: 'overwrite', type: 'property', detail: 'boolean' },
           { label: 'serverAction', type: 'property', detail: 'boolean' },
+          { label: 'optimization', type: 'property', detail: '{ level?, compileZod? }' },
           { label: 'formProvider', type: 'property', detail: 'boolean' }
         ]);
 
@@ -109,6 +112,7 @@ type ConfigContext =
   | 'top-level'
   | 'components'
   | 'components.preset'
+  | 'optimization'
   | 'defaults'
   | 'defaults.mode'
   | 'defaults.ui'
@@ -169,6 +173,8 @@ export function detectContext(before: string): ConfigContext {
     if (currentBlock === 'fields') return 'fields';
     if (currentBlock === 'overrides') return 'overrides';
   }
+
+  if (currentBlock === 'optimization') return 'optimization';
 
   if (depth === 3) {
     const parentBlock = blocks[depth - 2];

@@ -54,7 +54,7 @@ registerDeep(formRegistry, schema, {
 Register flat dot-path field configs against a schema's registry.
 
 Typically called with the merged output of `resolveFieldConfig()`,
-a flat `Record<string, FieldConfig>` keyed by dot-paths like
+a flat `Record&lt;string, FieldConfig&gt;` keyed by dot-paths like
 `"name"`, `"address.street"`, `"tags[]"` — and resolves each path against
 the schema structure, calling `registry.add()` for the target schema node.
 
@@ -71,7 +71,7 @@ registerFlat<Meta>(registry: $ZodRegistry<Meta>, schema: $ZodType, fields: Recor
 **Parameters:**
 - `registry: $ZodRegistry<Meta>` — The Zod registry to register field metadata into.
 - `schema: $ZodType` — The root Zod schema whose nested nodes are resolved by dot-path.
-- `fields: Record<string, FieldConfig>` — Flat `Record<string, FieldConfig>` keyed by dot-path (e.g. `"address.street"`, `"tags[]"`).
+- `fields: Record<string, FieldConfig>` — Flat `Record&lt;string, FieldConfig&gt;` keyed by dot-path (e.g. `"address.street"`, `"tags[]"`).
 ```ts
 const formRegistry = z.registry<FormMeta>();
 const schema = z.object({

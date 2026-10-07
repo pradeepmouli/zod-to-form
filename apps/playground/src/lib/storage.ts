@@ -1,3 +1,4 @@
+import { configDraftSchema } from '@zod-to-form/core';
 import { z } from 'zod';
 import type { PersistedState } from '../types/playground.ts';
 import { DEFAULT_PANE_SIZES, MIN_PANE_PCT, MAX_PANE_PCT } from '../types/playground.ts';
@@ -16,14 +17,7 @@ const PersistedStateSchema = z.object({
   editorContent: z.string(),
   componentMap: z.enum(['default', 'shadcn']),
   activeTab: z.enum(['preview', 'inspect', 'code']),
-  config: z.union([
-    z.object({
-      components: z.record(z.string(), z.unknown()).optional(),
-      fields: z.record(z.string(), z.unknown()).optional(),
-      defaults: z.record(z.string(), z.unknown()).optional()
-    }),
-    z.null()
-  ]),
+  config: configDraftSchema.nullable(),
   configTab: z.enum(['form', 'ts']).optional(),
   codeOutputMode: z.enum(['react', 'cli']).optional(),
   paneSizes: PaneSizesSchema.optional(),

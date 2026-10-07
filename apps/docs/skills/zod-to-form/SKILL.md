@@ -127,12 +127,12 @@ Config resolution order:
 
 ### core → `zod-to-form-core`
 
-Requires Zod v4 — uses `_zod.def`, `_zod.bag`, and `z.registry()` APIs.
+Requires Zod v4 — uses `_zod.def`, check definitions, and `z.registry()` APIs.
 Does NOT work with Zod v3 (which uses `_def` internals).
 
 - You want per-field validation instead of whole-form validation
 - You need native HTML validation attributes (required, minLength, pattern)
-- You want TypeScript inference and IDE autocompletion for config — `defineConfig` is the typed entry point; bare object literals lose generic inference on `components.overrides`
+- ALWAYS call on form values before schema.safeParse() in runtime mode — HTML inputs produce `""` for unset optional fields, which Zod rejects; this is the single mandatory normalization step
 
 Key APIs: `canonicalizeConfig`, `createOptimizers`, `createSchemaLiteCollector`
 
@@ -146,7 +146,7 @@ flexibility.
 - You are prototyping before committing to CLI codegen — `<ZodForm>` and the CLI share the same walkSchema output so the migration is mechanical
 - You need direct access to the RHF `form` instance (e.g. to call `form.setValue`)
 
-Key APIs: `ZodForm`, `useZodForm`, `useExternalSync`
+Key APIs: `ZodForm`, `SectionRenderer`, `useZodForm`
 
 ### cli → `zod-to-form-cli`
 

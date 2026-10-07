@@ -7,6 +7,7 @@ import { normalizeFieldKey, collectFieldSections } from '@zod-to-form/core';
 import { FieldRenderer, warnRemovedConfigKeys } from './FieldRenderer.js';
 import { defaultComponentMap } from './components/index.js';
 import type { RuntimeComponentConfig, ZodFormComponents } from './FieldRenderer.js';
+import { wrapWithSchemaLite } from './SchemaLiteSubmit.js';
 import { useZodForm } from './useZodForm.js';
 import type { input } from 'zod';
 
@@ -14,6 +15,7 @@ export type { ZodFormComponents };
 
 type ZodFormProps<TSchema extends ZodObject> = {
   schema: TSchema;
+  optimization?: import('@zod-to-form/core').OptimizationConfig;
   onSubmit?: (data: output<TSchema>) => unknown;
   onInvalid?: (errors: Record<string, unknown>) => void;
   /**
@@ -94,7 +96,8 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
     processors,
     className,
     children,
-    errorDisplay
+    errorDisplay,
+    optimization
   } = props;
   // US6: Warn if the old sectionComponents key is detected in componentConfig
   if (
@@ -114,17 +117,23 @@ export function ZodForm<TSchema extends ZodObject>(props: ZodFormProps<TSchema>)
 
   const mergedComponents = useMemo(() => ({ ...defaultComponentMap, ...components }), [components]);
 
-  const { form, fields } = useZodForm(schema, {
+  const { form, fields, schemaLite } = useZodForm(schema, {
     defaultValues,
     formRegistry,
     fields: componentConfig?.fields,
     processors,
     mode,
     onValueChange,
-    errorDisplay
+    errorDisplay,
+    optimization
   });
 
-  const submitHandler = onSubmit ?? (() => undefined);
+  const submit = onSubmit ?? (() => undefined);
+  const submitHandler = schemaLite
+    ? wrapWithSchemaLite(schemaLite, form.setError, (data) => {
+        void submit(data);
+      })
+    : submit;
 
   // Collect section groupings from config
   const sections = useMemo(() => {

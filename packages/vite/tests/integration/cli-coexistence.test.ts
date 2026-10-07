@@ -50,9 +50,17 @@ async function startDevServer(): Promise<ViteDevServer> {
     plugins: [
       z2fVite({
         configOverride: {
-          componentName: 'ActiveForm',
-          mode: 'submit',
-          ui: 'html'
+          components: { source: '@/components/ui', preset: 'html' },
+          defaults: { mode: 'submit', ui: 'html' },
+          schemas: {
+            ['signupSchema']: { name: 'ActiveForm' },
+            ['userSchema']: { name: 'ActiveForm' },
+            ['mySchema']: { name: 'ActiveForm' },
+            ['activeSchema']: { name: 'ActiveForm' },
+            ['TestSchema']: { name: 'ActiveForm' },
+            ['testSchema']: { name: 'ActiveForm' },
+            ['schema']: { name: 'ActiveForm' }
+          }
         },
         logLevel: 'silent'
       })
@@ -113,9 +121,17 @@ describe('CLI / plugin coexistence', () => {
         plugins: [
           z2fVite({
             configOverride: {
-              componentName: 'ActiveForm',
-              mode: 'submit',
-              ui: 'html'
+              components: { source: '@/components/ui', preset: 'html' },
+              defaults: { mode: 'submit', ui: 'html' },
+              schemas: {
+                ['signupSchema']: { name: 'ActiveForm' },
+                ['userSchema']: { name: 'ActiveForm' },
+                ['mySchema']: { name: 'ActiveForm' },
+                ['activeSchema']: { name: 'ActiveForm' },
+                ['TestSchema']: { name: 'ActiveForm' },
+                ['testSchema']: { name: 'ActiveForm' },
+                ['schema']: { name: 'ActiveForm' }
+              }
             },
             logLevel: 'silent'
           })
