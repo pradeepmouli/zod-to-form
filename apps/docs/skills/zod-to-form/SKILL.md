@@ -146,7 +146,7 @@ flexibility.
 - You are prototyping before committing to CLI codegen — `<ZodForm>` and the CLI share the same walkSchema output so the migration is mechanical
 - You need direct access to the RHF `form` instance (e.g. to call `form.setValue`)
 
-Key APIs: `ZodForm`, `useZodForm`, `useExternalSync`
+Key APIs: `ZodForm`, `SectionRenderer`, `useZodForm`
 
 ### cli → `zod-to-form-cli`
 

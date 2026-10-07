@@ -1,4 +1,5 @@
-import { bench, describe } from 'vitest';
+import { describe } from 'vitest';
+import { bench } from './register-benchmark.js';
 import { walkSchema } from '../../src/walker.js';
 import { smallSchema, mediumSchema, largeSchema } from './schemas.js';
 
@@ -8,20 +9,12 @@ const schemas = [
   { name: 'large (50 fields)', schema: largeSchema }
 ] as const;
 
-describe('walkSchema', () => {
-  for (const { name, schema } of schemas) {
-    describe(name, () => {
-      bench('no optimization', () => {
-        walkSchema(schema as never);
+for (const { name, schema } of schemas) {
+  describe(`walker / ${name}`, () => {
+    for (const level of [undefined, 1, 2] as const) {
+      bench(level === undefined ? 'no optimization' : `L${level}`, () => {
+        walkSchema(schema as never, level === undefined ? {} : { optimization: { level } });
       });
-
-      bench('L1', () => {
-        walkSchema(schema as never, { optimization: { level: 1 } });
-      });
-
-      bench('L2', () => {
-        walkSchema(schema as never, { optimization: { level: 2 } });
-      });
-    });
-  }
-});
+    }
+  });
+}

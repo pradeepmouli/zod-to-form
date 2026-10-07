@@ -1,4 +1,5 @@
-import { bench, describe } from 'vitest';
+import { describe } from 'vitest';
+import { bench } from './register-benchmark.js';
 import { z } from 'zod';
 import { prepareValidationSchema } from '../../src/index.js';
 import { createValidationCase, fixtures, freshSchema, runCase } from './validation-cases.js';

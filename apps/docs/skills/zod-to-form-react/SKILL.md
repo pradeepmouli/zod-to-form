@@ -39,7 +39,7 @@ flexibility.
 - You just need a working form UI — use `<ZodForm>` instead; `useZodForm` returns `fields[]` and `form`, but rendering those fields requires wiring up each field component yourself (`useZodForm`)
 - You are using the default `zodResolver` path (no `validationLevel`) — validation is handled by RHF's resolver and adding this wrapper causes double-validation with no benefit (`wrapWithSchemaLite`)
 
-API surface: 5 functions, 7 types, 3 constants
+API surface: 6 functions, 7 types, 3 constants
 
 ## NEVER
 
@@ -59,6 +59,7 @@ API surface: 5 functions, 7 types, 3 constants
 
 **Components:** `ZodForm` (Runtime React component that renders a type-safe form from a Zod v4 schema), `ZodFormSwitch` (Render the form matching `source[discriminator]`, unmounting on changes via
 a React `key`), `ZodFormSwitchProps` (Props for ZodFormSwitch), `defaultComponentMap` (The default HTML-based component map used by `<ZodForm>` and `<FieldRenderer>`), `shadcnComponentMap` (Component map pre-wired with shadcn/ui-styled implementations)
+**ZodForm:** `SectionRenderer` (Renders section components that group multiple form fields)
 **Hooks:** `useZodForm` (React Hook Form integration hook for Zod v4 schemas), `useExternalSync` (Reset a form's values when an externally-supplied source object's reference
 changes; preserve in-progress edits while the reference is stable)
 **Optimization:** `wrapWithSchemaLite` (Wraps a form `onSubmit` handler with `schemaLite` client-side validation)

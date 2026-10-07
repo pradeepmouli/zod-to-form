@@ -1,5 +1,18 @@
 # @zod-to-form/core
 
+## 0.11.4
+
+### Patch Changes
+
+- [#207](https://github.com/pradeepmouli/zod-to-form/pull/207) [`421d1cd`](https://github.com/pradeepmouli/zod-to-form/commit/421d1cdd41fbe12e6a8a705b23b7f3b30d7fb9df) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Bump vitest and vite to their latest majors (vitest 5, vite 8.3).
+
+## 0.11.3
+
+### Patch Changes
+
+- [#176](https://github.com/pradeepmouli/zod-to-form/pull/176) [`1609237`](https://github.com/pradeepmouli/zod-to-form/commit/160923731de809bdf46014c79fb5432ab9d8d470) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - - chore: upgrade to TypeScript 7, pin docs app to TS6 for typedoc compat
+  - chore: pnpm update --latest across the workspace
+
 ## 0.11.2
 
 ### Patch Changes

@@ -124,6 +124,7 @@ in form state.
 ### API
 
 - `ZodForm`: Runtime React component that renders a type-safe form from a Zod v4 schema.
+- `SectionRenderer`: Renders section components that group multiple form fields.
 - `useZodForm`: React Hook Form integration hook for Zod v4 schemas.
 - `useExternalSync`: Reset a form's values when an externally-supplied source object's reference
 changes; preserve in-progress edits while the reference is stable.

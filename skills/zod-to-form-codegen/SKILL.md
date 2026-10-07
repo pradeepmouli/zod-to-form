@@ -172,6 +172,12 @@ fields: {
 
 RJSF and JSON Forms require restructuring your schema or maintaining a separate layout document to achieve this.
 
+For custom layouts with an existing React Hook Form provider, use
+`collectFieldSections(fields, getOverride)` from `@zod-to-form/core` and
+`SectionRenderer` from `@zod-to-form/react`. Pass the resulting section map
+and `componentConfig={{ componentModule }}` to `SectionRenderer` inside that
+provider. It shares `ZodForm`'s renderer and preserves the host's form state.
+
 ---
 
 ## Quick Start

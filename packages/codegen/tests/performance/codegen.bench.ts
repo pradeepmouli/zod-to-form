@@ -1,4 +1,5 @@
-import { bench, describe } from 'vitest';
+import { describe } from 'vitest';
+import { bench } from '../../../core/tests/performance/register-benchmark.js';
 import { walkSchema } from '@zod-to-form/core';
 import type { WalkResult } from '@zod-to-form/core';
 import { generateFormComponent } from '../../src/index.js';

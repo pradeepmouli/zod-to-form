@@ -11,9 +11,11 @@
  * has to repeat the same five-line dance.
  */
 import * as traverseModule from '@babel/traverse';
-import type { TraverseOptions } from '@babel/traverse';
+import type { TraverseOptions, Visitor } from '@babel/traverse';
 
-type TraverseFn = <S = unknown>(ast: unknown, opts: TraverseOptions<S>) => void;
+// @babel/traverse 8 dropped the `TraverseOptions<S>` generic — the visitor's
+// state type is now threaded through the intersected `Visitor<S>` instead.
+type TraverseFn = <S = unknown>(ast: unknown, opts: TraverseOptions & Visitor<S>) => void;
 
 type TraverseInterop =
   | TraverseFn

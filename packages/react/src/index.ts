@@ -47,7 +47,7 @@ export type {
 } from '@zod-to-form/core';
 
 // Runtime renderer
-export { ZodForm } from './ZodForm.js';
+export { ZodForm, SectionRenderer } from './ZodForm.js';
 export type { ZodFormComponents } from './ZodForm.js';
 export { useZodForm } from './useZodForm.js';
 export { useExternalSync } from './useExternalSync.js';

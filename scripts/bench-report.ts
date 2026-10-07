@@ -12,34 +12,10 @@ import { dirname, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import { cpus } from 'node:os';
 
-interface BenchResult {
-  name: string;
-  rank: number;
-  rme: number;
-  sampleCount: number;
-  /** Median in ms */
-  median: number;
-  mean: number;
-  p75: number;
-  p99: number;
-  min: number;
-  max: number;
-  hz: number;
-}
-
-interface BenchGroup {
-  fullName: string;
-  benchmarks: BenchResult[];
-}
-
-interface BenchFileEntry {
-  filepath: string;
-  groups: BenchGroup[];
-}
-
-interface BenchFile {
-  files: BenchFileEntry[];
-}
+import {
+  normalizeBenchResults,
+  type BenchFile
+} from '../packages/core/tests/performance/bench-results.js';
 
 function formatMs(ms: number): string {
   if (ms < 0.001) return `${(ms * 1_000_000).toFixed(0)}ns`;
@@ -420,7 +396,7 @@ output +=
   'Validation fixtures: small (5 fields); medium (18 root fields, nesting/coercion/collections); large (nested addresses, collections, unions and cross-field refinements). L1/L2 are normalized form-submit validation, not arbitrary-JSON validation. Fresh setup clones the entire schema graph before preparation. Boolean-only validate is reported separately and does not produce messages or parsed output. Ratios above 1 favor compilation; setup includes construction, walking and preparation.\n\n';
 
 if (existsSync(nodeFile)) {
-  const data: BenchFile = JSON.parse(readFileSync(nodeFile, 'utf-8'));
+  const data = normalizeBenchResults(JSON.parse(readFileSync(nodeFile, 'utf-8')));
   const rows = collectRows(data);
   output += '### Node Benchmarks\n\n';
   output += compilationTable(data);
@@ -430,7 +406,7 @@ if (existsSync(nodeFile)) {
 }
 
 if (existsSync(browserFile)) {
-  const data: BenchFile = JSON.parse(readFileSync(browserFile, 'utf-8'));
+  const data = normalizeBenchResults(JSON.parse(readFileSync(browserFile, 'utf-8')));
   const rows = collectRows(data);
   output += '\n### Browser Benchmarks (Chromium via Playwright)\n\n';
   output += compilationTable(data);
