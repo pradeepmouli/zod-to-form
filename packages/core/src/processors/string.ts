@@ -1,3 +1,4 @@
+import { readSchemaConstraints } from '../schema-constraints.js';
 import type { $ZodString, $ZodTemplateLiteral } from 'zod/v4/core';
 import type { FormField, FormProcessorContext, ProcessParams } from '../types.js';
 import { regexToMask } from '../utils.js';
@@ -42,7 +43,7 @@ export function processString(
   field: FormField,
   _params: ProcessParams
 ): void {
-  const bag = schema._zod.bag;
+  const bag = readSchemaConstraints(schema);
   const def = schema._zod.def;
   const meta = ctx.formRegistry?.get(schema);
 

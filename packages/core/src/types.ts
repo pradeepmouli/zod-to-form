@@ -388,8 +388,7 @@ export interface WalkOptions {
    * and forwards it; useZodForm accepts it via its own options. Both converge
    * here as the single source of truth for the walker.
    */
-  optimization?: {
-    level: 1 | 2 | 3;
+  optimization?: import('./config.js').OptimizationConfig & {
     optimizers?: Record<string, FormOptimizer[]>;
   };
 }

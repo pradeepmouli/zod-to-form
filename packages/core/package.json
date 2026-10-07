@@ -52,7 +52,7 @@
   },
   "peerDependencies": {
     "jiti": "^2.0.0",
-    "zod": "^4.0.0"
+    "zod": "^4.6.0"
   },
   "peerDependenciesMeta": {
     "jiti": {
@@ -62,7 +62,7 @@
   "devDependencies": {
     "jiti": "^2.7.0",
     "type-fest": "^5.8.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.5"
   },
   "author": "Pradeep Mouli <pmouli@mac.com> (https://github.com/pradeepmouli)",
   "publishConfig": {

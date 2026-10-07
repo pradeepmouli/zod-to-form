@@ -1,3 +1,4 @@
+import { readSchemaConstraints } from '../schema-constraints.js';
 import type { $ZodType } from 'zod/v4/core';
 import type { NativeRules } from '../types.js';
 
@@ -12,7 +13,7 @@ import type { NativeRules } from '../types.js';
  * native conversion (strict equivalence — FR-017).
  */
 export function extractNativeRules(schema: $ZodType): NativeRules | null {
-  const bag = schema._zod.bag as Record<string, unknown>;
+  const bag = readSchemaConstraints(schema);
   const def = schema._zod.def as unknown as Record<string, unknown>;
   const checks = def['checks'] as Array<{ _zod?: { def: Record<string, unknown> } }> | undefined;
 

@@ -130,3 +130,5 @@ export * as processors from './processors/index.js';
 
 export { mergeConfigLayers, resolveFormConfig } from './resolve-config.js';
 export type { ConfigInvocation, ResolvedFormConfig } from './resolve-config.js';
+
+export { prepareValidationSchema } from './prepare-validation-schema.js';
