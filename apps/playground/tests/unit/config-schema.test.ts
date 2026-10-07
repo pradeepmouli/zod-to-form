@@ -194,8 +194,8 @@ describe('serializeConfigToTs / parseConfigFromTs round-trip', () => {
     expect(ts).toContain("import { defineConfig } from '@zod-to-form/core'");
     expect(ts).toContain('import type * as Components from');
     expect(ts).toContain('export default defineConfig');
-    expect(ts).toContain("mode: 'submit'");
-    expect(ts).toContain("source: './components'");
+    expect(ts).toContain('"mode": "submit"');
+    expect(ts).toContain('"source": "./components"');
   });
 
   it('round-trips config with fields through serialization', () => {
@@ -214,9 +214,9 @@ describe('serializeConfigToTs / parseConfigFromTs round-trip', () => {
 
   it('uses shadcn preset for shadcn componentMap', () => {
     const ts = serializeConfigToTs(null, 'shadcn');
-    expect(ts).toContain("preset: 'shadcn'");
-    expect(ts).toContain("ui: 'shadcn'");
-    expect(ts).toContain("source: './components/ui'");
+    expect(ts).toContain('"preset": "shadcn"');
+    expect(ts).toContain('"ui": "shadcn"');
+    expect(ts).toContain('"source": "./components/ui"');
   });
 
   it('round-trips full init-style config', () => {
@@ -273,4 +273,27 @@ describe('serializeConfigToTs / parseConfigFromTs round-trip', () => {
       expect(result.config.defaults?.mode).toBe('submit');
     }
   });
+});
+
+it('round-trips canonical compiler flags, schemas, variants and unexposed props', () => {
+  const original = {
+    components: { source: './ui' },
+    defaults: { optimization: { compileZod: true } },
+    schemas: { User: { name: 'Profile' } },
+    variants: { mobile: { defaults: { optimization: { compileZod: false } } } },
+    fields: { name: { hidden: true, props: { custom: 'kept' } } }
+  };
+  const values = configToFormValues(original, [makeField('name')]);
+  const next = formValuesToConfig(values, original);
+  const parsed = parseConfigFromTs(serializeConfigToTs(next));
+  expect(parsed.ok).toBe(true);
+  if (parsed.ok) expect(parsed.config).toMatchObject(original);
+});
+
+it('derives independent compiler controls from core validators', () => {
+  const schema = generateConfigSchema([]);
+  expect(schema.safeParse({ defaults: { optimization: { compileZod: true } } }).success).toBe(true);
+  expect(schema.safeParse({ defaults: { optimization: { compileZod: 'yes' } } }).success).toBe(
+    false
+  );
 });

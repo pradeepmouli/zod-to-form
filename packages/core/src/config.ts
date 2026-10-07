@@ -359,7 +359,7 @@ const componentsConfigSchema = z
   })
   .loose();
 
-const fieldConfigSchema = z
+export const fieldConfigSchema = z
   .object({
     component: nonEmptyStringSchema.optional(),
     order: z.number().optional(),
@@ -368,13 +368,6 @@ const fieldConfigSchema = z
     props: z.record(z.string(), z.unknown()).optional(),
     section: z.string().optional(),
     helpText: z.string().optional()
-  })
-  .loose();
-
-const fieldOverrideSchema = z
-  .object({
-    component: nonEmptyStringSchema,
-    props: z.record(z.string(), z.unknown()).optional()
   })
   .loose();
 
@@ -416,7 +409,7 @@ export const configPropertySchemas = {
   include: z.array(z.string()).optional(),
   exclude: z.array(z.string()).optional(),
   types: z.array(z.string()).optional(),
-  fields: z.record(z.string(), fieldOverrideSchema.or(fieldConfigSchema)).optional(),
+  fields: z.record(z.string(), fieldConfigSchema).optional(),
   defaults: defaultsSchema,
   schemas: z.record(z.string(), zodTypeConfigSchema).optional()
 };
@@ -424,7 +417,7 @@ const configPatchSchema = z.strictObject({
   ...configPropertySchemas,
   components: componentsConfigSchema.partial().optional()
 });
-const configSchema = z.strictObject({
+export const configSchema = z.strictObject({
   ...configPropertySchemas,
   variants: z.record(z.string(), configPatchSchema).optional()
 });
@@ -709,3 +702,11 @@ export function resolveFieldConfig(
 
   return merged;
 }
+
+/** Validated partial draft for configuration editors and persistence. */
+export const configDraftSchema = configSchema
+  .partial()
+  .extend({
+    components: componentsConfigSchema.partial().optional()
+  })
+  .transform((value) => value as ConfigPatch & Pick<ZodFormsConfig, 'variants'>);

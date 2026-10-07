@@ -14,28 +14,28 @@ describe('serializeConfigToTs', () => {
     expect(result).toContain('export default defineConfig');
     expect(result).toContain('"Textarea"');
     expect(result).toContain('"Full Name"');
-    expect(result).toContain('fields:');
+    expect(result).toContain('"fields":');
   });
 
   it('uses shadcn preset for shadcn componentMap', () => {
     const result = serializeConfigToTs(null, 'shadcn');
-    expect(result).toContain("preset: 'shadcn'");
-    expect(result).toContain("source: './components/ui'");
-    expect(result).toContain("ui: 'shadcn'");
+    expect(result).toContain('"preset": "shadcn"');
+    expect(result).toContain('"source": "./components/ui"');
+    expect(result).toContain('"ui": "shadcn"');
   });
 
   it('uses html for default componentMap', () => {
     const result = serializeConfigToTs(null, 'default');
-    expect(result).toContain("source: './components'");
-    expect(result).toContain("ui: 'html'");
+    expect(result).toContain('"source": "./components"');
+    expect(result).toContain('"ui": "html"');
     expect(result).not.toContain('preset:');
   });
 
   it('handles null config with proper defaults', () => {
     const result = serializeConfigToTs(null, 'default');
     expect(result).toContain('defineConfig');
-    expect(result).toContain("mode: 'submit'");
-    expect(result).toContain('serverAction: false');
+    expect(result).toContain('"mode": "submit"');
+    expect(result).toContain('"serverAction": false');
   });
 });
 

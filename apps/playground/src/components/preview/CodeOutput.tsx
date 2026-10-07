@@ -1,3 +1,5 @@
+import { mergeConfigLayers, resolveFormConfig, walkSchema } from '@zod-to-form/core';
+import { useSchemaFromSource } from '../../hooks/useSchemaFromSource.ts';
 import { useMemo, useState, useCallback } from 'react';
 import type { FormField } from '@zod-to-form/core';
 import { generateFormComponent } from '@zod-to-form/codegen';
@@ -14,6 +16,7 @@ function copyButtonLabel(failed: boolean, copied: boolean): string {
 }
 
 interface CodeOutputProps {
+  editorContent?: string;
   fields: FormField[] | null;
   componentMap: ComponentMapType;
   customComponentNames: string[];
@@ -29,8 +32,10 @@ export function CodeOutput({
   customComponentNames,
   config,
   codeOutputMode,
-  onCodeOutputModeChange
+  onCodeOutputModeChange,
+  editorContent = ''
 }: CodeOutputProps) {
+  const { schema } = useSchemaFromSource(editorContent, fields);
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
 
@@ -52,13 +57,19 @@ export function CodeOutput({
       // the component source the user already compiled/imported.
       importOverrides[name] = baseOverrides[name] ?? {};
     }
-    return {
-      components: {
-        preset,
-        source: config?.components?.source ?? './components',
-        overrides: { ...baseOverrides, ...importOverrides }
-      }
-    } as unknown as ZodFormsConfig<Record<string, unknown>>;
+    return resolveFormConfig({
+      config: mergeConfigLayers(
+        {
+          components: {
+            preset,
+            source: config?.components?.source ?? './components',
+            overrides: { ...baseOverrides, ...importOverrides }
+          }
+        },
+        config ?? {}
+      ),
+      exportName: 'schema'
+    }).componentConfig;
   }, [componentMap, customComponentNames, config]);
 
   const { code: generatedCode, error: codegenError } = useMemo(() => {
@@ -66,14 +77,20 @@ export function CodeOutput({
     try {
       let code: string;
       if (codeOutputMode === 'cli') {
-        code = generateFormComponent(fields, {
+        const resolved = resolveFormConfig({ config: componentConfig, exportName: 'schema' });
+        const walked =
+          schema && resolved.optimization.level !== undefined
+            ? walkSchema(schema, {
+                optimization: { ...resolved.optimization, level: resolved.optimization.level }
+              })
+            : null;
+        code = generateFormComponent(walked?.fields ?? fields, {
+          ...resolved,
           schemaImportPath: './schema',
           exportName: 'schema',
-          componentName: 'GeneratedForm',
-          mode: config?.defaults?.mode ?? 'submit',
-          ui: componentMap === 'shadcn' ? 'shadcn' : 'html',
-          formProvider: config?.defaults?.formProvider ?? false,
-          componentConfig
+          componentName: componentConfig.schemas?.['schema']?.name ?? 'GeneratedForm',
+          schemaLite: walked?.schemaLite,
+          schemaLiteInfo: walked?.schemaLiteInfo
         });
       } else if (useZodForm) {
         code = generateZodFormCode(componentMap, customComponentNames);
@@ -92,7 +109,8 @@ export function CodeOutput({
     componentMap,
     customComponentNames,
     config,
-    componentConfig
+    componentConfig,
+    schema
   ]);
 
   const handleCopy = useCallback(() => {

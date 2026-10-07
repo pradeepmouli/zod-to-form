@@ -97,6 +97,8 @@ export {
 export {
   defineConfig,
   configPropertySchemas,
+  configDraftSchema,
+  fieldConfigSchema,
   validateConfig,
   resolveFieldConfig,
   SHADCN_OVERRIDES,
