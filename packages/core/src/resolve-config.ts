@@ -96,7 +96,11 @@ export function resolveFormConfig({
     componentName:
       invocation.name ??
       schema?.name ??
-      `${exportName.replace(/Schema$/, '').replace(/(^|[^a-zA-Z0-9]+)([a-z])/g, (_, space: string, letter: string) => letter.toUpperCase())}Form`,
+      `${exportName
+        .replace(/Schema$/, '')
+        .split(/[^a-zA-Z0-9]+/)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join('')}Form`,
     mode: invocation.mode ?? schema?.mode ?? defaults?.mode ?? 'submit',
     ui: invocation.ui ?? defaults?.ui ?? 'shadcn',
     out: invocation.out ?? schema?.out ?? defaults?.out,

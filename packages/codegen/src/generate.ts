@@ -331,24 +331,12 @@ function getDefaultArrayItemExpression(field: FormField | undefined): string {
   return serializeDefaultValue(value);
 }
 
-const charMap: Record<string, string> = {
-  '<': '\\u003C',
-  '>': '\\u003E',
-  '/': '\\u002F',
-  '\\': '\\\\',
-  '\b': '\\b',
-  '\f': '\\f',
-  '\n': '\\n',
-  '\r': '\\r',
-  '\t': '\\t',
-  '\0': '\\0',
-  '\u2028': '\\u2028',
-  '\u2029': '\\u2029'
-};
-
 function escapeUnsafeChars(str: string): string {
-  // oxlint-disable-next-line no-control-regex -- intentionally matches null byte (U+0000) for JSON serialization safety
-  return str.replace(/[<>/\\\b\f\n\r\t\u0000\u2028\u2029]/g, (x) => charMap[x] ?? x);
+  // JSON serialization already escapes quotes, backslashes and control characters.
+  return str.replace(
+    /[<>/\u2028\u2029]/g,
+    (character) => `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`
+  );
 }
 
 function serializeDefaultValue(value: unknown): string {
@@ -701,7 +689,7 @@ function generateHoistedValidators(
     // Build the nested shape accessor by stepping through each segment.
     let accessor = exportName;
     for (const seg of segments) {
-      accessor += `.shape[${JSON.stringify(seg)}]`;
+      accessor += `.shape[${escapeUnsafeChars(JSON.stringify(seg))}]`;
     }
     const target = compileZod ? `_schema_${safeKey}` : accessor;
     const setup = compileZod ? `const ${target} = compile(${accessor});\n` : '';

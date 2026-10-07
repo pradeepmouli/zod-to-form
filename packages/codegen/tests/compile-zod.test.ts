@@ -55,3 +55,31 @@ it.each([false, true])(
     expect(validate('x')).toBe('too short');
   }
 );
+
+it.each([false, true])(
+  'escapes emitted shape keys without changing lookup (compile=%s)',
+  (compileZod) => {
+    const key = '</script>\\"\n';
+    const keyedSchema = z.object({
+      [key]: z.string().refine((value) => value.length > 1, 'too short')
+    });
+    const fields = walkSchema(keyedSchema, { optimization: { level: 1 } }).fields;
+    const code = generateFormComponent(fields, {
+      ...config,
+      optimization: { level: 1, compileZod }
+    });
+    const declarations = code
+      .split('\n')
+      .filter((line) => /^const _(schema|validate)_/.test(line))
+      .join('\n')
+      .replaceAll(': unknown', '');
+    expect(declarations).not.toContain('</script>');
+    const validatorName = declarations.match(/const (_validate_\w+)/)![1];
+    const validate = new Function('Schema', 'compile', `${declarations}; return ${validatorName};`)(
+      keyedSchema,
+      z.compile
+    );
+    expect(validate('valid')).toBe(true);
+    expect(validate('x')).toBe('too short');
+  }
+);
