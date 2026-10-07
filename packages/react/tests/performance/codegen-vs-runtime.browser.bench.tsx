@@ -1,3 +1,12 @@
+import { LargeL2CompiledForm } from './generated/LargeL2CompiledForm.js';
+import { LargeL1CompiledForm } from './generated/LargeL1CompiledForm.js';
+import { LargeNoneCompiledForm } from './generated/LargeNoneCompiledForm.js';
+import { MediumL2CompiledForm } from './generated/MediumL2CompiledForm.js';
+import { MediumL1CompiledForm } from './generated/MediumL1CompiledForm.js';
+import { MediumNoneCompiledForm } from './generated/MediumNoneCompiledForm.js';
+import { SmallL2CompiledForm } from './generated/SmallL2CompiledForm.js';
+import { SmallL1CompiledForm } from './generated/SmallL1CompiledForm.js';
+import { SmallNoneCompiledForm } from './generated/SmallNoneCompiledForm.js';
 import { bench, describe } from 'vitest';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
@@ -57,13 +66,15 @@ function renderAndUnmount(element: React.ReactElement): void {
 // ─── Runtime path: useZodForm walks on every mount ──────────────────
 function RuntimeForm({
   schema,
-  level
+  level,
+  compileZod = false
 }: {
   schema: ZodObject;
   level: 1 | 2 | undefined;
+  compileZod?: boolean;
 }): React.ReactElement {
   const { fields, form } = useZodForm(schema, {
-    optimization: level !== undefined ? { level } : undefined
+    optimization: { level, compileZod }
   });
   return (
     <FormProvider {...form}>
@@ -140,3 +151,97 @@ describe('runtime mount (walk every time)', () => {
     });
   }
 });
+
+// Compilation is hoisted for generated forms and identity-cached for runtime forms.
+for (const compileZod of [false, true]) {
+  describe('mount / small / None', () => {
+    bench(`compile=${compileZod} path=codegen`, () => {
+      const Component = compileZod ? SmallNoneCompiledForm : SmallNoneForm;
+      renderAndUnmount(<Component onSubmit={noop} />);
+    });
+    bench(`compile=${compileZod} path=runtime`, () =>
+      renderAndUnmount(
+        <RuntimeForm schema={smallSchema as ZodObject} level={undefined} compileZod={compileZod} />
+      ));
+  });
+  describe('mount / small / L1', () => {
+    bench(`compile=${compileZod} path=codegen`, () => {
+      const Component = compileZod ? SmallL1CompiledForm : SmallL1Form;
+      renderAndUnmount(<Component onSubmit={noop} />);
+    });
+    bench(`compile=${compileZod} path=runtime`, () =>
+      renderAndUnmount(
+        <RuntimeForm schema={smallSchema as ZodObject} level={1} compileZod={compileZod} />
+      ));
+  });
+  describe('mount / small / L2', () => {
+    bench(`compile=${compileZod} path=codegen`, () => {
+      const Component = compileZod ? SmallL2CompiledForm : SmallL2Form;
+      renderAndUnmount(<Component onSubmit={noop} />);
+    });
+    bench(`compile=${compileZod} path=runtime`, () =>
+      renderAndUnmount(
+        <RuntimeForm schema={smallSchema as ZodObject} level={2} compileZod={compileZod} />
+      ));
+  });
+  describe('mount / medium / None', () => {
+    bench(`compile=${compileZod} path=codegen`, () => {
+      const Component = compileZod ? MediumNoneCompiledForm : MediumNoneForm;
+      renderAndUnmount(<Component onSubmit={noop} />);
+    });
+    bench(`compile=${compileZod} path=runtime`, () =>
+      renderAndUnmount(
+        <RuntimeForm schema={mediumSchema as ZodObject} level={undefined} compileZod={compileZod} />
+      ));
+  });
+  describe('mount / medium / L1', () => {
+    bench(`compile=${compileZod} path=codegen`, () => {
+      const Component = compileZod ? MediumL1CompiledForm : MediumL1Form;
+      renderAndUnmount(<Component onSubmit={noop} />);
+    });
+    bench(`compile=${compileZod} path=runtime`, () =>
+      renderAndUnmount(
+        <RuntimeForm schema={mediumSchema as ZodObject} level={1} compileZod={compileZod} />
+      ));
+  });
+  describe('mount / medium / L2', () => {
+    bench(`compile=${compileZod} path=codegen`, () => {
+      const Component = compileZod ? MediumL2CompiledForm : MediumL2Form;
+      renderAndUnmount(<Component onSubmit={noop} />);
+    });
+    bench(`compile=${compileZod} path=runtime`, () =>
+      renderAndUnmount(
+        <RuntimeForm schema={mediumSchema as ZodObject} level={2} compileZod={compileZod} />
+      ));
+  });
+  describe('mount / large / None', () => {
+    bench(`compile=${compileZod} path=codegen`, () => {
+      const Component = compileZod ? LargeNoneCompiledForm : LargeNoneForm;
+      renderAndUnmount(<Component onSubmit={noop} />);
+    });
+    bench(`compile=${compileZod} path=runtime`, () =>
+      renderAndUnmount(
+        <RuntimeForm schema={largeSchema as ZodObject} level={undefined} compileZod={compileZod} />
+      ));
+  });
+  describe('mount / large / L1', () => {
+    bench(`compile=${compileZod} path=codegen`, () => {
+      const Component = compileZod ? LargeL1CompiledForm : LargeL1Form;
+      renderAndUnmount(<Component onSubmit={noop} />);
+    });
+    bench(`compile=${compileZod} path=runtime`, () =>
+      renderAndUnmount(
+        <RuntimeForm schema={largeSchema as ZodObject} level={1} compileZod={compileZod} />
+      ));
+  });
+  describe('mount / large / L2', () => {
+    bench(`compile=${compileZod} path=codegen`, () => {
+      const Component = compileZod ? LargeL2CompiledForm : LargeL2Form;
+      renderAndUnmount(<Component onSubmit={noop} />);
+    });
+    bench(`compile=${compileZod} path=runtime`, () =>
+      renderAndUnmount(
+        <RuntimeForm schema={largeSchema as ZodObject} level={2} compileZod={compileZod} />
+      ));
+  });
+}

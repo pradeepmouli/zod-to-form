@@ -51,10 +51,12 @@ function writeVariant(
   name: 'Small' | 'Medium' | 'Large',
   exportName: 'SmallSchema' | 'MediumSchema' | 'LargeSchema',
   schema: ZodObject,
-  level: Level
+  level: Level,
+  compileZod = false
 ): string {
-  const componentName = `${name}${levelSuffix(level)}Form`;
-  const walkOptions = level === 0 ? undefined : { optimization: { level: level as 1 | 2 } };
+  const componentName = `${name}${levelSuffix(level)}${compileZod ? 'Compiled' : ''}Form`;
+  const walkOptions =
+    level === 0 ? undefined : { optimization: { level: level as 1 | 2, compileZod } };
   const walkResult =
     level === 0
       ? {
@@ -74,7 +76,7 @@ function writeVariant(
     mode: 'submit',
     ui: 'html',
     schemaImportPath: './schema.js',
-    optimization: { level: level === 0 ? undefined : (level as 1 | 2) },
+    optimization: { level: level === 0 ? undefined : (level as 1 | 2), compileZod },
     schemaLite: schemaLite ?? undefined,
     schemaLiteInfo: schemaLiteInfo ?? undefined
   });
@@ -95,10 +97,11 @@ function writeVariant(
 
 const levels: Level[] = [0, 1, 2];
 
-for (const level of levels) {
-  writeVariant('Small', 'SmallSchema', smallSchema as unknown as ZodObject, level);
-  writeVariant('Medium', 'MediumSchema', mediumSchema as unknown as ZodObject, level);
-  writeVariant('Large', 'LargeSchema', largeSchema as unknown as ZodObject, level);
+for (const compileZod of [false, true]) {
+  for (const level of levels) {
+    writeVariant('Small', 'SmallSchema', smallSchema as unknown as ZodObject, level, compileZod);
+    writeVariant('Medium', 'MediumSchema', mediumSchema as unknown as ZodObject, level, compileZod);
+    writeVariant('Large', 'LargeSchema', largeSchema as unknown as ZodObject, level, compileZod);
+  }
 }
-
 console.log(`Generated fixtures in ${outDir}`);
