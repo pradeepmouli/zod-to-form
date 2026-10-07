@@ -1,5 +1,17 @@
 # @zod-to-form/react
 
+## 0.13.0
+
+### Minor Changes
+
+- [#226](https://github.com/pradeepmouli/zod-to-form/pull/226) [`078ee9f`](https://github.com/pradeepmouli/zod-to-form/commit/078ee9f169778662b8e93c66d339b8b7b40579ff) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Unify CLI and Vite configuration under the canonical nested components/defaults/fields/schemas/variants contract. Removed flat plugin options and validationLevel require migration. Add independent defaults.optimization.compileZod with cached finalized validation targets, upgrade to Zod 4.6, preserve authored presets until resolution, and forward optimization through runtime forms and generated modules.
+
+### Patch Changes
+
+- - chore(deps): update runtime dependencies
+- Updated dependencies [[`078ee9f`](https://github.com/pradeepmouli/zod-to-form/commit/078ee9f169778662b8e93c66d339b8b7b40579ff)]:
+  - @zod-to-form/core@0.12.0
+
 ## 0.12.0
 
 ### Minor Changes
