@@ -58,7 +58,7 @@
     "@babel/types": "^8.0.6",
     "@zod-to-form/codegen": "workspace:*",
     "@zod-to-form/core": "workspace:*",
-    "magic-string": "^1.1.0",
+    "magic-string": "^1.4.3",
     "pathe": "^2.0.3"
   },
   "devDependencies": {
