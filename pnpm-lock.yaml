@@ -166,8 +166,8 @@ importers:
         specifier: ^4.12.0
         version: 4.12.0(typedoc@0.28.20(typescript@6.0.3))
       typedoc-plugin-skillit:
-        specifier: ^2.0.3
-        version: 2.0.3(typedoc@0.28.20(typescript@6.0.3))
+        specifier: ^2.0.4
+        version: 2.0.4(typedoc@0.28.20(typescript@6.0.3))
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -1275,8 +1275,8 @@ packages:
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
-  '@babel/runtime@7.29.10':
-    resolution: {integrity: sha512-NpugTzbKgGrNe45Ui32cN8vCFFMxVtP/9rtfwv0nP5FRDAjvYBxJcLVpYA9mr1jxP6cnIT7x9LUzuDTbWYYNRA==}
+  '@babel/runtime@7.29.13':
+    resolution: {integrity: sha512-v+oN26xP4YIlQsbQ/CbTH1WG5m/l/DjKKZNy/Kp3f/AFvbgt7Em/D0FeMM3O2hX0YzeN2M16W8lOpyhIkfCBcQ==}
     engines: {node: '>=6.9.0'}
 
   '@babel/runtime@7.29.7':
@@ -3738,8 +3738,8 @@ packages:
   '@skillit/docusaurus@1.0.3':
     resolution: {integrity: sha512-5+3I65YZ3xkT6aq/g9Ta7MpCDz6cHnep44pibC9Pgq4OCqanimz1/YOY0SmEburB2VuuJnyNTLL6ll2r4mgdeA==}
 
-  '@skillit/typedoc@2.0.3':
-    resolution: {integrity: sha512-3E90MYVHXO+vZbkGqYBxNkazb5dQN+rYbY1QW3EH35YEB+y/QJusy5FUYAu43JEOER8jVcWfN9100tpJkknvxg==}
+  '@skillit/typedoc@2.0.4':
+    resolution: {integrity: sha512-2U4pkdl4XDbD0zZjiW6Fk97StSPC5l7Z6BbmZW8I8+w/IPCTryvptpEXaLPYfnFHrOm+NcEmorDX6SzPlprT3Q==}
     peerDependencies:
       typedoc: '>=0.28.0'
 
@@ -5935,6 +5935,7 @@ packages:
   image-size@2.0.2:
     resolution: {integrity: sha512-IRqXKlaXwgSMAMtpNzZa1ZAe8m+Sa1770Dhk8VkSsP9LS+iHD62Zd8FQKs8fbPiagBE7BzoFX23cxFnwshpV6w==}
     engines: {node: '>=16.x'}
+    deprecated: Use latest 2.x please
     hasBin: true
 
   import-fresh@3.3.1:
@@ -7231,8 +7232,8 @@ packages:
     engines: {node: '>=20'}
     hasBin: true
 
-  playwright-core@1.64.1:
-    resolution: {integrity: sha512-BC4s8y6SEVA6Q1rSxZTto8hI1KUI3xXlHGZgvGqP4IqPdI/a6FX9H29IDNz7vKo9l21b6LfYosScPL6M3xxyDQ==}
+  playwright-core@1.65.0:
+    resolution: {integrity: sha512-vNSKgH6YqtN7cdT/L334zo0a+YwkrpicyrHJlWWPIm/Q+Nn2SWInil01oT0mbu96U4GgoRtCYQD9CzJQgju+lA==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -7246,8 +7247,8 @@ packages:
     engines: {node: '>=20'}
     hasBin: true
 
-  playwright@1.64.1:
-    resolution: {integrity: sha512-HCrVhHr5QQuwYoswEUGTb7gGp522yflbv/ST8nF4sFWGuLjQCt17Q/EubpGGSNKYn1tsTCPZxqHhHCfVURu7UA==}
+  playwright@1.65.0:
+    resolution: {integrity: sha512-F3AMWcR44qMBt4kq+6Kb6mX7bjGXshktKFOPULd7reED6ZJWevjbNRqysP7q+AATE9kdPEZBibex1BYsvpVoeA==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -8606,8 +8607,8 @@ packages:
     peerDependencies:
       typedoc: 0.28.x
 
-  typedoc-plugin-skillit@2.0.3:
-    resolution: {integrity: sha512-A+vNMJbef6SJ79cpPAFdQpZtWbY8V36JhjrNDZIOfgu8DOoXAuln2d4HN2ECvJ1nqIr1Tnwg9kJtgUmm43x0tQ==}
+  typedoc-plugin-skillit@2.0.4:
+    resolution: {integrity: sha512-FIkhcvENR26OJ1uXdf5/G7Dn9wt1ZkGrwD0HsDVOftn052wV3qRXJRgArJ/GqghYK27AsDx9DOoVJ1kZtaczUA==}
     peerDependencies:
       typedoc: '>=0.28.0'
 
@@ -10123,7 +10124,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/runtime@7.29.10': {}
+  '@babel/runtime@7.29.13': {}
 
   '@babel/runtime@7.29.7': {}
 
@@ -13620,14 +13621,14 @@ snapshots:
     dependencies:
       '@skillit/core': 4.0.2
 
-  '@skillit/typedoc@2.0.3(typedoc@0.28.20(typescript@6.0.3))':
+  '@skillit/typedoc@2.0.4(typedoc@0.28.20(typescript@6.0.3))':
     dependencies:
-      '@skillit/core': 4.0.2
+      '@skillit/core': 4.0.3
       typedoc: 0.28.20(typescript@6.0.3)
 
   '@slorber/react-helmet-async@1.3.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
-      '@babel/runtime': 7.29.10
+      '@babel/runtime': 7.29.13
       invariant: 2.2.4
       prop-types: 15.8.1
       react: 19.2.8
@@ -13813,7 +13814,7 @@ snapshots:
   '@testing-library/dom@10.4.1':
     dependencies:
       '@babel/code-frame': 7.29.7
-      '@babel/runtime': 7.29.10
+      '@babel/runtime': 7.29.13
       '@types/aria-query': 5.0.4
       aria-query: 5.3.0
       dom-accessibility-api: 0.5.16
@@ -14113,11 +14114,11 @@ snapshots:
       - utf-8-validate
       - vite
 
-  '@vitest/browser-playwright@5.0.5(playwright@1.64.1)(vite@8.3.5(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.15)(yaml@2.9.1))(vitest@5.0.5)':
+  '@vitest/browser-playwright@5.0.5(playwright@1.65.0)(vite@8.3.5(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.15)(yaml@2.9.1))(vitest@5.0.5)':
     dependencies:
       '@vitest/browser': 5.0.5(vite@8.3.5(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.15)(yaml@2.9.1))(vitest@5.0.5)
       '@vitest/mocker': 5.0.5(vite@8.3.5(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.15)(yaml@2.9.1))
-      playwright: 1.64.1
+      playwright: 1.65.0
       tinyrainbow: 3.2.0
       vitest: 5.0.5(@types/node@26.6.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(jsdom@30.0.1)(vite@8.3.5(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.15)(yaml@2.9.1))
     transitivePeerDependencies:
@@ -15985,7 +15986,7 @@ snapshots:
 
   history@4.10.1:
     dependencies:
-      '@babel/runtime': 7.29.10
+      '@babel/runtime': 7.29.13
       loose-envify: 1.4.0
       resolve-pathname: 3.0.0
       tiny-invariant: 1.3.3
@@ -17582,7 +17583,7 @@ snapshots:
 
   playwright-core@1.63.0: {}
 
-  playwright-core@1.64.1:
+  playwright-core@1.65.0:
     optional: true
 
   playwright@1.62.0:
@@ -17595,9 +17596,9 @@ snapshots:
     dependencies:
       playwright-core: 1.63.0
 
-  playwright@1.64.1:
+  playwright@1.65.0:
     dependencies:
-      playwright-core: 1.64.1
+      playwright-core: 1.65.0
     optional: true
 
   pngjs@7.0.0: {}
@@ -19303,9 +19304,9 @@ snapshots:
     dependencies:
       typedoc: 0.28.20(typescript@6.0.3)
 
-  typedoc-plugin-skillit@2.0.3(typedoc@0.28.20(typescript@6.0.3)):
+  typedoc-plugin-skillit@2.0.4(typedoc@0.28.20(typescript@6.0.3)):
     dependencies:
-      '@skillit/typedoc': 2.0.3(typedoc@0.28.20(typescript@6.0.3))
+      '@skillit/typedoc': 2.0.4(typedoc@0.28.20(typescript@6.0.3))
       typedoc: 0.28.20(typescript@6.0.3)
 
   typedoc@0.28.20(typescript@6.0.3):
@@ -19579,7 +19580,7 @@ snapshots:
       why-is-node-running: 3.2.1
     optionalDependencies:
       '@types/node': 26.6.2
-      '@vitest/browser-playwright': 5.0.5(playwright@1.64.1)(vite@8.3.5(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.15)(yaml@2.9.1))(vitest@5.0.5)
+      '@vitest/browser-playwright': 5.0.5(playwright@1.65.0)(vite@8.3.5(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.15)(yaml@2.9.1))(vitest@5.0.5)
       '@vitest/coverage-v8': 5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5)
       '@vitest/ui': 5.0.5(vitest@5.0.5)
       jsdom: 30.0.1
