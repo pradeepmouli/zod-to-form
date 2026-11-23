@@ -86,7 +86,7 @@
     "lint-staged": "^17.6.0",
     "oxfmt": "^0.78.0",
     "oxlint": "^1.93.0",
-    "playwright": "^1.63.0",
+    "playwright": "^1.65.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "simple-git-hooks": "^2.13.1",
