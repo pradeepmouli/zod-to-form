@@ -1,5 +1,13 @@
 # @zod-to-form/vite
 
+## 0.5.1
+
+### Patch Changes
+
+- - chore(deps): update runtime dependencies
+
+- [#267](https://github.com/pradeepmouli/zod-to-form/pull/267) [`3db2736`](https://github.com/pradeepmouli/zod-to-form/commit/3db27367e500d0a03962b41340272a04bbd58765) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Support React Hook Form Resolvers 7.0.8 and later 7.x releases alongside version 5.
+
 ## 0.5.0
 
 ### Minor Changes
