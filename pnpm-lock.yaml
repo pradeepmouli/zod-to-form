@@ -208,8 +208,8 @@ importers:
         specifier: ^6.43.15
         version: 6.43.15
       '@hookform/resolvers':
-        specifier: ^5.5.7
-        version: 5.5.7(@sinclair/typebox@0.27.12)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(joi@17.13.4)(react-hook-form@7.88.0(react@19.2.8))(zod@4.6.5)
+        specifier: ^7.0.8
+        version: 7.0.8(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(joi@17.13.4)(react-hook-form@7.88.0(react@19.2.8))(zod@4.6.5)
       '@radix-ui/react-checkbox':
         specifier: ^1.3.11
         version: 1.3.11(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -380,8 +380,8 @@ importers:
         version: link:../core
     devDependencies:
       '@hookform/resolvers':
-        specifier: ^5.5.7
-        version: 5.5.7(@sinclair/typebox@0.27.12)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(joi@17.13.4)(react-hook-form@7.88.0(react@19.2.8))(zod@4.6.5)
+        specifier: ^7.0.8
+        version: 7.0.8(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(joi@17.13.4)(react-hook-form@7.88.0(react@19.2.8))(zod@4.6.5)
       '@testing-library/jest-dom':
         specifier: ^7.0.1
         version: 7.0.1(@testing-library/dom@10.4.1)(vitest@5.1.1)
@@ -425,8 +425,8 @@ importers:
         specifier: ^8.0.6
         version: 8.0.6
       '@hookform/resolvers':
-        specifier: ^5.0.0
-        version: 5.2.2(react-hook-form@7.72.1(react@19.2.5))
+        specifier: ^5.0.0 || ^7.0.8
+        version: 5.5.7(@sinclair/typebox@0.27.12)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(joi@17.13.4)(react-hook-form@7.72.1(react@19.2.5))(zod@4.6.5)
       '@zod-to-form/codegen':
         specifier: workspace:*
         version: link:../codegen
@@ -2402,11 +2402,6 @@ packages:
     peerDependencies:
       hono: ^4 || ^5.0.0-0
 
-  '@hookform/resolvers@5.2.2':
-    resolution: {integrity: sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA==}
-    peerDependencies:
-      react-hook-form: ^7.55.0
-
   '@hookform/resolvers@5.5.7':
     resolution: {integrity: sha512-CyPCYV8/KlXfEXLWj8HHHhVsR/IZ6Ckm3b/a4fWtO/lRnRK1huqncb8LlAWrmpPRsse5glF5aVuDRMHEr3UGag==}
     peerDependencies:
@@ -2475,6 +2470,81 @@ packages:
       superstruct:
         optional: true
       typanion:
+        optional: true
+      valibot:
+        optional: true
+      vest:
+        optional: true
+      yup:
+        optional: true
+      zod:
+        optional: true
+
+  '@hookform/resolvers@7.0.8':
+    resolution: {integrity: sha512-44+R4PUy3MWIBJR4sOjW0bZaz+H81k26urkTYeXAvEa8h45ueHrvQpZR/96iyLOobL6/yO0BJTaRPwwyDlL1/A==}
+    peerDependencies:
+      '@standard-schema/spec': ^1.0.0
+      '@vinejs/vine': ^2.0.0 || ^3.0.0 || ^4.0.0
+      ajv: ^8.12.0
+      ajv-errors: ^3.0.0
+      ajv-formats: ^2.1.1 || ^3.0.0
+      arktype: ^2.0.0 || ^3.0.0
+      ata-validator: ^1.23.0
+      class-transformer: '>=0.4.0'
+      class-validator: '>=0.12.0'
+      computed-types: ^1.0.0
+      effect: ^4.0.0
+      fluentvalidation-ts: ^3.0.0
+      fp-ts: ^2.7.0
+      io-ts: ^2.0.0
+      joi: ^17.0.0 || ^18.0.0
+      nope-validator: '>=0.12.0'
+      react-hook-form: ^7.55.0
+      superstruct: '>=0.12.0'
+      typanion: ^3.3.2
+      typebox: ^1.0.0
+      valibot: '>=0.31.0 || ^1.0.0-beta.4 || ^1.0.0-rc'
+      vest: '>=6.0.0'
+      yup: ^1.0.0
+      zod: ^3.25.0 || ^4.0.0
+    peerDependenciesMeta:
+      '@standard-schema/spec':
+        optional: true
+      '@vinejs/vine':
+        optional: true
+      ajv:
+        optional: true
+      ajv-errors:
+        optional: true
+      ajv-formats:
+        optional: true
+      arktype:
+        optional: true
+      ata-validator:
+        optional: true
+      class-transformer:
+        optional: true
+      class-validator:
+        optional: true
+      computed-types:
+        optional: true
+      effect:
+        optional: true
+      fluentvalidation-ts:
+        optional: true
+      fp-ts:
+        optional: true
+      io-ts:
+        optional: true
+      joi:
+        optional: true
+      nope-validator:
+        optional: true
+      superstruct:
+        optional: true
+      typanion:
+        optional: true
+      typebox:
         optional: true
       valibot:
         optional: true
@@ -12535,19 +12605,24 @@ snapshots:
     dependencies:
       hono: 4.13.13
 
-  '@hookform/resolvers@5.2.2(react-hook-form@7.72.1(react@19.2.5))':
+  '@hookform/resolvers@5.5.7(@sinclair/typebox@0.27.12)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(joi@17.13.4)(react-hook-form@7.72.1(react@19.2.5))(zod@4.6.5)':
     dependencies:
       '@standard-schema/utils': 0.3.0
       react-hook-form: 7.72.1(react@19.2.5)
-
-  '@hookform/resolvers@5.5.7(@sinclair/typebox@0.27.12)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(joi@17.13.4)(react-hook-form@7.88.0(react@19.2.8))(zod@4.6.5)':
-    dependencies:
-      '@standard-schema/utils': 0.3.0
-      react-hook-form: 7.88.0(react@19.2.8)
     optionalDependencies:
       '@sinclair/typebox': 0.27.12
       ajv: 8.20.0
       ajv-formats: 2.1.1(ajv@8.20.0)
+      joi: 17.13.4
+      zod: 4.6.5
+
+  '@hookform/resolvers@7.0.8(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(joi@17.13.4)(react-hook-form@7.88.0(react@19.2.8))(zod@4.6.5)':
+    dependencies:
+      '@standard-schema/utils': 0.3.0
+      react-hook-form: 7.88.0(react@19.2.8)
+    optionalDependencies:
+      ajv: 8.20.0
+      ajv-formats: 3.0.1(ajv@8.20.0)
       joi: 17.13.4
       zod: 4.6.5
 
