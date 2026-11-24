@@ -66,6 +66,24 @@ pnpm outdated        # Check outdated dependencies
 pnpm update:deps     # Update dependencies
 ```
 
+### Scheduled dependency updates
+
+The **Dependency Update** workflow runs daily and can be started from the `master` branch.
+It updates dependencies, builds, and type-checks before pushing a dependency commit to
+`develop`. A pull request from `develop` to `master` waits for CI, CodeQL, and the security
+audit before merging. The push to `master` starts the Release workflow, which opens the
+Changesets version PR for releasable package changes.
+
+The automation pauses when `develop` has unrelated work or either branch advances during
+verification. It can resume its own open promotion on the next run. The promotion job uses
+the same `RELEASE_TOKEN` as the Release workflow so GitHub runs the pull request and
+release checks. A dependency verification failure appears as a failed workflow run.
+
+Other repositories call this workflow from their existing Dependency Update schedules.
+Pin callers to a published commit and pass only their own release credentials. The default
+checks are CI, CodeQL, and the security audit. Repositories can list the checks they run
+and opt into creating a missing `develop` branch from `master`.
+
 ## Coding Standards
 
 ### TypeScript
