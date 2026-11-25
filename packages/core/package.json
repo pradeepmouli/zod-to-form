@@ -61,9 +61,9 @@
   },
   "devDependencies": {
     "jiti": "^2.7.0",
-    "tinybench": "^6.1.4",
-    "type-fest": "^5.8.0",
-    "zod": "^4.6.5"
+    "tinybench": "^6.2.5",
+    "type-fest": "^6.0.3",
+    "zod": "^4.6.7"
   },
   "author": "Pradeep Mouli <pmouli@mac.com> (https://github.com/pradeepmouli)",
   "publishConfig": {
