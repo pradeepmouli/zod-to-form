@@ -2,96 +2,293 @@ name: Dependency Update
 
 on:
   schedule:
-    - cron: '0 10 * * *'  # Daily 6am ET / 10am UTC
+    - cron: '0 10 * * *'
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      bootstrap_develop:
+        description: Allow creating develop from master when a repository does not have develop yet
+        default: false
+        type: boolean
+      required_workflows:
+        description: JSON array of workflow names that must pass for the promotion PR
+        default: '["CI", "CodeQL", "Security Audit"]'
+        type: string
+      node_version:
+        description: Node.js version used to generate and verify the update
+        default: '24.x'
+        type: string
+    secrets:
+      RELEASE_TOKEN:
+        description: Repository token for pushing, PR creation, and merging
+        required: true
+
+concurrency:
+  group: dependency-update-promotion
+  cancel-in-progress: false
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   update:
+    if: github.event.repository.default_branch == 'master' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    outputs:
+      master: ${{ steps.branches.outputs.master }}
+      develop: ${{ steps.branches.outputs.develop }}
+      base: ${{ steps.branches.outputs.base }}
+      changed: ${{ steps.update.outputs.changed }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve promotion base
+        id: branches
+        env:
+          BOOTSTRAP_DEVELOP: ${{ inputs.bootstrap_develop || false }}
+        run: |
+          master=$(git rev-parse origin/master)
+          develop=$(git rev-parse --verify --quiet origin/develop || true)
+          if [[ -z $develop && $BOOTSTRAP_DEVELOP != true ]]; then
+            echo "::error::The develop branch is missing. Create it from master before running dependency promotion."
+            exit 1
+          fi
+          if [[ -z $develop ]] || git merge-base --is-ancestor "$develop" "$master"; then
+            git switch --detach "$master"
+          elif git merge-base --is-ancestor "$master" "$develop" &&
+            [[ -z $(git log --format=%s "$master..$develop" | grep -vxF 'chore(deps): update dependencies to latest' || true) ]]; then
+            git switch --detach "$develop"
+          else
+            echo "::error::Develop contains other unpromoted work or has diverged from master. Sync the branches or promote those commits before retrying."
+            exit 1
+          fi
+          {
+            echo "master=$master"
+            echo "develop=${develop:-missing}"
+            echo "base=$(git rev-parse HEAD)"
+          } >> "$GITHUB_OUTPUT"
 
       - uses: pnpm/action-setup@v6
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install
+          node-version: ${{ inputs.node_version || '24.x' }}
+          cache: pnpm
 
       - name: Update dependencies
-        # Packages held on TypeScript 6 (typedoc does not support 7) must survive `update --latest`
+        id: update
+        env:
+          SKIP_INSTALL_SIMPLE_GIT_HOOKS: '1'
         run: |
+          # TypeDoc still needs TypeScript 6 even though other workspaces use TypeScript 7.
           git ls-files '*package.json' | while read -r f; do
-            jq -e '(.devDependencies.typescript // "") | startswith("^6")' "$f" > /dev/null && dirname "$f"
-          done > "$RUNNER_TEMP/ts6-dirs" || true
+            if jq -e '(.devDependencies.typescript // "") | startswith("^6")' "$f" > /dev/null; then
+              dirname "$f"
+            fi
+          done > "$RUNNER_TEMP/ts6-dirs"
           pnpm update --latest -r
           while read -r d; do
-            if [ "$d" = "." ]; then pnpm add -D -w 'typescript@^6.0.3'; else pnpm --filter "./$d" add -D 'typescript@^6.0.3'; fi
+            if [ "$d" = "." ]; then
+              pnpm add -D -w 'typescript@^6.0.3'
+            else
+              pnpm --filter "./$d" add -D 'typescript@^6.0.3'
+            fi
           done < "$RUNNER_TEMP/ts6-dirs"
 
-      - name: Check for changes
-        id: changes
-        run: |
-          if git diff --quiet package.json pnpm-lock.yaml packages/*/package.json apps/*/package.json 2>/dev/null; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
+          git add -- pnpm-lock.yaml '*package.json'
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
-      - name: Type check
-        if: steps.changes.outputs.changed == 'true'
-        run: pnpm run type-check
-        continue-on-error: true
-        id: typecheck
-
-      - name: Build
-        if: steps.changes.outputs.changed == 'true' && steps.typecheck.outcome == 'success'
-        run: pnpm run build
-        continue-on-error: true
-        id: build
-
-      - name: Generate changeset
-        if: steps.changes.outputs.changed == 'true' && steps.typecheck.outcome == 'success' && steps.build.outcome == 'success'
-        run: |
-          pkgs=$(git diff --name-only -- '*package.json' | while read -r f; do jq -r 'select(.private != true and .name != null) | .name' "$f"; done | sort -u)
+          pkgs=$(git diff --cached --name-only -- '*package.json' | while read -r f; do
+            jq -r 'select(.private != true and .name != null) | .name' "$f"
+          done | sort -u)
           if [ -n "$pkgs" ]; then
+            changeset=".changeset/deps-update-$GITHUB_RUN_ID.md"
             {
               echo '---'
-              for p in $pkgs; do echo "\"$p\": patch"; done
+              while read -r pkg; do printf '"%s": patch\n' "$pkg"; done <<< "$pkgs"
               echo '---'
               echo
-              echo '- chore(deps): update dependencies to latest'
-            } > ".changeset/deps-update-$(date +%s).md"
+              echo 'Update dependencies to their latest compatible versions.'
+            } > "$changeset"
+            git add "$changeset"
+          fi
+          git diff --cached --binary > "$RUNNER_TEMP/dependency-update.patch"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        if: steps.update.outputs.changed == 'true'
+        run: pnpm run build
+
+      - name: Type check
+        if: steps.update.outputs.changed == 'true'
+        run: pnpm run type-check
+
+      - uses: actions/upload-artifact@v7
+        if: steps.update.outputs.changed == 'true'
+        with:
+          name: dependency-update
+          path: ${{ runner.temp }}/dependency-update.patch
+          if-no-files-found: error
+          overwrite: true
+
+  promote:
+    needs: update
+    if: needs.update.result == 'success' && (needs.update.outputs.changed == 'true' || needs.update.outputs.master != needs.update.outputs.base)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check promotion credential
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          if [[ -z $GH_TOKEN ]]; then
+            echo "::error::Configure the repository's RELEASE_TOKEN or supply a GitHub App installation token."
+            exit 1
           fi
 
-      - name: Create PR
-        if: steps.changes.outputs.changed == 'true' && steps.typecheck.outcome == 'success' && steps.build.outcome == 'success'
-        uses: peter-evans/create-pull-request@v8
+      - uses: actions/checkout@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'chore(deps): update dependencies to latest'
-          title: 'chore(deps): update dependencies to latest'
-          body: |
-            Automated weekly dependency update via `pnpm update --latest -r`.
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
 
-            - Type-check: ✅ passed
-            - Build: ✅ passed
+      - uses: actions/download-artifact@v8
+        if: needs.update.outputs.changed == 'true'
+        with:
+          name: dependency-update
+          path: ${{ runner.temp }}
 
-            Auto-generated by the Dependency Update workflow.
-          branch: chore/deps-update
-          delete-branch: true
-          labels: dependencies
-
-      - name: Report failure
-        if: steps.changes.outputs.changed == 'true' && (steps.typecheck.outcome == 'failure' || steps.build.outcome == 'failure')
+      - name: Push dependency changes and promote
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          REQUIRED_WORKFLOWS: ${{ inputs.required_workflows || '["CI", "CodeQL", "Security Audit"]' }}
+          EXPECTED_MASTER: ${{ needs.update.outputs.master }}
+          EXPECTED_DEVELOP: ${{ needs.update.outputs.develop }}
+          UPDATE_BASE: ${{ needs.update.outputs.base }}
         run: |
-          echo "::warning::Dependency update failed verification"
-          echo "Type-check: ${{ steps.typecheck.outcome }}"
-          echo "Build: ${{ steps.build.outcome }}"
+          set -euo pipefail
+
+          fail() {
+            echo "::error::$*" >&2
+            exit 1
+          }
+
+          verify_branches() {
+            git fetch --prune --no-tags origin
+            [[ $(git rev-parse "origin/master") == "$EXPECTED_MASTER" ]] || fail 'Release branch has moved since verification.'
+            local integration
+            integration=$(git rev-parse --verify --quiet "origin/develop" || true)
+            [[ ${integration:-missing} == "$1" ]] || fail 'Integration branch has moved since verification.'
+          }
+
+          marker='<!-- scheduled-dependency-promotion -->'
+          pr=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --base master --head develop \
+            --json number,body,headRefOid,isCrossRepository --jq '.[0] // empty')
+          if [[ -n "$pr" ]]; then
+            jq -e --arg marker "$marker" --arg head "$EXPECTED_DEVELOP" \
+              '(.isCrossRepository | not) and (.body | contains($marker)) and .headRefOid == $head' <<< "$pr" > /dev/null ||
+              fail 'A separate develop promotion is already open.'
+          fi
+
+          verify_branches "$EXPECTED_DEVELOP"
+          git cat-file -e "$EXPECTED_MASTER:.github/workflows/release.yml" ||
+            fail 'The release branch must have the Changesets release workflow before promotion.'
+          git switch --detach "$UPDATE_BASE"
+          if ! jq -e 'type == "array" and length > 0 and all(.[]; type == "string" and length > 0)' <<< "$REQUIRED_WORKFLOWS" >/dev/null; then
+            fail 'Required workflows must be a JSON array of names.'
+          fi
+          patch="$RUNNER_TEMP/dependency-update.patch"
+          if [[ -f "$patch" ]]; then
+            git apply --index "$patch"
+            git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -m 'chore(deps): update dependencies to latest'
+          fi
+
+          # This check also applies when resuming a promotion after a runner interruption.
+          while IFS= read -r -d '' file; do
+            case "$file" in
+              package.json|*/package.json)
+                original=$(git show "$EXPECTED_MASTER:$file")
+                candidate=$(git show "HEAD:$file")
+                omit_deps='del(.dependencies, .devDependencies, .optionalDependencies, .peerDependencies)'
+                [[ $(jq -cS "$omit_deps" <<< "$original") == "$(jq -cS "$omit_deps" <<< "$candidate")" ]] ||
+                  fail "Non-dependency manifest change: $file"
+                ;;
+              pnpm-lock.yaml|.changeset/deps-update-*.md) ;;
+              *) fail "Unexpected file in dependency promotion: $file" ;;
+            esac
+          done < <(git diff --name-only -z "$EXPECTED_MASTER" HEAD)
+
+          head=$(git rev-parse HEAD)
+          # A normal push preserves GitHub protections and cannot discard any branch history.
+          git push origin "$head:refs/heads/develop"
+          if [[ -n "$pr" ]]; then
+            number=$(jq -r '.number' <<< "$pr")
+          else
+            number=$(gh pr create --repo "$GITHUB_REPOSITORY" --base master --head develop \
+              --title 'chore(deps): promote dependency updates' \
+              --body "$marker
+          Promote the scheduled dependency update after the repository checks pass.")
+          fi
+
+          deadline=$((SECONDS + 1200))
+          while (( SECONDS < deadline )); do
+            status=$(gh pr view "$number" --repo "$GITHUB_REPOSITORY" \
+              --json number,state,isDraft,isCrossRepository,baseRefName,headRefName,headRefOid,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup)
+            jq -e --arg head "$head" \
+              '.state == "OPEN" and (.isDraft | not) and (.isCrossRepository | not) and .baseRefName == "master" and .headRefName == "develop" and .headRefOid == $head' \
+              <<< "$status" > /dev/null || fail 'The promotion PR changed after CI started.'
+            if jq -e '.reviewDecision == "CHANGES_REQUESTED" or .mergeable == "CONFLICTING"' <<< "$status" > /dev/null; then
+              fail 'The promotion PR has changes requested or merge conflicts.'
+            fi
+            if jq -e 'any(.statusCheckRollup[];
+              (.status == "COMPLETED" and (.conclusion | IN("SUCCESS", "SKIPPED", "NEUTRAL") | not))
+              or (.state | IN("ERROR", "FAILURE")))' <<< "$status" > /dev/null; then
+              fail 'A promotion check failed or was cancelled.'
+            fi
+            # Use PR runs as well as the check rollup, which also includes develop push runs.
+            runs=$(gh run list --repo "$GITHUB_REPOSITORY" --event pull_request --branch develop --commit "$head" --limit 100 \
+              --json workflowName,status,conclusion)
+            if jq -e --argjson runs "$runs" --argjson required "$REQUIRED_WORKFLOWS" '
+              .mergeStateStatus == "CLEAN" and .reviewDecision != "REVIEW_REQUIRED" and
+              ($required | all(.[]; . as $workflow |
+                any($runs[]; .workflowName == $workflow and .status == "completed" and .conclusion == "success"))) and
+              (.statusCheckRollup | length > 0 and
+                all(.[]; .status == "COMPLETED" or .state == "SUCCESS"))
+            ' <<< "$status" > /dev/null; then
+              verify_branches "$head"
+              pr_number=$(jq -r '.number' <<< "$status")
+              unresolved=$(gh api graphql --paginate -f query='
+                query($owner: String!, $repo: String!, $number: Int!, $endCursor: String) {
+                  repository(owner: $owner, name: $repo) {
+                    pullRequest(number: $number) {
+                      reviewThreads(first: 100, after: $endCursor) {
+                        nodes { id isResolved }
+                        pageInfo { hasNextPage endCursor }
+                      }
+                    }
+                  }
+                }' -f owner="$GITHUB_REPOSITORY_OWNER" -f repo="${GITHUB_REPOSITORY#*/}" -F number="$pr_number" \
+                --jq '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved | not) | .id')
+              [[ -z "$unresolved" ]] || fail 'The promotion PR has unresolved review threads.'
+              gh pr merge "$number" --repo "$GITHUB_REPOSITORY" --merge --match-head-commit "$head"
+              merged=$(gh pr view "$number" --repo "$GITHUB_REPOSITORY" --json state --jq .state)
+              if [[ $merged == MERGED ]]; then
+                echo "Merged promotion PR $number. The master push triggers the Release workflow."
+              else
+                echo "::notice::Promotion PR $number has been submitted to the repository's merge queue."
+              fi
+              exit 0
+            fi
+            sleep 15
+          done
+          fail 'Timed out waiting for the promotion checks.'
