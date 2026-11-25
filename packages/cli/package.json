@@ -49,11 +49,11 @@
   "dependencies": {
     "@zod-to-form/codegen": "workspace:*",
     "@zod-to-form/core": "workspace:*",
-    "chokidar": "^5.0.0",
-    "commander": "^15.0.0"
+    "chokidar": "^6.0.0",
+    "commander": "^15.1.0"
   },
   "devDependencies": {
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   },
   "author": "Pradeep Mouli <pmouli@mac.com> (https://github.com/pradeepmouli)",
   "publishConfig": {
