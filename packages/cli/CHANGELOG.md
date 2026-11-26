@@ -1,5 +1,16 @@
 # @zod-to-form/cli
 
+## 0.9.1
+
+### Patch Changes
+
+- - chore(deps): update runtime dependencies
+
+- [#272](https://github.com/pradeepmouli/zod-to-form/pull/272) [`15e8f44`](https://github.com/pradeepmouli/zod-to-form/commit/15e8f44e20d1d11c25f6d8d89accd2e2508c85a5) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Update dependencies to their latest compatible versions.
+- Updated dependencies [[`15e8f44`](https://github.com/pradeepmouli/zod-to-form/commit/15e8f44e20d1d11c25f6d8d89accd2e2508c85a5)]:
+  - @zod-to-form/codegen@0.11.1
+  - @zod-to-form/core@0.12.1
+
 ## 0.9.0
 
 ### Minor Changes
