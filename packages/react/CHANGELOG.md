@@ -1,5 +1,15 @@
 # @zod-to-form/react
 
+## 0.13.2
+
+### Patch Changes
+
+- [#272](https://github.com/pradeepmouli/zod-to-form/pull/272) [`15e8f44`](https://github.com/pradeepmouli/zod-to-form/commit/15e8f44e20d1d11c25f6d8d89accd2e2508c85a5) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Update dependencies to their latest compatible versions.
+
+- [#274](https://github.com/pradeepmouli/zod-to-form/pull/274) [`ab5d0f2`](https://github.com/pradeepmouli/zod-to-form/commit/ab5d0f289e5711fe7b1e103f9f95ff3151c74b21) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Update dependencies to their latest compatible versions.
+- Updated dependencies [[`15e8f44`](https://github.com/pradeepmouli/zod-to-form/commit/15e8f44e20d1d11c25f6d8d89accd2e2508c85a5)]:
+  - @zod-to-form/core@0.12.1
+
 ## 0.13.1
 
 ### Patch Changes
