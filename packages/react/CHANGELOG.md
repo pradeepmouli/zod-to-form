@@ -1,5 +1,11 @@
 # @zod-to-form/react
 
+## 0.13.3
+
+### Patch Changes
+
+- [#275](https://github.com/pradeepmouli/zod-to-form/pull/275) [`eb809d9`](https://github.com/pradeepmouli/zod-to-form/commit/eb809d9c16e9ed0abb9c485c4f213c10d3e8809b) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Update dependencies to their latest compatible versions.
+
 ## 0.13.2
 
 ### Patch Changes
