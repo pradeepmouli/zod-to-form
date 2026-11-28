@@ -1,5 +1,11 @@
 # @zod-to-form/vite
 
+## 0.5.3
+
+### Patch Changes
+
+- [#277](https://github.com/pradeepmouli/zod-to-form/pull/277) [`518c543`](https://github.com/pradeepmouli/zod-to-form/commit/518c5436fb5300266728882eb99ff34ad09d0376) Thanks [@pradeepmouli](https://github.com/pradeepmouli)! - Update dependencies to their latest compatible versions.
+
 ## 0.5.2
 
 ### Patch Changes
